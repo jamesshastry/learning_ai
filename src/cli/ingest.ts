@@ -12,6 +12,7 @@ import { analyzeLectureGemini } from '../pipeline/analyze-gemini.js';
 import { slugify } from '../pipeline/playlist.js';
 import type { CourseConfig, LectureEntry, TranscribeResult, TranscriptSegment, AnalysisResult } from '../types.js';
 import { existsSync, readdirSync, renameSync } from 'fs';
+import chalk from 'chalk';
 
 /**
  * Register the `learn ingest` command.
@@ -108,6 +109,8 @@ export function ingestCommand(program: Command): void {
         let processed = 0;
         let errors = 0;
         let interrupted = false;
+        const total = toProcess.length;
+        const startTime = Date.now();
 
         // Clean shutdown on Ctrl+C — save state before exiting
         const sigintHandler = () => {
@@ -120,7 +123,13 @@ export function ingestCommand(program: Command): void {
         for (const lecture of toProcess) {
           if (interrupted) break;
           console.log();
-          info(`--- Lecture ${lecture.id}: ${lecture.title} ---`);
+          const elapsed = Date.now() - startTime;
+          const avgMs = processed > 0 ? elapsed / processed : 0;
+          const remaining = avgMs > 0 ? Math.round((total - processed - errors) * avgMs / 60000) : '?';
+          info(`[${processed + errors + 1}/${total}] Lecture ${lecture.id}: ${lecture.title}`);
+          if (processed > 0) {
+            info(chalk.dim(`  Overall: ${processed} done, ${errors} errors | ~${remaining} min remaining`));
+          }
 
           try {
             await processLecture(lecture, courseConfig, courseYamlPath, effectiveConfig, provider);
