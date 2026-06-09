@@ -32,12 +32,16 @@ export function ingestCommand(program: Command): void {
     .option('--force', 'Reprocess completed lectures', false)
     .option('--transcribe-only', 'Only transcribe — skip note generation (no API key needed)', false)
     .option('--provider <provider>', 'LLM provider: claude, gemini, or none')
+    .option('--lectures <range>', 'Process specific lectures: "3-7" or "3,5,8"')
+    .option('--skip <ids>', 'Skip specific lectures: "7,12"')
     .action(async (courseName: string, opts: {
       auto: boolean;
       review: boolean;
       force: boolean;
       transcribeOnly: boolean;
       provider?: string;
+      lectures?: string;
+      skip?: string;
     }) => {
       try {
         const config = loadConfig();
@@ -63,7 +67,7 @@ export function ingestCommand(program: Command): void {
           return;
         }
 
-        const toProcess = courseConfig.lectures.filter(l => {
+        let toProcess = courseConfig.lectures.filter(l => {
           if (opts.force) return true;
           if (l.status === 'pending' || l.status === 'error') return true;
           // Retry partial lectures (transcript exists, but notes/concepts missing)
@@ -73,6 +77,18 @@ export function ingestCommand(program: Command): void {
           if (l.status === 'transcribing' || l.status === 'analyzing') return true;
           return false;
         });
+
+        // Apply --lectures filter (e.g., "3-7" or "3,5,8")
+        if (opts.lectures) {
+          const selected = parseLectureRange(opts.lectures);
+          toProcess = toProcess.filter(l => selected.has(l.id));
+        }
+
+        // Apply --skip filter (e.g., "7,12")
+        if (opts.skip) {
+          const skipped = parseLectureRange(opts.skip);
+          toProcess = toProcess.filter(l => !skipped.has(l.id));
+        }
 
         if (toProcess.length === 0) {
           info('All lectures already processed. Use --force to reprocess.');
@@ -383,4 +399,31 @@ function renameOrphanedDir(
       renameSync(oldPath, newPath);
     }
   }
+}
+
+/**
+ * Parse a lecture range string into a set of padded IDs.
+ * Supports: "3-7" (range), "3,5,8" (list), or "3" (single).
+ */
+function parseLectureRange(rangeStr: string): Set<string> {
+  const ids = new Set<string>();
+
+  for (const part of rangeStr.split(',')) {
+    const trimmed = part.trim();
+    const rangeMatch = trimmed.match(/^(\d+)-(\d+)$/);
+    if (rangeMatch) {
+      const start = parseInt(rangeMatch[1], 10);
+      const end = parseInt(rangeMatch[2], 10);
+      for (let i = start; i <= end; i++) {
+        ids.add(String(i).padStart(2, '0'));
+      }
+    } else {
+      const num = parseInt(trimmed, 10);
+      if (!isNaN(num)) {
+        ids.add(String(num).padStart(2, '0'));
+      }
+    }
+  }
+
+  return ids;
 }

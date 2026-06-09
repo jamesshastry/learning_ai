@@ -23,6 +23,12 @@ export interface LectureEntry {
   duration_seconds?: number;
   date?: string;
   error?: string;
+  // Personal learning state (separate from pipeline status)
+  watched?: boolean;
+  watched_date?: string;
+  confidence?: ConfidenceLevel;
+  revisit?: boolean;
+  personal_notes?: string;
 }
 
 export type LectureStatus =
@@ -32,6 +38,8 @@ export type LectureStatus =
   | 'completed'
   | 'partial'
   | 'error';
+
+export type ConfidenceLevel = 'none' | 'low' | 'medium' | 'high';
 
 export type TranscriptSource = 'usetranscribe' | 'yt-dlp-captions' | 'manual';
 
