@@ -6,6 +6,37 @@ import type { AnalysisResult, Concept, TranscriptSegment } from '../types.js';
 
 const CONCEPT_INDEX_PATH = 'knowledge-graph/concept-index.txt';
 
+/** Max retries for transient Claude errors (429, 529, overloaded). */
+const MAX_RETRIES = 4;
+
+/**
+ * Retry a Claude API call with exponential backoff on transient errors.
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  label: string
+): Promise<T> {
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await fn();
+    } catch (e) {
+      const msg = (e as Error).message ?? '';
+      const isTransient = msg.includes('429') || msg.includes('529') ||
+        msg.includes('overloaded') || msg.includes('rate_limit') ||
+        msg.includes('capacity');
+
+      if (!isTransient || attempt === MAX_RETRIES) {
+        throw e;
+      }
+
+      const delay = Math.pow(2, attempt + 1) * 1000;
+      warn(`${label}: transient error (attempt ${attempt + 1}/${MAX_RETRIES + 1}), retrying in ${delay / 1000}s...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error('Unreachable');
+}
+
 /**
  * The tool definition for structured concept extraction (Call 2).
  * Using tool_use guarantees valid JSON output.
@@ -100,13 +131,14 @@ export async function analyzeLecture(
 
   // === CALL 1: Notes generation (text response) ===
   info('Generating lecture notes...');
-  const notesResponse = await client.messages.create({
-    model: config.model,
-    max_tokens: 8192,
-    messages: [
-      {
-        role: 'user',
-        content: `You are an expert note-taker and educator. Generate structured lecture notes from the following transcript.
+  const notesResponse = await withRetry(
+    () => client.messages.create({
+      model: config.model,
+      max_tokens: 8192,
+      messages: [
+        {
+          role: 'user',
+          content: `You are an expert note-taker and educator. Generate structured lecture notes from the following transcript.
 
 ## Lecture Information
 - **Title:** ${lectureTitle}
@@ -155,7 +187,9 @@ ${conceptListStr}
 ${transcript}`,
       },
     ],
-  });
+  }),
+    'Notes generation'
+  );
 
   const notesContent = notesResponse.content
     .filter(block => block.type === 'text')
@@ -170,15 +204,16 @@ ${transcript}`,
 
   // === CALL 2: Concept extraction (tool_use response) ===
   info('Extracting concepts...');
-  const conceptsResponse = await client.messages.create({
-    model: config.model,
-    max_tokens: 4096,
-    tools: [conceptExtractionTool],
-    tool_choice: { type: 'tool', name: 'concepts_extraction' },
-    messages: [
-      {
-        role: 'user',
-        content: `Extract all key concepts, their definitions, relationships, and relevant timestamps from this lecture transcript.
+  const conceptsResponse = await withRetry(
+    () => client.messages.create({
+      model: config.model,
+      max_tokens: 4096,
+      tools: [conceptExtractionTool],
+      tool_choice: { type: 'tool', name: 'concepts_extraction' },
+      messages: [
+        {
+          role: 'user',
+          content: `Extract all key concepts, their definitions, relationships, and relevant timestamps from this lecture transcript.
 
 ## Lecture: ${lectureTitle}
 ## Course: ${courseName} — ${courseTitle}
@@ -200,7 +235,9 @@ ${notesContent.substring(0, 2000)}
 ${transcript}`,
       },
     ],
-  });
+  }),
+    'Concept extraction'
+  );
 
   // Extract the tool_use result — guaranteed valid JSON by the API
   const toolUseBlock = conceptsResponse.content.find(

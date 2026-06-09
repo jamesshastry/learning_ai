@@ -59,7 +59,7 @@ function resolveProvider(
 /**
  * Get the default model name for a given provider.
  */
-function defaultModel(provider: LLMProvider): string {
+export function defaultModel(provider: LLMProvider): string {
   switch (provider) {
     case 'claude': return 'claude-sonnet-4-6';
     case 'gemini': return 'gemini-2.5-flash';

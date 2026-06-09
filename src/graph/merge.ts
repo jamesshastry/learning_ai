@@ -230,12 +230,17 @@ function loadAllConcepts(projectRoot: string): Array<{
     for (const lectureDir of readdirSync(lecturesDir)) {
       const conceptsPath = resolve(lecturesDir, lectureDir, 'concepts.yaml');
       const data = readYaml<ConceptsYaml>(conceptsPath);
-      if (!data?.concepts) continue;
+      if (!data?.concepts || !Array.isArray(data.concepts)) continue;
 
       // Extract lecture ID from directory name (e.g., "01-some-title" → "01")
       const lectureId = lectureDir.split('-')[0];
 
       for (const concept of data.concepts) {
+        // Validate required fields
+        if (!concept.name || !concept.definition) {
+          debug(`Skipping malformed concept in ${conceptsPath}: missing name or definition`);
+          continue;
+        }
         entries.push({ concept, course: courseDir, lectureId });
       }
     }

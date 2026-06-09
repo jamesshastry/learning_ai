@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, renameSync } from 'fs';
 import { dirname, resolve } from 'path';
 import yaml from 'js-yaml';
 
@@ -12,7 +12,9 @@ export function readYaml<T>(filePath: string): T | undefined {
 }
 
 /**
- * Write an object as YAML to a file, creating directories as needed.
+ * Write an object as YAML to a file atomically.
+ * Writes to a temp file first, then renames — prevents corrupt YAML
+ * if the process is killed mid-write.
  */
 export function writeYaml(filePath: string, data: unknown): void {
   ensureDir(dirname(filePath));
@@ -21,7 +23,7 @@ export function writeYaml(filePath: string, data: unknown): void {
     noRefs: true,
     sortKeys: false,
   });
-  writeFileSync(filePath, content, 'utf-8');
+  atomicWrite(filePath, content);
 }
 
 /**
@@ -64,6 +66,16 @@ export function ensureDir(dirPath: string): void {
   if (!existsSync(dirPath)) {
     mkdirSync(dirPath, { recursive: true });
   }
+}
+
+/**
+ * Write a file atomically: write to .tmp, then rename.
+ * rename() is atomic on most filesystems (POSIX guarantee).
+ */
+function atomicWrite(filePath: string, content: string): void {
+  const tmpPath = filePath + '.tmp';
+  writeFileSync(tmpPath, content, 'utf-8');
+  renameSync(tmpPath, filePath);
 }
 
 /**

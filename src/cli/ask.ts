@@ -3,7 +3,7 @@ import { resolve } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenAI } from '@google/genai';
-import { loadConfig } from '../utils/config.js';
+import { loadConfig, defaultModel } from '../utils/config.js';
 import { readText } from '../utils/files.js';
 import { error, info } from '../utils/logger.js';
 
@@ -22,6 +22,10 @@ export function askCommand(program: Command): void {
       try {
         const config = loadConfig();
         const provider = opts.provider ?? config.llmProvider;
+        // Resolve model for effective provider
+        const effectiveModel = provider !== config.llmProvider
+          ? defaultModel(provider as 'claude' | 'gemini' | 'none')
+          : config.model;
 
         if (provider === 'none') {
           error('No LLM provider configured. Set ANTHROPIC_API_KEY or GEMINI_API_KEY in .env');
@@ -45,7 +49,7 @@ export function askCommand(program: Command): void {
 
         const lectureDirs = readdirSync(lecturesDir).filter(d => !d.startsWith('.')).sort();
         const paddedId = lectureId.padStart(2, '0');
-        const matchingDir = lectureDirs.find(d => d.startsWith(paddedId + '-'));
+        const matchingDir = lectureDirs.find(d => d.split('-')[0] === paddedId);
 
         if (!matchingDir) {
           error(`Lecture ${lectureId} not found in ${courseName}.`);
@@ -82,14 +86,14 @@ ${question}`;
         if (provider === 'gemini') {
           const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
           const response = await ai.models.generateContent({
-            model: config.model,
+            model: effectiveModel,
             contents: prompt,
           });
           answer = response.text ?? '';
         } else {
           const client = new Anthropic({ apiKey: config.anthropicApiKey });
           const response = await client.messages.create({
-            model: config.model,
+            model: effectiveModel,
             max_tokens: 2048,
             messages: [{ role: 'user', content: prompt }],
           });

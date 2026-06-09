@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { resolve } from 'path';
 import { execSync } from 'child_process';
-import { loadConfig, type LLMProvider } from '../utils/config.js';
+import { loadConfig, defaultModel, type LLMProvider } from '../utils/config.js';
 import { readYaml, writeYaml, writeText, ensureDir, writeJson, readText } from '../utils/files.js';
 import { success, error, info, warn, step } from '../utils/logger.js';
 import { detectDuration, exceedsLimit } from '../pipeline/duration.js';
@@ -11,7 +11,7 @@ import { analyzeLecture } from '../pipeline/analyze.js';
 import { analyzeLectureGemini } from '../pipeline/analyze-gemini.js';
 import { slugify } from '../pipeline/playlist.js';
 import type { CourseConfig, LectureEntry, TranscribeResult, TranscriptSegment, AnalysisResult } from '../types.js';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync, readdirSync, renameSync } from 'fs';
 
 /**
  * Register the `learn ingest` command.
@@ -80,18 +80,34 @@ export function ingestCommand(program: Command): void {
         }
 
         const modeLabel = provider === 'none' ? '(transcribe-only)' : `(${provider})`;
+        // Resolve model for the effective provider
+        const effectiveModel = provider !== config.llmProvider
+          ? defaultModel(provider)
+          : config.model;
+        const effectiveConfig = { ...config, model: effectiveModel };
+
         info(`Processing ${toProcess.length} lectures in ${courseConfig.title} ${modeLabel}`);
         if (opts.review && provider !== 'none') info('Review mode: will open editor after each lecture');
 
         let processed = 0;
         let errors = 0;
+        let interrupted = false;
+
+        // Clean shutdown on Ctrl+C — save state before exiting
+        const sigintHandler = () => {
+          warn('\nInterrupted — saving current state...');
+          writeYaml(courseYamlPath, courseConfig);
+          interrupted = true;
+        };
+        process.on('SIGINT', sigintHandler);
 
         for (const lecture of toProcess) {
+          if (interrupted) break;
           console.log();
           info(`--- Lecture ${lecture.id}: ${lecture.title} ---`);
 
           try {
-            await processLecture(lecture, courseConfig, courseYamlPath, config, provider);
+            await processLecture(lecture, courseConfig, courseYamlPath, effectiveConfig, provider);
 
             if (opts.review && provider !== 'none' && lecture.status === 'completed') {
               const titleSlug = slugify(lecture.title);
@@ -123,8 +139,15 @@ export function ingestCommand(program: Command): void {
           }
         }
 
+        // Clean up SIGINT handler
+        process.removeListener('SIGINT', sigintHandler);
+
         console.log();
-        success(`Ingestion complete: ${processed} processed, ${errors} errors`);
+        if (interrupted) {
+          warn(`Ingestion interrupted: ${processed} processed, ${errors} errors, ${toProcess.length - processed - errors} remaining`);
+        } else {
+          success(`Ingestion complete: ${processed} processed, ${errors} errors`);
+        }
       } catch (e) {
         error(`Ingestion failed: ${(e as Error).message}`);
         process.exit(1);
@@ -158,11 +181,7 @@ async function processLecture(
   config: ReturnType<typeof loadConfig>,
   provider: LLMProvider
 ): Promise<void> {
-  const titleSlug = slugify(lecture.title);
-  const lectureDir = resolve(
-    config.projectRoot, 'courses', courseConfig.name, 'lectures',
-    `${lecture.id}-${titleSlug}`
-  );
+  const lecturesBase = resolve(config.projectRoot, 'courses', courseConfig.name, 'lectures');
 
   // Check what already exists from previous partial runs
   const existingTranscript = findExistingTranscript(config.projectRoot, courseConfig.name, lecture.id);
@@ -217,6 +236,13 @@ async function processLecture(
       lecture.duration_seconds = result.duration_seconds;
     }
 
+    // Compute lecture directory (title may have just changed)
+    const titleSlug = slugify(lecture.title);
+    const lectureDir = resolve(lecturesBase, `${lecture.id}-${titleSlug}`);
+
+    // Rename old directory if title changed and an old dir exists
+    renameOrphanedDir(lecturesBase, lecture.id, `${lecture.id}-${titleSlug}`);
+
     // Normalize
     step(++currentStep, totalSteps, 'Normalizing transcript...');
     segments = result.segments;
@@ -244,6 +270,10 @@ async function processLecture(
           : { timestamp: '00:00', text: line };
       });
   }
+
+  // Compute final lecture directory (use current title, which may have been updated by transcription)
+  const titleSlug = slugify(lecture.title);
+  const lectureDir = resolve(lecturesBase, `${lecture.id}-${titleSlug}`);
 
   // Analyze (skip if transcribe-only or notes already exist)
   let analysis: AnalysisResult | null = null;
@@ -306,7 +336,9 @@ function findExistingTranscript(
 }
 
 /**
- * Find an existing file in a lecture directory, searching by lecture ID prefix.
+ * Find an existing file in a lecture directory.
+ * Matches by exact lecture ID (the part before the first '-'),
+ * preventing prefix collisions (e.g., ID "10" matching "100-*").
  */
 function findExistingFile(
   projectRoot: string, courseName: string, lectureId: string, filename: string
@@ -315,7 +347,10 @@ function findExistingFile(
   if (!existsSync(lecturesDir)) return null;
 
   const paddedId = lectureId.padStart(2, '0');
-  const dirs = readdirSync(lecturesDir).filter(d => d.startsWith(paddedId + '-'));
+  const dirs = readdirSync(lecturesDir).filter(d => {
+    const dirId = d.split('-')[0];
+    return dirId === paddedId;
+  });
 
   for (const dir of dirs) {
     const filePath = resolve(lecturesDir, dir, filename);
@@ -323,4 +358,29 @@ function findExistingFile(
   }
 
   return null;
+}
+
+/**
+ * Rename an orphaned lecture directory when the title (and thus slug) changes.
+ * E.g., "01-video-1" → "01-jensen-huang-the-gpu-computing-stack"
+ */
+function renameOrphanedDir(
+  lecturesBase: string, lectureId: string, expectedDirName: string
+): void {
+  if (!existsSync(lecturesBase)) return;
+
+  const paddedId = lectureId.padStart(2, '0');
+  const dirs = readdirSync(lecturesBase).filter(d => {
+    const dirId = d.split('-')[0];
+    return dirId === paddedId && d !== expectedDirName;
+  });
+
+  for (const oldDir of dirs) {
+    const oldPath = resolve(lecturesBase, oldDir);
+    const newPath = resolve(lecturesBase, expectedDirName);
+    if (!existsSync(newPath)) {
+      info(`Renaming lecture directory: ${oldDir} → ${expectedDirName}`);
+      renameSync(oldPath, newPath);
+    }
+  }
 }

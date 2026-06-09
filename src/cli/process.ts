@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { resolve } from 'path';
-import { loadConfig, type LLMProvider } from '../utils/config.js';
+import { loadConfig, defaultModel, type LLMProvider } from '../utils/config.js';
 import { readYaml, writeYaml, writeText, writeJson, ensureDir } from '../utils/files.js';
 import { success, error, info, step, warn } from '../utils/logger.js';
 import { detectDuration, exceedsLimit } from '../pipeline/duration.js';
@@ -38,6 +38,10 @@ export function processCommand(program: Command): void {
 
       // Determine effective provider
       const provider = resolveEffectiveProvider(opts.provider, opts.transcribeOnly, config.llmProvider);
+      // Resolve model for the effective provider (prevents sending Claude model name to Gemini)
+      const effectiveModel = provider !== config.llmProvider
+        ? defaultModel(provider)
+        : config.model;
 
       // Validate API key for the chosen provider
       if (provider === 'claude' && !config.anthropicApiKey) {
@@ -140,7 +144,7 @@ export function processCommand(program: Command): void {
           analysis = await runAnalysis(
             provider, result.segments, lecture.title,
             courseConfig.name, courseConfig.title,
-            config.projectRoot, config
+            config.projectRoot, { ...config, model: effectiveModel }
           );
         } else {
           info('Transcribe-only mode — skipping note generation');

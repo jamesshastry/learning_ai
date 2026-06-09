@@ -47,7 +47,7 @@ export function notesCommand(program: Command): void {
 
         // Find the lecture directory matching the ID
         const paddedId = lectureId.padStart(2, '0');
-        const matchingDir = lectureDirs.find(d => d.startsWith(paddedId + '-'));
+        const matchingDir = lectureDirs.find(d => d.split('-')[0] === paddedId);
 
         if (!matchingDir) {
           error(`Lecture ${lectureId} not found in ${courseName}.`);
@@ -84,7 +84,7 @@ export function notesCommand(program: Command): void {
         const lecturesDir = resolve(config.projectRoot, 'courses', courseName, 'lectures');
         const lectureDirs = readdirSync(lecturesDir).filter(d => !d.startsWith('.')).sort();
         const paddedId = lectureId.padStart(2, '0');
-        const matchingDir = lectureDirs.find(d => d.startsWith(paddedId + '-'));
+        const matchingDir = lectureDirs.find(d => d.split('-')[0] === paddedId);
 
         if (!matchingDir) {
           error(`Lecture ${lectureId} not found in ${courseName}.`);

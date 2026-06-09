@@ -217,7 +217,7 @@ function generateVisualizationHTML(graphData: GraphData): string {
     </div>
   </div>
   <script>
-    const data = ${JSON.stringify(graphData)};
+    const data = ${JSON.stringify(graphData).replace(/</g, '\\u003c')};
 
     const tagColors = {};
     const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
