@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { resolve } from 'path';
 import { execSync } from 'child_process';
 import { loadConfig, type LLMProvider } from '../utils/config.js';
-import { readYaml, writeYaml, writeText, ensureDir, writeJson } from '../utils/files.js';
+import { readYaml, writeYaml, writeText, ensureDir, writeJson, readText } from '../utils/files.js';
 import { success, error, info, warn, step } from '../utils/logger.js';
 import { detectDuration, exceedsLimit } from '../pipeline/duration.js';
 import { transcribeVideo } from '../pipeline/transcribe.js';
@@ -10,7 +10,8 @@ import { fallbackTranscribe } from '../pipeline/fallback.js';
 import { analyzeLecture } from '../pipeline/analyze.js';
 import { analyzeLectureGemini } from '../pipeline/analyze-gemini.js';
 import { slugify } from '../pipeline/playlist.js';
-import type { CourseConfig, LectureEntry, TranscribeResult, AnalysisResult } from '../types.js';
+import type { CourseConfig, LectureEntry, TranscribeResult, TranscriptSegment, AnalysisResult } from '../types.js';
+import { existsSync, readdirSync } from 'fs';
 
 /**
  * Register the `learn ingest` command.
@@ -64,7 +65,13 @@ export function ingestCommand(program: Command): void {
 
         const toProcess = courseConfig.lectures.filter(l => {
           if (opts.force) return true;
-          return l.status === 'pending' || l.status === 'error';
+          if (l.status === 'pending' || l.status === 'error') return true;
+          // Retry partial lectures (transcript exists, but notes/concepts missing)
+          // only when we have an LLM provider to generate them
+          if (l.status === 'partial' && provider !== 'none') return true;
+          // Retry stuck lectures from interrupted runs
+          if (l.status === 'transcribing' || l.status === 'analyzing') return true;
+          return false;
         });
 
         if (toProcess.length === 0) {
@@ -140,6 +147,9 @@ function resolveProvider(
 
 /**
  * Process a single lecture through the pipeline.
+ * Smart resume: skips stages whose output already exists.
+ * - If transcript.txt exists → skip transcription
+ * - If notes.md exists and provider hasn't changed → skip analysis
  */
 async function processLecture(
   lecture: LectureEntry,
@@ -148,99 +158,169 @@ async function processLecture(
   config: ReturnType<typeof loadConfig>,
   provider: LLMProvider
 ): Promise<void> {
-  const totalSteps = provider === 'none' ? 4 : 6;
-
-  // Detect duration
-  step(1, totalSteps, 'Detecting duration...');
-  const duration = await detectDuration(lecture.video_id);
-  if (duration !== null) {
-    lecture.duration_seconds = duration;
-  }
-
-  // Transcribe
-  step(2, totalSteps, 'Transcribing...');
-  let result: TranscribeResult | null = null;
-
-  if (exceedsLimit(duration)) {
-    warn('Video exceeds 90-minute limit. Using fallback.');
-    result = await fallbackTranscribe(lecture.video_id);
-  } else {
-    lecture.status = 'transcribing';
-    writeYaml(courseYamlPath, courseConfig);
-
-    result = await transcribeVideo(lecture.video_id);
-    if (!result) {
-      warn('Primary transcription failed. Trying fallback...');
-      result = await fallbackTranscribe(lecture.video_id);
-    }
-  }
-
-  if (!result) {
-    throw new Error('All transcription methods failed');
-  }
-
-  lecture.transcript_source = result.source;
-  if (result.title && result.title !== 'Untitled') {
-    lecture.title = result.title;
-  }
-  if (result.duration_seconds) {
-    lecture.duration_seconds = result.duration_seconds;
-  }
-
-  // Normalize
-  step(3, totalSteps, 'Normalizing transcript...');
-  const transcriptText = result.segments
-    .map(seg => `[${seg.timestamp}] ${seg.text}`)
-    .join('\n') + '\n';
-
-  // Analyze (skip if transcribe-only)
-  let analysis: AnalysisResult | null = null;
-  if (provider !== 'none') {
-    const providerLabel = provider === 'claude' ? 'Claude' : 'Gemini';
-    step(4, totalSteps, `Analyzing with ${providerLabel}...`);
-    lecture.status = 'analyzing';
-    writeYaml(courseYamlPath, courseConfig);
-
-    if (provider === 'gemini') {
-      analysis = await analyzeLectureGemini(
-        result.segments, lecture.title, courseConfig.name, courseConfig.title,
-        config.projectRoot, config
-      );
-    } else {
-      analysis = await analyzeLecture(
-        result.segments, lecture.title, courseConfig.name, courseConfig.title,
-        config.projectRoot, config
-      );
-    }
-  }
-
-  // Write files
-  step(provider !== 'none' ? 5 : 4, totalSteps, 'Writing output files...');
   const titleSlug = slugify(lecture.title);
   const lectureDir = resolve(
     config.projectRoot, 'courses', courseConfig.name, 'lectures',
     `${lecture.id}-${titleSlug}`
   );
+
+  // Check what already exists from previous partial runs
+  const existingTranscript = findExistingTranscript(config.projectRoot, courseConfig.name, lecture.id);
+  const existingNotes = findExistingFile(config.projectRoot, courseConfig.name, lecture.id, 'notes.md');
+  const hasTranscript = existingTranscript !== null;
+  const hasNotes = existingNotes !== null;
+
+  // Determine what stages to run
+  const needsTranscription = !hasTranscript;
+  const needsAnalysis = provider !== 'none' && !hasNotes;
+  const totalSteps = (needsTranscription ? 3 : 0) + (needsAnalysis ? 1 : 0) + 2; // +2 for write + status
+  let currentStep = 0;
+
+  let transcriptText: string;
+  let segments: TranscriptSegment[];
+
+  if (needsTranscription) {
+    // Detect duration
+    step(++currentStep, totalSteps, 'Detecting duration...');
+    const duration = await detectDuration(lecture.video_id);
+    if (duration !== null) {
+      lecture.duration_seconds = duration;
+    }
+
+    // Transcribe
+    step(++currentStep, totalSteps, 'Transcribing...');
+    let result: TranscribeResult | null = null;
+
+    if (exceedsLimit(duration)) {
+      warn('Video exceeds 90-minute limit. Using fallback.');
+      result = await fallbackTranscribe(lecture.video_id);
+    } else {
+      lecture.status = 'transcribing';
+      writeYaml(courseYamlPath, courseConfig);
+
+      result = await transcribeVideo(lecture.video_id);
+      if (!result) {
+        warn('Primary transcription failed. Trying fallback...');
+        result = await fallbackTranscribe(lecture.video_id);
+      }
+    }
+
+    if (!result) {
+      throw new Error('All transcription methods failed');
+    }
+
+    lecture.transcript_source = result.source;
+    if (result.title && result.title !== 'Untitled') {
+      lecture.title = result.title;
+    }
+    if (result.duration_seconds) {
+      lecture.duration_seconds = result.duration_seconds;
+    }
+
+    // Normalize
+    step(++currentStep, totalSteps, 'Normalizing transcript...');
+    segments = result.segments;
+    transcriptText = segments
+      .map(seg => `[${seg.timestamp}] ${seg.text}`)
+      .join('\n') + '\n';
+
+    // Write transcript immediately (so it survives if analysis fails)
+    ensureDir(lectureDir);
+    writeText(resolve(lectureDir, 'transcript.txt'), transcriptText);
+    if (result.raw) {
+      writeJson(resolve(lectureDir, 'raw.json'), result.raw);
+    }
+  } else {
+    // Load existing transcript
+    info('Transcript already exists — skipping transcription');
+    transcriptText = readText(existingTranscript!)!;
+    segments = transcriptText
+      .split('\n')
+      .filter(line => line.trim())
+      .map(line => {
+        const match = line.match(/^\[([^\]]+)\]\s*(.*)$/);
+        return match
+          ? { timestamp: match[1], text: match[2] }
+          : { timestamp: '00:00', text: line };
+      });
+  }
+
+  // Analyze (skip if transcribe-only or notes already exist)
+  let analysis: AnalysisResult | null = null;
+  if (needsAnalysis) {
+    const providerLabel = provider === 'claude' ? 'Claude' : 'Gemini';
+    step(++currentStep, totalSteps, `Analyzing with ${providerLabel}...`);
+    lecture.status = 'analyzing';
+    writeYaml(courseYamlPath, courseConfig);
+
+    if (provider === 'gemini') {
+      analysis = await analyzeLectureGemini(
+        segments, lecture.title, courseConfig.name, courseConfig.title,
+        config.projectRoot, config
+      );
+    } else {
+      analysis = await analyzeLecture(
+        segments, lecture.title, courseConfig.name, courseConfig.title,
+        config.projectRoot, config
+      );
+    }
+  } else if (hasNotes) {
+    info('Notes already exist — skipping analysis');
+  }
+
+  // Write files
+  step(++currentStep, totalSteps, 'Writing output files...');
   ensureDir(lectureDir);
 
-  writeText(resolve(lectureDir, 'transcript.txt'), transcriptText);
+  if (!hasTranscript) {
+    writeText(resolve(lectureDir, 'transcript.txt'), transcriptText);
+  }
   if (analysis) {
     writeText(resolve(lectureDir, 'notes.md'), analysis.notes);
     writeYaml(resolve(lectureDir, 'concepts.yaml'), { concepts: analysis.concepts });
   }
-  if (result.raw) {
-    writeJson(resolve(lectureDir, 'raw.json'), result.raw);
-  }
 
   // Update status
-  step(totalSteps, totalSteps, 'Updating status...');
-  if (provider === 'none') {
+  step(++currentStep, totalSteps, 'Updating status...');
+  if (provider === 'none' && !hasNotes) {
     lecture.status = 'partial';
+  } else if (hasNotes || (analysis && analysis.concepts.length > 0)) {
+    lecture.status = 'completed';
   } else {
-    lecture.status = analysis && analysis.concepts.length > 0 ? 'completed' : 'partial';
+    lecture.status = 'partial';
   }
   delete lecture.error;
   writeYaml(courseYamlPath, courseConfig);
 
   success(`Completed: ${lecture.title}`);
+}
+
+/**
+ * Find an existing transcript file for a lecture, searching by lecture ID prefix.
+ * Returns the full file path or null.
+ */
+function findExistingTranscript(
+  projectRoot: string, courseName: string, lectureId: string
+): string | null {
+  return findExistingFile(projectRoot, courseName, lectureId, 'transcript.txt');
+}
+
+/**
+ * Find an existing file in a lecture directory, searching by lecture ID prefix.
+ */
+function findExistingFile(
+  projectRoot: string, courseName: string, lectureId: string, filename: string
+): string | null {
+  const lecturesDir = resolve(projectRoot, 'courses', courseName, 'lectures');
+  if (!existsSync(lecturesDir)) return null;
+
+  const paddedId = lectureId.padStart(2, '0');
+  const dirs = readdirSync(lecturesDir).filter(d => d.startsWith(paddedId + '-'));
+
+  for (const dir of dirs) {
+    const filePath = resolve(lecturesDir, dir, filename);
+    if (existsSync(filePath)) return filePath;
+  }
+
+  return null;
 }

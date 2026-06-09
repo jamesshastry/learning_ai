@@ -5,6 +5,7 @@ import { addCommand } from './add.js';
 import { processCommand } from './process.js';
 import { notesCommand } from './notes.js';
 import { statusCommand } from './status.js';
+import { refreshCommand } from './refresh.js';
 import { ingestCommand } from './ingest.js';
 import { searchCommand } from './search.js';
 import { askCommand } from './ask.js';
@@ -22,6 +23,7 @@ addCommand(program);
 processCommand(program);
 notesCommand(program);
 statusCommand(program);
+refreshCommand(program);
 
 // Phase 2: Batch ingestion, search, Q&A
 ingestCommand(program);
