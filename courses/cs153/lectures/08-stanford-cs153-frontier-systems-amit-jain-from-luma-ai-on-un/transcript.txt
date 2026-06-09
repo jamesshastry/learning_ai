@@ -1,0 +1,1890 @@
+[00:09] Welcome gang to
+[00:11] week three of CS 153.
+[00:14] We have today with us Amit
+[00:16] Jain from Luma.
+[00:19] Thank you for joining us Amit. Thanks
+[00:20] for having me.
+[00:22] Okay.
+[00:24] >> [applause]
+[00:26] >> Amit is going to be talking to us today
+[00:28] about unified intelligent systems.
+[00:31] You're going to be hearing a lot more
+[00:32] about this. I think it's a
+[00:35] very
+[00:36] relevant follow-up to the visual
+[00:39] intelligence systems lecture we had last
+[00:41] week from Andy Blatman at Black Forest
+[00:43] Labs.
+[00:45] Quick recap on the class.
+[00:48] And today we're going to talk about
+[00:50] Amit.
+[00:51] And today we're going to do a field trip
+[00:53] into what I think is also one of the
+[00:55] most exciting
+[00:56] factories working on
+[00:58] how to get work done, especially visual
+[01:02] and creative work done in the world
+[01:04] called Luma. But before that, why don't
+[01:06] we start by talking about Amit a little
+[01:09] bit. I had the privilege to get to know
+[01:10] Amit a few years ago when he was still
+[01:13] an engineer at Apple.
+[01:15] And uh
+[01:16] I was at Discord at the time and Amit I
+[01:18] got an email from Amit saying um
+[01:21] "Hey, I heard you have a bunch of 3D
+[01:23] data.
+[01:24] Uh can I have it?"
+[01:26] >> [laughter]
+[01:27] >> I remember that.
+[01:27] >> And I said no, you can't uh because
+[01:29] Discord had acquired the data, but I
+[01:31] started asking Amit what why he needed
+[01:33] the data. If you guys remember um I
+[01:35] covered this in in our first lecture,
+[01:36] but Ubiquity Six, the company I had
+[01:37] started about a decade ago, was a 3D
+[01:39] computer vision mapping company and we
+[01:42] had uh we'd had millions of people
+[01:44] around the world who were capturing the
+[01:45] world in 3D using their smartphones and
+[01:47] all that data with terabytes of data um
+[01:50] uh that were 3D representations of the
+[01:52] world that we'd reconstructed from 2D
+[01:54] images.
+[01:55] And Amit said, "Well, I want to build um
+[01:58] a 3D
+[01:59] service that uh that is generative.
+[02:02] I want to allow people to create gener-
+[02:04] the same kinds of meshes and point
+[02:06] clouds and 3D representations of spaces,
+[02:08] but through generative models, because
+[02:09] that's where the world is going.
+[02:11] Um and I s-
+[02:12] got interested, cuz I kind of agreed
+[02:14] with him, and he was ahead of the curve.
+[02:16] And so, I had a chance to invest as an
+[02:18] angel investor at the time, and then a
+[02:19] few years later, I had a chance to
+[02:20] partner with Amit again at a16z when I
+[02:22] was a general partner, and Amit, thank
+[02:24] you for letting
+[02:25] me lead your series
+[02:27] >> B. B. Um Amit was also one of the first
+[02:31] customers of the a16z compute program
+[02:33] called oxygen, and actually helped name
+[02:35] oxygen as well.
+[02:37] Um I think the quote was he said
+[02:39] something like, you know, if we don't
+[02:40] have compute on day one, That's can't
+[02:42] really breathe. Yeah. So, um tell us a
+[02:45] little bit about
+[02:47] what Luma is, and how what were the dots
+[02:50] that led from
+[02:51] the inside at Apple
+[02:53] that generative modeling was the future
+[02:55] that led here. My background very
+[02:57] briefly, so at Apple I was working on
+[02:59] first the lidar systems that actually
+[03:01] now is on our iPhones. This was called
+[03:03] the Jasper sensor if any any of you are
+[03:05] familiar.
+[03:06] And we were trying to build um
+[03:09] we were trying to actually build like,
+[03:10] you know, what comes after the after the
+[03:11] camera.
+[03:12] The sensor was built, now I can talk
+[03:14] about it because, you know, that project
+[03:15] is no more for the car, uh which was
+[03:17] called Titan.
+[03:18] And we started to work on Vision Pro
+[03:20] after that, because, you know, the car
+[03:22] project got got canceled, and the Vision
+[03:23] Pro had had a bunch of lidars on it.
+[03:26] And during that work, it started to
+[03:28] become obvious that like, okay, you
+[03:29] know, um
+[03:31] the computers of the future, we still
+[03:32] don't know what they will look like. You
+[03:34] know, maybe they will have AI or what
+[03:36] what not. The computers of the future
+[03:37] will need very different interfaces,
+[03:39] will need very different kind of media,
+[03:41] and will need very different kind of of
+[03:42] ways of actually capturing and creating
+[03:44] and building those things into the
+[03:46] system. So, in 2020 at Apple, we started
+[03:49] exploring generative models.
+[03:52] And and think about it, 2020, so you
+[03:54] know, before language model scaling was
+[03:55] known to be working and before
+[03:57] actually it was before DALL-E, but NeRF
+[03:59] had already come out from Matthew Tancik
+[04:01] from Berkeley. So, we started to explore
+[04:04] those generative systems and that led me
+[04:06] to
+[04:07] thinking that okay,
+[04:09] if language scaling is working,
+[04:13] and here is is a method where we
+[04:15] differentiable 3D is possible, what
+[04:17] would happen if all of these things are
+[04:18] combined together, right? That would
+[04:19] basically mean you have the full
+[04:21] footprint of every observation in the
+[04:23] universe and you will be able to like
+[04:25] you know differentially learn about
+[04:26] them. If you can differentially learn
+[04:28] about them, you can understand them and
+[04:29] then finally you can generate them. So,
+[04:31] that was the genesis of Luma and at that
+[04:34] time because of of the pedigree we had,
+[04:36] 3D seemed like the most logical way of
+[04:38] going forward because first of all, 3D
+[04:40] tells you 3D has a lot more information
+[04:42] than images do.
+[04:44] Uh, naively we assumed at the time 3D
+[04:46] has a lot more information than videos
+[04:47] do as well and that 4D would be very
+[04:49] easy to capture and scale, but again I
+[04:51] say naively because as you will learn in
+[04:52] in a few seconds that that was a bad
+[04:54] assumption, but that's kind of where we
+[04:55] started with the idea of building what
+[04:58] we now called a world simulator. At that
+[05:00] time it was just like all right, like
+[05:01] you know, if we can learn this and
+[05:03] generate this, we would have something
+[05:04] that would allow us world understanding.
+[05:07] And
+[05:08] you you talked about you said this
+[05:10] phrase which is important,
+[05:12] you know, learn the world in a
+[05:14] differentiable manner. What does that
+[05:16] mean?
+[05:17] Right. So, I mean, if you're I'm sure
+[05:19] you guys are all familiar with like you
+[05:20] know, how transformers work and how AI
+[05:22] models work. Differentiable means you
+[05:24] can put it in a training loop and
+[05:27] you can have a loss function that can be
+[05:29] then iteratively optimized. So,
+[05:30] differentiable allows you to do that. If
+[05:33] the function is non-differentiable, then
+[05:34] like you know, you just really can't do
+[05:35] gradient descent on it. And if you can't
+[05:38] do gradient descent on it, then deep
+[05:39] learning doesn't work. So, the tools
+[05:41] that we have for this era, for this
+[05:43] generation is basically compute and
+[05:45] gradient descent. Um, and yes,
+[05:47] transformers are things that are very
+[05:49] very well susceptible to gradient
+[05:50] descent, but the actual, you know, thing
+[05:52] underneath it is gradient descent and
+[05:54] compute. So, how can we take a lot of
+[05:56] data, a lot of compute, and gradient
+[05:57] descent and produce something useful out
+[05:59] of it?
+[06:00] Differentiability is the core
+[06:01] characteristic of that problem, those
+[06:03] problems basically. Yeah.
+[06:04] That's helpful. Can you just connect the
+[06:06] dots on how what that insight led to
+[06:08] then what Luma is doing today? So, we
+[06:10] started when we started the company, the
+[06:12] idea was we will will, you know, capture
+[06:14] an ungodly amount of 3D data, build a
+[06:17] flywheel that allows people to capture
+[06:18] that and like, you know, for us to be
+[06:19] able to use it and then like, you know,
+[06:21] build build world simulation systems
+[06:22] with it. So, we released an app which is
+[06:24] called Luma 3D capture. It actually was
+[06:26] very very popular because one, the
+[06:28] results were really really great. It was
+[06:29] for the first time that NeRF and
+[06:31] Gaussian splats were productionized. And
+[06:33] Matthew, you know, he joined our team
+[06:35] actually to really push forward the
+[06:37] frontier of of that sort of the world.
+[06:39] But very soon we realized that it
+[06:40] doesn't matter how many people use the
+[06:42] app, it will never reach the scale that
+[06:45] was necessary to learn enough about the
+[06:48] universe.
+[06:49] Why is that?
+[06:51] Because think about it, right? The
+[06:52] number of people that are writing on the
+[06:54] internet, that are taking photos on the
+[06:56] internet, that are are are capturing
+[06:58] videos on the internet,
+[06:59] substantially outpaces anything one
+[07:02] company can actually distribute.
+[07:05] Also, there's like, you know, decades
+[07:06] and decades and decades of that
+[07:07] information that is already available.
+[07:09] So, it's all about data. It actually you
+[07:11] you can make the case that like, you
+[07:13] know, this particular modality of data
+[07:14] is better for learning versus this or
+[07:16] versus that. It really doesn't matter,
+[07:17] that's a moot point because you're
+[07:19] running against the physics of scale.
+[07:21] So, wherever there is scale in data,
+[07:23] that's the only thing that's going to
+[07:24] work. Mhm. And you have to design the
+[07:26] algorithms around where the the data is,
+[07:28] not the other way around, right? You
+[07:30] come up with some pristine algorithm,
+[07:31] but you don't have any data, then like,
+[07:33] you know, what's the point? Robotics is
+[07:34] coming up against this problem right now
+[07:36] where like, all right, we're going to
+[07:37] build like, you know, these action
+[07:38] systems, but well, where is is action
+[07:40] data? There's no internet of action
+[07:42] data.
+[07:43] >> [laughter]
+[07:43] >> You can have huge labs in in China and
+[07:45] India and in Vietnam and and and
+[07:47] everywhere gathering this data, but the
+[07:49] scale is really not comparable. So, you
+[07:51] have to just design the systems around
+[07:52] data. So, that's what that's what we
+[07:54] learned.
+[07:55] Um so, in 2023, after that realization
+[07:57] and after you know, Nvidia Hopper
+[07:59] architecture was announced, um we
+[08:01] started to build the foundations of um
+[08:03] you know,
+[08:04] generative video. Because video is
+[08:06] three-dimensional. It has two dimensions
+[08:08] of space and one dimension of time. And
+[08:10] human brain actually like you know,
+[08:11] learns about 3D representation through
+[08:13] that time proxy. So, when Hopper
+[08:16] architecture came about,
+[08:19] we started to think like, all right, it
+[08:20] might be possible actually to learn
+[08:21] video.
+[08:22] And to learn the world representation
+[08:24] through video. So, in 2023, uh Jamming
+[08:26] joined us. Jamming uh was a you know, at
+[08:29] Nvidia at that point. He's a Stanford
+[08:30] grad. And a few other people from
+[08:32] Stanford and Berkeley uh started to join
+[08:34] the company with this idea of like, all
+[08:35] right, let's learn from video.
+[08:38] And we started to build that
+[08:38] infrastructure. And in February sorry,
+[08:40] in March 2024, we released the first
+[08:42] video model uh that was called Dream
+[08:43] Machine. And um you know, in in the
+[08:45] first 3 weeks, 4 weeks, actually we got
+[08:47] up to uh 6 million users from that
+[08:49] because people had never seen generative
+[08:50] video. Uh Sora was announced, but never
+[08:52] released. So, people had never
+[08:53] experienced it. So, people really wanted
+[08:54] to actually try that out. So, we started
+[08:56] with video that at point.
+[08:58] And then we have had the similar
+[08:59] realization again in 2025, early 2025.
+[09:02] It's just like annual cycles now. That
+[09:04] just video is not enough because video
+[09:05] is good, but it doesn't pair human
+[09:08] logic. It doesn't pair why an event is
+[09:10] important. What is the sequence of
+[09:12] events and what does that actually lead
+[09:13] to? Just having language models in the
+[09:16] middle uh that are like you know, you
+[09:17] being used for embedding is not
+[09:19] sufficient. You need unified
+[09:20] intelligence. So, that's kind of where
+[09:21] we are now. Yep. These are the dots.
+[09:23] Well, um yeah, so the this is not the
+[09:25] first time the class has heard that when
+[09:28] you close the loop, you have to you have
+[09:31] to sort of evolve the the mid-training,
+[09:33] the post-training pipeline, the
+[09:34] interface. And so, can we spend a little
+[09:36] bit of time? So, I I don't think it's a
+[09:38] surprise for people to hear that there
+[09:39] was sort of an iterative loop every year
+[09:41] as you got more and more data from
+[09:43] customers. But, can we talk a little bit
+[09:45] about that first you know, the final
+[09:47] projects for the class this time are the
+[09:49] one-person frontier lab where they're
+[09:50] going to be bootstrapping their own
+[09:52] flywheels. That's pretty cool. Um and
+[09:54] the first you know, before I I remember
+[09:58] you know, how nerve-racking it was for
+[09:59] you and for the team
+[10:01] when when when you had the realization
+[10:03] that
+[10:04] video was going to be the future, but
+[10:05] you didn't have a video model out in the
+[10:07] world yet. And you didn't have a
+[10:08] state-of-the-art system to start
+[10:10] collecting that
+[10:11] um
+[10:12] that context feedback loop. Yeah. So,
+[10:14] let's let's let's take a bit of a
+[10:17] journey back in time time travel to uh
+[10:19] the launch of Dream Machine 1. Yeah. Can
+[10:21] you just tell folks how you went about
+[10:23] kickstarting or bootstrapping the the
+[10:25] video flywheel at Luma?
+[10:27] So, I think the core problem that you
+[10:28] want to think about
+[10:30] whenever you're building these really
+[10:32] really large systems,
+[10:34] they have a wild distribution, right?
+[10:35] Like, you know, if even if you're
+[10:36] talking about language models, well,
+[10:38] they have all of language models
+[10:39] language model data and what is good
+[10:41] what is bad, right? So, you want to
+[10:43] think about Okay, from this really raw
+[10:46] distribution I get from pre-training,
+[10:48] how do I get to a model that humans can
+[10:50] use?
+[10:51] And what humans find useful is a very
+[10:54] narrow band within that distribution.
+[10:57] And that narrow band is not like, you
+[10:58] know, a predictable linear band. It's
+[11:00] just like, you know, pockets of of of
+[11:02] greatness that humans think are great.
+[11:05] Some other species might find it very
+[11:06] different, right? But, we have our own
+[11:08] aesthetics, we have our own use cases,
+[11:10] we have our own value systems. So, we
+[11:11] find those those distributions valuable.
+[11:14] So, now the question becomes how do you
+[11:15] find or how do you basically get that
+[11:18] distribution out of the model?
+[11:20] So, we started to think about that
+[11:21] problem. And and with Dream Machine, the
+[11:24] because there were so many users that
+[11:25] were using the model, the question
+[11:27] became All right, can we learn something
+[11:29] about that? And and preference or like,
+[11:31] you know, preference feedback at that
+[11:32] time by the way,
+[11:34] SFT right like you know, was just
+[11:36] started to being thought about. RLHF was
+[11:38] a hot thing where people were thinking
+[11:39] about like all right, like you know,
+[11:40] human feedback loops.
+[11:42] So, we built a system where
+[11:44] videos that people were liking and
+[11:46] people were downloading, we considered
+[11:47] that to be a signal of like all right,
+[11:49] this is something that people prefer. Um
+[11:52] it was not 100% accurate because some
+[11:53] people were downloading really bad
+[11:54] videos as a showcase of how bad AI is at
+[11:57] video, right? So, our model also learned
+[11:59] a lot of that. So, we had to then build
+[12:01] systems for humans be able to go and
+[12:03] filter out like people we pay. So, then
+[12:06] it started to emerge what a frontier lab
+[12:09] actually looks like. A frontier lab has
+[12:11] these components of data, these
+[12:13] components of compute and algorithm, but
+[12:14] it also has huge parts of of
+[12:18] what we call scales and trainers and
+[12:19] tutors and people who are doing the
+[12:21] labeling of data and all of these
+[12:22] systems.
+[12:23] If you don't have that, that is actually
+[12:24] not complete.
+[12:26] And a part of that is also the product
+[12:28] you built. Can the product actually give
+[12:30] you enough information to make sure that
+[12:33] the next model is better than the
+[12:34] previous one and hence the experience is
+[12:37] better and hence more people will use it
+[12:38] and hence [clears throat] you'll get
+[12:39] more data from it
+[12:41] about this preference of of human
+[12:42] distribution and can you make the next
+[12:44] model actually better. So, I mean, it
+[12:46] took us a long time to learn actually
+[12:48] how to gather that feedback, how to, you
+[12:50] know, and then now the system we have in
+[12:52] in in the latest Luma agent system
+[12:55] ungodly amount of feedback actually we
+[12:56] get from from
+[12:58] what people are doing. Every interaction
+[13:00] that is there, we learn from like you
+[13:01] know, whether they like it, dislike it
+[13:02] and what way they like it, what way they
+[13:04] dislike it, whether the full chain of
+[13:06] thought that that the model produced and
+[13:07] the full chain of work that the model
+[13:09] produced is any good, which elements of
+[13:11] that is not good and then that's how you
+[13:14] actually start to get good at it. Well,
+[13:16] let's um
+[13:18] why why don't we do a double click on
+[13:19] how that's that actually works? So,
+[13:23] to remind everybody
+[13:26] about the field trip we're about to
+[13:27] take, right? Um
+[13:29] this is the
+[13:31] the very basic standard AI factory we've
+[13:33] talked about, right? Frontier AI um sort
+[13:35] of pipeline. We got pre-training,
+[13:37] mid-training, and then we have
+[13:39] post-training and deployment. And so
+[13:41] today we're going to hear a little bit
+[13:42] from Amit on how the the Luma version of
+[13:46] this works. Why don't you go ahead and
+[13:47] just kind of talk us through Yeah.
+[13:49] what's what's actually going on under
+[13:50] the hood at Luma. Absolutely. So um
+[13:54] let me talk about what is informing the
+[13:56] design decisions for our architecture
+[13:58] and for our models. Um
+[14:01] currently we're seeing huge amount of
+[14:03] alpha coming from from language models
+[14:06] being used for for adjacent tasks like
+[14:08] coding, for adjacent tasks like, you
+[14:09] know, system design and and those kind
+[14:11] of processes.
+[14:12] But when we start to think about tasks
+[14:14] that require
+[14:16] more context than what is available in
+[14:17] text. So, creative work, right?
+[14:21] Huge amount of things a huge amount of
+[14:22] information that is in in visual domain.
+[14:25] Huge amount of information in auditory
+[14:27] domain. Actually huge amount of
+[14:28] information in the trace of how you
+[14:31] arrived at the final output, right?
+[14:33] That.
+[14:34] When we think about robotics,
+[14:36] you can definitely start to build a
+[14:38] robotic system just based on text models
+[14:39] or VLMs or VLAs that people are starting
+[14:41] to do now,
+[14:42] but they will not generalize just the
+[14:44] same way that like, you know, autonomy
+[14:46] autonomous driving didn't generalize
+[14:48] until people started to build full
+[14:50] end-to-end systems that that had
+[14:52] language, that had video, that had like,
+[14:54] you know, all of the kind of all
+[14:55] signals, all of these things in there.
+[14:56] So that's the problem we are coming up
+[14:58] with that the real world is way more
+[15:00] complicated than coding, right? I mean
+[15:03] coding is a really valuable task, but
+[15:05] not everything can be done in coding,
+[15:07] right? Like otherwise programmers would
+[15:08] be the only profession that would be
+[15:09] left. Uh uh and now they're also, you
+[15:12] know, endangered species actually. But
+[15:14] I'm not sure that's true, but I
+[15:15] understand your point. Yeah.
+[15:17] As as a programmer, uh it's really fun
+[15:19] >> Well, the job has evolved for sure to
+[15:21] become a trainer and a tutor, yeah. It's
+[15:23] a really fun fun time to be that way. I
+[15:25] started coding like you know when I was
+[15:26] 13 years old in order to build
+[15:29] simulation systems in order to do like
+[15:30] you know so my background is in physics
+[15:32] and in order to actually build like you
+[15:33] know simulation systems for for
+[15:35] electromagnetism and those kind of
+[15:36] things to see how these systems behave.
+[15:38] That's why when I learned to start
+[15:39] coding and even at that point it was
+[15:42] really obvious that I cannot teach those
+[15:43] systems
+[15:44] from any observations.
+[15:46] Mhm. Right? We can write the code
+[15:49] but that is like approximations that we
+[15:50] have in our in our models or in our in
+[15:52] our equations but we can't actually
+[15:54] teach those models from any data. So all
+[15:56] of this is informing how we build our
+[15:58] systems.
+[16:00] So
+[16:01] even early on we started to think about
+[16:03] okay
+[16:04] in our pre-training
+[16:06] how can we learn from all of video, all
+[16:08] of images and all of text, right? It's a
+[16:11] really hard problem because they're
+[16:13] really different modalities and they're
+[16:15] expressed very differently. If if you
+[16:16] think about the encoding of these
+[16:18] modalities, text is discrete and text
+[16:20] performs the best when you encode encode
+[16:23] it in a discrete manner. At least that
+[16:25] is the understanding today.
+[16:26] Video is kind of somewhere in between.
+[16:29] And audio and images are best performed
+[16:31] in in a continuous space. So our
+[16:34] factory as you call it is built around
+[16:37] this idea of like how do we learn
+[16:39] jointly from all of these systems. In
+[16:41] 2025 these were disparate towers that we
+[16:44] built. Language tower, image tower,
+[16:46] video tower, audio tower.
+[16:48] And then like you know we would unify
+[16:49] them together
+[16:51] using just like you know some some
+[16:53] fusion techniques so that like you know
+[16:54] they will do better.
+[16:56] If you look at like you know the work
+[16:57] from Andy's lab right like you know
+[16:59] stable diffusion those kind of things.
+[17:01] That's what it does as well where you
+[17:02] have a tiny little language component
+[17:05] and and
+[17:06] you learn embeddings from that to be
+[17:07] able to understand the human
+[17:08] instructions.
+[17:10] It was just not sufficient. So when we
+[17:11] talked to our customers when they try to
+[17:12] use our system. So where where are
+[17:14] systems being used right for instance?
+[17:16] Currently large studios, so actually I'm
+[17:18] very very very excited about um a new
+[17:21] show that is coming out on Prime Video.
+[17:23] Uh the trailer's out. Uh it's called um
+[17:25] um Old Stories. Uh it's about Moses,
+[17:28] right? So it has um
+[17:30] Sir Ben Kingsley is the star of it. Uh
+[17:33] it's it's a proper production. It's not
+[17:34] an AI video. Uh it's a $4 million sorry,
+[17:36] $4.5 million per episode production
+[17:38] basically.
+[17:39] And it's all pretty much all produced
+[17:41] using Luma agents. So they're using it
+[17:43] in these like really high-intent
+[17:45] situations where they want to be able to
+[17:46] model the whole world and the physics of
+[17:47] the world and light and and and and
+[17:50] fluid and interactions and all of these
+[17:53] kind of things. Now when you do that,
+[17:55] it's just not sufficient to build an
+[17:57] image model or a video model. You need a
+[17:59] model that understands time and
+[18:01] causality and and language, right? And
+[18:03] it it understands like proper
+[18:04] instructions. Okay, well like you know
+[18:06] uh um
+[18:07] this looks good, but what if like you
+[18:09] know the the shirt sleeves had like you
+[18:11] know this particular thing right here?
+[18:13] Mhm. How do you express that
+[18:15] instruction? Okay, in time when this
+[18:16] person actually walks uh through the
+[18:18] door, the whole scene explodes. All
+[18:20] right, what is walking through the door
+[18:22] actually means? When the person walks
+[18:23] through the door, what does this
+[18:24] explosion of the scene mean? Give me
+[18:25] more instructions, right?
+[18:27] The deeper you go into these kind of
+[18:29] problems, and this is a very very very
+[18:31] big market, right? It's about 120
+[18:33] million creatives in the world whose
+[18:35] This is their job, right? Like you know
+[18:36] these are not people who paint for a
+[18:37] hobby or all these kind of things. These
+[18:39] are people who actually are employed in
+[18:40] this industry. So about uh you know two
+[18:43] times, three times by estimation of
+[18:44] coders.
+[18:45] Um
+[18:46] their work every day goes into
+[18:49] replicating the physics of the real
+[18:50] world into computers.
+[18:53] So we want to build systems for them.
+[18:55] And if you want to do that, you want to
+[18:56] build what we are now calling unified
+[18:58] models that have the same understanding
+[19:01] and intelligence of a language model
+[19:03] that can follow context, that can
+[19:05] remember,
+[19:06] and the physical understanding and the
+[19:08] world model understanding of video
+[19:09] models and image models. So that is what
+[19:12] the output that is what the things we
+[19:14] want to produce. This is 2025. And now
+[19:17] in 2026, when the models got really
+[19:18] good,
+[19:19] what people want to do is like they want
+[19:20] to do the full work end-to-end.
+[19:22] You know, it's like all right, why is it
+[19:24] only producing 5-second video for me,
+[19:26] right? Why can't it make the whole shot?
+[19:28] If you go to like, you know, what people
+[19:30] in advertising want, why can't it make
+[19:31] the whole campaign? If you talk to
+[19:32] robotics companies, why can't it
+[19:34] actually produce the whole action and
+[19:36] then judge its own output and then tell
+[19:38] me when this is the right action and
+[19:39] incorrect action. Like, you know, why
+[19:41] can't I get the right force and all of
+[19:42] these kind of problems. So, people want
+[19:44] end-to-end results.
+[19:46] So, now the Luma factory is about
+[19:49] building systems that can do end-to-end
+[19:50] work in multimodal domains. So, that's
+[19:54] that's kind of what we do. We have
+[19:56] massive reserves of like, you know,
+[19:58] multimodal data
+[20:00] in about the final trainable outputs are
+[20:02] in in about 30 petabytes of you know,
+[20:04] scale. We train them on on
+[20:07] currently H100s and very soon GB300
+[20:10] uh
+[20:10] you know, GPUs
+[20:12] in
+[20:13] in the 010K scale basically. So, pretty
+[20:16] much the same as as a second-tier
+[20:18] language model training. Like, you know,
+[20:19] so we're not at 1 trillion parameter yet
+[20:20] because that scaling hasn't been figured
+[20:22] out. But, we're going to get there.
+[20:24] And then we do post training on this
+[20:27] stuff using huge amount of customer data
+[20:29] and huge amount of
+[20:31] user preference data as well as
+[20:33] data that comes from our own human
+[20:35] annotations. And finally, we put them in
+[20:37] production and we do reinforcement
+[20:39] learning and and continue learning on
+[20:41] those systems. So, that's the shape of
+[20:42] the factory currently at Luma.
+[20:45] And could you talk a little bit about
+[20:47] you know, when you started deploying
+[20:49] these systems
+[20:50] in
+[20:51] in in the first lecture we talked about
+[20:52] mission-critical contexts, right? And
+[20:54] one one type of mission-critical context
+[20:56] is a large studio for whom their data is
+[20:58] super sensitive. They don't want you
+[21:00] know, they're happy to have you train
+[21:01] their data, but with their data for
+[21:04] them, but But don't
+[21:06] if if running a studio, I don't want my
+[21:07] data being used by another studio. So
+[21:09] how how do you how did you navigate the
+[21:10] deployment
+[21:12] sort of
+[21:13] restrictions Yeah. of these of these
+[21:16] professionals? So we work with two
+[21:17] archenemies at the same time, Netflix
+[21:19] and and Amazon Prime Studio, right?
+[21:22] Which are the two giants of streaming
+[21:24] war at the moment. Um
+[21:26] So basically then then you have to build
+[21:28] systems that are guaranteeing that
+[21:32] there is no way that there's any data
+[21:34] overlap.
+[21:36] We have internal controls and systems
+[21:37] that like you know are are some of the
+[21:39] standard ones like SOC 2 and those those
+[21:40] kind of things and then specific ones
+[21:42] that are for AI labs
+[21:45] on how do you not train on this on on
+[21:46] this data. So for instance,
+[21:49] if you're producing the next
+[21:50] blockbuster,
+[21:52] you don't want the next Iron Man for
+[21:53] instance, right? Like to show up into
+[21:55] the training data. So we have guarantees
+[21:57] around that like all right,
+[21:59] whenever certain stuff is marked or
+[22:00] projects are marked, they will never
+[22:02] show up in training data. They will
+[22:04] never show up in in any of these loops
+[22:07] basically. But we still learn from like
+[22:09] you know what users are doing in the
+[22:10] product, which is different from the the
+[22:12] visual artifacts that they're producing,
+[22:14] but rather the traces they're producing.
+[22:15] We were still able to use them and learn
+[22:16] from them actually. This is the
+[22:17] interaction data when people are working
+[22:20] with the interface of the agents. That's
+[22:22] right. Okay.
+[22:23] >> there's some limitations on on these
+[22:24] kind of high higher sensitivity
+[22:25] projects.
+[22:27] Yeah. Um yeah, I think you have you know
+[22:29] sort of a
+[22:31] Well, one I could you talk a little bit
+[22:32] how you created these slides cuz this
+[22:34] these I believe were created created
+[22:35] with
+[22:36] with Uni 1. That's right. Is that right?
+[22:37] So uh these are uh you know, I I
+[22:39] basically gave it uh actually let me
+[22:42] start from that first and then I will
+[22:44] actually actually talk talk about
+[22:45] unified models as well. So here, I
+[22:47] created this uh like you know, on the
+[22:49] top what you see, I created that um
+[22:51] mind map, whatever you want to call it,
+[22:53] in our product. And then I basically
+[22:55] asked if you see on the right, um I
+[22:57] asked it like you know, and also gave it
+[22:58] on slide uh that like you know, the one
+[23:01] right here. Sorry, not this one, but
+[23:05] Okay, I don't know. The first one you
+[23:06] saw of the factory
+[23:08] That's right. I gave it that and asked
+[23:09] it like, "Hey, in this style, actually
+[23:11] produce the outputs." And now, this is
+[23:13] actually a very, very good example of
+[23:15] what unified intelligence that I'm going
+[23:16] to talk about means. People, when they
+[23:19] think about image models, video models,
+[23:20] or or any models not text, they think
+[23:23] they are just
+[23:25] they produce beautiful images, right?
+[23:28] But that is a really big mental gap that
+[23:30] the world has in this area. Just like
+[23:32] language models produce words, right?
+[23:35] The words can be beautiful. You can just
+[23:36] say like, "Hey, it's a poem." And it
+[23:37] could mean nothing, right? And and
+[23:39] simultaneously, you can have a
+[23:40] mathematical proof of Euler's problem
+[23:42] number pick your take your pick, right?
+[23:44] 1152.
+[23:46] They all are words at the end of the
+[23:47] day.
+[23:48] But how you string them together
+[23:50] determines the information content and
+[23:52] determines the informa- the the
+[23:53] intelligence of those.
+[23:55] Just like that, how you arrange the
+[23:57] pixels determines what they're conveying
+[24:00] and how how intelligent they are. So,
+[24:02] unified models that we are producing
+[24:04] now, and I'm going to talk about that in
+[24:05] a second,
+[24:07] are about how you express intelligence
+[24:09] in whatever medium is convenient for the
+[24:12] person that they are actually, you know,
+[24:14] who's using it. So, if a language is a
+[24:16] language output is convenient,
+[24:17] fantastic. If it is slides and images,
+[24:20] fantastic. If it's a video explainer,
+[24:21] great.
+[24:23] But they're all basically outputs that
+[24:25] are intelligence. So, that that's what
+[24:26] we call unified models. So, you have
+[24:28] basically it was one shot. I produced
+[24:30] those slides. It produced one that I
+[24:31] didn't like and I deleted, but before
+[24:33] you asked me to take a screenshot of
+[24:34] that. But that that was pretty much
+[24:36] about it. If I would have asked it to do
+[24:38] a very detailed overview of that, then
+[24:39] that's what it it would have done. So,
+[24:42] end-to-end work. This is what we call
+[24:43] end-to-end work, right? You know?
+[24:45] >> just to break down what happened, you
+[24:46] gave it
+[24:47] you gave it my original slide as a
+[24:49] prompt, a screenshot of that prompt.
+[24:51] >> Yeah. You then gave it instructions on
+[24:52] the right in the chat. And then you gave
+[24:54] it a little bit like guidance, is it
+[24:56] that's just
+[24:58] >> my my my thoughts up there. Right. The
+[25:00] top half of the screen is like, you
+[25:01] know, my my thinking. Right. And then
+[25:03] the output below was essentially the
+[25:04] slide one shot it from that.
+[25:06] >> Correct. Okay. And why was that
+[25:09] not just possible trivially? What Why
+[25:11] can't an LLM do that? And why wasn't Why
+[25:13] did it take so long to get here? What's
+[25:14] the hard part about this? Right. So, I
+[25:16] mean, that's a good segue into unified
+[25:17] models, basically. So, um
+[25:20] well, LLM, first of all, doesn't
+[25:22] generate images. Right. I mean, it's a
+[25:24] language model. Mhm. You can ask an LLM
+[25:26] to use a computer and try to generate
+[25:29] images, but again, it really falls apart
+[25:31] because it doesn't see anything. Mhm.
+[25:33] So, when it tries to reason spatially,
+[25:34] when it tries to produce, like, you
+[25:36] know, any visual outputs,
+[25:38] they're blind models. They see
+[25:39] everything as a full sequence, right?
+[25:42] Like, you know,
+[25:43] even the grid nature of of of images and
+[25:46] visual information is not apparent to
+[25:48] LLMs.
+[25:49] So, when you start to do VLMs, which are
+[25:50] vision-language models, right? Like, you
+[25:51] know, you start to teach them a little
+[25:52] bit about image part of it. VLMs are
+[25:55] still not generative. VLMs understand
+[25:57] images, but VLMs can't generate images.
+[25:59] So, we have on this world where, like,
+[26:00] you know, you have understanding in
+[26:02] language and and generation of text, and
+[26:04] then you have uh models like Flux, which
+[26:06] are good at generating images, right? Uh
+[26:08] which are great models, by the way,
+[26:09] right?
+[26:11] But then, they don't have any of this
+[26:12] understanding. Right.
+[26:13] >> Right. And I think Andy talked about
+[26:14] that last time as well, that like,
+[26:15] there's this big chasm in between these
+[26:17] two things. Understanding is separate
+[26:18] and and and language is separate. Oh,
+[26:20] sorry, generation is separate.
+[26:22] >> But in language, that's not true.
+[26:24] An LLM is good because it understands
+[26:26] text and generates text all in one go.
+[26:28] Mhm. Right? There's no There's no delta
+[26:30] in between. There's no two models that
+[26:32] are actually doing it. If we want to
+[26:34] solve world understanding and
+[26:36] quote-unquote world models that people
+[26:37] are calling it, that's what we need to
+[26:39] do. But
+[26:40] um we've I mean, for at least about a
+[26:42] year, I guess, we've had models that can
+[26:44] generate language tokens and image
+[26:46] tokens, right? Like, with Nano Banana.
+[26:47] Right. But they
+[26:49] they was like, Nano Banana was still not
+[26:51] able to generate I I remember trying to
+[26:53] generate schematics like this. Uh. I I
+[26:55] tried to generate the factory slide.
+[26:57] >> Yeah. With Nano Banana, I couldn't.
+[26:59] Okay.
+[27:00] >> Why were the capabilities still not
+[27:01] there with basic sort of like these
+[27:03] jointly trained models? So, from what we
+[27:04] know of Google's architecture, Nano
+[27:06] Banana is still a fused architecture
+[27:08] where like, you know, there's a
+[27:09] large diffusion tower that is generating
+[27:12] images, and there's a large language
+[27:14] tower that is generating text.
+[27:16] And there's like a thin bridge in
+[27:18] between them. So, like, you know, you
+[27:20] generate huge amount of text, it's
+[27:21] called EP, enhanced prompt, and that
+[27:23] text you take and give it to the image
+[27:25] model. And that image model's job is now
+[27:27] interpreting that text using a very thin
+[27:29] narrow VAE, right? Like, you know,
+[27:32] and and some encoder.
+[27:34] I don't know what Google uses for their
+[27:35] internal encoders, but these encoders
+[27:36] are like 700 million parameters, 800
+[27:38] million parameters. That's the best you
+[27:39] were able to actually get out of it.
+[27:41] What we're building in unified
+[27:42] architecture is different. Mhm.
+[27:45] So, our approach is
+[27:46] Well, transformers are probably the
+[27:48] single thing like you If you know, I was
+[27:50] coming back in time, this is what I
+[27:52] would bring with me, the transformer
+[27:53] architecture.
+[27:54] And I would give it to people that like,
+[27:56] all right, you know, go go go play with
+[27:57] this.
+[27:58] Transformers are very good at They don't
+[28:00] care actually what kind of information
+[28:02] you're passing through them, right?
+[28:03] Continuous, discrete, actually, it's all
+[28:05] okay.
+[28:06] It's the pre and the post of it that
+[28:08] like, you know, the encoders and
+[28:09] decoders when actually things start to
+[28:10] fall apart. So, in unified
+[28:12] architectures, what we are building
+[28:15] are these
+[28:16] Actually, let me
+[28:18] I didn't order it correctly, but anyway.
+[28:20] Uh this is a pretty bad diagram of that
+[28:22] because again, it is a I didn't try to
+[28:24] go with a architecture diagram, but
+[28:25] that's that's kind of the idea.
+[28:27] One single transformer or maybe one
+[28:30] single backbone,
+[28:31] you encode this information in the same
+[28:33] space, whether that is audio, image,
+[28:35] text, code, doesn't matter really.
+[28:38] And then you reason about them all in
+[28:40] the same backbone, just like the human
+[28:43] brain, right? So,
+[28:45] human brain, while it has, you know
+[28:48] different different different areas for
+[28:49] processing image information and
+[28:52] or visual information and auditory
+[28:53] information, those kind of things.
+[28:55] But those are just encoders.
+[28:57] All of that information then goes into
+[28:58] the neocortex or maybe
+[29:00] a little stages before that, but anyway,
+[29:02] it ends in in your cortex and reasoning
+[29:04] and thinking and and and
+[29:07] all the judgment happens in one single
+[29:09] place.
+[29:10] This is how we build the next generation
+[29:12] of great models, right? Like you know,
+[29:14] that are able to do more tasks than what
+[29:15] LLMs are able to do. Mhm. It took us
+[29:17] about a year to come up with this
+[29:19] architecture. A huge number of failed
+[29:21] attempts.
+[29:22] You probably know, right? I don't know
+[29:24] how long I've been talking about this.
+[29:25] Huge number of attempts at
+[29:27] trying to scale them, all of that
+[29:29] things. But now we are at a place where
+[29:30] we are pretty comfortable and confident
+[29:32] at building like you know
+[29:34] hundreds of billions of parameter models
+[29:36] out of this architecture and we know
+[29:37] that it is going to scale. So now
+[29:39] there's efforts within the company at
+[29:40] all of these modalities, but one single
+[29:42] model, one single architecture including
+[29:44] language. Yeah, that's unified
+[29:46] architecture for it, you know. Makes
+[29:47] sense. Yeah. Did you have any more
+[29:49] before we switch to Q&A? Uh yeah. So
+[29:51] actually let me talk about how we deploy
+[29:53] these architectures first of all. So
+[29:55] this is what we are trying to build. If
+[29:56] you wanted to do end-to-end work, this
+[29:59] should be very familiar. Like you know,
+[30:00] if you have taken CS class, it's the
+[30:01] REPL loop, read-eval-print loop. This is
+[30:03] how computers work, have worked for a
+[30:05] very very long time. If you think about
+[30:06] the von Neumann architecture, it is
+[30:07] built around like you know, the REPL
+[30:09] loop generally. It was not thought about
+[30:11] at the time this way, but now we think
+[30:12] about it this way.
+[30:14] If you want to deploy models to not just
+[30:16] produce like you know, text tokens or
+[30:18] image tokens, but actually to do work,
+[30:20] end-to-end work,
+[30:22] how do you build these systems? So how
+[30:24] do you do that REPL loop? One way is
+[30:26] doing the left one, where like you know,
+[30:28] there you have different models for each
+[30:29] kind of things and there's like
+[30:31] two schools of thought.
+[30:33] You produce federated models or like you
+[30:35] know, you have this kind of like tiny
+[30:37] models that are each doing specialized
+[30:39] work.
+[30:40] And then you you make them come back.
+[30:42] You just pass outputs from each other,
+[30:45] and you probably have a judge model on
+[30:46] top that like, you know, judges and
+[30:47] orchestrates all of that work. That's
+[30:49] approach one. And approach two is that
+[30:51] you have these like, you know, mega
+[30:53] models in the middle, and where they
+[30:55] have where they share this like, you
+[30:56] know, deep connective tissue, and they
+[30:58] can reason in one single space.
+[31:01] And you give them, you know, inputs, and
+[31:03] you expect outputs of them. They're
+[31:04] iterative models, so it's not like, you
+[31:06] know, one shot all the outputs that are
+[31:07] going to come out.
+[31:09] But we are betting on this second
+[31:11] approach. And the reason is very simple,
+[31:13] because we think intelligence is not
+[31:16] this pipeline architecture problem. If
+[31:18] you think about the systems of
+[31:19] intelligence, the systems of
+[31:20] intelligence don't look like, you know,
+[31:21] this kind of big database problem. The
+[31:23] systems of intelligence look more like
+[31:25] the human brain, where you let
+[31:28] information itself design the
+[31:30] architectures and circuits inside it,
+[31:32] like what we do during training, and
+[31:33] hopefully very soon in continual
+[31:35] learning, these circuits will change as
+[31:36] we as we are actually,
+[31:38] you know, using these models.
+[31:40] And then you sort of step away from
+[31:42] that.
+[31:44] You manage context outside. You you
+[31:47] know, manage memory sometimes outside,
+[31:48] sometimes inside, like how you do with
+[31:50] caches in in CPUs today. But the actual
+[31:52] processing unit are these unified
+[31:54] models. So, that is sort of our approach
+[31:56] of how we how we think about building
+[31:57] them. And how we think of improving them
+[32:00] is a little bit like this. So, if you
+[32:03] want to think about like, what is the
+[32:04] computer of the future looks like,
+[32:05] actually what is every agent product
+[32:07] today,
+[32:08] it's some version of this basically.
+[32:10] Like, you know, this is not a big
+[32:11] revelation. This is how things are being
+[32:13] built. So, you have like, you know, a
+[32:15] tool harness in the middle. I'm going to
+[32:17] go from the middle up. This tool harness
+[32:19] means systems that can use Linux,
+[32:21] systems that can use, you know, call
+[32:23] APIs, all of these kind of things.
+[32:25] But then, how does it all work? How does
+[32:27] it actually full work get done?
+[32:29] So, you have this like fat stack of
+[32:30] skills on the top. These are
+[32:32] domain-specific understanding, right?
+[32:34] So, you want to teach a robot like, you
+[32:36] know, how to assemble something, right?
+[32:38] That's not a normal thing, right? Like,
+[32:40] you know, if you want to think about
+[32:40] like how is an iPhone assembled? This is
+[32:42] a very domain-specific thing.
+[32:44] You can give it all that information. It
+[32:46] doesn't need to be in the model. It
+[32:48] doesn't even need to be in the tools.
+[32:49] You give this information as context.
+[32:52] And you can do this across huge amount
+[32:55] of verticals, huge amount of like, you
+[32:56] know, different task in those verticals.
+[32:59] Then you have tool harnesses where you
+[33:00] give it as general ability to call tools
+[33:03] and things like that. And finally,
+[33:05] orchestrating all of that and thinking
+[33:07] through all of that is this unified
+[33:08] model at the bottom that is
+[33:11] interpreting all of this multimodal
+[33:13] information, generating tool calls,
+[33:15] understanding which skills to use, and
+[33:17] producing the outputs. So, this is how
+[33:19] we think the architecture of the future
+[33:21] of computers will look like, and this is
+[33:23] what we have built the current product
+[33:24] basically on. This is This is basically
+[33:26] built on this kind of architecture. So,
+[33:27] yeah. So, actually, could you just do a
+[33:29] one-to-one mapping? So, here where where
+[33:32] is the harness? Where are the skills?
+[33:34] >> Yeah. Where is the model? So, actually,
+[33:36] when it generated these slides, right?
+[33:39] Someone on our team who's really, really
+[33:40] good at producing greatly designed
+[33:42] slides
+[33:43] wrote a I don't know about it 50-page
+[33:45] document on what it means to design good
+[33:47] slides, right? And if you see I don't
+[33:50] know if the prompt is there.
+[33:52] Um
+[33:54] I've got a clear picture and I'll kick
+[33:55] off planning and generation. Okay. So,
+[33:57] after this, it would have uh said like,
+[34:00] "Oh, let me look up the skills I have
+[34:01] access to."
+[34:02] >> that was the skill. That's a general
+[34:04] purpose um slide skill.
+[34:06] >> Like best-in-class slide creation skill
+[34:09] that was created internally by human and
+[34:10] then uploaded for anybody else to use.
+[34:12] >> Exactly. Automatically. Exactly.
+[34:14] Uh so, that's the skill layer. Then uh
+[34:17] the model layer is obviously the one
+[34:18] that is generating and and generating
+[34:19] the tool calls and all of these kind of
+[34:20] things. And the tool layer here, so not
+[34:23] many tools were necessary, but I I I
+[34:25] think like, you know, your image that
+[34:27] that you gave, that was also passed as
+[34:28] context, and we probably ran OCR on it
+[34:31] just to like, you know, see like, you
+[34:32] know, what what kind of things is So,
+[34:33] this was not a very tool call heavy
+[34:34] thing. But, had you asked it to make an
+[34:37] interactive webpage that like, you know,
+[34:40] animates all of this stuff, then it
+[34:41] would have gone and called you know,
+[34:43] coding tools
+[34:45] tools to like, you know, run that code
+[34:47] deploy that code all of these kind of
+[34:48] things. So, it would have done all of
+[34:49] these things. But, it's the underlying
+[34:50] model that is orchestrating all of that.
+[34:52] Okay, I'm going to ask you one last
+[34:53] question before we switch.
+[34:55] Which is
+[34:56] Okay, so it took a couple years to put
+[34:58] the whole system together, which is a
+[35:00] fairly high-scale system.
+[35:02] Can you talk about the business for a
+[35:03] sec? You announced earlier this year, I
+[35:05] think you raised about a billion
+[35:06] dollars. 1.5. 1.5 billion? Yeah, total.
+[35:10] Yeah, over the lifetime Luma's raised
+[35:11] about a 1.5 billion. Of that, I think a
+[35:13] billion was raised this these last 12
+[35:15] months. Um
+[35:17] you know, why does why is this such a
+[35:19] capital-intensive effort if it's not as
+[35:21] high-scale as language?
+[35:23] If you really want to do it correctly,
+[35:24] it is larger scale than language.
+[35:26] Because it is strictly a superset of
+[35:29] like, you know, the work that is going
+[35:31] on in language. But,
+[35:32] currently, we don't care as much about
+[35:34] coding for instance. So, we don't have
+[35:36] to spend that much effort towards it. We
+[35:38] can go towards all the areas that
+[35:40] language models are not good at. And
+[35:42] that means we can actually have a
+[35:44] subscale compute infrastructure,
+[35:46] subscale data infrastructure, things
+[35:47] like that. So, it doesn't require 100
+[35:48] billion yet. Like, you know, we can do
+[35:50] with 1 billion what like, you know,
+[35:51] generally takes 5 10 billion annual run
+[35:54] rate to be able to produce.
+[35:56] Um but, if you think about it like where
+[35:57] things are going, you know, in 1 year 2
+[35:59] year 3 years time,
+[36:01] we believe that
+[36:03] these systems will far surpass language
+[36:06] systems just because of the access to
+[36:08] more data. More data is better, right?
+[36:11] Just because of their understanding of
+[36:13] more domains. So, I'll give you an
+[36:14] example. One of our customers who's
+[36:16] using these systems,
+[36:17] they work in energy industry.
+[36:19] You can guess who that is.
+[36:21] Um Right. And now suddenly, like, you
+[36:22] know, our systems have no idea about uh
+[36:26] you know, grid systems. Like, all right,
+[36:27] like, you know, how the energy grid
+[36:28] actually works and and and how they want
+[36:30] to be able to do that. So, what we did
+[36:33] is we started to ingest their energy
+[36:36] grid diagrams and energy grid code and
+[36:37] all of these kind of things. And
+[36:39] suddenly our systems are better at
+[36:40] producing schematics and planning than
+[36:43] Anthropic's coding models are because
+[36:44] they can't actually read all that
+[36:45] information. They can't actually see,
+[36:47] like, you know, how the things are laid
+[36:48] out, that sort of problems. It's a very
+[36:50] small example. Uh studios have another
+[36:53] big example where, like, you know, yes,
+[36:55] LLMs that have had forever, but a story
+[36:56] is not just text. A story is all of the
+[36:58] physical stuff that is happening. If it
+[37:00] has visual understanding, it can do much
+[37:01] better.
+[37:02] So, we believe, like, you know,
+[37:04] especially as the age of robotics comes
+[37:05] about,
+[37:06] you will need these systems to be
+[37:08] general and these systems to be able to
+[37:10] do everything, including writing code.
+[37:12] And and that's kind of where we're going
+[37:13] to go. But today, this gives us a very
+[37:16] great business where language models are
+[37:18] not really applying. Um
+[37:20] currently we are like, you know, when we
+[37:21] started the company, I mean, we were
+[37:23] very small. Today we work with some of
+[37:25] the largest studios in the world. Now we
+[37:27] work with the largest advertising agency
+[37:28] in the world, Publicis. They're just
+[37:29] deployment channels for us. We work with
+[37:31] the second largest brand in the world,
+[37:32] Coke, who is moving $3 billion of annual
+[37:35] production of of content to Luma,
+[37:38] basically. And um
+[37:40] in addition to that, like, you know, in
+[37:42] in in some of the areas, like,
+[37:44] how do you do work just in a company?
+[37:46] How do you communicate information
+[37:48] visually? They're They're starting to
+[37:49] be, like, you know, these new areas
+[37:51] in which previously only designers and
+[37:53] and artists could work. Now everyone is
+[37:55] starting to do that. Yeah, so this was
+[37:57] you know, you had an event earlier this
+[37:59] year. I mean, like, I think it was 3
+[38:00] weeks ago.
+[38:01] >> Yeah. I in SF and I came by. And the
+[38:03] thing that shocked me was that it was
+[38:06] all artists and creatives. And you I
+[38:08] mean, you spoke for a little bit off the
+[38:09] stage, but then they got you off the
+[38:10] stage. And then a bunch of folks from
+[38:12] Hollywood came by, a bunch of designers
+[38:14] and it was the first time I'd seen so
+[38:16] many artists and creators,
+[38:18] not not like machine learning people,
+[38:20] but but creatives excited about using
+[38:23] tools. What Why
+[38:25] has That's And that's very new.
+[38:28] But you know, there was a lot of fear,
+[38:30] uncertainty, doubt a couple of years ago
+[38:32] that this was going to actually take
+[38:33] away jobs in the creative industry.
+[38:35] Um
+[38:36] but for whatever reason, these folks
+[38:38] These are some of the biggest names in
+[38:39] in creative in the creative world.
+[38:41] >> Right. Um
+[38:42] some of whom were actually opponents of
+[38:44] of the technology a couple years ago.
+[38:45] What what what changed? I think the
+[38:47] technology at that time was not good
+[38:48] enough. And they were just looking at it
+[38:50] from the angle of like, it's First of
+[38:52] all, it's using all our data and it's
+[38:55] not good enough. So, what is the point
+[38:56] of all of that?
+[38:58] But through all of this work that we
+[39:00] have been doing, now the value starting
+[39:01] to become just it's in their face,
+[39:03] right? So, when we go and talk to
+[39:05] companies about our work and and and
+[39:07] what the products are doing, what we do
+[39:09] is very simple. We actually sit right
+[39:11] there and someone will open a board and
+[39:14] and start to produce their stuff. So,
+[39:15] actually this happened recently at
+[39:17] a gaming company, Savvy Games. And um
+[39:20] you know, they produce Monopoly Go and
+[39:21] some of the most played games in the
+[39:23] world. And we were talking about it and
+[39:24] everything was hypothetical. It's like,
+[39:25] "Oh, it will scale up production. It
+[39:27] will reduce cost." All of these kind of
+[39:28] things. And then like you know, I was
+[39:30] just I took a couple of like you know,
+[39:31] their assets and we produced like you
+[39:32] know,
+[39:33] about a 500 scale campaign while we were
+[39:37] sitting and talking about it, right?
+[39:38] Like you know, it's like, "You can do it
+[39:39] for all of these different different
+[39:40] things." And we showed it right there.
+[39:42] When you see that, it's the same thing
+[39:44] that coders are having that moment
+[39:45] today. It was all slop before, right?
+[39:47] Slop just means When someone says slop,
+[39:49] it means they have never seen or used a
+[39:51] good AI system before, right? When you
+[39:54] see the results and you're like, "This
+[39:55] is as good or better than what I can
+[39:56] produce." Or at the same in the similar
+[39:58] ballpark at least,
+[40:00] their minds change.
+[40:01] Hollywood studios were and and still are
+[40:03] like very apprehensive, but now when
+[40:05] they start to see like you know, the
+[40:06] production that we have coming out
+[40:08] we actually show them and they're like,
+[40:09] "There's no way this is AI generated."
+[40:11] And then we show them the back backstage
+[40:12] production of it, right? Like you know,
+[40:14] and then that changes my hearts and
+[40:15] minds. So, the best way to change hearts
+[40:17] and minds is to just do good work. But
+[40:19] but but but why does that does that mean
+[40:21] the existing
+[40:22] folks in those jobs have more
+[40:24] productivity or they're getting stuff
+[40:26] done faster? Like what what is the
+[40:29] benefit to the creative? Let's put the
+[40:30] business people aside for a sec. The
+[40:31] actual the creatives who are using these
+[40:33] tools
+[40:35] what's the benefit to them? Yeah.
+[40:37] I think it really changes the game of
+[40:38] what they're able to do. So, in in a
+[40:40] couple of ways. First of all,
+[40:42] right now execution is at a premium.
+[40:45] Mhm. So, you do so much work to validate
+[40:48] the idea ahead of time and like you know
+[40:49] this is all across AI by the way not
+[40:51] just like you know for Luma. You do so
+[40:53] much work like oh is this the right idea
+[40:54] once we put the execution resources on
+[40:56] it right like you know. But think about
+[40:57] it. It just it just changes the equation
+[40:59] completely. It's like all right, let's
+[41:00] execute on all of them and produce the
+[41:02] thing and we'll see which one is great
+[41:04] one.
+[41:04] When you think about some of the best
+[41:06] creatives in the world and I I don't
+[41:07] mean creatives like just visual creators
+[41:09] right like you know people who made
+[41:10] anything
+[41:11] they end up being prolific. If you look
+[41:14] at their life afterwards right like you
+[41:15] know if you look at Einstein's work
+[41:16] right? Yes, relativity is huge but
+[41:18] there's also like you know huge amount
+[41:20] of work that went into
+[41:21] like you know Brownian motion huge
+[41:23] amount of work that went into light and
+[41:24] like you know
+[41:25] lasers and which we forgot photoelectric
+[41:28] effect. Right. If you look at Archimedes
+[41:29] incredible amount of work. If you look
+[41:31] at Mozart you know just ungodly amount
+[41:33] of work. Some of them was good some of
+[41:35] them was not so good. Right.
+[41:37] People who are great at what they do are
+[41:40] not just one shotters like they they
+[41:41] actually produce a huge amount of stuff.
+[41:43] Currently if you look at just our
+[41:45] industry artists and creatives are stuck
+[41:47] in this industrial system that measures
+[41:50] every action they do by the by the like
+[41:52] you know output that they're producing.
+[41:53] This is no way to do great things. If
+[41:56] you want to do great things you should
+[41:57] have the liberty to just like explore
+[41:59] basically you know unconstrained. Then
+[42:02] they start to use our stuff.
+[42:04] >> [snorts]
+[42:04] >> They feel unconstrained.
+[42:06] And I think that is what is bringing a
+[42:09] lot of creatives on board.
+[42:11] >> Cuz you can paralyze
+[42:13] exploration.
+[42:14] >> exploration, I see.
+[42:14] >> Right? And
+[42:16] then you get to produce better things
+[42:17] than you could ever do. It's more
+[42:19] enjoyable because, you know, you're not
+[42:21] in the slog of like every single pixel
+[42:22] and all these kind of things. You become
+[42:24] come at a higher level. This is what the
+[42:25] Moment coders are having, too. It's like
+[42:27] all these ideas I had, they're not just
+[42:29] stuck anymore. They're not I can just
+[42:31] try them out. Yeah.
+[42:32] >> Okay. I think we should switch to Q&A.
+[42:35] I'm sure there's lots and lots of
+[42:36] questions. So, the question is
+[42:38] what is my hypothesis why so Sora shut
+[42:40] down, whether it's a business reason,
+[42:42] it's an architecture reason, and two,
+[42:44] what impact does it have on us in the
+[42:46] industry, but also like, you know, on
+[42:48] creatives. So,
+[42:50] I mean, I can only give you hypothesis.
+[42:52] I don't know really what is happening
+[42:53] inside
+[42:54] OpenAI.
+[42:55] But, I mean, the the the one word here
+[42:56] is really focus.
+[42:59] OpenAI, at the core of it, is a large
+[43:01] language model lab. What they do really,
+[43:04] really well is produce models that are
+[43:06] very good for chat, particularly, right?
+[43:08] Chat is a vertical that has a about 8
+[43:10] billion customers, right? Maybe not
+[43:12] little kids, but if you Maybe they, too,
+[43:14] right? Like, you know, because they want
+[43:14] to talk to computers. So,
+[43:16] pretty much all of humanity is a good
+[43:17] customer of chat.
+[43:20] Executing on that is a really hard
+[43:22] problem. Executing on anything at that
+[43:24] scale, you need to go into the depths of
+[43:27] hell to be like, you know, get
+[43:29] everything working really, really well.
+[43:30] When you do everything, that's really
+[43:32] hard to do. I mean,
+[43:34] Luma also had that problem, actually,
+[43:36] right? Like, you know, in early days
+[43:37] when we we were not really clear about
+[43:39] how do we execute on this. So, we tried
+[43:41] a lot of parallel paths.
+[43:43] But, doesn't matter how much money you
+[43:44] have, doesn't matter how much how many
+[43:45] people you have. This was also a lesson
+[43:47] from Apple. This
+[43:49] way more things at Apple that they
+[43:50] choose not to do than they choose to do,
+[43:52] right? That is because it doesn't matter
+[43:54] the money, it doesn't matter the people,
+[43:55] the organizational physics still come
+[43:57] into play. Less is more. Exactly.
+[43:59] There's only so much attention you have
+[44:00] as a company, not as a person, but as a
+[44:03] company that you can actually devote to
+[44:04] making something. So, OpenAI doing
+[44:06] literally everything is not good for
+[44:09] their business. And I think that is a
+[44:10] realization that is setting in. And I
+[44:12] think this will not be the last thing
+[44:14] that they have actually canceled, right?
+[44:15] There might be actually even more.
+[44:17] Um one thing I will challenge is OpenAI
+[44:18] was not the largest player in the
+[44:19] market. It is actually Google that is
+[44:22] doubling down on on video, on images, on
+[44:24] visual generation, right? Like you know,
+[44:25] Gemini are Gemini's great models that
+[44:27] that do pretty much all of these things
+[44:29] actually.
+[44:30] It doesn't indicate actually anything on
+[44:32] the size of the market. It just
+[44:33] indicates that they are getting their
+[44:35] kicked because of lack of lack of focus
+[44:37] by Google, by Anthropic, and those kind
+[44:38] of things. And they have to focus if
+[44:40] they want to go IPO, right? And that's
+[44:41] the market that we are actually entering
+[44:43] at this point. For Luma, what does this
+[44:44] mean? I mean, this is great news. This
+[44:46] validates like you know, our our our
+[44:48] thesis that like you can only do so many
+[44:50] things at a time. And um
+[44:53] this is the area that we have chosen to
+[44:54] go in because this is a very very big
+[44:56] market with huge number of people that
+[44:59] call it their profession. So,
+[45:01] it actually gives us very good footing
+[45:04] in in the same market. So, that's what
+[45:05] I've to say.
+[45:07] So, the question is,
+[45:08] given that anyone can make a video about
+[45:10] anything and content about anything,
+[45:13] what happens to copyright? Right?
+[45:17] So, I think [laughter]
+[45:18] copyright and the ability to produce
+[45:20] something are orthogonal problems,
+[45:22] right?
+[45:24] If you're talented enough, you can make
+[45:26] Mickey Mouse in Photoshop, really. Uh
+[45:28] and you can actually produce great stuff
+[45:31] about Mickey Mouse. Like you let's say
+[45:32] you're DreamWorks. You don't have rights
+[45:33] to Mickey Mouse, but you have all the
+[45:34] people who can actually produce anything
+[45:37] related to Mickey Mouse. But you don't.
+[45:39] Why? Because the law exists that like
+[45:41] you know, prevents you from doing that.
+[45:43] So, I think none of that has changed.
+[45:46] Has it become easier to violate other
+[45:48] people's copyright? Yes, I think so,
+[45:50] right?
+[45:51] You didn't ask me like what the
+[45:52] responsibility of platforms is. Again,
+[45:54] the responsibility of platforms is the
+[45:55] same as it was for Photoshop, right?
+[45:57] Like you know, it's not Photoshop's
+[45:58] responsibility to prevent you from
+[45:59] producing Mickey Mouse. It's your
+[46:01] responsibility as a law-abiding citizen
+[46:03] um to not violate the law of the land.
+[46:07] So, I think it is pretty much orthogonal
+[46:08] basically. Like, you know, generative AI
+[46:10] doesn't change copyright in any way,
+[46:11] shape, or form
+[46:13] at least on the output side of it.
+[46:15] But, specifically if there's a law that
+[46:16] says you can't do XYZ, you'll
+[46:19] you will adhere to it. Absolutely. If we
+[46:21] get a DMCA notice, we'll take it down.
+[46:23] All right, like you know, if you're
+[46:24] hosting it. Right.
+[46:26] If that person used to create it and we
+[46:28] get a call of like, all right, like you
+[46:30] know, this person made something, it is
+[46:32] not our responsibility to point law
+[46:34] enforcement to them. Right, like you
+[46:35] know, because that's not the law of the
+[46:36] land.
+[46:36] >> All right, I see. You you have you
+[46:38] protect the users in that case. That's
+[46:39] right. Right.
+[46:41] So, the question is,
+[46:42] GANs were very popular 2017-2018,
+[46:45] and now, you know, the world has shifted
+[46:47] pretty much entirely towards diffusion
+[46:48] models. What is the space of GANs in
+[46:50] today's models
+[46:51] or today's architectures basically?
+[46:54] That's a great question actually. We
+[46:55] still use GANs quite a lot. We use
+[46:58] techniques from GANs quite a lot. But,
+[47:00] GANs are one of the most finicky
+[47:01] architectures to ever work with. So,
+[47:04] GANs, if you don't know, are generative
+[47:06] like you know, adversarial networks.
+[47:07] And as the name says, they're
+[47:08] adversarial networks. So, like you know,
+[47:10] you you design the the objective
+[47:13] in a very different way to diffusion
+[47:14] models. Right, like you know, where you
+[47:16] have a very predictable gradient
+[47:17] descent. I mean, they still explode
+[47:18] sometimes, but it's a very predictable
+[47:20] system.
+[47:21] GANs are still actually used quite
+[47:23] heavily in distillation networks. Like,
+[47:24] you know, if you want to do
+[47:25] distillation, like GANs are actually
+[47:26] pretty useful.
+[47:27] If you wanted to do a real-time system,
+[47:29] you would still go to GANs quite a lot.
+[47:31] But, because GANs are just not very
+[47:33] predictable, researchers don't want to
+[47:35] work on them. And that is the laws of
+[47:38] like, you know, physics in in AI. What
+[47:41] researchers want to work on is generally
+[47:43] what will get worked on. Right, like so,
+[47:44] I can I can make the case that hey, Rust
+[47:46] is more efficient. Doesn't matter.
+[47:48] Everybody wants to code in Python. So,
+[47:49] that's what will be done.
+[47:51] But, also GANs have not shown the kind
+[47:54] of scaling that we are seeing with
+[47:55] transformers. right? GANS are primarily,
+[47:59] you know, unit-based and and and
+[48:00] convolution-based models.
+[48:02] And they just don't really show the kind
+[48:04] of learning that you can get from
+[48:06] Transformers. Can GANS be implemented
+[48:08] using Transformers? Yes, there are some
+[48:09] papers about it. But at that point,
+[48:11] you're really really trying very hard to
+[48:12] like, you know, just just do GANS. And
+[48:14] and that's okay. But diffusion models
+[48:17] also now are on the way out. So, I know
+[48:19] this will be a little bit controversial
+[48:20] if people are thinking about it. But
+[48:21] diffusion models have physics that is
+[48:23] not actually bearing out on scaling side
+[48:25] of it. So, Luma and and some of the
+[48:27] companies are actually moving away to
+[48:30] hybrid auto-regressive and diffusion
+[48:31] regimes. That's what our our um
+[48:34] unified models actually are.
+[48:36] >> [laughter]
+[48:36] >> Uh because diffusion models actually
+[48:37] have some really really bad habits that
+[48:40] are hard to unlearn and hard to like,
+[48:42] you know, get out of of the system. So,
+[48:44] they're also on the way out, actually.
+[48:45] So, yeah. It's a very uh
+[48:47] I
+[48:48] If you realize, basically, when we first
+[48:50] started teaching the class, Mike, there
+[48:51] there there were debates about what the
+[48:52] right programming language was for for
+[48:55] security. And it feels like
+[48:56] architectures have come full circle,
+[48:58] basically. Don't
+[49:00] I'll
+[49:02] good note for office hours this week.
+[49:03] The question was, as models get more and
+[49:05] more powerful, what is the space of
+[49:07] human creativity, especially in these
+[49:08] unified models that can do pretty much
+[49:09] all tasks, visual tasks, language tasks,
+[49:11] all these kind of things?
+[49:13] My stance on this has been actually very
+[49:15] very
+[49:17] sterile from day one.
+[49:19] I don't think anything the model is
+[49:20] doing is creative or not creative.
+[49:22] Whether it's creative or not creative is
+[49:23] for humans to judge.
+[49:25] That judgment alone is the act of
+[49:27] creation, right? What you choose to do
+[49:29] is an act of creation. What How I tend
+[49:31] to spend my time is actually a very
+[49:33] creative endeavor, right? Like, you
+[49:35] know, it because it will produce outputs
+[49:36] that people will generate consider
+[49:37] creative or not creative.
+[49:39] But more importantly, in a practical
+[49:41] physical system that is an AI system,
+[49:43] how Where is human Where is the role of
+[49:45] human? It's in that fat skills area.
+[49:47] This is why our slides look good,
+[49:50] because someone who knows this really
+[49:52] really well
+[49:53] went in and taught the model a million
+[49:57] times over that like you know, this is
+[49:59] what good looks like to humans and this
+[50:00] is what bad looks like to humans.
+[50:02] This is just like programmers, right?
+[50:04] Like you know, before artists never had
+[50:05] this kind of huge leverage. They did
+[50:08] something once and it will run a billion
+[50:10] times. Like programmers have always had
+[50:11] this leverage. You write the program
+[50:13] once and it will run again and again and
+[50:15] again and again on everyone's computers,
+[50:16] on everyone's phones many many times
+[50:18] over and produce value. Artists produce
+[50:19] one thing and then that's one thing.
+[50:21] That's it, right? Now
+[50:23] other creatives in the world, not just
+[50:25] programmers, have this leverage because
+[50:27] of this architecture. You teach the
+[50:29] model once and they are able to produce
+[50:31] like you know, huge amount of really
+[50:33] really great things in different
+[50:34] contexts. This is actually an explosion
+[50:37] of creative potential that this never
+[50:38] has been, right? So, the skills in human
+[50:41] creativity are much more important.
+[50:43] Actually, it will weed out people who
+[50:44] were mediocre and it will like elevate
+[50:46] people who are really great to even
+[50:47] greater heights because now their work
+[50:50] will be rerun a trillion times over.
+[50:52] Okay, so Hollywood is default dead right
+[50:54] now. Right? And that has nothing to do
+[50:56] with AI. Uh that is really nothing to do
+[50:59] with any of the technological changes
+[51:00] recently.
+[51:01] Hollywood's business model has been
+[51:03] deteriorating for the past 30 years and
+[51:05] COVID really accelerated it and then the
+[51:07] writer's strike this was the nail in the
+[51:09] coffin. Um
+[51:11] at this point we are at a place where
+[51:13] like you know, this production that I'm
+[51:15] talking about is the first production in
+[51:17] LA proper
+[51:19] in last 5 years. First production
+[51:21] because all production has moved out of
+[51:23] Los Angeles. Think about it. Hollywood
+[51:25] doesn't make movies anymore. Hollywood
+[51:26] finances them but doesn't make them.
+[51:29] Where where are they being made? In
+[51:31] Greece, in in Canada, in in Ireland,
+[51:34] wherever you get tax incentives you're
+[51:35] going to make it there. So, what does
+[51:37] solving this problem actually mean,
+[51:38] right? First of all, Hollywood has to
+[51:41] stop thinking like PE.
+[51:44] Currently, Hollywood's business model is
+[51:45] like a private equity. Oh, Guardians of
+[51:47] the Galaxy was a great hit. Let's make
+[51:49] number two, number three, number four,
+[51:50] number five, number seven, number 10,
+[51:51] number 20, right?
+[51:53] How many Avengers are there now? I don't
+[51:55] even know, right? And how many
+[51:57] crossovers of Avengers and Spider-Man
+[51:59] and I'm won't be surprised if like, you
+[52:01] know, Tintin isn't there one day, right?
+[52:04] Like some multiverse thing. As a
+[52:06] physicist, that's a really troubling
+[52:08] thing for me, the multiverse universe,
+[52:09] right? That's not how it works at all.
+[52:12] Um
+[52:13] But it is emblematic of a PE mindset
+[52:15] where like, all right, we created a
+[52:16] franchise, we created an asset. How do
+[52:18] we rent seek that asset the most we
+[52:21] possibly can? But you know, audience
+[52:22] don't think like that. More and more
+[52:25] people want to watch great things, want
+[52:28] to go to theaters, want to actually
+[52:30] like, you know, watch things on their
+[52:31] phone. That is emblematic in Netflix's
+[52:34] growth. I mean, the
+[52:35] on Thursday you're going to see like,
+[52:36] you know, their their this quarter
+[52:37] results. I'm not saying buy or sell
+[52:38] anything.
+[52:39] But like, you're seeing the growth of
+[52:41] Netflix and they produce 800 productions
+[52:44] a year. Compared to like, you know, the
+[52:46] the five, 10, 20 that large studios are
+[52:48] producing right now. That is a PE
+[52:50] mindset. So, those 800 productions don't
+[52:51] have $500 budget, right? They have like,
+[52:54] you know, they're they're like 10
+[52:55] million, 20 million, 30 million, 50
+[52:56] million dollar budgets. And this is how
+[52:57] they're scaled. What does this allow?
+[52:59] This allows different kinds of and more
+[53:02] kinds of stories to be told and that
+[53:03] means it appeals to wider audience. So,
+[53:06] your platform then becomes more
+[53:07] appealing to more people.
+[53:10] Are they making again a Harry Potter?
+[53:11] Yes, I'm very happy about it, by the
+[53:13] way, right?
+[53:14] But this is also PE mindset that like,
+[53:15] why are we making Harry Potter when we
+[53:17] have so many other great books that
+[53:18] should be made again and again and again
+[53:20] and again, right? They should Sorry,
+[53:21] shouldn't be made again and again. So,
+[53:24] Hollywood has been default dead for a
+[53:25] long time. If nothing changes, this not
+[53:28] about AI again, if nothing changes, all
+[53:30] those jobs are actually already gone.
+[53:32] Right?
+[53:33] Um
+[53:35] The the people in those industries know
+[53:36] that. AI is a chance to actually change
+[53:39] the business model once and for all.
+[53:42] Because you can move away from these
+[53:43] massively expensive production methods,
+[53:46] you can move away from these huge huge
+[53:50] you know time and capital sinks and go
+[53:52] back to an era where like you know many
+[53:53] many ideas can be tried and one has a
+[53:56] shot of building people into the you
+[53:58] know into theaters. Ryan Gosling from
+[54:00] Hail Mary if you have not seen it, great
+[54:01] movie,
+[54:02] makes a great point. It's not the
+[54:04] audience's job to come to the theaters
+[54:06] to you know keep Hollywood alive. It's
+[54:08] Hollywood's job to make great things so
+[54:10] the audiences want to watch it. You
+[54:11] can't blame your customer Um what I'm
+[54:13] going to do is that was well said and I
+[54:15] think the P mindset is is
+[54:18] is going to come up over and over again
+[54:19] where capital markets where wherever
+[54:21] they look for predictability Yeah. Um we
+[54:24] tend to find stagnation of innovation
+[54:26] and I think that's that's hurting a lot
+[54:27] of people. That's a great question and
+[54:29] that's the one that like you know the
+[54:30] whole company spends all their time
+[54:31] thinking about honestly. So the question
+[54:33] is
+[54:34] what is the delta between where we are
+[54:36] to getting to a place where world
+[54:38] models, video models, whatever have you
+[54:40] are as generally used and useful as
+[54:42] language models are today, fair? Right.
+[54:45] So if there's only one word basically,
+[54:47] intelligence. That's the delta. So
+[54:49] currently image models and video models
+[54:51] that are not unified models are really
+[54:54] really stupid and and I mean that in in
+[54:56] non-derogatory way of that, right? When
+[54:58] I say stupid, I mean in in this way like
+[55:00] when you work with a person who you
+[55:02] don't consider to be intelligent, what
+[55:03] are the signs? They forget what you
+[55:06] said. You have to tell them the same
+[55:07] thing again and again.
+[55:09] They don't actually understand what you
+[55:11] said. They kind of are a facsimile of
+[55:13] understanding, right? It's like you said
+[55:15] something but they're like but that's
+[55:16] not what I said like you know yes you
+[55:18] you kind of interpreted my words
+[55:19] literally but that's not what I'm
+[55:20] saying. You have no context of what I'm
+[55:22] saying.
+[55:23] They are able to do small things but
+[55:25] like you know when you ask of more of
+[55:27] them then they can actually do that.
+[55:29] This is what today's video models and
+[55:30] image models are. All of them basically,
+[55:32] right?
+[55:34] That's what we try to solve with Uni 1.
+[55:36] They need to be as intelligent as
+[55:37] language models are. They need to have
+[55:39] multi-turn, right? So, when you when you
+[55:41] ask it something, afterwards, it needs
+[55:43] to be able to go back and say, "All
+[55:45] right, this is what I generated. This is
+[55:46] what you had asked. I I have memory. Let
+[55:48] me iterate on it and let me fix it." How
+[55:49] annoying would ChatGPT be if you only
+[55:52] had one turn on it, right? And then you
+[55:54] had to repeat the thing and then another
+[55:56] turn and repeat the thing and then
+[55:57] another turn. That's ridiculous, right?
+[55:59] Nobody uses that. See, that was the
+[56:00] difference between LLMs being a research
+[56:03] project and them becoming generally
+[56:05] useful. That was RLHF, right? That
+[56:08] enabled chat.
+[56:10] Multi-turn. So, that was number one.
+[56:12] Number two is is how much intelligence
+[56:14] did they actually have. So, current
+[56:16] image models and video models
+[56:19] are beautiful pixel generators. They
+[56:21] have really no understanding of what the
+[56:24] hell they're generating, the physics of
+[56:26] it, then then any introspection on it,
+[56:27] all of these kind of things.
+[56:29] Unified models are designed to solve
+[56:31] this kind of problem. So, when you use
+[56:33] them in in
+[56:34] things like education, for instance,
+[56:36] right? Like, you know, these slides
+[56:37] could Sorry, not this one, but the ones
+[56:39] I had could easily be used for by
+[56:41] teachers, right? With probably a lot
+[56:43] more density and I can show you really
+[56:44] good examples of it producing really
+[56:45] high-density things.
+[56:47] Videos are some of the best explainers
+[56:49] in the world, right? Imagine a history
+[56:51] class that is now taught as drab text,
+[56:54] but you can actually see. And most
+[56:56] importantly, you can do alternatives.
+[56:58] What if the Rubicon was not crossed,
+[57:01] right? What if Caesar was not murdered?
+[57:03] What if, like, you know, these things
+[57:04] didn't happen? What if Archduke Franz
+[57:06] Ferdinand was not shot in 1914, right?
+[57:08] Like, you know, would there still be a
+[57:09] World War I? I posit yes, and like, you
+[57:10] know, we can go into that. But, what if
+[57:12] you see that flow out? You had this
+[57:13] level of, like, you know,
+[57:15] temporal understanding and coherency and
+[57:17] these kind of things. Language models
+[57:19] are getting there. Image and video
+[57:20] models don't have that. That's what we
+[57:22] need to solve. So, that is the distance
+[57:24] between them being just tools that can
+[57:27] produce almost stock footage to things
+[57:30] that can do end-to-end work. Awesome.
+[57:32] Thank you, Ahmed, for being here. Thanks
+[57:34] for having me.
+[57:35] >> [applause]

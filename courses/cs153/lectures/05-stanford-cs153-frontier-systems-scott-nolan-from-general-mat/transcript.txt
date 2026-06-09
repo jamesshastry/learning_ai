@@ -1,0 +1,1688 @@
+[00:08] We are super lucky to have with us today
+[00:11] to talk about energy bottlenecks, Scott
+[00:13] Nolan. Welcome, Scott.
+[00:15] >> Thanks. Yeah, thanks for having me.
+[00:18] Excited to be here.
+[00:20] >> So, if you remember, we started the
+[00:22] class by talking about how we're going
+[00:24] through a great transition, right?
+[00:26] Right. So we have the old system stack
+[00:28] that is transitioning to the new system
+[00:30] stack.
+[00:32] And to go back to our organizing mental
+[00:35] model and metaphor for the class of the
+[00:37] AI factory. You guys remember this
+[00:40] right? This is how intelligence is being
+[00:43] manufactured. The frontier pre-training
+[00:45] mid training postraining deploy to
+[00:48] agents rinse and repeat.
+[00:50] And for the last few weeks, as you guys
+[00:51] have heard from folks like um you know,
+[00:55] Maddie at 11 Labs, Robin uh Andy at
+[00:59] Black Forest Labs, and Amit at Luma,
+[01:03] right? Those are all different types of
+[01:04] intelligence that are being figured out
+[01:06] in the field right now.
+[01:10] Today we're going to zoom out a little
+[01:13] bit
+[01:14] because sometimes it can get
+[01:18] easy to forget that what's happening at
+[01:21] AI labs. Sure, it's exciting, right?
+[01:24] We're getting new capabilities that have
+[01:26] never been possible before and that is
+[01:28] what's driving so much growth in the
+[01:30] industry right now and excitement and
+[01:32] revenue and all of that. Um but that's
+[01:34] just one part of what's going on because
+[01:37] to deliver new capabilities to the
+[01:39] world. It takes a number of things to
+[01:42] come together, right? And we talked
+[01:44] about how there um some major
+[01:48] bottlenecks on that progress of
+[01:50] capabilities and one of them as we've
+[01:53] talked about before is compute.
+[01:57] But the point of this class is to try to
+[01:59] give you sort of a macro systems view of
+[02:03] what's going on in the world. Not just
+[02:04] in model labs, but up and down the
+[02:08] stack. Okay. And I find the stack the
+[02:12] whole idea of a stack even is quite
+[02:14] rigid sometimes because it it kind of
+[02:16] pres presents this view of you know how
+[02:19] things work. I mean ultimately it's just
+[02:21] one type of mental model and
+[02:23] scaffolding. And as you know, we've been
+[02:26] talking about a different kind of mental
+[02:27] model in scaffolding, which is a a
+[02:29] frontier pipeline. And what I'd like to
+[02:32] do
+[02:33] is zoom out a little bit now. Okay. This
+[02:36] is my uh handiwork. I'm not a
+[02:39] professional artist. Um but this is my
+[02:44] my attempt to try and be a little as
+[02:48] close to Haya Miyazaki as I can be. I
+[02:50] grew up watching uh a bunch of Studio
+[02:52] Ghibli movies and um this is sort of a
+[02:56] stylized mockup of what I think you know
+[02:58] is is a systems level view of how these
+[03:02] capabilities factories are working. And
+[03:04] so if you look right right at the center
+[03:06] of the factory you've got the pipeline
+[03:09] right data comput algorithms
+[03:10] pre-training foundation models mid
+[03:12] training and so on. But to make that
+[03:15] work,
+[03:16] it takes a whole other bunch of systems
+[03:19] to come together. Now, if you look at
+[03:21] the right side of the factory, you got a
+[03:24] little box there that I called that that
+[03:27] think about that is analogous to the
+[03:28] data center that's providing compute,
+[03:31] you know, and we talked about in lecture
+[03:32] one how comput is super critical. It's
+[03:34] important, but remember that's just one
+[03:35] bottleneck.
+[03:37] Sometimes what gets lost in the
+[03:39] conversation is that powering the data
+[03:41] centers is a whole other important thing
+[03:44] called energy
+[03:46] and electricity.
+[03:48] And to keep your compute running on
+[03:50] time, well, somebody's got to power the
+[03:52] data center. And we are going through
+[03:56] well I would say we've been now in four
+[03:58] years of relentless
+[04:02] pressure on that part of the supply
+[04:04] chain cuz after Chad GPT came out in
+[04:07] late 2022
+[04:09] um you know that turned out to be this
+[04:11] this so for a long time before Chad GPT
+[04:13] came out and scaling laws had been
+[04:15] discovered big question on everybody's
+[04:18] mind was what is this stuff what is AI
+[04:20] going to be useful for
+[04:22] I mean it's cool technology But really
+[04:24] what how is it going to change the world
+[04:26] and Chia GPT I would say was the first
+[04:28] sort of consumer killer app right it
+[04:30] became this this way to consume the
+[04:33] technology of um language models that
+[04:35] was that were legible to everyday people
+[04:38] but the supply chain wasn't ready for
+[04:40] that you it takes like two years to tape
+[04:42] out chips and stand up data centers and
+[04:45] so in early 2023 a few months after Chad
+[04:48] GPD came out there was a huge compute
+[04:50] crunch and for a short window of time
+[04:52] also a huge energy crunch. At that
+[04:55] moment in time, a bunch of us in the
+[04:57] industry who are paying attention to
+[04:59] what was going on started realizing,
+[05:01] wait, if this continues,
+[05:03] we're not going to be able to keep the
+[05:06] progress going because at some point in
+[05:08] the future, cool, we had a consumer
+[05:11] killer app now with GPT, but some point
+[05:13] somebody's going to figure out an
+[05:14] enterprise
+[05:15] killer app, you know, some some tool or
+[05:18] way to use this technology that's useful
+[05:19] to enterprises and businesses.
+[05:22] And that's what happened, right? What
+[05:24] happened in December 2025? A few months
+[05:27] ago,
+[05:29] Claude 4.6 came out. Anyone remember
+[05:32] that? How many of you were coding over
+[05:35] the week over the summer uh winter
+[05:36] break?
+[05:39] Yeah. Did it feel different? Right. And
+[05:42] then all the adults, well you guys were
+[05:44] students, so you had some free time, but
+[05:45] all the adults who were, you know, on on
+[05:47] parent duty came back from winter break
+[05:50] and started using Claude at work
+[05:53] and stuff started to change, right? Cuz
+[05:55] now suddenly you've got enterprises and
+[05:57] businesses going, "Hey, this is really
+[05:58] useful.
+[06:00] We want more of this stuff."
+[06:03] And that was a Groundhog Day moment. Um
+[06:05] now for me it wasn't that surprising
+[06:07] because as you know four years ago when
+[06:10] chat came out that's when I realized
+[06:12] compute was going to be a bottleneck. I
+[06:13] started working on a version of uh
+[06:15] trying to unlock unblock that bottleneck
+[06:17] at 816Z.
+[06:18] But elsewhere in the industry there's a
+[06:21] guy called Scott who was realizing that
+[06:23] energy was going to go through a similar
+[06:25] problem because if you just keep going
+[06:27] down the supply chain you realize that
+[06:29] that's going to be a huge bottleneck.
+[06:31] And so
+[06:32] the reason I have the electricity part
+[06:35] of this map so much bigger than the data
+[06:38] center map is actually from a urgency
+[06:40] perspective, even if you have a data
+[06:42] center ready to go. If you can't get
+[06:44] power to it, doesn't matter.
+[06:48] It's over. You can't train models. And
+[06:51] so um for this class, we wanted to make
+[06:53] sure you got a a view into that part of
+[06:55] the world as well. And so for the next
+[06:59] um few minutes we're going to get a sort
+[07:03] of an expert deep dive into this part of
+[07:05] the factory right uh ideally all of this
+[07:08] is just happening in one place and at
+[07:09] some point in the future maybe we can
+[07:10] have modular data centers like on campus
+[07:14] next to the lab with a modular reactor
+[07:16] or something. We're not there yet and so
+[07:18] instead we have data centers in one part
+[07:21] of the world and energy power generation
+[07:23] other parts of the world. Um so this is
+[07:26] a glorified sort of idealized utopia
+[07:28] schematic here. Um but for this lecture
+[07:30] we're going to be zooming in to energy.
+[07:34] So with that um why don't we start with
+[07:36] you Scott. Thank you for coming.
+[07:39] Tell us about yourself. How did you get
+[07:40] here?
+[07:41] >> Cool. Yeah thanks for having me. Um so
+[07:44] Scott Nolan CEO of General Matter. We
+[07:46] are a uranium enrichment company for
+[07:49] nuclear energy. I started off as an
+[07:51] engineer. I was mechanical uh undergrad
+[07:53] aerospace masters. Uh that was Cornell
+[07:56] and ended up coming to Stanford for a
+[07:58] second master's degree in business of
+[08:01] all things. Um but sat in a lot of
+[08:03] engineering classes that were pretty
+[08:04] much all of my electives uh including
+[08:06] some CS classes. So uh did that wrapped
+[08:10] that up in 2011 joined Founders Fund the
+[08:12] VC firm was there for over a decade. uh
+[08:16] just fully focused on anything hard
+[08:18] tech, anything engineering,
+[08:19] technologydriven
+[08:21] um and that included energy. And so, you
+[08:25] know, one one part of energy I had
+[08:26] always been interested in was nuclear.
+[08:28] It always felt like this branch of
+[08:31] energy production that just had gotten
+[08:33] completely forgotten and sidelined as
+[08:35] you know it being a massive mistake for
+[08:37] like the past 50 years. And for the for
+[08:41] that decade, I would meet with so many
+[08:42] different nuclear companies and by 2020,
+[08:44] there were starting to be some pretty
+[08:46] interesting ones. Um, but they all said
+[08:48] the same thing that they had no fuel and
+[08:49] that they had to get their fuel from
+[08:51] Russia, which was really shocking to me.
+[08:54] Um, I dug into it for the better part of
+[08:57] 2023 and realized it was all because of
+[08:59] this one missing step, which is what
+[09:01] we're working on. So, we we'll get into
+[09:02] it. But for today's class, I think the
+[09:04] interesting thing is just this energy
+[09:06] topic in general. How much of a
+[09:08] bottleneck is this? How do we solve it?
+[09:10] And we'll go through that.
+[09:11] >> Yeah, it sounds great.
+[09:12] >> So, we're gonna, you know, you don't
+[09:13] have to take my word for it. We're going
+[09:14] to start with three pretty smart people
+[09:17] um who talk about energy a bunch as
+[09:19] bottlenecks to their to their
+[09:21] businesses. So, first one is um is Sam
+[09:25] from from OpenAI and this is him
+[09:27] testifying to the Senate. So this is uh
+[09:30] you know you can't you can't you have to
+[09:32] tell the truth when you testify to the
+[09:33] Senate so you know this is true. Um so
+[09:37] everything is going to converge to the
+[09:39] cost of energy to the cost of
+[09:40] electricity like chips are going to get
+[09:42] cheaper um models are going to get
+[09:44] cheaper but energy is fundamentally what
+[09:47] you consume when you're running these
+[09:48] models and you know one version of this
+[09:52] is biology uh who was a Stanford
+[09:55] professor at you know for a time also
+[09:57] has argued that everything all cost all
+[10:00] you know monetary things should be
+[10:02] denominated in jewels. Um, and so this
+[10:04] gets back to the same sort of same sort
+[10:06] of thing. And then, you know, then you
+[10:09] then you think about Jensen and probably
+[10:12] his his incentive should be to say that
+[10:14] chips are the bottleneck or that
+[10:16] something about what he's doing is the
+[10:18] bottleneck, but even he would argue or
+[10:20] admit on, you know, on the Joe Rogan
+[10:22] podcast that energy is actually the
+[10:24] bottleneck.
+[10:26] So that's pretty powerful. And then you
+[10:28] know you go to you go to Elon and um
+[10:32] there's you know many bottlenecks that
+[10:33] he could talk about but the one that he
+[10:35] wants to highlight is is energy and I
+[10:38] think you're seeing this now in in some
+[10:40] of the plans with SpaceX. Um and so I
+[10:43] guess I left that out of my background.
+[10:44] I was an engineer. I worked at SpaceX
+[10:46] right out of school. Um and then did did
+[10:48] a bunch of other stuff before Founders
+[10:50] Fund. So um
+[10:51] >> that was before you came back for grad
+[10:53] school, right?
+[10:53] >> Before Yeah, I did everything backwards
+[10:56] basically. But better late than never.
+[10:57] >> It's okay.
+[10:58] >> Um and then you know and then it's like
+[11:01] okay well these are people at the very
+[11:03] forefront of data centers of of the
+[11:05] models thinking about what's coming
+[11:07] next. Um but then you go mainstream and
+[11:10] you realize well even the Financial
+[11:12] Times is realizing this. They're
+[11:13] realizing that actually what's upstream
+[11:15] of data centers and all the compute is
+[11:17] power and you really need power and then
+[11:19] where are we going to get it from? Um
+[11:21] and we'll have some time after these
+[11:22] slides to talk about some theories about
+[11:24] this. Um,
+[11:27] but you you then might ask, well, okay,
+[11:28] how big a problem is this really? Is
+[11:30] this really like something that we can
+[11:32] easily tackle? You know, you mention,
+[11:34] okay, let's talk about energy,
+[11:35] electricity. It just sounds to most
+[11:37] people like so unexciting and boring
+[11:39] and, oh, it's big metal wires and
+[11:42] infrastructure and why do we care about
+[11:43] this? Certainly, someone has this
+[11:45] solved. How could that possibly be a
+[11:47] problem? We've been doing it for a
+[11:48] hundred years. Um, and you know, but
+[11:52] then you look at the demand and you
+[11:54] realize, wait, this is like way super
+[11:57] linear and how are we actually going to
+[11:59] keep up with this? And then you say,
+[12:01] well, okay, you know, maybe it gets to a
+[12:02] terowatt, but you know, in a decade it
+[12:05] gets to a terowatt. That's that's pretty
+[12:08] fast, but maybe we can keep up with
+[12:10] that. Maybe it's not so hard. And then
+[12:12] you look at what we've actually done
+[12:14] over the past, you know, in this chart
+[12:17] you've got over 50 years x-axis and you
+[12:20] look at like the last 20 years and you
+[12:23] realize, wait, we haven't done much of
+[12:24] anything. And in fact, like one
+[12:26] terowatt's
+[12:28] kind of a problem based on what we've
+[12:30] been doing.
+[12:32] um we need to be much more on a
+[12:33] China-like slope where you look at the
+[12:35] the yellow portion of this um and you
+[12:39] realize wait we need to be on a very
+[12:40] different slope even than China and so
+[12:42] we have to go from almost a complete
+[12:44] standstill on grid expansion to nearly
+[12:46] vertical and so that's going to require
+[12:49] some very different activities than what
+[12:50] we've been doing as a country for a long
+[12:53] time for longer than pretty much anyone
+[12:55] in this room has been around so I think
+[12:59] with that you you quickly realize is,
+[13:01] you know, okay, it does seem like maybe
+[13:04] electricity is the bottleneck to AI.
+[13:06] Maybe maybe Jensen and Sam and Elon are
+[13:09] all on the same page because this is so
+[13:11] overwhelmingly obvious that you have to
+[13:12] solve this. And then you would say,
+[13:14] well, okay, how are we going to solve
+[13:16] this? This is clearly a big problem. Um,
+[13:20] you know, we haven't done much. How do
+[13:22] we how do we go really quickly on on
+[13:24] ramping production? And if you rewind to
+[13:27] like 5 years ago, um, stranded energy
+[13:30] was enough. Uh, so there's plenty
+[13:32] stranded energy.
+[13:33] >> Yeah. So there's plenty of stranded
+[13:34] energy. And stranded energy would be
+[13:36] things like, you know, a hydroelectric
+[13:38] dam in some, you know, rural region that
+[13:41] there's no population nearby really
+[13:43] consuming it. Or maybe it's geothermal,
+[13:46] um, isolated geothermal with existing
+[13:48] technologies that no community to
+[13:51] consume it or stranded wind in West
+[13:52] Texas. Um, the list goes on and on, but
+[13:55] anything like that, something where
+[13:56] there's supply without real demand. And
+[13:58] so what you saw late 2010s, early 2020s,
+[14:02] that was completely dominated by
+[14:03] companies that said, "Okay, I see that
+[14:04] stranded power. I'm going to go build
+[14:06] something there." The very first builds
+[14:09] that happened were typically Bitcoin uh
+[14:12] Bitcoin mining centers.
+[14:14] >> Yep.
+[14:14] >> Um, you know, you didn't have the really
+[14:16] huge AI data center demand, but you did
+[14:19] know that, okay, what can I do with
+[14:21] stranded power? I can mine Bitcoin. I
+[14:23] don't need that much connectivity. I
+[14:24] don't need fiber. I can get by with
+[14:26] Aridium or something if it's middle of
+[14:28] nowhere. I can get I can get, you know,
+[14:30] enough connectivity to actually perform
+[14:32] that. And so you saw companies like on
+[14:34] the left um is a company called Cruso,
+[14:39] which now has, you know, is doing the
+[14:41] Stargate project in West Texas. And that
+[14:44] project is linked up with wind and
+[14:46] natural gas and all sorts of things.
+[14:48] Some of it which was stranded. Um, and
+[14:51] so that was that was a great strategy
+[14:52] for a long time. At this point, most of
+[14:55] those great resources that were stranded
+[14:57] without nearby demand have been claimed.
+[14:59] People have gobbled those up.
+[15:01] And, you know, the capacity that we need
+[15:04] is increasing quite a bit. And so, even
+[15:08] those small chunks of electricity that
+[15:10] were available would not even be enough
+[15:11] today to satisfy things. And so um
+[15:14] things are really moving to ask the
+[15:16] questions of how can we create massive
+[15:18] net new power production. And so this
+[15:20] was something I was starting to think
+[15:22] about both the stranded topic and the
+[15:23] bigger topic um at founders fund late
+[15:27] 2010s early 2020s and coincidentally
+[15:30] um invested in if the top left is Crusoe
+[15:34] uh then invested in all of these
+[15:35] companies and so top left is uh data
+[15:39] center just like Crusoe um I don't
+[15:40] actually think it's a Cruso one uh
+[15:42] you've got SpaceX which is now talking
+[15:44] about in orbit power production and then
+[15:46] you've got a company called Panthalasa
+[15:48] doing distributed energy in in the
+[15:50] ocean. And so lots of different angles
+[15:52] on this. People have different theories.
+[15:54] We can talk about in orbit. We can talk
+[15:55] about other options, but today we'll
+[15:57] talk about on land because that really
+[15:58] dominates things. And that's what that's
+[16:00] the reality that we're living in.
+[16:03] And so you say, okay, well, we need to
+[16:04] produce a lot of power on land. What are
+[16:06] what are the constraints? What are we
+[16:07] designing for? Um what are the things
+[16:10] that the data centers actually care
+[16:11] about? And one of the big things they
+[16:13] care about is uptime. So you know, data
+[16:16] center, can you run it on solar? Can you
+[16:18] run it on wind? you could um but you're
+[16:21] going to need a lot of batteries and by
+[16:22] the time you had enough batteries to get
+[16:23] this uptime at least as batteries exist
+[16:25] today grids scale um your cost is going
+[16:28] to be pretty high and so people have
+[16:30] have gone away from that. Uh what you're
+[16:33] seeing today the last couple years is a
+[16:35] lot of natural gas powered data centers
+[16:38] running on turbines. Turbines are
+[16:40] getting pretty scarce. the lead time for
+[16:42] turbines is a few years now. Um, which
+[16:46] has increased drastically and the
+[16:48] producers of turbines generally are not
+[16:50] ramping production quickly enough to
+[16:52] even remotely keep up with this. Um, and
+[16:55] so then you say, okay, well, we need we
+[16:57] need something that's not natural gas,
+[16:59] can be base load. Where do we look? And
+[17:02] you might say, well, okay, what are the
+[17:04] other factors? Maybe we don't want to
+[17:05] put out a lot of carbon. Maybe we want
+[17:06] it to be pretty safe. And so then you
+[17:08] look at the historical statistics
+[17:10] factoring in, you know, every plant
+[17:13] that's ever been built and you realize
+[17:15] that um here's here's the base load
+[17:17] chart. Then you realize looking at
+[17:19] safety and cleanliness of power source
+[17:22] that actually nuclear is pretty good. Um
+[17:24] it's actually lowest carbon emission of
+[17:26] any of them and it's essentially tied
+[17:28] for safest with wind. Um, and so those
+[17:32] two things together, if you care about
+[17:34] safety or emissions, it's going to push
+[17:37] you pretty hard towards nuclear. And
+[17:40] that's why all the hyperscalers are are
+[17:42] looking to that. I think they all
+[17:44] realize nuclear is not going to be
+[17:45] something where you build a plant
+[17:46] overnight. It's not a one-year project.
+[17:48] It's something that we're going to see
+[17:50] ramping in the next 5 to 10 years. Truly
+[17:52] ramping and moving the needle. Until
+[17:53] then, it's kind of a a race. Who can
+[17:56] find stranded power? Who can find enough
+[17:58] turbines? who can maybe stand up solar
+[18:01] with enough battery storage if they're
+[18:02] less cost sensitive. Um but long-term
+[18:06] everyone's looking to nuclear. And so
+[18:07] then then you say well okay well if
+[18:10] nuclear's the long-term you know scaling
+[18:13] limiter to electricity 5 to 10 year time
+[18:16] frame and electricity is the bottleneck
+[18:19] to AI then you probably realize well
+[18:21] that's kind of unexpected but maybe
+[18:23] nuclear is actually the bottleneck to AI
+[18:25] scaling. um if you're talking about here
+[18:27] on land at least
+[18:30] and so then you might ask the third
+[18:31] question well okay is there a bottleneck
+[18:33] to nuclear uh which brings us to what
+[18:35] we're working on and every nuclear
+[18:37] reactor runs on fuel I think a lot of
+[18:39] people hear nuclear and you would think
+[18:41] it's a magical technology it's like a
+[18:44] perpetual motion machine but no you
+[18:46] actually need to refuel it every every
+[18:48] year or two depending on the reactor for
+[18:50] more advanced reactors there's some that
+[18:51] design for 5 to 10 year refueling cycles
+[18:53] but um it does require fire constant
+[18:56] fuel and it constantly burns up fuel
+[18:58] just like any other type of engine. And
+[19:00] that fuel comes from five different
+[19:01] steps. You you start by mining, you turn
+[19:05] into a gas, you enrich it, uh you turn
+[19:07] it back into solid, and then you make
+[19:08] your fuel pellet. And you might then
+[19:11] think just like electricity, well, this
+[19:13] is a solved problem. What could be the
+[19:14] issue? Um but you actually look at these
+[19:17] five steps and it turns out that the US
+[19:20] has less than.1%
+[19:22] market share today of enrichment which
+[19:25] is the middle step. And so the US is
+[19:28] actually unable to produce its own
+[19:30] nuclear fuel at any scale whatsoever.
+[19:32] And we rely completely on European firms
+[19:35] and even to this day Russia. um even
+[19:38] though there's sanctions, we still we
+[19:40] still import uh because we really need
+[19:42] to and
+[19:45] um you know so there's this missing
+[19:46] piece right in the middle and so we
+[19:48] can't really scale nuclear fuel as a
+[19:50] country which means we can't really
+[19:51] scale nuclear and which will mean that
+[19:54] we can't scale uh data centers and AI
+[19:58] um and you know if scaling is one thing
+[20:01] cost is another at some point the cost
+[20:03] will matter a lot people will start
+[20:04] being more price sensitive it won't just
+[20:06] be an arms race for who can end up a
+[20:07] data center the fastest. There'll be
+[20:09] margin compression. Cost will matter.
+[20:12] But in fact cost is the biggest you know
+[20:14] of the cost of uh advanced nuclear fuel
+[20:17] is the biggest cost in many cases and
+[20:19] the biggest portion of that is actually
+[20:21] enrichment which is why we're working on
+[20:23] it. And so you you know you do the build
+[20:26] one more time and you realize enrichment
+[20:28] is kind of the bottleneck all the way
+[20:30] through to to AI on a on a 5year time
+[20:33] frame. And so that's why we're almost in
+[20:36] a race against time at General Matter
+[20:38] going as quickly as we possibly can to
+[20:40] bring enrichment back online in the US
+[20:43] at scale like with a highly scalable
+[20:46] method that we think can completely win
+[20:48] on cost. Um and we're getting a lot of
+[20:51] support from that. So when we started
+[20:53] the company there was uh no ban on
+[20:55] Russian uranium. There was no AI data
+[20:57] center boom. Um it was under Biden
+[21:00] administration. We started by working on
+[21:02] advanced fuel for advanced reactors and
+[21:03] that was a big push and then now this
+[21:05] administration is very focused on energy
+[21:08] production and there's kind of follow
+[21:10] through on that push um across
+[21:12] administrations and bottom right you can
+[21:14] see our August groundbreaking of our
+[21:16] facility in Kentucky. Um in that image
+[21:18] there's people from like the full range
+[21:21] of political spectrum all getting
+[21:23] together around this. And so going from
+[21:26] the very beginning, you can see the tech
+[21:27] leaders are realizing energy is a
+[21:29] bottleneck all the way to DC, everyone
+[21:31] realizes that energy is upstream of
+[21:33] everything, not just AI, but also
+[21:35] manufacturing and pretty much any any
+[21:38] industry that you want does rely on it.
+[21:40] And uh the current state of it in the US
+[21:42] is is far worse and far less ready to
+[21:45] scale than a lot of people realize. So
+[21:47] that's what we're working on.
+[21:49] >> Thank you, Scott. Uh why don't we take a
+[21:53] beat there because you said a few things
+[21:54] I want to kind of double click on but
+[21:56] Scott mentioned Bitcoin mining
+[21:58] and he's me you know sort of mentioned
+[22:00] that in passing but the reason I want to
+[22:02] zoom in on that is because um you know
+[22:04] sometimes
+[22:06] the cultural commentary around a piece
+[22:10] of technology can often make the
+[22:11] underlying progress that's quite real
+[22:14] and you know clearly sort of fundamental
+[22:17] um confusing
+[22:19] Um,
+[22:21] you know, nominally from a memes
+[22:22] perspective, you know, the way this
+[22:24] manifests itself on the timeline and so
+[22:25] on is people saying SBF funded, you
+[22:28] know, anthropic SBF was running FDX at
+[22:30] the time. um like you know the fact that
+[22:34] people in the crypto community were
+[22:36] investing in AI stuff. You know you can
+[22:39] we we we can disagree on whether crypto
+[22:41] ended up delivering on its promises or
+[22:43] not. But what we have to acknowledge is
+[22:45] that um
+[22:47] you know Bitcoin mining was was a bit of
+[22:50] a dress rehearsal for AI.
+[22:54] >> Mhm. Um, and sometimes, you know, I I
+[22:56] get all these questions where there'll
+[22:57] be a a team working on a pretty
+[23:00] important fundamental bottleneck at the
+[23:02] infrastructure layer, but just because
+[23:04] they've raised money or something or
+[23:05] have done some
+[23:08] political donation or something with
+[23:09] somebody from the crypto community,
+[23:11] their underlying progress just gets
+[23:12] thrown out. You know, it's like a baby
+[23:14] throw out the baby with the bath water
+[23:16] sort of moment because people go, "Oh,
+[23:17] if if crypto people are involved or
+[23:18] bitcoining money is involved because
+[23:19] that didn't work out." And yet, right,
+[23:21] who knows? at at some point we may have
+[23:23] this decentralized
+[23:24] you know sort of um censorship
+[23:27] resistance and so on uh and then we we
+[23:29] will have truly decentralized computing.
+[23:32] These things take a long time but the
+[23:35] from a first principles perspective I I
+[23:36] find it quite sad and and disappointing
+[23:40] when
+[23:42] people aren't able to decouple those two
+[23:43] things. Um you know you you you
+[23:46] mentioned Crusoe as an example of of a
+[23:49] company that's been that you've worked
+[23:50] with before. Um I think Russo was
+[23:52] originally a Bitcoin mining company,
+[23:55] right? And then they they sort of some
+[23:57] of many of the innovations that they
+[23:58] ended up realizing uh during the Bitcoin
+[24:02] era have ended up translating into to uh
+[24:05] building infrastructure for the AI era.
+[24:08] Um and I and I think those learnings
+[24:09] have ended up coming valuable. Um, you
+[24:12] know, venture capitalists sometimes like
+[24:13] to call these evolutions pivots and I
+[24:16] think there's a
+[24:18] unnecessary stigma around that when in
+[24:20] fact pivots are just one step of the
+[24:22] continuous feedback loop we've talked
+[24:23] about before in my view, right? Um, and
+[24:25] it's an update and the best leaders
+[24:27] update their priors. Similarly, as as
+[24:30] you've been approaching the sort of
+[24:33] energy um discussion, you know, nuclear
+[24:36] is is another one of these areas that
+[24:39] has been
+[24:41] unfortunately uh plagued by a bunch of
+[24:44] confusion, politics, you know, social
+[24:46] divisiveness. Um what advice would you
+[24:49] have for people here who are who believe
+[24:51] that
+[24:53] uh you know they'd like to work on
+[24:55] energy, they they'd like to work on
+[24:57] nuclear but for whatever reason feels
+[24:59] like because of the past um
+[25:03] uh political climates or social
+[25:06] objections to that technology uh the
+[25:08] fundamental progress is not legible. Am
+[25:10] I making sense? Am I question making
+[25:11] sense?
+[25:12] >> Yeah. I mean you can even go back to
+[25:13] that chart the emissions and the safety
+[25:16] track record of nuclear and then what
+[25:18] we'll talk about nuclear but going back
+[25:19] to what you were saying before of these
+[25:21] pivots I think you know pivots is one
+[25:24] thing but I would say if a company is
+[25:26] building something that you can think of
+[25:28] more like a primitive
+[25:29] >> right
+[25:29] >> like a fundamental building block which
+[25:31] you might say well utilization of
+[25:34] stranded electricity feels like a
+[25:36] primitive and yes what we might do with
+[25:39] it today is mine Bitcoin
+[25:41] >> right um we think that this is going to
+[25:44] be really useful. And that's what
+[25:46] Crusoe's approach was. And they went
+[25:48] from Bitcoin mining to saying, well,
+[25:49] actually, you know, yeah, we're mining
+[25:51] Bitcoin, but we're also massively
+[25:53] reducing emissions, right,
+[25:54] >> that are occurring just because this
+[25:56] this gas was not just stranded. Because
+[25:59] it was stranded, people were just
+[26:00] burning off methane straight into the
+[26:02] atmosphere with both carbon emissions
+[26:04] and particulate emissions,
+[26:05] >> right?
+[26:06] >> And they took it and they ran it through
+[26:07] a turbine and made power and mined
+[26:09] Bitcoin and reduced emissions. And so,
+[26:11] um, they felt like, hey, no matter what,
+[26:14] even if you discount the value of mining
+[26:15] Bitcoin to zero, we're still creating
+[26:17] value. Then we're making money and we
+[26:19] can invest in this infrastructure. And
+[26:20] they took that and they built enterprise
+[26:23] um, you know, cloud deployments,
+[26:25] >> slightly larger scale. They would go
+[26:26] after bigger projects, not just stranded
+[26:28] oil wells in North Dakota, but stranded
+[26:30] wind in West Texas. And then they took
+[26:32] that and they leveraged that into
+[26:34] something else. So, it's it's really
+[26:35] building this up over time. I think um
+[26:38] on top of a basic primitive is is
+[26:40] probably the way to think about it even
+[26:41] more than a pivot even though maybe the
+[26:43] final endstage product that people
+[26:45] interacted with looked different.
+[26:46] >> Y
+[26:47] >> and so you know I think I think of that
+[26:49] as something we're basically doing. Um
+[26:52] it's something lots of companies have
+[26:54] done in the past. It's something SpaceX
+[26:55] did. It was really how can we do re how
+[26:58] can we reduce the problem of
+[27:00] commercializing space into a fundamental
+[27:02] piece and that fundamental piece was
+[27:04] launch capacity. And you could
+[27:05] denominate that in dollars per kilo to
+[27:07] an orbit.
+[27:08] >> Um and and that was a really powerful
+[27:11] thing. If we can just bring make this
+[27:12] cheaper, we can do a lot of really cool
+[27:15] stuff with that and make something
+[27:17] cheaper. You get more of it and people
+[27:18] will build on this and we'll we'll push
+[27:20] forward the commercial space economy. So
+[27:22] that was that thesis. For us, our
+[27:24] fundamental building block that we're
+[27:26] working on is enrichment, which is
+[27:28] really just refining. It's refining of
+[27:29] fuel. It's refining of uranium based on
+[27:31] its isotope. and you want to get the
+[27:33] fizzile isotope um in enough
+[27:36] concentration that you can run a
+[27:37] reactor. And so that's a very very
+[27:40] fundamental thing to do in a whole
+[27:42] sector of energy that's been unfairly uh
+[27:46] you know put on the sidelines. Uh and we
+[27:48] can talk about why that's happened. But
+[27:50] if you can enrich, you can make fuel. If
+[27:52] you can make fuel, you can make 5% fuel.
+[27:55] You can make halo. You can make these
+[27:56] different grades that different reactors
+[27:58] run on. And you can supply to anyone.
+[28:01] And so you can supply to the existing
+[28:03] reactors that are powering 20% of the
+[28:05] grid in the US today with zero carbon
+[28:07] emission. Um and those utilities are
+[28:09] very eager for uh you know to work with
+[28:11] new entrance and to support the
+[28:13] expansion that's going to happen. Um or
+[28:16] you can work with advanced reactors
+[28:17] which probably are what most people hear
+[28:19] about all the small modular reactors or
+[28:20] micro reactors and you can make the more
+[28:22] enriched fuel that they need to get
+[28:24] their smaller form factor. Y
+[28:26] >> and so, um, I think back to your
+[28:28] question of like what should people in
+[28:30] the room think about when working on a
+[28:32] problem, um, I wouldn't worry so much
+[28:35] about what the what the public narrative
+[28:37] of it is or what very surface level
+[28:40] treatment of it tells you. I would go a
+[28:42] lot of clicks deeper, like just go all
+[28:44] the way to the bottom and figure out,
+[28:45] okay, well, what are we actually solving
+[28:47] for here? If we want base load, if we
+[28:50] want it to be clean, if we want it to be
+[28:51] very scalable uh, and safe, let's look
+[28:54] at the numbers. and you look at the
+[28:55] numbers and you realize that despite a
+[28:57] lot of um you know not even a lot a few
+[29:01] very famous nuclear accidents um you
+[29:04] know I'm famous partly because it's a
+[29:06] hard thing to understand uh the safety
+[29:09] track record of nuclear is so much
+[29:10] better than anything else right
+[29:12] >> and even accidents like 3M island had uh
+[29:15] you know I think based on all all
+[29:18] analysis like no direct measurable
+[29:20] deaths from that accident um
+[29:24] Um same thing with even in Japan with
+[29:26] Fukushima it was you know maybe there
+[29:28] was one one fatality but thousands from
+[29:31] the tsunami that caused it. And so um
+[29:34] nuclear has just been this technology
+[29:35] that if you look back to the 50s and 60s
+[29:37] obviously we were supposed to do two
+[29:39] things. We were supposed to go to space
+[29:40] and we were supposed to have you know
+[29:42] energy that was abundant and clean and
+[29:45] very power dense. And we've done one of
+[29:47] them but now we're finally doing the
+[29:49] second. And so you know I think it's
+[29:51] partly the industry's fault. Uh, I think
+[29:53] the government gets a lot of blame, the
+[29:55] public gets a lot of blame, but I think
+[29:56] a lot of it was actually the industry.
+[29:58] Um, not not making the case for nuclear
+[30:00] nearly strongly enough.
+[30:01] >> Y
+[30:02] >> and it definitely wasted a lot of time,
+[30:05] but you know, no time like the present.
+[30:08] >> I mean, we're we're old guys now, but uh
+[30:11] we're going to I'm going to date our
+[30:12] ourselves, but when you know in the
+[30:15] 2010s, there was this meme of the keep
+[30:17] calm, don't panic uh meme. Do do you
+[30:20] remember that one? the this the red this
+[30:22] is like red poster.
+[30:23] >> Yeah.
+[30:24] >> Like it's a London Underground one.
+[30:26] >> It's a London Underground one.
+[30:27] >> There's also the dog sitting in the
+[30:28] burning building. Everything's fine.
+[30:30] >> Everything's fine. Yeah. Yeah. So So I I
+[30:32] think those are two ends of the
+[30:32] spectrum, right? Like stuff is burning
+[30:35] down. You're saying it's fine and that's
+[30:37] cope. And that's one spectrum.
+[30:38] >> But then the other spectrum is, you
+[30:40] know, something happens which always
+[30:43] something goes wrong in the physical
+[30:45] world and then everybody panics and
+[30:46] overcorrects and that sets us back for
+[30:48] the next decade. um you know where in
+[30:50] the spectrum should should the students
+[30:53] how how do you is there a repeatable way
+[30:55] for people to calibrate on where the
+[30:57] right place is to be so you're not just
+[31:00] overindexing on the memes and instead
+[31:02] actually landing at the right place.
+[31:03] >> Yeah, I don't think I think it's a
+[31:04] mistake to get too caught up in the
+[31:06] moment. You have to be somewhat aware of
+[31:07] what's going on and if you know if you
+[31:09] have an idea that's clearly 20 years too
+[31:11] early, I think that's that's not going
+[31:13] to be a good thing to work on. you're
+[31:15] probably better off working on something
+[31:16] that's more immediately necessary and
+[31:18] then come back to that idea later. Um,
+[31:21] but I would just focus on the
+[31:22] fundamentals. And so like the the the
+[31:25] framework I always go back to, I've
+[31:27] always found it compelling is, you know,
+[31:29] what's the really important problem
+[31:31] that's that's not getting solved um
+[31:34] that's not going to get solved by
+[31:36] someone else that somehow your skill set
+[31:38] lines you up to to be really useful for.
+[31:41] And it's really just work on those
+[31:42] things. Yep. Um, that could be at an
+[31:44] existing company. It could be at a new
+[31:46] company. You could start your own
+[31:47] company. It could even be uh in a
+[31:49] nonprofit, in the government, it could
+[31:51] be in lots of different places. Um, but
+[31:54] I'd say work on whatever you're going to
+[31:56] be the most useful for that's actually
+[31:57] an important problem and find the right
+[31:59] place to do that.
+[32:01] >> Um, I'm guessing questions are piling
+[32:03] up, so I'm going to take a I'm going to
+[32:04] ask quite a couple more while people get
+[32:06] their questions in.
+[32:08] um as a proof point for how powerful it
+[32:12] is to truly internalize like when this
+[32:14] lecture is live, I would encourage you
+[32:16] to go back and listen to every word
+[32:17] Scott said, internalize it and then try
+[32:21] and
+[32:22] practice it because as a proof point of
+[32:24] how powerful
+[32:26] that framework is. You know, you started
+[32:29] um general matter in January 2024, was
+[32:33] it? Yeah.
+[32:34] >> Right.
+[32:34] >> Yeah, that's when we became a company.
+[32:36] Before that, we were working on this in
+[32:37] fall of 23 and I I had been starting on
+[32:40] this even in December of 22.
+[32:42] >> Right. So, you spent about a year
+[32:44] marinate like truly understanding the
+[32:46] problem doing the five W's
+[32:48] >> in 2023.
+[32:49] >> Mhm.
+[32:50] >> Scott then started the company general
+[32:52] matter. He's remember Scott's never
+[32:54] started a hardware business before. He
+[32:55] worked at SpaceX of course and got a ton
+[32:57] of really great lessons and worked at um
+[33:00] founders fund. But really is this not is
+[33:04] this the first company you started?
+[33:05] Yeah. Yeah. First company Scott started.
+[33:06] Okay. Uh January 2024.
+[33:11] 24 months later,
+[33:14] 24 months,
+[33:16] Scott announced, this is January of this
+[33:19] year, that General Matter has been
+[33:21] awarded a $900 million contract from the
+[33:24] DOE
+[33:26] to do uranium enrichment. Can we get a
+[33:28] round of applause for that for a second?
+[33:35] the rate of progress
+[33:38] that Scott single-handedly and the
+[33:40] general m how big is the team?
+[33:42] >> Uh we're close to 100 now. 100 people
+[33:45] have accelerated
+[33:47] in in such a short amount of time that
+[33:50] that's that's so fast that the US
+[33:52] government is saying we're going to hand
+[33:55] this 100 person company startup
+[33:57] almost a billion dollar contract to help
+[34:00] us move the country forward.
+[34:03] And so you know sometimes the timelines
+[34:05] on which you can make a difference
+[34:07] especially if you do the right systems
+[34:09] analysis
+[34:10] and you focus on alignment between your
+[34:12] mission, your business model, the
+[34:14] technology
+[34:16] are quite extraordinary and can surprise
+[34:17] people. But maybe you could take us
+[34:18] behind the scenes a little bit on what
+[34:19] it took to go from that moment when you
+[34:22] founded the company to that contract.
+[34:24] >> Yeah and I would I would highlight that
+[34:25] you know you talked you just mentioned
+[34:27] alignment. And the thing that's really
+[34:29] aligning is this is a multi-billion
+[34:31] dollar project and the DOE has said,
+[34:33] "Hey, we want to help we want to help
+[34:36] accelerate this and help you go even
+[34:37] bigger than you would otherwise,
+[34:38] >> right?" And
+[34:39] >> so the the contract itself is to help us
+[34:41] build that capacity as quickly as we
+[34:43] possibly can. And so the aligning thing
+[34:44] is we'll we'll bring even more private
+[34:46] capital to the project in that amount.
+[34:48] >> Um and so I think if if you ask, okay,
+[34:51] well, how does this come about? We we
+[34:54] chose to work on a problem that we knew
+[34:55] was completely we believed would not be
+[34:57] solved and was completely important and
+[35:00] required urgent action. And fortunately
+[35:02] the DOE Congress had already been
+[35:04] thinking about this. They had already
+[35:05] funded these programs. We didn't have to
+[35:07] convince them that these programs should
+[35:08] exist. They knew that they should exist
+[35:10] and they were open to new entrance
+[35:12] coming in and helping solve it. And so
+[35:14] what it looked like was
+[35:16] identifying the problem in 2023
+[35:19] uh really asking ourselves if if this
+[35:21] was a thing to work on. We concluded
+[35:22] that yes, it was um pulled the team
+[35:25] together in in late 23 with all the
+[35:27] right people from the industry. We we
+[35:28] asked ourselves, okay, what does the
+[35:30] right team look like for something like
+[35:31] this? Then we handpicked those people
+[35:33] from a bunch of different companies that
+[35:35] included National Labs, other companies
+[35:38] in the nuclear energy space and then
+[35:40] people from Tesla and SpaceX because we
+[35:42] were going to run a pretty similar
+[35:43] playbook to break into a really capital
+[35:45] inensive incumbent dominated stagnant
+[35:47] industry. And so, uh, we wanted those
+[35:50] exact type of people with that DNA and
+[35:52] that experience. And so, it was pulled
+[35:53] the team together. And then then we
+[35:55] evaluated, should we do we want to, you
+[35:58] know, put our hat in the ring for this
+[36:00] program? And it was completely on on on
+[36:03] the direct path of what we were going to
+[36:04] do anyway. And we said, yes, let's put
+[36:07] our best effort forward to do this. And
+[36:08] so, you know, first few months of the
+[36:11] company was legitimately 100hour weeks
+[36:14] just living and sleeping at the at the
+[36:16] headquarters. and and doing all the work
+[36:19] that we were going to do over a few
+[36:20] years um to get the plan extremely uh
+[36:23] buttoned up and then then became the
+[36:26] search for the right site. So the other
+[36:27] thing with nuclear was we knew yes we
+[36:30] can have the best technology, we can
+[36:31] have the best overall plan, but you also
+[36:33] need a really supportive community and a
+[36:34] supportive location for what you're
+[36:36] doing. And so we're headquartered in LA,
+[36:40] but our facility won't be in LA. Our
+[36:42] facility will be in Western Kentucky.
+[36:44] And so that's where we're doing
+[36:45] construction and actual enrichment and
+[36:47] manufacturing. Um, and so we found a a
+[36:50] site there that's in the the same city
+[36:53] as the last place the DOE that the US
+[36:55] did commercial enrichment in 2013 before
+[36:58] it was shut down. It's called Paduka,
+[37:00] Kentucky. Right.
+[37:00] >> There's a DOE site there. We originally
+[37:02] went there looking for some old
+[37:04] buildings that we could use. Um, but
+[37:05] then we found that there was 100 acres
+[37:07] at the south end of the site that had
+[37:08] not ever been developed and was perfect
+[37:11] for what we needed. And so that was the
+[37:13] beginning of the partnership with with
+[37:15] the DOE. Um, and yeah, like you know,
+[37:18] like you said, they've been extremely
+[37:19] supportive of someone new coming in to
+[37:22] help try and solve this problem. Uh, I'm
+[37:24] going to ask you a follow-up sort of
+[37:26] last question on this. You know, there's
+[37:27] a lot of anxiety and uh, fear,
+[37:31] uncertainty, and doubt about the current
+[37:32] administration not supporting science
+[37:34] and engineering in the country. Um, but
+[37:37] what you just outlined is a direct
+[37:40] counter example to that. Um what what is
+[37:43] there like how supportive is the was the
+[37:45] federal government in this? You know
+[37:46] Doge my understanding is there were in
+[37:48] members of Doge that helped sort of
+[37:50] smooth things along for you. Is that
+[37:52] true or do you feel like you know the
+[37:55] United States is asleep at the wheel and
+[37:57] actually not helping entrepreneurs make
+[37:59] progress on a bunch of critical
+[38:00] infrastructure like the one you're
+[38:01] working on?
+[38:02] >> Yeah, I'd say definitely not asleep at
+[38:03] the wheel. I think, you know, going back
+[38:05] to something I said earlier, the the
+[38:06] support for this has been ever since the
+[38:08] Biden administration in 2022, 2023. Um,
+[38:13] and so I don't think it's a political
+[38:14] thing. I think, you know, we can we can
+[38:17] get into some of the details there, but
+[38:19] it's been something where there's been
+[38:21] congressional support for first doing
+[38:24] Halo, which is the advanced reactor
+[38:26] fuel, and then doing LEU, which is what
+[38:28] the grid currently consumes. Um, and so
+[38:31] it's a known problem. It's a known
+[38:32] opportunity. we really need to bring
+[38:34] this back as a country and so um yeah
+[38:37] there's just been a bunch of support
+[38:38] from across the political spectrum and
+[38:40] then you know that's the political side
+[38:43] then within the government you have
+[38:44] people who are been putting their whole
+[38:46] careers into this and I think uh within
+[38:49] DOE and the nuclear energy department
+[38:50] those are people that are in it not
+[38:52] because nuclear has been growing because
+[38:54] it hasn't since the '90s but because
+[38:55] they really believe in it and I think um
+[38:59] yeah there's just been incredible
+[39:00] support from across DOE for what we're
+[39:03] doing also. So, I'd say it's it's the
+[39:05] type of thing that um you know, to your
+[39:07] question of like should people be
+[39:08] worried about what's happening dayto-day
+[39:11] and memes and um you know, public
+[39:14] opinion, there's there's certainly going
+[39:15] to be ups and downs for nuclear over the
+[39:17] next few decades. I think it's going to
+[39:18] be drastically ups. Um but there's been
+[39:22] the same sort of support like very
+[39:24] consistent support uh from everyone in
+[39:26] the government.
+[39:27] >> On the topic of jobs, so there's a bunch
+[39:29] of jobs you've now created in
+[39:31] California. Mhm.
+[39:32] >> But you also create a bunch of jobs in
+[39:34] Kentucky.
+[39:34] >> Yep.
+[39:35] >> Over the next four years, how many jobs
+[39:37] do you think General Matter is going to
+[39:39] create?
+[39:40] >> Uh, it's pro I mean, it's hard to say.
+[39:41] It's certainly hundreds and hundreds of
+[39:43] jobs. Even in LA, it's probably close to
+[39:45] 500 over the next few years. In
+[39:47] Kentucky, it's it's that much or more.
+[39:50] Um, you know, if you go back to the
+[39:52] really early days of SpaceX, apparently
+[39:53] they thought the company would ever only
+[39:56] be like 200 people. Um, clearly that's
+[39:58] not true. It's like close to 20,000 now.
+[40:01] So these things have a way of you know
+[40:03] when you're working on a really
+[40:04] important problem that uh can just keep
+[40:06] scaling I think you know that's maybe
+[40:09] one my one lesson from over a decade at
+[40:11] Founders Fund was things can scale much
+[40:13] more than you think and they often need
+[40:15] to scale much more than you think. uh
+[40:17] which is you know goes back to the
+[40:18] SpaceX example off by two orders of
+[40:20] magnitude on on what headcount would
+[40:22] someday be and for us I think just near
+[40:25] future we look at you know hundreds of
+[40:28] people in LA hundreds in Kentucky that
+[40:31] probably puts you at like a thousand uh
+[40:33] for doing what we need to do so a
+[40:35] thousand new jobs created by a startup
+[40:38] whose path is definitely accelerated by
+[40:41] AI right to do the five W's you know
+[40:44] Scott kind of walked us through how
+[40:47] arguably uranium enrichment is the
+[40:49] bottleneck on AI as you guys have heard
+[40:52] multiple times there is a there's a
+[40:53] narrative that AI you know eliminates
+[40:56] jobs and reduces jobs when in fact Scott
+[41:00] is sort of living proof that entirely
+[41:02] new jobs are being created in real time
+[41:04] in the thousands to unblock the
+[41:06] bottlenecks for AI scaling and I think
+[41:08] this is an important sort of alignment
+[41:11] mechanism everyone should be aware of
+[41:13] more and more which is this is not some
+[41:15] dream that AI can create new jobs. It is
+[41:17] literally creating new jobs both in the
+[41:20] sort of knowledge sector in in
+[41:22] California, people who are working on
+[41:24] engineering systems for you, but also in
+[41:26] the construction industry halfway across
+[41:28] the country. And so I expect to see more
+[41:31] and more companies like general matter
+[41:33] assuming the public understands that AI
+[41:35] is actually net new is igniting a
+[41:38] renaissance in in physical in the
+[41:40] physical world that that we will end up
+[41:42] in a place where jobs that didn't exist
+[41:44] before are going to be created. But I
+[41:45] don't know if you'd agree or if I'm
+[41:46] being overly optimistic.
+[41:47] >> Uh I'm I'm pretty optimistic. I mean in
+[41:50] our case we we have dozens of open roles
+[41:53] and like we're looking for to hire
+[41:54] hundreds of people. We can't find enough
+[41:56] good people. Not quickly enough. And so
+[41:58] in our experience, like you know, it's
+[42:01] it's obviously different for every
+[42:02] company and every person, but our
+[42:04] experience is that we want to find more
+[42:07] good people and give them jobs. And so
+[42:09] we're in a huge we're in a deficit. And
+[42:11] so how do we find enough great people?
+[42:13] So for people that want to work hard and
+[42:16] uh are good at what they do, there's
+[42:17] plenty of, at least at our company, tons
+[42:19] of opportunity across pretty much every
+[42:21] type of engineering, every type of
+[42:23] construction type role, finance, like
+[42:26] you name it. uh will hire people.
+[42:29] >> I mean, we could do a quick poll before
+[42:30] we run to questions. How many people now
+[42:32] feel like they'd be interested in a job
+[42:34] working on uranium enrichment?
+[42:38] >> Great.
+[42:38] >> Pretty good.
+[42:39] >> All right.
+[42:39] >> Looks like 95% I think I saw. Great.
+[42:43] >> We'll get we'll get people connected.
+[42:45] Okay. Uh first question.
+[42:47] >> Yeah. The question is essentially um DOE
+[42:49] contract originally was all the way out
+[42:51] through 2034. That's a long time. Uh
+[42:53] we're here today, you know, almost a
+[42:55] decade ahead of that. What do we do?
+[42:57] People are doing turbins. How do we
+[42:59] scale up to actually make this relevant?
+[43:02] And then what about space? And so, uh,
+[43:05] you know, our timeline is much faster
+[43:07] than the 2034 timeline. So, our whole
+[43:09] goal because the industry needs it is to
+[43:11] be online before the end of the decade
+[43:14] and then to be scaling very rapidly from
+[43:16] there. So, we hope we can be on a useful
+[43:18] timeline for any reactor that's trying
+[43:20] to launch and scale up. So as they're
+[43:22] doing the deployments, you know, first
+[43:24] criticality in many cases this year,
+[43:26] demos next year, really scaling 2829.
+[43:30] Um, we hope to be to be really ready for
+[43:33] them as they're really scaling. I think
+[43:35] most of the real hockey stick that
+[43:37] you'll see on these big picture charts
+[43:38] that we looked at, that'll be early
+[43:40] 2030s into 2035. So we're going to see
+[43:44] oneoff deployments, you know, I think in
+[43:46] the next couple years, tens, not
+[43:48] hundreds of SMRs. And then for the
+[43:50] really big builds, those do take five to
+[43:53] 10 years to do um gigawatt scale
+[43:55] reactors and so there's a little bit
+[43:56] more time there, but we're trying to be
+[43:59] well ahead of everything. So our time
+[44:01] frame acknowledges that. I think you
+[44:03] know getting back to then the the
+[44:05] turbine question and and natural gas.
+[44:08] Yeah, it does take 5 years plus to build
+[44:10] a gigawatt scale reactor in the US. Um
+[44:13] you know and that's probably being
+[44:14] optimistic. And so in the meantime, you
+[44:16] do need to find something else. And so
+[44:18] people have found the stranded wind.
+[44:20] They found, you know, natural gas
+[44:21] pipelines that they can hook up to. And
+[44:23] then you need the turbines, but now the
+[44:25] turbines are sold out a couple years.
+[44:27] You know, you might need grid
+[44:28] interconnect. Like a lot of that power
+[44:31] electronics equipment is is out a couple
+[44:33] years at industrial scale. So I think
+[44:36] the next couple years are almost going
+[44:37] to be the hardest of how do we keep
+[44:39] scaling? How do we not hit the wall uh
+[44:41] while we wait for nuclear to come in in
+[44:43] a few years time frame? And then you
+[44:45] asked about uh space and I think the
+[44:48] space approach is one that really only
+[44:50] one company can do and it's an answer to
+[44:52] all these questions and there's some
+[44:55] technical challenges that they're going
+[44:56] to have to solve. But I wouldn't bet
+[44:58] against SpaceX in solving technical
+[45:00] challenges but that'll be their
+[45:02] solution. I think it'll be uniquely
+[45:03] their solution to just put
+[45:05] sun-synchronous uh you know data center
+[45:07] satellites in orbit. Other people really
+[45:10] can't do that. And so I think everything
+[45:13] else will be fought either as like
+[45:15] that's the that's by air, everything
+[45:17] else will be a ground game. Um and maybe
+[45:19] some some in the ocean, but I think it's
+[45:21] going to be dominated almost with every
+[45:24] other company by who can scale power on
+[45:26] land and therefore who can scale
+[45:28] nuclear.
+[45:29] >> You you don't you don't think our friend
+[45:32] Jeff Bezos is going to find a way to
+[45:34] also find a comparable solution in
+[45:36] space? Um I I think everyone's I think
+[45:39] even even SpaceX would say they hope for
+[45:41] that. Certainly in the early days it was
+[45:43] like we don't want this whole industry
+[45:45] just riding on us. We want let's the
+[45:47] whole goal of SpaceX is make humanity
+[45:49] you know multilanetary. So end goal is
+[45:52] that SpaceX felt like they had to do it.
+[45:54] If other people could chip in that's
+[45:56] something they would want. But if if you
+[45:57] just look at the actual launch volume of
+[46:00] SpaceX versus Blue Origin it's just
+[46:02] drastic. And and Blue Origin started
+[46:04] before SpaceX. Well, Blue Origin has the
+[46:07] advantage of using AI now to accelerate
+[46:09] all its man engineering operations,
+[46:11] which SpaceX didn't. You guys had to do
+[46:12] it all from scratch.
+[46:13] >> Fair. That's fair. Yeah. Okay. We'll see
+[46:15] how good the AI engineering agents are,
+[46:17] though.
+[46:18] >> Yeah.
+[46:19] >> I guess this is what next year's class
+[46:20] is going to be about, like the space
+[46:22] race.
+[46:23] >> Um, okay. Next question.
+[46:25] >> Yeah. So, question, two-part question.
+[46:27] One was, what was it like early days
+[46:29] SpaceX and how did that shape how I
+[46:30] thought about engineering? And then two,
+[46:32] why did I decide to leave SpaceX? So uh
+[46:35] step one was part part one of the the
+[46:38] question really when I joined I was an
+[46:40] intern at first in college the it was
+[46:42] like 35 people roughly um you know we
+[46:46] were just trying to get the very
+[46:48] beginning parts built and and working
+[46:51] and so it was everything from let's
+[46:53] build test stands that we're going to
+[46:54] test the the engines on my the part I
+[46:56] worked on was propulsion systems and I
+[46:59] was like a structural thermal analyst on
+[47:01] the propulsion team which was low single
+[47:03] digit sort of team. Um, and so we had to
+[47:06] design the test stands. We had to design
+[47:08] our very first most primitive engines.
+[47:11] Um, you know, like heat sink based
+[47:13] engines. We weren't even doing full
+[47:14] nozzles. It was just can we get the
+[47:16] combustion to work right? Let's build
+[47:18] the test fixtures. And so it was
+[47:20] relatively scrappy. It was how can we
+[47:21] make a lot of fast progress? Uh, we
+[47:23] don't need to make the fanciest test
+[47:26] stand ever. It just has to work. And so
+[47:28] let's do what's fast and relatively
+[47:29] cheap. um and optimize for the things
+[47:32] you're trying to optimize for. And so
+[47:33] back then it was purely schedule
+[47:35] optimization and some cost optimization
+[47:38] with a hard line on safety. Uh and so if
+[47:41] you satisfied those things, it was yeah,
+[47:43] let's get it built and let's get it out
+[47:44] there and let's test it and then we'll
+[47:46] learn a bunch and then let's we'll do
+[47:48] the next thing. And so it's really just
+[47:50] like okay, how many of these steps can
+[47:51] we just chew through and and get to the
+[47:53] finish line? And so fast forward all the
+[47:56] way um through 20, you know, 2025, 2026,
+[48:00] 2027. Uh we got the engines developed.
+[48:03] They were working great. We got the
+[48:05] Falcon 1, the first rocket built, uh
+[48:07] launched a couple times. Uh first time
+[48:10] it didn't make it that far. that had a
+[48:12] fire inside the engine bay area due to
+[48:15] um a broken uh like a an aluminum uh nut
+[48:20] on a on a fitting on a on a fuel line
+[48:23] that was hooked into a different part of
+[48:25] the engine and and that crack led to a a
+[48:26] fuel leak which caught on fire and and
+[48:28] took down the rocket. Second one
+[48:30] basically worked. Uh it got all the way
+[48:32] to orbit, not not full orbit, but second
+[48:34] stage deployed and you had a fuel
+[48:36] sloshing issue uh where a lack of extra
+[48:39] baffles allowed basically a spiral to
+[48:42] form and and second stage went out. Um,
+[48:45] and then at that point, everything, you
+[48:47] know, short-sightedly to your second
+[48:49] question, I felt like, okay, the rocket
+[48:52] works, the engines work, and maybe it's
+[48:55] not going to be as exciting as it was in
+[48:57] the early years. You know, here's this
+[48:59] example of this really important
+[49:00] company, SpaceX, founded by someone
+[49:03] who's an engineer with some business
+[49:05] experience. Maybe I need to go get
+[49:06] business experience. And so, that was my
+[49:08] conclusion, but I think it was the wrong
+[49:09] one. As it turned out, the company
+[49:12] scaled another, you know, over 10x. Um,
+[49:16] it got to do like people who have stayed
+[49:18] there, a lot of my friends have gotten
+[49:20] to work on some of the coolest projects
+[49:22] um that anyone could work on in the past
+[49:24] decade. And it was absolutely the right
+[49:26] place to be, uh, for a lot of reasons.
+[49:29] Um, so I think at the time though, I
+[49:31] felt like, oh, 100% company, that's
+[49:32] that's a big company. Like, you've got
+[49:34] to be at startups when they're three
+[49:36] people. And you know, I felt the same
+[49:39] thing about uh Palunteer at one point,
+[49:42] about Square at one point, thought
+[49:43] about, you know, dropping out of
+[49:45] different things to go work at these
+[49:46] places, but felt like, oh, maybe maybe
+[49:49] 50 or 60 people or 80 people is too big.
+[49:51] And again, completely incorrect. Like
+[49:54] 100 people is actually just where you
+[49:56] get into the really hard stuff of
+[49:58] scaling a business. seeing how you go
+[50:00] from ideas and just product market fit
+[50:02] to actually operationalizing and
+[50:04] executing like the people who I know who
+[50:06] were at SpaceX during that window of
+[50:08] like a 100 people to a thousand people
+[50:10] those are the real operators like they
+[50:12] know how to build and run teams they
+[50:14] know know how to do manufacturing like
+[50:16] even the people all the way up to 10,000
+[50:18] so there's yeah there was still um yeah
+[50:21] two more orders of magnitude to go of
+[50:23] learning and so uh definitely you know
+[50:27] ended up doing a lot of cool stuff that
+[50:29] I've been excited about, but also a
+[50:31] really great decision to stay there for
+[50:32] everyone who did. Yeah. Uh the question
+[50:35] was how how do you grapple with the
+[50:36] perceptions of nuclear power in the US
+[50:38] and then anything we can learn from
+[50:39] Europe? Um man, the Europe one is really
+[50:43] almost a tragic example of there's
+[50:45] plenty of learnings there. So, uh you
+[50:48] know, Germany completely shut down its
+[50:50] nuclear energy programs, shut down its
+[50:52] reactors, reactors that were working
+[50:54] fine. um with the idea being well we're
+[50:57] going to shut these down and we're going
+[50:58] to do renewables. And then if you look
+[51:00] at empirically what's occurred they have
+[51:02] not replaced it with renewables. It's
+[51:03] almost entirely replaced with base load
+[51:06] which means uh coal, natural gas, fossil
+[51:09] fuels and the the um the consequence has
+[51:13] been obviously carbon emissions but even
+[51:15] like air quality. You can look at air
+[51:18] quality maps of Germany now with no
+[51:20] nuclear versus Germany before versus
+[51:23] France which has a great percentage of
+[51:26] nuclear on the grid and it's like you
+[51:28] know you look at their quality and it's
+[51:29] like completely blue and and clean over
+[51:31] France and then completely red over
+[51:33] Germany and there's there's other
+[51:36] reasons for that too but it's like why
+[51:39] why you know it's just completely
+[51:40] self-defeating to to turn off
+[51:43] >> affordable energy very cheap energy once
+[51:46] it's built that's clean and replace it
+[51:49] with, you know, burning biomass and
+[51:51] fossil fuels. Like, no reason for it.
+[51:53] So, I think I think that's a real life
+[51:55] like present day example of what not to
+[51:58] do. And, you know, that doesn't mean
+[52:01] that that alone doesn't prove that you
+[52:03] should go build as much nuclear as
+[52:04] possible because you could say things
+[52:06] like, well, um, it is expensive to build
+[52:09] up front. Once it's advertised, keep it
+[52:11] going, but it's expensive to build up
+[52:13] front. And I think that's actually the
+[52:16] next thing that the industry is going to
+[52:17] solve is how do we make it much cheaper
+[52:19] to build up front. And so that's both
+[52:21] on, you know, you see a few startups
+[52:22] doing nuclear development businesses. Um
+[52:25] things like the nuclear company,
+[52:27] Elemental, Oppenheimer Energy, the
+[52:29] grandson of Robert Oppenheim
+[52:31] Oppenheimer. Um, and you see all the SMR
+[52:34] companies that are saying, "We can build
+[52:35] these things in factories, make them
+[52:37] much, much cheaper, shippable, install
+[52:40] at the site, and then all you need is
+[52:42] this fuel source that currently the US
+[52:44] doesn't produce, and you know, on top of
+[52:47] not producing the conventional." So, I
+[52:50] think the way that we grapple with
+[52:51] perception is, you know, fortunately,
+[52:53] perception on its own is getting much
+[52:55] better because of all these examples and
+[52:57] people caring now about expanding the
+[52:58] grid and doing it cleanly. There's only
+[53:00] one option. It's nuclear.
+[53:03] Um and and you look at the charts of
+[53:05] like for and against nuclear and they've
+[53:08] gone from like mostly negative on
+[53:09] nuclear to just completely crossing the
+[53:11] past few years to where public
+[53:13] perception is now positive on it. And so
+[53:16] um fortunately
+[53:17] you know we're working on something that
+[53:19] we felt like was the absolutely the
+[53:20] right problem but you know the consensus
+[53:23] has moved along with that really
+[53:24] quickly. Yeah. So the question was
+[53:27] Kazakhstan you know huge producer of
+[53:30] uranium I think uh 40%
+[53:32] um worldwide
+[53:34] and then you know okay there's the or
+[53:37] production and what what should the
+[53:38] future of this look like in the country
+[53:40] um
+[53:43] and I think like going back to you know
+[53:45] the the five steps in the supply chain
+[53:48] different countries probably want to
+[53:50] focus on the things that they are
+[53:51] uniquely able to do uh Kazakhstan Canada
+[53:55] austral Australia, a few other countries
+[53:57] have incredible uranium ore deposits
+[53:59] that put them, you know, in the lead for
+[54:01] production. They can produce at cost
+[54:02] that no one else can with whether it's
+[54:05] like existing mining technologies or
+[54:07] more modern ones. Um, and then okay,
+[54:11] what should these next steps look like?
+[54:12] I think one idea that we have on all
+[54:14] these steps is ideally they're
+[54:16] colloccated at least the ones that are
+[54:18] involve like chemical processing and so
+[54:20] why scatter these things across the
+[54:22] country and right now it's completely
+[54:23] you know very scattered across the
+[54:25] country due to the the history of it in
+[54:27] the US um and then how do we think about
+[54:31] our specific step of of enrichment our
+[54:34] goal long term is same goals that SpaceX
+[54:37] had like bring back this technology in
+[54:40] the US use it to help scale the
+[54:42] industry, do it at a much lower cost
+[54:44] structure. Um, and by doing that, we
+[54:47] hope, you know, there's going to be a
+[54:48] lot more fuel production, a lot more
+[54:49] nuclear energy. And so our goal is
+[54:51] actually for countries that don't do
+[54:53] enrichment, um, you know, US first and
+[54:56] foremost, let's solve the problem here.
+[54:58] But if we have allies, let's do it for
+[55:00] them. let's do it at incredibly low cost
+[55:02] that you know leaves little room for
+[55:04] anyone else to really worry about it
+[55:07] which then has a huge downstream
+[55:08] proliferation uh benefit of you know
+[55:12] fewer countries saying well I need to do
+[55:13] this um which then leads to a whole lot
+[55:16] of complexity from ge a geopolitics
+[55:18] perspective that's way above my pay
+[55:20] grade but I know if you know if we can
+[55:22] help solve this it seems like a good
+[55:25] thing on so many levels both for like
+[55:26] power production more clean energy less
+[55:29] fossil fuel like carbon emissions, um
+[55:32] less risk of worldwide like
+[55:34] proliferation of nuclear weapons, on and
+[55:36] on and on. So
+[55:38] >> um could you actually take a few
+[55:39] minutes? I realized we skipped over the
+[55:40] five steps in the supply chain for
+[55:42] uranium.
+[55:43] >> Yeah.
+[55:43] >> Um if you could walk people through like
+[55:45] step by step what's going on. That's the
+[55:46] that would be the the general matter or
+[55:49] like the the the uranium version of the
+[55:52] pre-training, mid- training, post
+[55:53] training, right? Could you walk through
+[55:54] that for a sec?
+[55:55] >> Yeah. Going back to the reactors, you
+[55:56] need to put fuel in them. They consume
+[55:58] the fuel. They're ultimately burning up
+[56:00] U235. That's the fizzle material. That's
+[56:02] what's going to have the chain reaction
+[56:04] that releases neutrons to make heat. You
+[56:06] take the heat, heat water generally, uh,
+[56:08] run a steam turbine, and you make
+[56:10] electricity off of that. And so, okay,
+[56:12] we need fuel that has relatively dense
+[56:15] U, you know, U235 content by weight. And
+[56:18] the way you do that, um, is you get the,
+[56:21] you get the mind product, you then
+[56:23] convert it from U308 to UF6. uh you then
+[56:27] enrich that UF6 gas, which is again a
+[56:30] refining or separation process. You then
+[56:33] have a gas that's not going to help make
+[56:35] fuel rods. You need to turn that back
+[56:37] into a solid through a chemical process.
+[56:40] And then you take that solid and you
+[56:41] form it into whatever pellet shape you
+[56:43] want. Um and so the step that we do is
+[56:45] simply working with the gas and
+[56:47] separating it. Uh so in our facility
+[56:50] there's no nuclear reactions. We're not
+[56:51] a nuclear reactor. We specifically avoid
+[56:54] any nuclear reactions by keeping
+[56:56] material spread out enough uh so that it
+[56:58] can't form a critical mass and then
+[57:01] there's no chemical reactions. It's it's
+[57:03] separation process. Um
+[57:05] >> and can you talk for a second in that
+[57:06] five-step process from mining to
+[57:08] fabrication? Why why has the United
+[57:11] States historically done so badly on
+[57:12] enrichment whereas on the on all the
+[57:14] other parts of that supply chain, you
+[57:17] know, there's there's options in the US?
+[57:19] >> Yeah. Well, historically we did really
+[57:20] well actually. Um in the 80s we were
+[57:23] about 86% of worldwide capacity on
+[57:26] enrichment and it occurred in a couple
+[57:28] you know a few different sites across
+[57:29] the US.
+[57:32] You know, you you take that all the way
+[57:33] through the Cold War. That's when we
+[57:34] really reached its, you know, our peak.
+[57:36] The US was providing all of its own
+[57:39] utility power through enrichment at DOE
+[57:42] sites, right?
+[57:43] >> They were governmentr run. Um they were
+[57:45] former either Manhattan Project or Cold
+[57:47] War sites. And so with the fall of the
+[57:50] Berlin Wall though, we said, okay, you
+[57:52] know, there's now more free trade. We
+[57:55] can now trade with Russia. Russia had
+[57:56] all these warheads that it was in
+[57:58] everyone's best interest to start
+[58:00] disarming postcold war and so the US had
+[58:03] a program called megat tons to megawws
+[58:05] nicknamed that
+[58:07] >> right
+[58:07] >> uh where we took the weapons and we we
+[58:09] down blended them and we ran them in our
+[58:11] reactors um and as a result you know we
+[58:14] said okay we actually have this supply
+[58:16] now we have more free trade we can we
+[58:18] can actually get this from Europe our
+[58:20] technology is actually relatively
+[58:22] expensive that we were running at the
+[58:23] time very uneconomical compared to what
+[58:25] we could get out of Russia or Europe.
+[58:27] And so we said, let's just let's just do
+[58:30] free trade on this. Um, you know, the
+[58:32] entities that ran uh the enrichment
+[58:36] plants in the US had a hard time at that
+[58:38] point making money on them and said,
+[58:40] "Hey, it's time to sunset these." And so
+[58:41] that was 20, the last of those was 2013.
+[58:44] And so since then, it's been
+[58:46] decommissioning and, you know, preparing
+[58:48] that site back for other industrial
+[58:50] uses, uh, which is what we're doing. Um
+[58:52] and so it was really a path dependency
+[58:55] of we had a certain technology it was
+[58:57] not globally competitive the Berlin wall
+[58:59] fell we started trading with Russia
+[59:01] Europe even more shut down what we had
+[59:04] and then you know I think there was a
+[59:06] people probably had plans of how you
+[59:08] know we'll bring back enrichment when we
+[59:09] need to and I think the need is just
+[59:11] coming much more quickly than people
+[59:12] would have expected
+[59:13] >> and as a recurring theme we are now back
+[59:16] to the future basically of reim
+[59:19] enrichment it's like we were doing
+[59:21] historically
+[59:22] 20 year stagnation for whatever reason
+[59:24] and now it seems like AI has reignited
+[59:28] the trajectory that basically took a bit
+[59:30] of a detour but we're back on track now.
+[59:32] Yep.
+[59:32] >> Roughly speaking.
+[59:33] >> Yep. Yeah. Very similar to many other
+[59:35] industries, similar to the space
+[59:37] industry. It didn't mean that it was as
+[59:39] simple as you know just reassembling the
+[59:41] space shuttle or rebuilding Saturn 5.
+[59:43] You you know you want to do things
+[59:45] leveraging all the progress of the last
+[59:47] few decades. And so you are going to
+[59:50] always want to start clean sheet and and
+[59:52] question everything,
+[59:53] >> right?
+[59:54] >> Um and that's what we did. And so many
+[59:56] many very exciting engineering uh
+[59:58] challenges and problems to work on. Um
+[01:00:01] but that's that's the fun.
+[01:00:03] >> And and uh to borrow Peter Tealism, how
+[01:00:05] far are we from flying cars now, even
+[01:00:07] though we only got Twitter for a while?
+[01:00:09] >> Uh probably closer. Closer. Probably
+[01:00:12] well, I mean, you look at all there's uh
+[01:00:13] not that far away actually. You look at
+[01:00:15] Joby and and all these other companies.
+[01:00:17] flying cars for final project. Thank you
+[01:00:19] so much, Scott. Yes, thank you guys.

@@ -1,0 +1,285 @@
+concepts:
+  - name: Energy as Primary AI Bottleneck
+    aliases: []
+    definition: >-
+      The rapidly escalating demand for power to operate AI data centers is becoming the most significant upstream
+      constraint, surpassing compute itself, as acknowledged by industry leaders.
+    tags:
+      - infrastructure
+      - hardware
+      - application
+    timestamps:
+      - '03:44'
+      - '06:29'
+      - '09:04'
+      - '10:22'
+      - '13:04'
+      - '18:23'
+    relations:
+      - target: AI Factory
+        type: enables
+        note: The AI Factory requires massive energy input to operate.
+      - target: AI Scaling
+        type: prerequisite_for
+        note: Unblocking this bottleneck is essential for continued AI scaling.
+      - target: US Grid Expansion Stagnation
+        type: related_to
+        note: Historical stagnation in grid expansion contributes to the current bottleneck.
+  - name: AI Factory
+    aliases: []
+    definition: >-
+      An organizing mental model or metaphor for the entire pipeline of intelligence manufacturing, encompassing
+      pre-training, mid-training, post-training, and deployment to agents.
+    tags:
+      - architecture
+      - theory
+      - infrastructure
+    timestamps:
+      - '00:37'
+      - '03:02'
+    relations:
+      - target: Energy as Primary AI Bottleneck
+        type: related_to
+        note: The manufacturing of intelligence requires significant energy resources.
+      - target: Base Load Power
+        type: related_to
+        note: Needs reliable, continuous power for its operations.
+  - name: Stranded Energy
+    aliases: []
+    definition: >-
+      Energy generated from sources (e.g., remote hydro, flared natural gas, wind) that lack nearby demand or
+      transmission infrastructure, which was initially leveraged by industries like Bitcoin mining.
+    tags:
+      - infrastructure
+      - application
+      - optimization
+    timestamps:
+      - '13:27'
+      - '13:34'
+      - '14:04'
+      - '14:48'
+      - '15:08'
+      - '17:56'
+      - '25:34'
+      - '25:51'
+      - '25:56'
+      - '26:28'
+    relations:
+      - target: Net New Power Production
+        type: contrasts_with
+        note: >-
+          While initially useful, stranded energy solutions are insufficient for AI's massive demand, necessitating net
+          new generation.
+      - target: Bitcoin Mining
+        type: related_to
+        note: Bitcoin mining was an early adopter of stranded energy utilization before AI infrastructure.
+  - name: Net New Power Production
+    aliases: []
+    definition: >-
+      The necessity to build entirely new power generation capacity rather than just utilizing existing 'stranded'
+      sources, driven by the unprecedented scale of AI energy demand.
+    tags:
+      - infrastructure
+      - hardware
+      - optimization
+    timestamps:
+      - '15:18'
+      - '16:04'
+    relations:
+      - target: AI Scaling
+        type: prerequisite_for
+        note: Required to meet the rapidly escalating energy demands of AI infrastructure.
+      - target: Nuclear Energy
+        type: enables
+        note: Nuclear power is presented as the optimal long-term solution for achieving this.
+  - name: Nuclear Energy
+    aliases: []
+    definition: >-
+      A power generation method identified as the optimal long-term solution for AI's energy needs due to its base load
+      capabilities, lowest carbon emissions, and excellent safety record.
+    tags:
+      - hardware
+      - infrastructure
+      - application
+    timestamps:
+      - '08:26'
+      - '17:37'
+      - '18:06'
+      - '18:21'
+      - '24:33'
+      - '28:13'
+      - '28:50'
+      - '29:09'
+      - '29:34'
+      - '39:14'
+      - '50:48'
+      - '52:03'
+      - '52:58'
+    relations:
+      - target: Net New Power Production
+        type: enables
+        note: Provides base load, low-carbon power at the scale needed for AI.
+      - target: Base Load Power
+        type: part_of
+        note: A key source for consistent, high-uptime electricity.
+      - target: Public Perception of Nuclear Power
+        type: related_to
+        note: Historical negative perception has been a barrier to its adoption.
+      - target: Uranium Enrichment
+        type: prerequisite_for
+        note: Requires fuel produced through the enrichment process.
+  - name: Uranium Enrichment
+    aliases:
+      - Enrichment
+    definition: >-
+      A critical intermediate step in the nuclear fuel supply chain, where uranium hexafluoride gas is processed to
+      increase the concentration of the fissile U-235 isotope, making it suitable for reactor fuel.
+    tags:
+      - hardware
+      - infrastructure
+      - optimization
+    timestamps:
+      - '08:48'
+      - '08:59'
+      - '19:21'
+      - '20:21'
+      - '27:26'
+      - '27:31'
+      - '34:00'
+      - '36:47'
+      - '56:27'
+      - '57:12'
+      - '58:20'
+      - '59:08'
+    relations:
+      - target: Nuclear Fuel Supply Chain
+        type: part_of
+        note: A crucial step in producing usable nuclear fuel.
+      - target: Nuclear Energy
+        type: prerequisite_for
+        note: The lack of domestic enrichment capacity is the immediate bottleneck to scaling nuclear power in the US.
+      - target: Government-Technology Interaction
+        type: related_to
+        note: >-
+          General Matter received significant government support, a $900M contract from the DOE, to re-establish
+          domestic enrichment capacity.
+  - name: Nuclear Fuel Supply Chain
+    aliases:
+      - Uranium Fuel Cycle
+    definition: >-
+      The five-step process for producing nuclear fuel, starting from mining uranium ore, converting it to a gas,
+      enriching it, converting it back to a solid, and fabricating fuel pellets.
+    tags:
+      - infrastructure
+      - hardware
+    timestamps:
+      - '19:00'
+      - '53:45'
+      - '55:55'
+    relations:
+      - target: Nuclear Energy
+        type: part_of
+        note: Encompasses all the steps required to provide fuel for nuclear reactors.
+      - target: Uranium Enrichment
+        type: related_to
+        note: Highlights enrichment as the missing and critical step within this chain for the US.
+      - target: Megatons to Megawatts Program
+        type: related_to
+        note: Historical US program that impacted the domestic supply chain by utilizing downblended warheads.
+  - name: Public Perception of Nuclear Power
+    aliases: []
+    definition: >-
+      The historical and evolving societal views and political obstacles that have impacted the adoption and expansion
+      of nuclear energy, despite its safety and cleanliness records.
+    tags:
+      - societal
+      - infrastructure
+      - theory
+    timestamps:
+      - '24:36'
+      - '28:50'
+      - '50:35'
+      - '52:50'
+    relations:
+      - target: Nuclear Energy
+        type: contrasts_with
+        note: Past negative perceptions hindered nuclear energy's growth despite its safety and cleanliness.
+  - name: AI as a Catalyst for New Jobs
+    aliases: []
+    definition: >-
+      The phenomenon where the rapidly growing demand for AI infrastructure, particularly energy, is creating thousands
+      of new jobs across various sectors, from engineering to construction.
+    tags:
+      - societal
+      - infrastructure
+      - application
+    timestamps:
+      - '20:01'
+      - '39:35'
+      - '41:01'
+      - '41:15'
+    relations:
+      - target: Societal Responsibility in AI Infrastructure
+        type: related_to
+        note: Directly addresses the societal impact of AI on employment, showing job creation rather than elimination.
+      - target: Nuclear Energy
+        type: related_to
+        note: The demand for nuclear energy for AI is driving job creation in that sector.
+  - name: Base Load Power
+    aliases: []
+    definition: >-
+      A consistent and reliable source of electricity required to meet the continuous, high-uptime demand of AI data
+      centers, which intermittent sources like solar and wind struggle to provide without extensive storage.
+    tags:
+      - infrastructure
+      - hardware
+    timestamps:
+      - '17:05'
+      - '51:03'
+    relations:
+      - target: AI Factory
+        type: enables
+        note: Essential for the uninterrupted operation of AI training and inference.
+      - target: Nuclear Energy
+        type: part_of
+        note: Nuclear power is a key provider of this type of stable electricity.
+  - name: US Grid Expansion Stagnation
+    aliases: []
+    definition: >-
+      The decades-long slowdown in building new power generation and transmission infrastructure in the United States,
+      which has created a severe deficit in energy supply relative to the accelerating demand from AI.
+    tags:
+      - infrastructure
+      - optimization
+    timestamps:
+      - '12:23'
+      - '12:44'
+    relations:
+      - target: Energy as Primary AI Bottleneck
+        type: prerequisite_for
+        note: This stagnation is a root cause of the energy bottleneck facing AI.
+      - target: Net New Power Production
+        type: contrasts_with
+        note: The current need for massive new power generation directly counters the historical trend of stagnation.
+  - name: Megatons to Megawatts Program
+    aliases: []
+    definition: >-
+      A post-Cold War program where the US acquired highly enriched uranium from Russian nuclear warheads, downblended
+      it, and used it as fuel for commercial power reactors, impacting the domestic nuclear fuel supply chain.
+    tags:
+      - societal
+      - infrastructure
+      - application
+    timestamps:
+      - '58:03'
+    relations:
+      - target: Nuclear Fuel Supply Chain
+        type: related_to
+        note: >-
+          This program contributed to the decline of domestic uranium enrichment capacity in the US by providing an
+          alternative fuel source.
+      - target: Government-Technology Interaction
+        type: related_to
+        note: >-
+          An example of a large-scale government initiative with significant technological and geopolitical implications
+          for energy.

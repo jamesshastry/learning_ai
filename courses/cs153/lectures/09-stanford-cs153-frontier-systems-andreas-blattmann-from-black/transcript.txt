@@ -1,0 +1,1680 @@
+[00:07] Quick show of hands. How many people
+[00:09] recognize a song that was playing? So,
+[00:11] my favorite song is called Bella Napoli.
+[00:13] It has been added to the uh CS153
+[00:16] Spotify playlist. For anybody who has
+[00:18] music requests for CS53 this quarter,
+[00:21] also known as AI Coachella. We've
+[00:24] [snorts] got an open playlist. Please
+[00:25] feel free to add songs there. That one
+[00:27] was a request from me in honor of our
+[00:30] speaker today who I'm very lucky to call
+[00:33] a close friend and is the co-founder of
+[00:36] Black Forest Labs, Andreas Plottman.
+[00:38] Thank you for joining us, Andy.
+[00:40] >> Thanks, Ans. Thanks, everyone. Thanks
+[00:41] for having me.
+[00:42] >> Andy is joining us from Germany in a
+[00:44] little town called Fryberg, which I
+[00:47] think a lot of you will be hearing about
+[00:48] more and more as it becomes a hub uh for
+[00:52] frontier research in Europe. If you
+[00:54] remember in our first lecture, right, we
+[00:57] talked about the anatomy of frontier AI
+[01:00] progress and we talked about three or
+[01:04] four important touch points in this
+[01:05] class. You're going to be hearing about
+[01:07] over and over again. One is that there's
+[01:10] a a transition happening from the old
+[01:13] systems, the old infra stack to a new
+[01:16] one, right? And you got to be open to
+[01:18] understanding what those rewrites are
+[01:20] looking like and and our speakers are
+[01:21] going to tell you which parts of the
+[01:23] stack they're helping to rewrite. We
+[01:25] talked about the basic AI scaling
+[01:26] recipe, right? We've got two sort of
+[01:28] loops that are important to run. Once
+[01:30] you do you get some compute, you get
+[01:32] some data, you build a model, and then
+[01:35] you do inference, right? That gives you
+[01:37] revenue to buy more compute and then
+[01:39] context feedback. We've talked about the
+[01:41] bottlenecks right on that on getting
+[01:44] those loops scaling which is context,
+[01:48] compute, capital and culture. We talked
+[01:50] about context and and compute. We'll
+[01:51] talk a little bit about all four today.
+[01:53] And then the last was well for your
+[01:55] projects which is the the part I'm sure
+[01:57] many of you are anxious about is how do
+[01:59] you get one of those scaling flywheels
+[02:01] going right? And we talked about there
+[02:03] being sort of three steps in the
+[02:06] journey. There's an incubation phase
+[02:08] where you kind of figure out which
+[02:10] specific part of the frontier you want
+[02:12] to attack with a state-of-the-art
+[02:14] system, right? Then you land with a soda
+[02:17] release, a state-of-the-art release, and
+[02:18] then that allows you to expand to more
+[02:20] and more capabilities on the frontier
+[02:22] that you care about. And if you
+[02:24] remember, we did sort of a a field trip
+[02:27] into one of the frontier factories,
+[02:29] right? Um in in our first lecture, which
+[02:31] was anthropic, we talked about code as
+[02:33] one domain. And today we have a chance
+[02:36] to do a field trip into another Frontier
+[02:38] Eye factory in Germany called Black
+[02:40] Force Labs. And we've got here one of
+[02:42] the factory owners, Andy Blottman, um
+[02:45] who's a co-founder of Black Force Labs,
+[02:47] also co-creator of Stable Diffusion. How
+[02:50] many people here have heard of Stable
+[02:51] Diffusion? All of you. Perfect. Great.
+[02:53] You've done some homework. And so today
+[02:55] we're going to talk about the frontier
+[02:58] here. asked uh on Tuesday we talked
+[03:00] about the the audio and the speech
+[03:03] frontier, right? What is audio
+[03:05] intelligence like? What was it? Where is
+[03:07] it going? With Maddie from 11 Labs. And
+[03:10] today we have Andy talking to us about
+[03:12] the frontier of visual intelligence,
+[03:14] which I think is one actually one of the
+[03:15] most exciting frontier, if not the most
+[03:17] critical frontier to unlock more
+[03:19] progress in if we really want to get um
+[03:21] these models to work in mission critical
+[03:23] contexts in the real world. And so we're
+[03:26] going to spend some time talking about
+[03:27] the anatomy of visual intelligence as as
+[03:29] Andy sees it as one of the pioneers of
+[03:31] the field. And then we're going to talk
+[03:33] go back in time a little bit and zoom
+[03:34] into how we bootstrapped the flux
+[03:36] flywheel together a couple years ago.
+[03:38] Flux is the name of the flagship model
+[03:40] family from Black Forest Labs. And then
+[03:43] we're going to spend some time on the
+[03:44] fun part which is future frontiers.
+[03:46] Where are things right now that where
+[03:49] where are the unsolved problems? where
+[03:50] are we right now where you guys can step
+[03:52] in and start co-creating this journey uh
+[03:55] in the space. So this was the frontier
+[03:58] factory right we talked about this is
+[04:00] sort of the basic template again to be
+[04:02] clear this is a directional heristic
+[04:05] every team is different every research
+[04:07] project is different but to kind of give
+[04:08] you a grounding sense of repeating
+[04:10] patterns about how um some of the best
+[04:13] teams are manufacturing intelligence
+[04:14] repeatedly remember this was the
+[04:16] pipeline we had um pre-training
+[04:18] mid-training post-training with agents
+[04:20] in the real world there's a version of
+[04:22] this that that Andy is going to walk us
+[04:24] through but before we jump into that why
+[04:25] don't we just spend some time on on you,
+[04:27] Andy. Who are you and how did you get
+[04:29] here?
+[04:29] >> Yeah, cool. Thank you, An. Thanks again
+[04:31] for having me, everyone. Um, yeah, I'm
+[04:33] Andy. Um,
+[04:35] started looking into AI, I think, in
+[04:38] 2019. Um, I I was actually originally
+[04:41] studying mechanical engineering. It's
+[04:42] classic German education. Uh, I think
+[04:46] you go to a school and then you figure
+[04:47] out you're kind of somewhat technical
+[04:48] and what are you doing if you don't know
+[04:50] exactly what what to do? Studying
+[04:52] mechanical engineering in Germany,
+[04:54] right? Um and then it yeah through
+[04:56] through a couple of um I think
+[04:59] coincidences I got into computer science
+[05:01] into coding into
+[05:04] already robotics back in the days. We
+[05:05] talk more about robotics uh later. Um
+[05:09] and applied at a PhD in H Highleberg uh
+[05:11] where I met my two co-founders Robin and
+[05:13] Patrick. Um and that was a really like
+[05:15] small lab. Everyone back in the day was
+[05:17] doing representation learning with
+[05:20] visual models or like for the visual
+[05:22] domain and computer vision in itself
+[05:25] back that was 2019 was kind of a a niche
+[05:28] topic in this niche topic back then of
+[05:31] AI. It was really like people saw the
+[05:33] potential already but but no no one no
+[05:36] one had an idea of how how that would uh
+[05:39] explode then later, right? So it was
+[05:41] really a kind of a yeah niche topic we
+[05:44] worked on but we soon had a very good
+[05:45] intuition about like how to train models
+[05:48] to generate pixels mainly images back
+[05:51] then. Um and we're competing on a
+[05:55] research level as a very small lab with
+[05:57] players that were much larger than us.
+[05:59] Uh and finally that already back in the
+[06:02] day was Google and OpenAI their research
+[06:05] teams and it was not about building
+[06:06] frontier systems was
+[06:08] >> foundation models. Yeah. Or or even
+[06:11] before that uh who wrote actually the
+[06:13] nicest paper to show that something was
+[06:15] was happening. So back in the days it
+[06:17] was like
+[06:18] >> this was pre uh
+[06:20] >> that was pre-stable diffusion. There was
+[06:22] that was
+[06:23] >> it was for the ones who remember it
+[06:25] style GAN was kind of
+[06:27] >> the images were most often generated
+[06:29] with GANs because they had a kind of a
+[06:31] good inductive biases for for for kind
+[06:34] of this data domain. Um and it was
+[06:37] generating a 256 x 256 pixels image was
+[06:41] a challenge like not every algorithm
+[06:43] could do that and yeah it was just a
+[06:45] very different world. So um we competed
+[06:47] with labs that were much larger than us
+[06:49] and we had even back in the day way way
+[06:54] uh less compute. So we had to come up
+[06:56] with kind of more um efficient
+[07:00] algorithms to solve that problem because
+[07:02] images and not speaking of videos are so
+[07:05] much higher dimensional than other
+[07:07] representations say text or something
+[07:09] text is uh much lower dimensional
+[07:11] >> and and to anchor focus on time you were
+[07:13] still this was when you were at the
+[07:14] University of H Highleberg.
+[07:15] >> Exactly. Right.
+[07:15] >> Exactly. Um so um yeah and then we we
+[07:20] spent like two years investigating how
+[07:23] can we actually find representations for
+[07:26] natural data for images for video um
+[07:29] mainly that are
+[07:32] perceptually equivalent to the pixel
+[07:35] space or to what matters to us humans in
+[07:38] the pixel space but much lower
+[07:40] dimensional and much more efficient
+[07:42] because we didn't have the computer to
+[07:43] train a kind of generative model on the
+[07:46] pixel space and it's also super wasteful
+[07:48] and that was what gave rise to a a
+[07:50] series of papers on latent generative
+[07:53] modeling. So you actually train a kind
+[07:55] of a compression model um similar to a
+[07:59] learned JPEG code you could imagine it
+[08:01] to find that perceptually equivalent
+[08:03] representation to the uh pixel space and
+[08:05] you train the generative model there and
+[08:07] that um helped us saving tons of compute
+[08:11] training our models much more
+[08:12] efficiently and with orders of magnitude
+[08:15] less compute than our competitors put
+[08:18] out like better
+[08:22] like models that were on power even
+[08:23] better than those competitors and that
+[08:25] was what that algorithm latent diffusion
+[08:27] also gave rise to stable diffusion. Then
+[08:29] um so
+[08:31] we proposed the algorithm saw the
+[08:33] potential set out to search some compute
+[08:36] luckily find that in the open source
+[08:37] community um and train stable diffusion
+[08:40] that was then released in 2022 um and
+[08:43] pretty much surprised us as well like
+[08:45] with all the hype it got and actually
+[08:47] was it was fun. It was here in the Bay
+[08:49] Area it was hyped much more than in
+[08:50] Germany. in Germany. Still today, not a
+[08:53] lot of people know about that model,
+[08:54] funnily.
+[08:55] >> Yeah, it that there was a moment I
+[08:57] remember Dolly 2 was in preview, I
+[08:59] think. And and then you guys put out
+[09:01] stable diffusion and I remember on
+[09:03] Reddit there was somebody had sketched
+[09:05] out uh they had taken one of their kids'
+[09:08] like
+[09:10] uh drawings. It was like a crayon
+[09:12] drawing and had turned it had run it
+[09:14] through the image to image transfer on
+[09:17] SD. Uh I think it's for SD1. Um, and it
+[09:20] and out out had come this beautiful
+[09:22] illustration and I remember taking a
+[09:24] screenshot of that cuz I was just blown
+[09:26] away and I tweeted it and I think it was
+[09:29] like a Monday morning. We went into our
+[09:31] exec meeting at Discord and then I came
+[09:33] out for lunch and the tweet had like 3
+[09:37] or 4 thousand likes and it was it like a
+[09:41] for me it was a moment where I realized
+[09:42] that the technology of generative
+[09:44] modeling at that point had crossed an
+[09:46] inflection point where it suddenly
+[09:48] became legible to people outside the
+[09:50] machine learning community because it
+[09:51] was so visual.
+[09:52] >> Yeah.
+[09:52] >> Right. I I think it it might be worth
+[09:55] spending a couple minutes here to just
+[09:56] take people back in time because at at
+[09:58] this moment in time in the ML community
+[10:01] I would say there was a bit of a dogma
+[10:03] that language modeling was the beall and
+[10:05] endall of intelligence. You know the
+[10:07] general consensus at the time was that
+[10:09] language is the interface to reasoning
+[10:13] to to for intelligence which that the
+[10:15] way humans reason about intelligence the
+[10:18] way we think is through language
+[10:21] and I would say that's a philosophical
+[10:23] belief that has come and gone in its
+[10:25] sort of the strength of its religious
+[10:28] zeal. Um, but for those who are in the
+[10:30] computer vision community, and I I count
+[10:32] myself as one of those because my last
+[10:34] company, as we've talked about, was
+[10:35] Ubiquity 6. It was a 3D mapping and
+[10:37] computer vision company. We were working
+[10:38] on 3D reconstruction.
+[10:41] It it was clear that language was
+[10:43] extraordinarily valuable, don't get me
+[10:45] wrong, at at at reasoning about certain
+[10:48] tasks and fields. But for those of us
+[10:50] who are in the computer vision
+[10:51] community,
+[10:53] it felt incomplete because language is
+[10:56] is just one way we communicate, one way
+[10:58] we reason about the world. For those of
+[10:59] you who are visual thinkers or visual
+[11:01] intelligence who believe in multiple
+[11:02] intelligences, right, you just learn
+[11:04] better when you see visual
+[11:06] representations of things. And so it was
+[11:09] quite um cool to see stable diffusion
+[11:12] coming out and make progress of a
+[11:15] different kind legible to both the
+[11:17] machine learning community as well as
+[11:19] the the broader developer community, the
+[11:21] broader consumer community and and
+[11:23] that's when I think we we reach you know
+[11:24] we started working together because we
+[11:26] were trying to get some of these um
+[11:27] stable diffusion like capabilities onto
+[11:29] discord but can you talk about it? You
+[11:31] know, you said two things that I think
+[11:32] are quite helpful to overlay for the
+[11:35] students here, which is the difference
+[11:36] between natural and unnatural
+[11:38] representations. Could could you speak
+[11:39] about that for a sec?
+[11:41] >> If we think about ourselves, if everyone
+[11:43] uh you look at me currently hopefully
+[11:46] and and um the medium through which you
+[11:50] are perceiving this is clearly video and
+[11:54] audio, right? you hear what I'm saying
+[11:56] and you're seeing me um gesturing here
+[11:59] or or talking to an um so these are
+[12:02] these are what we what I call natural
+[12:04] representations. If you think about the
+[12:06] source of those representations
+[12:09] eventually it's the sun or here we have
+[12:11] some some lights that try to resemble
+[12:13] what the sun sun does but it's
+[12:15] electromagnetic waves of a source that
+[12:18] we humans cannot control. We can shape
+[12:22] obviously the the or we we we can we can
+[12:25] control the shape of this world and we
+[12:26] can build buildings but this the
+[12:27] electromagnet magnetic spectrum that
+[12:30] falls onto the earth we cannot control.
+[12:33] Same for sound like natural
+[12:36] signals like a hearing a river flow or
+[12:38] something that's just
+[12:40] might some might call it noise or
+[12:42] something that's just natural and it's
+[12:43] there. Whereas text is inherently
+[12:46] humanmade. You see this in so many
+[12:48] different um occasions. If you just
+[12:50] measure the the information per sign
+[12:53] that text transports, it's so much
+[12:55] higher than the information per sign per
+[12:58] pixel in an image. And why is that?
+[12:59] Because it's humanmade. It was
+[13:01] evolutionarily very important for us to
+[13:04] communicate uh efficiently. Um, and that
+[13:07] there's I think that that's also at the
+[13:09] heart of why we need to compress images
+[13:11] and videos before we train a generative
+[13:13] model on them because there's so much
+[13:14] redundancy in in it. In text, you don't
+[13:17] have this redundancy because it's
+[13:18] humanmade. Throughout evolution, we
+[13:20] reduce that redundancy and um and made
+[13:25] it efficient for learning. However, it's
+[13:28] super important
+[13:29] at least in how I see it and how we see
+[13:31] it at like Force Labs to consider two
+[13:35] things. First, if you think about
+[13:36] yourself as babies, how you learn, it's
+[13:39] first observing things, hearing
+[13:43] and seeing and then interacting with
+[13:46] things in the physical world, right?
+[13:48] This is pretty much the first I would
+[13:50] say three, four, five years. I don't
+[13:52] know when I learned reading or but it's
+[13:54] I think maybe with five or something.
+[13:56] And just the level of intelligence a
+[13:58] three-year-old has compared to the level
+[14:01] of intelligence a a language model has
+[14:03] is very different, right? And I think
+[14:05] that's what what what why we care so
+[14:07] much about natural representations like
+[14:09] audio and video
+[14:13] because we we are like absolutely
+[14:16] convinced that this will be the
+[14:17] fundament of all the kind of higher
+[14:19] intelligence that these systems will
+[14:20] eventually have and starting from
+[14:23] language and trying to to stack up a bit
+[14:26] of additional uh kind of representations
+[14:28] on top of that is in my um kind of
+[14:32] opinion the the wrong way. You should
+[14:34] start with from first principles how we
+[14:35] humans do it and that's clearly learning
+[14:37] our natural representations by first
+[14:39] observing and second we'll talk about
+[14:41] that later interacting
+[14:44] these are just from how we think about
+[14:46] it the main pillars of learning and also
+[14:49] the main pillars of what we define as
+[14:50] visual intelligence actually
+[14:52] >> so I I I think um
+[14:54] so this is pretty important because
+[14:58] two years ago three years ago I would
+[14:59] say the consensus was that the way to do
+[15:02] generative modeling was roughly
+[15:05] this, right? Where you had this these
+[15:07] foundation models that were unimodal.
+[15:10] They were text to image, text to video.
+[15:13] >> Looking at stable diffusion as a stable
+[15:15] image model. Exactly. Unimodal based on
+[15:17] images.
+[15:18] >> Yeah. Could you could you just talk
+[15:19] about what this the what the state of
+[15:22] the art was then
+[15:23] >> versus now?
+[15:24] >> Yeah.
+[15:24] >> So, yeah, stable fusion. I think it's a
+[15:26] perfect example of that. Um, it was a
+[15:28] text image model. You could you could do
+[15:29] super nice kind of artistic things that
+[15:32] have not been possible before, but was
+[15:34] clearly made for content creation,
+[15:36] right? It was a a unimodal model made
+[15:38] for the purpose of content creation. You
+[15:41] could you could yeah make artistic style
+[15:43] transfer. You could you could do you
+[15:44] could trail Laura and and do maybe some
+[15:46] some kind of um character consistent
+[15:50] marketing transformation or like yeah
+[15:51] character consistency into the get
+[15:53] character consistency into the model
+[15:55] then use it for marketing or something.
+[15:57] But that's all content creation. We
+[15:59] currently see that visual models
+[16:02] starting to become way more than that.
+[16:04] We don't train a single unimodal model
+[16:08] anymore to just like
+[16:10] fulfill the purpose of content creation.
+[16:12] We're training a a unified a uni a
+[16:15] multimodal model for natural
+[16:17] representations or natural data that
+[16:19] then can give rise to so much more. It's
+[16:22] about physical AI. It's about robotics,
+[16:24] computer use. We can do with these
+[16:25] models. We had a couple of demos already
+[16:27] like or there were recently a couple of
+[16:28] demos that were super impressive. We can
+[16:31] do world modeling and simulation and
+[16:32] still content creation. Um but
+[16:36] combining different natural
+[16:38] representations or only training on one
+[16:40] is the key ingredient because it will
+[16:43] give the model a much more natural
+[16:44] understanding. As one example, if I if I
+[16:49] just see two rigid bodies colliding, I
+[16:53] always have a sound attached to it,
+[16:55] right? There's a correlation between
+[16:57] that sound happening and a certain
+[16:59] action in physical in the physical world
+[17:01] happening.
+[17:03] And being able to observe this
+[17:05] correlation for a model is super
+[17:06] important because it will help it that
+[17:08] model understand much better what's
+[17:10] actually going on. Whereas if I only
+[17:11] train at at one single modality, it's
+[17:14] much harder to to kind of understand
+[17:16] what's going on or
+[17:19] >> just interacting with with this bottle.
+[17:21] I think it's super hard for a model to
+[17:23] understand what's actually going on if
+[17:26] it's not if it's doesn't hear that
+[17:27] sound. How would that be different for
+[17:29] that kind of transparent body compared
+[17:31] to to someone um putting their hand
+[17:35] through water or something which is also
+[17:37] transparent. Right.
+[17:37] >> Right. So um these correlations between
+[17:42] different natural data representations
+[17:44] are super important for a model to learn
+[17:46] kind of at a higher um representation of
+[17:48] intelligence as well. Now this this idea
+[17:52] you know for those in the machine
+[17:53] learning community is not new. I mean,
+[17:55] for a while there was an there was a
+[17:57] sense that the progression of technology
+[17:59] would be we'd have sort of
+[18:03] state-of-the-art systems that were
+[18:04] capable at individual modalities
+[18:07] >> and then at some point to make them
+[18:08] smarter, we'd have to give them the
+[18:10] ability to reason across different
+[18:12] domains, you know, transfer learning, so
+[18:14] to speak, where you can reason about the
+[18:17] physics of a of of of this bottle
+[18:19] hitting that and and the the sound, the
+[18:21] audio emerging. Um but you can't start
+[18:24] with everything on day one. And so could
+[18:26] you just take let's let's talk about how
+[18:28] we bootstrapped
+[18:30] the fly wheel because now today fast
+[18:32] forward two years ago you know four
+[18:34] years after stable diffusion came out
+[18:36] you know flux is now
+[18:39] uh used by millions of people around the
+[18:41] world you guys have hundreds of millions
+[18:42] in revenue blah blah blah but for the
+[18:44] purpose of the students I think it's
+[18:45] helpful to zoom back in time and say
+[18:46] okay you guys have this clear thesis for
+[18:49] eventually models will be good enough at
+[18:52] reasoning about all kinds of all of
+[18:54] visual intelligence
+[18:56] But you have to start somewhere.
+[18:57] >> Yes.
+[18:58] >> Especially when you have less resources
+[19:00] than than the largest companies in the
+[19:02] world. You're a smaller team. You have
+[19:04] less data. So can we spend a little bit
+[19:06] of time talking about how did you
+[19:08] concretize where to start?
+[19:10] >> Yeah.
+[19:10] >> And then how did you initialize that
+[19:12] kind of momentum flywheel we talked
+[19:14] about from at day one.
+[19:16] >> Yeah. Absolutely. Yeah. I think uh
+[19:19] that's one of the most important things
+[19:20] when starting a company. focus matters
+[19:23] >> well or any research project right at
+[19:24] the time actually SD was not even a
+[19:26] company.
+[19:26] >> Yeah. Yeah. Absolutely. Absolutely. But
+[19:29] I think I want to as an example I want
+[19:31] to I want to take how we started the
+[19:33] company because there we we had this
+[19:34] kind of huge experience in uh image
+[19:37] generation unimodal image generation.
+[19:40] We've done stability fusion then we've
+[19:42] worked for stability AI put out a couple
+[19:44] of uh more models on that domain and we
+[19:47] pretty much had the recipe to kind of
+[19:50] train a frontier model for that domain
+[19:52] >> right
+[19:52] >> so when we started the the the company
+[19:54] we clearly or we looked at the field and
+[19:57] we said there's clearly a need for a
+[20:01] next generation of image models because
+[20:03] so far the models cannot say produce
+[20:05] hands that that are actually having five
+[20:07] fingers right that that was back in the
+[20:09] day a So we attacked that specific field
+[20:12] and said okay we want to be building a
+[20:14] model for for
+[20:16] specifically for image that is just 10x
+[20:18] better than everything else and that's
+[20:20] what that then we sat down together 3
+[20:22] months we had all the recipes we knew
+[20:24] what to do we scaled it and what came
+[20:27] out of that was flux one that initially
+[20:29] had kind of
+[20:31] >> product market fit you can say we even
+[20:33] before we took our API public we had a
+[20:35] couple of very large customers uh that
+[20:37] that kind of helped just closed the
+[20:39] feedback loop. Now talking about the
+[20:41] feedback loop because obviously on once
+[20:42] you can build a technology
+[20:45] but
+[20:46] setting that technology out to solve
+[20:48] real world problems will give you the
+[20:50] very important kind of data to actually
+[20:53] learn from first what is an important
+[20:56] problem to work on and also how to make
+[20:58] the model better for that specific
+[20:59] problem. Right? By that you you have the
+[21:01] first kind of
+[21:03] >> uh loop closure for the flying. I mean,
+[21:06] let's let's break that um that release
+[21:08] down. Flux one, I think
+[21:11] this is the kind of pipeline we talked
+[21:14] about, right? So, could you just go
+[21:15] through sort of the BFL version of this
+[21:18] and explain what's going on at each step
+[21:21] within the the company of the BFL sort
+[21:23] of pipeline? Yeah. So I mean this this
+[21:27] is particularly for um for how we would
+[21:30] define visual intelligence now but I
+[21:32] think I can also for flux one it was
+[21:34] clearly we trained only on unimodal like
+[21:36] like text text and image right only on
+[21:38] those representations so the
+[21:39] pre-training was just a large corpus of
+[21:41] text and image for the mid training we
+[21:43] added um
+[21:46] higher resolution um and like a couple
+[21:48] of more capabilities into and then we
+[21:50] had this kind of post- training phase
+[21:51] where we exposed the model to
+[21:54] first we did a kind of offline post
+[21:57] training before you release an initial
+[21:59] model. Do some distillation to make the
+[22:02] model more efficient. You you align it
+[22:04] with uh your
+[22:07] intuition about what customers would
+[22:09] care about,
+[22:10] >> right?
+[22:10] >> And then you expose it to kind of the
+[22:12] real world, but then you get this
+[22:13] feedback. And for for flux one, a very
+[22:16] interesting um observation we made was
+[22:20] oh wow so many people are using our text
+[22:22] to image models
+[22:24] to actually
+[22:26] train a Laura and then do character
+[22:29] consistency. Like they they want they
+[22:30] they want to they want to have the
+[22:32] ability to control the model with more
+[22:35] than only text because text is obviously
+[22:37] nice and easy and low-key. Everyone
+[22:39] understands it. Everyone can use it.
+[22:41] that it's also very ambiguous if you
+[22:44] like and and again the there's a kind of
+[22:47] disconnect between this kind of
+[22:49] artificial representation text and and
+[22:51] the natural representation image. So if
+[22:53] I say an image of a blue bird, there are
+[22:55] infinitely many images that that give
+[22:57] rise to this kind of um
+[23:00] description, right? The bird could be
+[23:01] sitting on a branch, the bird could be
+[23:03] flying and so on and so forth. And it's
+[23:04] actually super hard to apply precise
+[23:06] control to um image to to the image you
+[23:10] want to be generating.
+[23:12] So that was that was I think that's a
+[23:14] perfect example of the benefit of the
+[23:17] loop closure because what we learned was
+[23:19] okay people want to actually do image
+[23:21] editing
+[23:21] >> right
+[23:23] >> so what did we do we did a post train on
+[23:26] partially based on the data we got
+[23:28] partially based on new stuff to create
+[23:30] an image editing model which was flux
+[23:31] one context that came out I think pretty
+[23:34] exactly a year bit less than a year ago
+[23:37] um and that was the first
+[23:40] image editing model where you could
+[23:41] actually in a scalable and fast way get
+[23:43] character consistency. So I now I could
+[23:45] take an image of you an say uh and maybe
+[23:48] of me and combine us two sitting
+[23:50] together not in a lecture hall but um in
+[23:53] a cafe having having a chat and that's
+[23:55] that just has massive potential for
+[23:58] everything content creation right
+[23:59] marketing needs it to to like get get
+[24:02] different product different products
+[24:04] into different contexts and it just like
+[24:06] supercharged or currently supercharging
+[24:09] like a lot of different applications
+[24:12] around the creative world. Yes, this may
+[24:14] not be ob obvious, but I want to pause
+[24:16] here because because you know Andy did
+[24:18] this quite naturally, but
+[24:22] for those of you who who were trying out
+[24:24] AI image models, let's say 18 months
+[24:27] ago, how many of you tried giving it a
+[24:29] photo of yourself and then saying, you
+[24:31] know, give this person a hat and then it
+[24:33] came out actually looking like you?
+[24:36] Yeah. No hands are going up. One one
+[24:37] hand is going up. It was a pretty basic
+[24:41] capability gap.
+[24:43] these image models just didn't have
+[24:44] character consistency, right? You just
+[24:47] give it like a photo of yourself and
+[24:49] say, you know, give him a mustache or
+[24:51] whatever and out would come somebody
+[24:53] looking not like me. And um that
+[24:58] you know that that for many people in
+[25:00] the space that was just a I actually
+[25:02] can't I if I had a dollar for every time
+[25:06] uh people would would say you know that
+[25:09] that's just that problem will not get
+[25:11] solved like these models are so dumb
+[25:14] like look AI is so dumb it will never
+[25:16] like it'll never be able to surpass that
+[25:18] capability threshold.
+[25:21] Um I I I would just sit there and the
+[25:23] and these are very smart people
+[25:24] including by the way some of the
+[25:25] speakers in this class who over the
+[25:28] years have realized they had to update
+[25:29] their priors about the the speed at
+[25:31] which you can update these capabilities.
+[25:33] But it was common consensus at the time
+[25:35] that these image models are just not
+[25:36] going to get that good. You know AI is
+[25:38] dumb. It can't reason about the the way
+[25:41] the humans do humans do about create
+[25:43] like you know faces and specific
+[25:45] characters. And I was just it was I was
+[25:48] shocking to me how very smart people
+[25:50] would very confidently proclaim in the
+[25:52] industry that I was just not going to
+[25:53] get salt. Meanwhile, you know, here we
+[25:55] were in Fryberg um looking at the data
+[25:58] where there were people using flux one
+[26:01] which was not very good at character
+[26:02] consistency but that that context
+[26:04] feedback of seeing how the prompts
+[26:06] people were trying to use with the model
+[26:09] and the the feedback of them saying
+[26:12] actually that that was not good. can you
+[26:13] please try you know doing this better?
+[26:17] the the the multi-step sort of reasoning
+[26:19] chain that we were getting from seeing
+[26:21] people out in the wild using it. And it
+[26:23] was an openweight model which we'll talk
+[26:24] about in a second which is quite unique
+[26:26] gave us a very clear path actually to
+[26:28] improving the capabilities and then
+[26:30] actually it was you know one of our team
+[26:31] members Dustin uh in in SF who figured
+[26:35] out that you know we should just make an
+[26:37] update to this that's that's called
+[26:38] context with a K because that's the
+[26:40] German way to pronounce it. um that is
+[26:42] specifically an editing model and I
+[26:45] think between the insight that insight
+[26:48] which was at an offsite in Spain where
+[26:50] where we were we were in
+[26:51] >> I think it was in um in Italy
+[26:52] >> in Italy we were in Italy you know uh I
+[26:55] I think Dali no GP GBD1 image had just
+[26:58] come out we were literally all together
+[27:00] >> and there was a sense you know this is
+[27:01] an important thing as a as a as a new
+[27:03] team or as a first-time you know
+[27:05] researcher it can be quite daunting when
+[27:08] some lab that has way more resources
+[27:10] than you launches something that's that
+[27:12] looks way better.
+[27:15] And and your first intuition is to go,
+[27:17] "Oh my god, we're
+[27:20] But you got to remember that the mark of
+[27:23] a good leader is to not panic. Keep
+[27:26] calm, look at the data, assess the
+[27:30] landscape, and then come up with a plan
+[27:31] step by step." And often you'll notice
+[27:33] that if you're good at at mapping the
+[27:36] domain you're you want to be an expert
+[27:37] in somewhere in your intuition, you have
+[27:39] a gut feeling that's telling you there's
+[27:41] actually some unsolved problem still
+[27:42] left. And you know Dustin did a great
+[27:45] job at that. The team rallied I think
+[27:46] within 24 hours we had redone the the
+[27:49] staffing on the team. And I think what
+[27:51] 60 days later context came out. Yeah.
+[27:53] >> Right. And revenue from context doubled
+[27:56] I think within six weeks. In fact, I
+[27:59] think soon after is when um this part is
+[28:02] public now that Meta announced a
+[28:04] partnership with BFL and said they were
+[28:06] going to be using Black Forest models.
+[28:08] This tiny team out of Germany. I think
+[28:11] the team was you guys were like 25
+[28:13] people.
+[28:13] >> Yeah.
+[28:15] >> To drive image editing for all two
+[28:18] billion Facebook and Meta and so on
+[28:20] users. I mean this is not normal,
+[28:25] right? And and observing
+[28:29] my I was I was lucky enough by this
+[28:30] time, you know, I I had
+[28:33] been an investor with you guys for about
+[28:34] a year and a half and so we would go to
+[28:36] these offsets together and I I'd had a
+[28:38] chance to sort of see how in real time
+[28:40] you know this this is not the systems
+[28:44] problem often is not just a technical
+[28:47] problem because actually all the data
+[28:48] was available to us the context was
+[28:50] available to us. It's the human system
+[28:52] of of organizing the team and the
+[28:54] research sort of culture, right? In a
+[28:57] way that is not you're not panicking,
+[28:58] but you're still assessing kind of the
+[29:00] the frontier meth methodically and being
+[29:02] very honest with yourself about how fast
+[29:05] capabilities are moving and where you
+[29:06] can uniquely sort of contribute to that
+[29:09] system is is the key to keeping that
+[29:12] loop going over and over and over again.
+[29:15] And I think that's why you know BFL is
+[29:17] where they are today. They went from
+[29:18] zero to several hundred million revenue.
+[29:20] So it's the company is now worth more
+[29:22] than 3 billion. But it can be easy to
+[29:24] forget that that wasn't always the case.
+[29:26] And there are these moments in your
+[29:27] journey, especially in machine learning
+[29:29] where things change so fast. It's very
+[29:31] tempting to just give up, you know, and
+[29:34] say, you know what, this problem is
+[29:36] solved. I mean, it really it is
+[29:38] remarkable to me how many teams in image
+[29:40] generation just don't no longer exist
+[29:43] because they just gave up
+[29:45] and instead BFL just stayed persistent
+[29:48] and today is one of the only leaders
+[29:49] left. I would say an independent leader
+[29:51] that's pushing the visual frontier. In
+[29:52] fact, I I hope some of the projects here
+[29:54] push the frontier too. But um that's
+[29:57] that's I think a learning for me has
+[30:00] been it's actually quite straightforward
+[30:02] sometimes technically if you have the
+[30:04] right leadership to keep advancing the
+[30:06] frontier. But sort of a drift in your
+[30:08] mission, a lack of conviction that you
+[30:11] know it's worth attacking the problem
+[30:14] you you are committed to over and over
+[30:16] again in the face of crazy challenges is
+[30:18] often just the difference between you
+[30:20] know success and fail. How many people
+[30:21] know that have seen that meme of the guy
+[30:23] tunneling and giving up right? Yeah, you
+[30:26] guys know that meme. We we'll put it in
+[30:27] the class reading list. I'm dating
+[30:29] myself with with Boomer memes here, but
+[30:32] I can't tell you how many times it's
+[30:33] felt like that at BFL. And then one
+[30:35] release later, right, the world has
+[30:37] changed. And that that's actually I
+[30:39] think also a good segue into what's
+[30:41] next. Like now we're seeing this this
+[30:44] kind of these models being applied
+[30:46] everywhere for content creation. But
+[30:48] again, then you need to think more like
+[30:51] like look forward and and and and think
+[30:53] okay, what's next? And clearly we now
+[30:56] see this insane potential of especially
+[30:58] these combined multimodal video audio
+[31:00] image models for the capabilities we
+[31:03] just talked about right physical AI um
+[31:06] computer use right world modeling and
+[31:09] simulation and still also content
+[31:10] creation and you can you can actually
+[31:12] build a single model that is capable of
+[31:14] all doing all of that together and you
+[31:17] will actually get compounding effects
+[31:19] based on this example with with the
+[31:22] correlation of noise and the action in
+[31:23] the physical case. Um, you can also make
+[31:27] models that are much smarter for
+[31:29] generating
+[31:30] norm regular images or videos footage
+[31:33] for say again advertising or something.
+[31:36] >> Well, could could we could you talk a
+[31:38] little bit about that? So let's zoom
+[31:39] forward to um actually could could you
+[31:42] talk about
+[31:44] you know how do you take an image or
+[31:47] a content creation pipeline and add to
+[31:51] it what you just talked about the
+[31:53] ability to actually interact with the
+[31:54] physical world or learn from the
+[31:55] physical world you know what what does
+[31:57] action prediction mean how is that done
+[31:59] and then maybe you can talk about self
+[32:00] flow a little bit since we're going to
+[32:01] be assigning that as reading. Yeah.
+[32:02] Yeah. Yeah. Absolutely. Um so yeah, I
+[32:05] think first you you need to go from we
+[32:09] already talked about this unimodal to
+[32:10] multimodal, right? Um and then you get
+[32:13] this kind of Yeah, this is this one. And
+[32:14] if you if you go back to the slide here,
+[32:16] I think this this is a good one. So
+[32:18] there's a large pre-training on again
+[32:22] natural representations. These are the
+[32:23] representations we humans used to to
+[32:26] learn from in our first years of of of
+[32:28] our lives. Um and there you you just
+[32:32] combine everything together and you have
+[32:33] these um this combined pre-training that
+[32:36] gives you a very very general model. So
+[32:39] pre-training for us means
+[32:42] images, video, audio combining with a
+[32:46] architecture or with an algorithm that
+[32:48] we've also published um beginning of
+[32:50] March selfflow which allows the model to
+[32:53] actually get compounding effects by
+[32:55] observing
+[32:57] again I don't make this this uh example
+[33:00] again you you saw it uh already a couple
+[33:02] of times by observing correlations that
+[33:03] that exist between those modalities that
+[33:06] gives you a very very general
+[33:07] representation
+[33:08] What we add next in mid training is
+[33:11] additional context. We do new tasks such
+[33:15] as conditioning on I can condition a
+[33:17] model on an input image and an audio
+[33:20] track and I say I I want to I want to
+[33:22] hear an saying XYZ in that voice model
+[33:26] does this. This is additional context.
+[33:28] But importantly for extending the scope
+[33:31] beyond pure um content creation, you
+[33:35] also want to condition the model on
+[33:37] actions. And you want to have the model
+[33:39] predict actions. And then we can arrive
+[33:42] at models like this computer use models
+[33:44] for instance that that are conditioned
+[33:46] on a video or an image and they predict
+[33:50] the next move
+[33:52] based on keystrokes or something to
+[33:55] achieve a certain task. Say I want to be
+[33:58] opening a new brow browser tab or
+[33:59] something, right? So this is crucial to
+[34:02] get to expand the scope um of this kind
+[34:04] of very general representation that we
+[34:07] get from pre-training but we actually
+[34:08] want to be using it for we want to make
+[34:10] use of this kind of general generality
+[34:12] of the representation. So we add
+[34:14] additional context and importantly
+[34:16] actions. Um and what we then do this is
+[34:20] very important or yeah maybe maybe to
+[34:22] zoom out a bit more and come back to the
+[34:24] human learning example.
+[34:26] pre-training, mid-training, this is all
+[34:28] still observation. All the algorithms
+[34:30] that we're training like foundation
+[34:32] models with in the early training stages
+[34:34] currently are models observing examples.
+[34:38] We we're calculating a loss from that.
+[34:41] We back propagate that through the
+[34:43] network, but there's no interaction
+[34:45] whatsoever.
+[34:46] >> Right?
+[34:46] >> So, how do we actually get the model to
+[34:49] interact really in the physical world?
+[34:52] That's super important for kind of
+[34:54] learning higher forms of intelligence as
+[34:57] we are all uh convinced of. So what do
+[34:59] we do? We use this model that can
+[35:02] actually given a video predict an action
+[35:05] to do something and hook it up in the
+[35:07] real world on a say on a robot for
+[35:09] instance, right? And then that allows us
+[35:13] to inter like allows this model to
+[35:16] through a robot interact with the
+[35:17] physical world create data for that
+[35:20] again and we can pipe that back into the
+[35:22] model training and that's when we close
+[35:23] this feedback loop. Uh so our post
+[35:27] training
+[35:28] looks or means interacting with the
+[35:31] physical world right so this is
+[35:33] important if you guys remember we talked
+[35:36] about physical verification
+[35:39] right as a key predictor where frontier
+[35:42] progress is going to continue wherever
+[35:43] you have context that can be and
+[35:45] performance that can be verified
+[35:48] progress can quite reliably be made
+[35:49] there right so in software engineering
+[35:52] that's verifiable because you can write
+[35:54] unit tests
+[35:55] in image generation not very verifiable
+[35:58] right because
+[36:00] one be beyond the basic tasks that that
+[36:03] um Andy talked about which is accuracy
+[36:06] right six five fingers instead of six
+[36:09] character consistency which is more a
+[36:11] preference uh
+[36:12] >> but even that example how would you
+[36:14] measure that at scale um without having
+[36:17] a human telling you no exactly
+[36:19] >> is that actually five five fingers
+[36:21] >> well I think you should talk about how
+[36:22] how that verification works and then
+[36:24] What is the you know in the new world
+[36:26] where you have to verify physical task
+[36:28] robotics what does that look like?
+[36:30] >> Yeah. Yeah. So I I think in it's fun
+[36:33] because if you if you Oh yeah. So
+[36:35] verification for for for images are
+[36:37] super is super tricky especially when it
+[36:39] comes to kind of or for videos when it
+[36:41] comes to physical things. But
+[36:44] once you hook that up in the real world,
+[36:46] there are just certain things that go
+[36:49] that that that you can do and certain
+[36:50] things that you can't do because a robot
+[36:53] arm can cannot just just do certain
+[36:55] certain joints. So it's like exposing it
+[36:57] to the physical world
+[37:00] naturally
+[37:02] um applies the boundary conditions that
+[37:03] we would expect. So that that's a very
+[37:06] important step and by that you you have
+[37:07] the perfect uh kind of environment
+[37:09] >> right to to directly inherently model
+[37:12] these kind of restrictions.
+[37:14] >> Whereas in the case of aesthetics or
+[37:16] visual preference how did you guys
+[37:18] verify that? How how did you get a model
+[37:20] to be better when just doing content
+[37:22] creation?
+[37:23] >> Yeah.
+[37:24] >> Uh that that involves like massive mass
+[37:26] massive amount of human judgment and
+[37:28] then uh feedbacking that signal through
+[37:30] the model again. Right. Okay. But that's
+[37:31] like
+[37:33] of often very tedious and also often
+[37:34] very dependent on who you're asking.
+[37:37] It's like a uh if I ask you, you've
+[37:40] looked at so many images by now. You're
+[37:41] I would consider you an expert. Um
+[37:43] because we always show that guy our
+[37:45] models, but you're also enjoying it. I
+[37:46] guess
+[37:47] >> depends on how much Betsy I've had that
+[37:48] day, [laughter]
+[37:50] >> you know, but but but like showing an
+[37:53] image to someone who has no idea of like
+[37:54] of like of of of say image generation
+[37:58] versus to myself and I've looked at so
+[38:00] many images, it gives you a very
+[38:03] different signal. I would rate something
+[38:06] as good or bad that looks very different
+[38:09] from what a kind of a another person uh
+[38:12] would do, right? It depends on the crowd
+[38:13] who you're asking. So it's you can ask
+[38:16] people that is very unam very ambiguous
+[38:18] in a way.
+[38:19] >> So this is a key insight I would say
+[38:21] because anytime the answer to the eval
+[38:23] question of how do you verify is it
+[38:27] depends on the audience or it depends on
+[38:29] the person consuming the system.
+[38:32] It should trigger a light bulb. At least
+[38:35] it does for me. That the value that you
+[38:40] get from the system varies a lot by how
+[38:43] much the model can be customized for a
+[38:45] particular audience.
+[38:48] And that is where open source comes in
+[38:50] because the beauty of open models is if
+[38:52] you give away the weights and they're
+[38:54] good general weights, right? Then you
+[38:56] can tell Meta, hey, you're welcome to
+[39:00] customize the preferences of what of
+[39:03] this model as you see fit for your
+[39:05] users. And you can tell another
+[39:07] government that has different cultural
+[39:10] preferences and biases that wants to,
+[39:12] you know, be able to deploy content
+[39:13] creation for let's say internal teams in
+[39:15] a completely different culture and say
+[39:18] you can have a control over that last
+[39:19] mile. And I think that's turned out to
+[39:21] be a very critical part of the open
+[39:24] ecosystem where I often get asked an you
+[39:27] know why did BFL open their models up
+[39:29] and just give away all this research for
+[39:31] free. Is it just that they want to save
+[39:33] the world? Well, you know part of it is
+[39:34] cultural as you can tell Andy you know
+[39:36] Andy was a came from the academic
+[39:38] community enjoyed and and benefited from
+[39:41] open publishing but at the end of the
+[39:43] day you've got to turn these research
+[39:45] products into businesses right and it
+[39:47] turns out there's extraordinary value
+[39:50] in producing state-of-the-art systems
+[39:53] that are then open and customizable
+[39:56] when the consumer of the system, the
+[39:58] person benefiting from the system has a
+[40:00] very different preferences from other
+[40:02] people who might be consuming the
+[40:03] system. Does that make sense? Have I
+[40:05] lost you guys? Can I get some nodding if
+[40:08] that's making sense? Yes. Okay. This
+[40:09] will be a theme consistently okay in the
+[40:12] class which is anywhere you have
+[40:15] consumers of a system or customers or
+[40:18] the people benefiting from the system
+[40:19] wanting more and more personalization
+[40:22] customization of the system for
+[40:24] themselves. That's where open models
+[40:26] become extraordinarily valuable and you
+[40:28] can actually build it turns out a very
+[40:29] large business very quickly doing that.
+[40:31] So I actually think there's a false
+[40:32] trade-off in the space a little bit
+[40:33] about open versus closed. These are both
+[40:35] just techniques or tactics for how to
+[40:38] deliver value. They they some sometimes
+[40:40] they get politicized philosophically but
+[40:42] actually just from a very bas basic
+[40:43] first principle of commercial
+[40:45] perspective you know open makes a lot of
+[40:47] sense in some domains where where the
+[40:49] aesthetics the preferences and so on are
+[40:51] quite there's a long tale of the
+[40:53] distribution is quite wide and and and
+[40:55] um and heterogeneous versus domains
+[40:58] where you know preferences are actually
+[41:00] quite narrow. If there if there's a
+[41:01] pretty narrow distribution then I think
+[41:03] you know closed models and so on are
+[41:04] quite valuable in that case. I think
+[41:06] there's one last piece that we haven't
+[41:08] covered which is the state-of-the-art
+[41:09] today because as Andy said now the
+[41:11] state-of-the-art right is about how do
+[41:12] you get these systems to reason in a
+[41:15] unified fashion across text image video
+[41:18] and so on in a way that's that has cross
+[41:22] sort of transfer learning across these
+[41:24] different modalities a very hard problem
+[41:26] very very hard problem but as is the
+[41:28] case with BFL consistently the team has
+[41:31] you know makes these sort of research
+[41:33] advancements and then gives
+[41:35] the technology and so this this was
+[41:37] actually one example I think what two
+[41:38] months ago no a month ago
+[41:39] >> month ago
+[41:40] >> self flow which has turned out to be a
+[41:42] technique now that suddenly magically
+[41:43] all my friends at all the labs are
+[41:44] calling and saying an have you heard of
+[41:46] self flow I was like yes we have heard
+[41:47] of self flow you it's on archive cuz
+[41:50] Andy and team published it so maybe you
+[41:52] can talk a little bit about what the
+[41:53] intuition behind self flow is as a
+[41:55] mechanism to to solve the multimodal
+[41:57] reasoning problem
+[41:58] >> um so
+[42:01] when training uh visual generative
+[42:03] models it's always been historically um
+[42:06] a bit tricky to get representations into
+[42:09] the model where they don't only generate
+[42:10] pixels in a way,
+[42:12] >> right?
+[42:12] >> But also understand what's actually
+[42:13] semantically going on. And there has
+[42:15] been a body of work on um so-called or
+[42:19] that that worked on aligning
+[42:20] representations of generative models
+[42:22] with
+[42:24] um representation learning
+[42:26] representations.
+[42:28] Um that
+[42:29] >> getting mad at there
+[42:30] >> to to to to get them a bit more
+[42:31] understanding of what's actually going
+[42:32] on and not only make them stupid pixel
+[42:35] generators that just learn to kind of
+[42:39] um resemble what what looks consistent
+[42:41] in an image. um that has been in the
+[42:44] last two years always been focused on
+[42:47] single modality. So what people did they
+[42:49] used a pre-trained representation
+[42:51] learning model like maybe some of you
+[42:53] might know the dyno model for images um
+[42:55] pre-trained model and they try to just
+[42:57] make the representations that the
+[42:59] transformer that is a backbone for image
+[43:02] generation has internally aligned with
+[43:05] the representation that this
+[43:06] representation uh learning model um had
+[43:10] and that is clearly restricted once you
+[43:13] want to go multimodal but as you saw in
+[43:16] the last slides going multimodal is
+[43:18] super important to learn kind of higher
+[43:19] form of intelligence. It's we want to be
+[43:21] multi we want to have models learning
+[43:23] multimodal representations because
+[43:24] that's frankly what we humans uh have
+[43:27] right so we it's crucially needed. So
+[43:29] how can we actually combine learning
+[43:32] having these so-called alignment losses
+[43:34] with multimodal representations and the
+[43:37] cellflow paper solves exactly that
+[43:39] problem in a very natural way. Really
+[43:42] recommended read for everyone. It's it's
+[43:44] a sign super super nice. Okay, good.
+[43:47] Shall we transition to questions? Okay.
+[43:50] >> Yeah. So, the question was um when when
+[43:52] when we close the feedback loop, how do
+[43:53] we ensure to to compress this? How do we
+[43:57] make sure that actually uh personal data
+[43:59] is respected um and um that no no harm
+[44:02] is is generated based on those models.
+[44:04] So first um we have a lot of content
+[44:07] filters on on our API obviously because
+[44:09] we
+[44:11] our our belief is that these models are
+[44:13] powerful tools for humans to to create
+[44:14] super super nice and creative outputs
+[44:16] and also much more than only content
+[44:18] creation as we just saw. Um
+[44:21] and we don't want to have them misused.
+[44:23] So we we add a lot of content filters
+[44:25] that actually um make sure no harm is is
+[44:29] generated um on the personal uh
+[44:31] information. Obviously being being based
+[44:34] in the uh European Union, we comply with
+[44:36] the AUI act and there's actually a a
+[44:38] kind of law that that um we also follow
+[44:43] that you based on a request. So if if
+[44:45] you put in a um a an image of yourself
+[44:49] on our API and you say hey look I I I
+[44:52] don't want to you you to you to um to
+[44:55] store this kind of data we have to
+[44:57] delete it. So we have systems in place
+[44:58] to actually make sure this this
+[45:00] basically happens. So the question is
+[45:02] like we had a lot of partners um large
+[45:05] companies that we worked with like XAI,
+[45:07] Meta um backed by Nvidia and the the
+[45:11] question was how do we evaluate um with
+[45:14] whom we work and with whom not. Um I
+[45:16] think maybe as a general statement we're
+[45:19] working on building visual intelligence
+[45:21] infrastructure for um everyone
+[45:24] basically. So from an infrastructure
+[45:26] perspective, you really want to make
+[45:28] sure you put guard rails around your
+[45:30] models um that people cannot misuse
+[45:33] those. But then infrastructure is there
+[45:36] for basically everyone, right? And and
+[45:39] that that that's that's the the
+[45:41] standpoint we're also taking. We care a
+[45:44] lot about the safety of the models.
+[45:45] That's important and we do everything we
+[45:47] can to prevent misuse. But then um I
+[45:51] think it's also us provide putting out a
+[45:54] technology there and providing it to to
+[45:58] to everyone and it's always hard to take
+[46:01] a certain standpoint on like who you're
+[46:03] working with, who you're not working
+[46:04] with. Uh because it you get it gets very
+[46:06] tricky to justify in the end. Uh
+[46:08] >> let me try and translate what Andy is
+[46:09] saying. [laughter]
+[46:12] The company basically applies its guard
+[46:14] risk to everybody.
+[46:16] So no matter who you are and how big you
+[46:18] are and how much money you've got, if
+[46:19] you want us to remove our guardrails,
+[46:21] sorry, those guardrails apply to
+[46:23] everybody equally because being a
+[46:26] standard and being infrastructure that
+[46:29] people can rely on means you don't treat
+[46:30] different people differently [snorts]
+[46:32] and everyone can rely that they're not
+[46:34] getting, you know, just because they
+[46:36] might have more money or they might be
+[46:38] more politically influential, whatever
+[46:39] it might be, that they can get the same
+[46:41] quality of service as everybody else.
+[46:43] And so that's the position BFL has taken
+[46:44] as an infrastructure provider is that
+[46:46] doesn't matter who you are. Now
+[46:47] sometimes you have custom needs because
+[46:49] you have of the scale that are
+[46:50] technical. Hey, we need it to be
+[46:51] deployed in this way. We need some
+[46:53] latency requirements that are more
+[46:55] technical. But when it comes to
+[46:57] guardrails, that applies to everybody.
+[46:59] And so when some partners say we want
+[47:00] you to move those guardrails, say sorry,
+[47:02] you can go elsewhere. And that has
+[47:04] resulted in sometimes the company losing
+[47:06] meaningful amounts of revenue. And
+[47:08] that's okay because in the long term as
+[47:11] we talked about in the first lecture the
+[47:13] way you get infrastructure to move
+[47:14] stably is you have trusted standards and
+[47:16] trusted institutions to enforce them and
+[47:18] sometimes you got to enforce them
+[47:20] yourselves.
+[47:22] >> Would you say that's roughly correct?
+[47:23] >> Thanks sir. Yes. [laughter]
+[47:25] >> We've had some we've had some spirited
+[47:28] debates I would say at the company and
+[47:29] you know we've talked about culture as a
+[47:31] bottleneck on on progress. You know one
+[47:33] of the most one of the secret sources of
+[47:35] BFL is a very united culture.
+[47:38] where there's a lot of debate and
+[47:39] dissent on what to do and not to do but
+[47:41] then when they commit they all commit
+[47:44] together I mean how many people have
+[47:46] left the company in the entire lifetime
+[47:47] of the company like two
+[47:49] >> uh um one
+[47:50] >> one they've [snorts] had one person
+[47:52] leave in the entire history of the
+[47:54] company
+[47:56] not common in the AI space where
+[47:58] sometimes you have like co-founders
+[47:59] leaving six months in I'm sure you this
+[48:01] is the thing this is my one issue with
+[48:02] the Bay Area the culture's forgotten
+[48:05] that sometimes to keep to make progress
+[48:07] on long-term ambitious goals, you got to
+[48:10] stay together as a unit. And and that
+[48:12] that's a great question. I think it
+[48:13] challenged, you know, I think the
+[48:15] culture at several points and I think
+[48:18] they turned into uh sort of moes in a
+[48:22] sense.
+[48:22] >> Yeah, absolutely. You debate, then you
+[48:24] you disagree and then you commit.
+[48:27] >> You commit.
+[48:27] >> Uh and onwards then
+[48:30] >> and there'll be more, I'm sure. Uh next
+[48:32] question. Yes. question is how do we
+[48:34] deal with um the insane amount of data
+[48:37] labeling that has to be done and other
+[48:39] than for for text uh images are just
+[48:41] like not not not not that
+[48:43] straightforward to label um I think
+[48:48] two answers first when we train a model
+[48:49] we start obviously from we just saw this
+[48:51] kind of pre-training mid training
+[48:53] post-training uh stages we start with
+[48:56] more data and also more noisy data and
+[48:58] pre-training and then we like as you
+[49:00] progress through training you reduce the
+[49:02] amount amount of data but you increase
+[49:05] the quality. So for um in pre-training
+[49:08] it's enough to do automatic automatic
+[49:12] like labeling that you can automate and
+[49:15] then really apply it at at massive
+[49:17] scales. There are systems that that that
+[49:20] are available to do this uh also
+[49:21] publicly some but obviously also uh we
+[49:25] have some internal stuff that I can talk
+[49:27] too much about now. Um but then the more
+[49:30] we approach later stages in training,
+[49:32] the more we also involve um say human
+[49:34] signals and stuff like that because you
+[49:36] want to make sure as you say that in the
+[49:39] latest stages of training where you
+[49:41] actually then again align this kind of
+[49:43] very broad and general representation
+[49:44] your model learns with what actually
+[49:47] matters most to everyone out there. You
+[49:50] want to make sure that this is actually
+[49:52] you have annotations that reflect
+[49:54] exactly what you want. And that's when
+[49:56] you when still the the gold standard is
+[49:59] involving uh human labeling. Then where
+[50:01] do we see the the field going in terms
+[50:03] of um denoising it iterate like just
+[50:07] just in general iterative denoising? Uh
+[50:09] is is it will it still be needed in the
+[50:11] future? There are now other um
+[50:14] probabilistic approaches that such as
+[50:16] drifting models that allow us to do
+[50:18] maybe a single step. Um and yeah, I'll
+[50:20] answer that very generally. I think it's
+[50:23] super interesting if you compare these
+[50:25] kind of flow matching diffusion models
+[50:27] uh with language models. Both are
+[50:29] iterative. Both are iterative models.
+[50:32] But flow matching models or diffusion
+[50:35] models are iterative in a dimension that
+[50:37] is orthogonal to the data and this kind
+[50:39] of time dimension that we artificial
+[50:41] time dimension that we apply that goes
+[50:43] from pure noise to to kind of the data
+[50:46] you want to be generating. Whereas
+[50:47] language models are iterative in the
+[50:51] direction of the data, right? You
+[50:52] generate token by token and that that
+[50:55] has very interesting implications for
+[50:57] both the training and the the inference
+[51:00] um kind of properties these these models
+[51:03] have. Um, for diffusion flow matching
+[51:07] type models, you have you're actually
+[51:10] pretty data inefficient because every
+[51:13] training example gives rise to
+[51:17] infinitely many kind of potential losses
+[51:19] because you can pick every kind of um
+[51:22] point on the continuous trajectory from
+[51:25] clean image to noise and say I want to
+[51:27] den noiseise from here to say the next
+[51:30] step, right? And then I can do this
+[51:32] super often.
+[51:34] So that that that tells us it's super
+[51:36] data inefficient in a way compared to
+[51:38] language models where we can train on
+[51:39] all tokens par in parallel or let me
+[51:42] specify language models a bit uh more
+[51:44] autogressive models uh where we can
+[51:45] train on all tokens in parallel on the
+[51:48] other side we have at inference it's
+[51:53] like the these two properties being
+[51:54] switched so um or the effects of these
+[51:56] prop two properties being switched when
+[51:58] you see language models you have to
+[52:00] generate token by token and there are
+[52:01] some hacks such speculative decoding and
+[52:04] stuff like that. um that maybe can can
+[52:06] help you. But essentially you still have
+[52:08] to like you cannot just miss data.
+[52:09] Whereas for diffusion models or flow
+[52:12] matching models you can actually distill
+[52:14] a model down right what we do when we do
+[52:17] post training we do distillation. We've
+[52:19] wr we've written a bunch of papers on uh
+[52:21] adversarial diffusion distillation where
+[52:22] you get down the kind of number of steps
+[52:26] from flow matching models from 50 say to
+[52:30] four or two and then it actually doesn't
+[52:32] make a a real difference anymore if you
+[52:34] if you then do a drifting model and you
+[52:36] have this then directly at at one step
+[52:38] maybe or you maybe take two steps but
+[52:40] the pipeline is just more stable and
+[52:42] mature when you distill a diffusion
+[52:45] model down to two steps using
+[52:47] adversarial diffusion distillation right
+[52:49] so I think it's it's two things of the
+[52:51] same uh yeah of the same side of the
+[52:53] coin but coming back to auto reggressive
+[52:56] models
+[52:58] that that that's not really the like
+[53:00] like possible for like get getting these
+[53:02] insane speed ups by just distillation
+[53:08] in in in the or using the iterative
+[53:10] nature of the model that's not possible
+[53:12] so I think a very interesting research
+[53:14] problem that I'm thinking often how can
+[53:16] we combine
+[53:18] the data efficiency of auto reggressive
+[53:19] models with the kind of inference
+[53:23] capabilities or inference properties
+[53:25] that these kind of diffusion flow
+[53:27] matching type models have. So everyone
+[53:28] who's who's doing who who likes to do
+[53:31] research that that's a super interesting
+[53:32] problem to work on. Uh,
+[53:33] >> are you guys hiring
+[53:34] >> and you Yeah, always always
+[53:37] >> and yeah I could not I could not have
+[53:39] spent the next half hour talking about
+[53:41] this but we
+[53:42] >> this this part is a the you know latent
+[53:44] adversarial distillation is a very um
+[53:47] it's a part of the the pipeline at BFL
+[53:50] that I would say is is very near and
+[53:51] dear to the to the core of the company
+[53:54] not only for two reasons. One is because
+[53:56] it actually makes these models
+[53:57] extraordinarily efficient. And for those
+[53:59] of you who have German friends, you know
+[54:01] that efficiency is top of mind. And I
+[54:04] think that's that's that's a through
+[54:05] line through everything uh BFL does.
+[54:08] It's high quality. It's efficiency. But
+[54:09] it also ended up being a key unlock for
+[54:11] our business model. Because early on,
+[54:13] you know, a big question was well, we
+[54:14] have this philosophy of we want to be
+[54:17] open. We want to produce open weights,
+[54:19] but we got to find a way to make it
+[54:21] commercially sustainable. because
+[54:22] there's a lot of projects that open
+[54:24] models up and then they they just die
+[54:26] and then that's not stable
+[54:27] infrastructure either that you can rely
+[54:28] on. And so one of the key differences
+[54:30] between diffusion models and autogressor
+[54:32] models as Andy's talking about is that a
+[54:35] you know the the the model size is
+[54:37] actually the same in a diffusion model
+[54:39] in the if you look at the first flux
+[54:41] family we we released we didn't release
+[54:43] flux as a single model. Uh it was
+[54:45] actually flux one was was um packaged
+[54:48] into three different models. Flux uh
+[54:50] Schnel which is German for fast, right?
+[54:54] Uh Flux Dev and then Flux Pro and Flux
+[54:58] Pro we put behind an API whereas Flux
+[55:01] Schnell was full Apache 2.0 open Weights
+[55:03] and then Flux Dev was open weights but a
+[55:05] commercial license where any you were
+[55:07] welcome to look at the weights use the
+[55:08] model but if you wanted to make revenue
+[55:09] off of it you had to pay. And the key
+[55:11] distinction between these three was
+[55:13] actually they were the same size model
+[55:16] unlike for example language models where
+[55:18] you have flux uh like if you have claude
+[55:20] haiku sonnet opus and so on they're
+[55:23] actually different sizes. So in
+[55:24] autogressive land you distill down the
+[55:26] model you you train a big model then you
+[55:28] distill down to smaller and smaller
+[55:29] sizes. In flux one which is a diffusion
+[55:32] model family it was the same size but
+[55:34] fewer steps.
+[55:36] >> So you you can still do size
+[55:38] distillation. You could say the size is
+[55:39] installation but I think it was they
+[55:40] were all at this point
+[55:41] >> for flash one it was yeah yeah
+[55:43] absolutely
+[55:43] >> and so we we distilled it down to Chanel
+[55:46] which was basically a singlestep model
+[55:47] at that point so it's four steps
+[55:49] >> four steps sorry fourstep model super
+[55:51] fast super lightweight um lower quality
+[55:55] pro more steps super high quality slower
+[56:00] right because you're iterating over more
+[56:01] diffusion steps and so that turned out
+[56:04] to be this very beautiful kind of
+[56:06] packaging of the core technology in a
+[56:07] way that was also commercially
+[56:08] sustainable because the open source
+[56:10] developer community was was thrilled
+[56:11] because now they had this really fast
+[56:13] model for a lot of use cases that you
+[56:14] can run locally and all the enterprises
+[56:16] who didn't want to deal with
+[56:17] customization had a high quality model
+[56:19] that was behind API and developers who
+[56:21] wanted the mix sort of a mix of both got
+[56:24] a pretty high quality model that was
+[56:25] also open weights that was fast and and
+[56:28] that trade-off you know is is a hard one
+[56:31] to make if if you don't sort of foresee
+[56:34] the fact that you want to close this
+[56:35] loop that we've talked about of Frontier
+[56:38] Research arch repeatably.
+[56:40] You know, I would say 2 years ago the
+[56:42] state of the art was train a model, put
+[56:43] it out, put the weights out there, let's
+[56:44] see. But when you start thinking long
+[56:46] term, then you're not thinking in terms
+[56:48] of a single model release. You're trying
+[56:50] to think about it as a system. That's
+[56:53] capital cont. You know, you know, we've
+[56:54] talked about all the bottlenecks and you
+[56:56] want one iteration to help you unlock
+[56:57] the bottleneck for the next run and the
+[56:59] next run. And adversarial distillation,
+[57:01] laten adversial distillation turned out
+[57:03] to be a pretty key unlock for that part
+[57:05] of the bottleneck two years ago. Um,
+[57:06] next question. spatial intelligence.
+[57:08] Yes. And whether it's more 3D or um or
+[57:12] like how how I see the the the 3D space
+[57:15] where some companies are working versus
+[57:17] our kind of more video based um approach
+[57:21] um going forward in the future. Um I
+[57:24] think I'll I'll I'll take a a kind of
+[57:28] opinionated uh view here.
+[57:31] >> Again, it comes back to how how do we
+[57:33] humans learn uh in in our childhood? I
+[57:37] think we don't have explicit 3D
+[57:39] representations of anything in our head.
+[57:41] We just learn based on video and audio.
+[57:43] And I think that's the way that that
+[57:44] will or I I don't know if anyone have at
+[57:46] least myself. I I I can I cannot look
+[57:48] into people's heads, but I I don't have
+[57:50] an explicit kind of 3D coordinate
+[57:53] representation of something in my head.
+[57:55] I just I see you. I have a kind of my my
+[57:58] eyes are doing a bit of triangulation
+[57:59] obviously, but it's still pretty much a
+[58:02] a kind of projection onto onto uh those
+[58:06] two eyes. Um so I think it's it's I
+[58:09] don't have an explicit 3D model of of
+[58:11] like say an this bottle or something
+[58:13] else. I just learn it from video and I
+[58:15] can obviously move my head around or I
+[58:17] can interact with this object and that's
+[58:19] all we need. So I'm not a I'm not a kind
+[58:22] of um so like I don't believe too much
+[58:25] in these explicit 3D representations.
+[58:26] It's also a data problem at some point.
+[58:28] Do we get all the data kind of labeled
+[58:30] with 3D representations? I don't know.
+[58:32] Just learning based on natural
+[58:34] representations and then interacting
+[58:37] with it as I already said like before is
+[58:39] in my view the the kind of way to go
+[58:41] forward.
+[58:42] I I I
+[58:45] I'm going to I'm going to express a
+[58:46] somewhat contrarian opinion to it and
+[58:48] which is which is actually not totally
+[58:49] disagreeing with you but I I would
+[58:50] sharpen it to say I think what we have
+[58:52] learned empirically is that these static
+[58:54] 3D representations and I have a strong
+[58:56] point of view on this because I I I
+[58:58] started a company that failed at this
+[58:59] [laughter]
+[59:00] ubiquity 6 was a 3D mapping company we
+[59:02] tried to map the world with uh
+[59:04] reconstructions in 3D using a bunch of
+[59:07] deep learning priors and what we learned
+[59:09] was it actually don't get me wrong the
+[59:11] technology worked on it is valuable, but
+[59:12] explicit 3D representations are very
+[59:14] narrow, inflexible, and static,
+[59:17] especially when you take the temporal
+[59:19] the the time element out of it. Their
+[59:21] uses are quite limited and niche. And so
+[59:24] there are these applications for 3D
+[59:26] representations that are useful, don't
+[59:27] get me wrong, especially when you're
+[59:28] getting human like machine perception.
+[59:30] You know, point clouds, for example, are
+[59:32] great at having robotics, you know, do
+[59:34] pos indoor positioning in GPS denied
+[59:36] environments. But when it comes to when
+[59:39] you're trying to build a system that can
+[59:40] be interacted with by humans, it turns
+[59:42] out point clouds, 3D meshes, the these
+[59:45] are all sort of intermediary
+[59:47] representations and in a sense hacks to
+[59:50] you know that that are less general and
+[59:53] flexible than representations that can
+[59:55] integrate naturally time and audio and
+[59:59] all these other modalities because
+[01:00:00] that's how we reason. Now I because I
+[01:00:02] actually disagree with you Andy. I do
+[01:00:03] think I have a 3D representation in my
+[01:00:04] head of certain things like I if I if I
+[01:00:06] >> but is it explicitly are you thinking in
+[01:00:09] in in terms of coordinates? I don't I
+[01:00:11] don't think so.
+[01:00:11] >> Well, I think about this lecture hall.
+[01:00:13] >> Yeah.
+[01:00:13] >> Like when I'm planning a lecture, you
+[01:00:15] know, I often have a 3D representation
+[01:00:17] spatially, but it's it's just one input
+[01:00:20] representation as part of a broader set
+[01:00:21] of
+[01:00:22] >> but but you're not like that there's
+[01:00:23] there's no kind of prior that enforces
+[01:00:25] you to to to think think about this uh
+[01:00:27] kind of explicitly. It's implicit. You
+[01:00:30] learn it. You learn it based based on
+[01:00:31] like what you're perceiving and what
+[01:00:33] you're interacting with.
+[01:00:34] >> That's right.
+[01:00:35] >> And then and obviously we could we could
+[01:00:37] maybe maybe a network could in in its
+[01:00:40] weights represent this kind of uh
+[01:00:42] implicit 3D structure if it needs that.
+[01:00:45] >> But I think the interfa like we're
+[01:00:46] talking about the interface, right? Do
+[01:00:47] we do we need these exp?
+[01:00:49] >> Uh okay. Yes. At the human interface
+[01:00:50] level, no. It's it's it's quite
+[01:00:51] unnatural to reason in in explicit 3D
+[01:00:53] prayers. I would agree with that.
+[01:00:55] >> Welcome to our late night conversations.
+[01:00:57] [laughter]
+[01:00:57] >> Yes. Thank you so much Andy for coming.
+[01:01:00] Thanks for having me everyone.
