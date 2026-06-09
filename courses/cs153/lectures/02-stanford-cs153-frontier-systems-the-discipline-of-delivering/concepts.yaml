@@ -1,0 +1,402 @@
+concepts:
+  - name: Value per Gigawatt
+    aliases:
+      - Value delivered per dollar
+      - Daily active users per gigawatt
+      - Capability per gigawatt
+    definition: >-
+      The critical metric for infrastructure success, focusing on the actual utility, capability, or revenue generated
+      for users per unit of compute capacity or cost, rather than just raw gigawatts deployed.
+    tags:
+      - application
+      - optimization
+      - infrastructure
+    timestamps:
+      - '03:47'
+      - '04:58'
+      - '06:31'
+      - '07:47'
+    relations:
+      - target: Extreme Reliability (for AI Workloads)
+        type: prerequisite_for
+        note: Higher reliability directly contributes to higher value per gigawatt by ensuring compute is actually usable.
+      - target: System Balance (Amdahl's Law at Scale)
+        type: prerequisite_for
+        note: A balanced system prevents wasted compute, increasing value extraction from deployed capacity.
+      - target: Goodput
+        type: related_to
+        note: Goodput is a measure that contributes to achieving higher value per gigawatt.
+      - target: Energy Abundance and Affordability
+        type: related_to
+        note: Affordability of energy impacts the cost component of value per dollar.
+  - name: Extreme Reliability (for AI Workloads)
+    aliases:
+      - Robust fault detection and recovery
+      - High availability
+    definition: >-
+      The paramount importance of robust systems that minimize failures and enable rapid recovery, especially for
+      large-scale synchronous AI computations where a single node failure can halt the entire process.
+    tags:
+      - architecture
+      - optimization
+      - infrastructure
+      - training
+      - hardware
+    timestamps:
+      - '04:03'
+      - '04:10'
+      - '10:05'
+      - '11:16'
+      - '12:50'
+      - '13:03'
+    relations:
+      - target: AI Workload Reliability Shift
+        type: contrasts_with
+        note: >-
+          While AI training often accepts *more downtime* for *more capacity*, it still demands *extreme reliability* at
+          the individual node level because single failures are catastrophic for synchronous jobs.
+      - target: Optical Circuit Switching (OCS)
+        type: enables
+        note: OCS contributes to extreme reliability by allowing rapid, programmatic recovery from rack failures.
+      - target: Value per Gigawatt
+        type: part_of
+        note: Essential for extracting maximum value from deployed compute capacity.
+      - target: Operational Resilience
+        type: related_to
+        note: Concept of ensuring continuous operation despite failures.
+  - name: System Balance (Amdahl's Law at Scale)
+    aliases: []
+    definition: >-
+      The critical need to balance all components of a large-scale compute system (flops, HBM, SRAM, network bandwidth,
+      storage, CPU) according to application needs, to avoid bottlenecks and wasted investment, extending Amdahl's Law
+      to modern distributed AI infrastructure.
+    tags:
+      - architecture
+      - hardware
+      - optimization
+      - infrastructure
+      - theory
+    timestamps:
+      - '14:13'
+      - '14:40'
+      - '14:49'
+      - '16:00'
+      - '17:08'
+      - '18:04'
+    relations:
+      - target: Amdahl's Law
+        type: related_to
+        note: This concept is an extension of Amdahl's Law to modern, large-scale distributed systems.
+      - target: Value per Gigawatt
+        type: prerequisite_for
+        note: Achieves higher value per gigawatt by ensuring efficient use of all resources.
+      - target: Goodput
+        type: enables
+        note: System balance directly improves goodput by eliminating resource starvation.
+      - target: Hardware Specialization (TPUs)
+        type: related_to
+        note: >-
+          Specialization often involves designing chips with specific balance points for particular workloads (e.g.,
+          AI/AT).
+  - name: AI Workload Reliability Shift
+    aliases: []
+    definition: >-
+      A recent phenomenon where modern AI training workloads prioritize raw compute capacity and throughput over
+      traditional "five-nines" (99.999%) availability, accepting more downtime in exchange for significantly increased
+      access to compute.
+    tags:
+      - training
+      - application
+      - infrastructure
+      - optimization
+    timestamps:
+      - '11:19'
+      - '11:34'
+      - '11:54'
+      - '12:21'
+      - '12:33'
+    relations:
+      - target: Extreme Reliability (for AI Workloads)
+        type: contrasts_with
+        note: >-
+          While AI training accepts more downtime overall, it still requires extreme reliability *within* a synchronous
+          job.
+      - target: Demand Response (Data Centers)
+        type: enables
+        note: The willingness to accept downtime allows data centers to participate in demand response programs.
+      - target: Operational Resilience
+        type: related_to
+        note: Changes the definition and priorities of operational resilience for specific AI workloads.
+  - name: Energy Abundance and Affordability
+    aliases: []
+    definition: >-
+      The biggest long-term bottleneck for scaling AI infrastructure, characterized by long lead times (years) for
+      procuring large-scale, affordable, and sustainable energy for data centers, requiring complex community-level
+      solutions.
+    tags:
+      - infrastructure
+      - hardware
+      - data
+      - optimization
+    timestamps:
+      - '05:19'
+      - '10:27'
+      - '21:16'
+      - '23:24'
+      - '25:28'
+      - '56:01'
+      - '56:36'
+    relations:
+      - target: Value per Gigawatt
+        type: related_to
+        note: Directly impacts the "per dollar" aspect of value, as energy is a significant cost.
+      - target: Infrastructure Planning Under Uncertainty
+        type: related_to
+        note: The long lead times for energy procurement exacerbate planning challenges.
+      - target: Demand Response (Data Centers)
+        type: enables
+        note: Solutions like demand response help optimize existing energy resources and integrate with the grid.
+      - target: PUE (Power Usage Effectiveness)
+        type: related_to
+        note: PUE is a metric for energy efficiency, which is crucial given energy scarcity.
+  - name: Optical Circuit Switching (OCS)
+    aliases: []
+    definition: >-
+      A networking technology utilized by Google to provide programmable network topology in data centers, enabling
+      rapid reconfiguration (e.g., in seconds) to maintain network coherence, recover from failures, and create direct
+      high-bandwidth connections for specific jobs without human intervention.
+    tags:
+      - architecture
+      - hardware
+      - infrastructure
+      - optimization
+    timestamps:
+      - '31:38'
+      - '31:56'
+      - '32:00'
+      - '32:23'
+      - '32:41'
+      - '33:00'
+      - '33:14'
+      - '34:41'
+      - '35:46'
+    relations:
+      - target: Programmable Topology
+        type: enables
+        note: OCS is the core technology behind programmable topology.
+      - target: Extreme Reliability (for AI Workloads)
+        type: enables
+        note: >-
+          OCS allows for rapid recovery of network topology after failures, enhancing reliability for synchronous
+          workloads.
+      - target: Torus Topology
+        type: related_to
+        note: OCS is used to maintain and reconfigure a torus topology for ML training.
+  - name: Hardware Specialization (TPUs)
+    aliases: []
+    definition: >-
+      The strategic development of specialized hardware (e.g., Google's TPU-i for inference and TPU-t for training) to
+      achieve significant performance and efficiency gains for specific, large workloads, as general-purpose CPUs have
+      slowed their improvement rate.
+    tags:
+      - hardware
+      - architecture
+      - optimization
+      - training
+      - application
+    timestamps:
+      - '47:34'
+      - '47:56'
+      - '48:06'
+      - '48:40'
+      - '49:31'
+    relations:
+      - target: System Balance (Amdahl's Law at Scale)
+        type: related_to
+        note: >-
+          Specialization involves designing chips with specific memory-to-compute-to-networking ratios tailored for
+          particular applications.
+      - target: Value per Gigawatt
+        type: enables
+        note: More efficient hardware increases the value extracted from compute capacity.
+  - name: Infrastructure Planning Under Uncertainty
+    aliases:
+      - Dynamic replanning
+    definition: >-
+      The complex challenge of forecasting and provisioning compute capacity (e.g., gigawatts of power, chips,
+      buildings) years in advance due to long lead times, leading to risks of under- or over-prediction and requiring
+      dynamic, daily replanning based on new information and changing demands.
+    tags:
+      - infrastructure
+      - data
+      - optimization
+    timestamps:
+      - '20:50'
+      - '21:46'
+      - '22:20'
+      - '39:13'
+      - '39:41'
+    relations:
+      - target: Energy Abundance and Affordability
+        type: related_to
+        note: Long lead times for energy procurement are a major factor contributing to planning uncertainty.
+  - name: Demand Response (Data Centers)
+    aliases: []
+    definition: >-
+      A practice where data centers act as assets to the power grid by agreeing to temporarily reduce their power
+      consumption during peak demand (e.g., extreme weather), allowing utilities to provision less capacity overall and
+      ensuring homes have necessary power.
+    tags:
+      - infrastructure
+      - optimization
+      - safety
+      - application
+    timestamps:
+      - '01:02:00'
+    relations:
+      - target: AI Workload Reliability Shift
+        type: prerequisite_for
+        note: The willingness of AI training to accept downtime enables participation in demand response.
+      - target: Energy Abundance and Affordability
+        type: related_to
+        note: Optimizes the use of existing energy resources, contributing to affordability and grid stability.
+      - target: Societal Responsibility in AI Infrastructure
+        type: part_of
+        note: An example of how data centers can be community assets.
+  - name: Goodput
+    aliases: []
+    definition: >-
+      A measure of the useful output or effective utilization of a system, focusing on the work that directly
+      contributes to value rather than just raw throughput or capacity that might be idle or wasted due to
+      inefficiencies.
+    tags:
+      - optimization
+      - application
+      - infrastructure
+    timestamps:
+      - '04:37'
+      - '04:40'
+    relations:
+      - target: Value per Gigawatt
+        type: related_to
+        note: Maximizing goodput is essential for achieving high value per gigawatt.
+      - target: System Balance (Amdahl's Law at Scale)
+        type: prerequisite_for
+        note: A balanced system prevents bottlenecks that would reduce goodput.
+  - name: Torus Topology
+    aliases: []
+    definition: >-
+      A specific network topology, often three-dimensional, used for ML training clusters where nodes are connected in a
+      grid-like fashion with wrap-around connections, particularly efficient for all-reduce collective operations.
+    tags:
+      - architecture
+      - network
+      - training
+    timestamps:
+      - '32:51'
+      - '33:47'
+      - '34:47'
+      - '36:51'
+      - '37:04'
+    relations:
+      - target: Optical Circuit Switching (OCS)
+        type: related_to
+        note: OCS is used to maintain and reconfigure the torus topology for reliability.
+      - target: Extreme Reliability (for AI Workloads)
+        type: related_to
+        note: Maintaining the integrity of the torus topology is critical for synchronous ML training reliability.
+  - name: The Bitter Lesson (AI Scaling)
+    aliases: []
+    definition: >-
+      Rich Sutton's observation that, historically in AI, simply throwing more compute at problems, combined with
+      general-purpose methods, has consistently yielded better results than sophisticated, human-engineered solutions,
+      leading to a continuous demand for more computational power.
+    tags:
+      - theory
+      - training
+      - application
+    timestamps:
+      - '58:51'
+      - '59:04'
+    relations:
+      - target: Hardware Specialization (TPUs)
+        type: related_to
+        note: >-
+          While the bitter lesson suggests general methods, specialization aims to make the 'throwing more compute' even
+          more efficient.
+      - target: Energy Abundance and Affordability
+        type: related_to
+        note: The bitter lesson implies an ever-increasing demand for compute, exacerbating energy challenges.
+  - name: PUE (Power Usage Effectiveness)
+    aliases:
+      - Power Usage Efficiency
+    definition: >-
+      A metric used to measure the energy efficiency of a data center, calculated as the ratio of total facility power
+      to IT equipment power. A lower PUE indicates greater energy efficiency.
+    tags:
+      - infrastructure
+      - optimization
+    timestamps:
+      - '01:00:46'
+      - '01:00:48'
+      - '01:00:50'
+    relations:
+      - target: Energy Abundance and Affordability
+        type: related_to
+        note: Improving PUE directly contributes to more affordable and sustainable energy use in data centers.
+      - target: Societal Responsibility in AI Infrastructure
+        type: part_of
+        note: >-
+          Strategic decisions about PUE (e.g., balancing water usage with power efficiency) are part of responsible
+          infrastructure development.
+  - name: Societal Responsibility in AI Infrastructure
+    aliases:
+      - Community asset
+      - Ethical deployment
+      - Guardrails and safety
+    definition: >-
+      The obligation of technologists and infrastructure builders to ensure that the deployment of AI infrastructure
+      provides uplift to local communities and the environment, considering factors like noise, water usage, power grid
+      impact, job creation, and the ethical implications of AI's societal transformation.
+    tags:
+      - safety
+      - application
+      - infrastructure
+    timestamps:
+      - '53:50'
+      - '54:01'
+      - '01:00:00'
+      - '01:00:33'
+      - '01:00:35'
+      - '01:02:54'
+      - '01:04:08'
+    relations:
+      - target: Energy Abundance and Affordability
+        type: related_to
+        note: Addressing environmental impact of energy use is a key part of this responsibility.
+      - target: Demand Response (Data Centers)
+        type: part_of
+        note: Demand response programs are an example of data centers acting as community assets.
+      - target: PUE (Power Usage Effectiveness)
+        type: related_to
+        note: Decisions about PUE (e.g., water vs. power trade-offs) must align with community needs.
+  - name: Amdahl's Law
+    aliases: []
+    definition: >-
+      A fundamental principle stating that the speedup of a program due to parallelization is limited by the sequential
+      portion of the program. It emphasizes the importance of balancing computational power with the ability to feed it
+      data (IO) to achieve maximum performance.
+    tags:
+      - theory
+      - architecture
+    timestamps:
+      - '15:24'
+      - '15:27'
+      - '15:34'
+      - '16:08'
+    relations:
+      - target: System Balance (Amdahl's Law at Scale)
+        type: related_to
+        note: >-
+          The concept of system balance discussed in the lecture is an extension of Amdahl's Law to large-scale
+          distributed systems.

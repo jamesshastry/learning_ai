@@ -1,0 +1,1989 @@
+[00:09] Thank you so much for joining us, Amin.
+[00:11] Please give me a round of applause for
+[00:12] Amin Vahdat.
+[00:14] >> [applause]
+[00:18] >> You guys have no idea how hard it was to
+[00:20] get Amin to show up.
+[00:22] Seriously.
+[00:23] This is the one lecture
+[00:25] that um I've been super excited about.
+[00:28] And Sebastian, who many of you know, um
+[00:31] who is my co-founder on Amp,
+[00:33] wanted to be here and he's so bummed
+[00:35] that he couldn't because he's busy
+[00:36] working on the cluster for your guys'
+[00:37] final projects.
+[00:39] Uh Sebastian worked on the Borg X Borg
+[00:41] GQM scheduler, that designed that, too.
+[00:43] So, we are very much
+[00:45] uh a a Google family over at Amp, and so
+[00:50] Amin's a bit of a rock star in in our
+[00:52] kind of lore.
+[00:53] Um so, to give you guys some context,
+[00:56] Amin
+[00:58] what is the head of basically in charge
+[01:00] of the internal infrastructure at
+[01:02] Google. The TPUs
+[01:05] that make Gemini possible really would
+[01:07] not
+[01:08] be at anywhere close to scale they are
+[01:10] at if it wasn't for Amin.
+[01:12] Okay, so
+[01:14] pay attention to every word he says.
+[01:17] Like think about him as the opposite of
+[01:19] Jensen. You know, Jensen like is a
+[01:21] rapid-fire high-throughput LLM. Um
+[01:24] think about Amin kind of as like
+[01:27] the distillation of like
+[01:30] three frontier models who have been
+[01:32] trained on like frontier like the in
+[01:34] practice and discipline of
+[01:36] infrastructure for the last How long
+[01:37] have you been doing this, Amin? Coming
+[01:39] up on 30 years, I'm sad to say. 30
+[01:41] years.
+[01:42] And so, every word Amin speaks has like
+[01:45] every token that he produces as an LLM
+[01:49] has like universes contained in them.
+[01:51] Okay? And we we will probably not
+[01:52] understand what he actually means for
+[01:54] years. So, I'm I'm this is going to be
+[01:55] recorded and put up on YouTube cuz I
+[01:57] think years from now people will look
+[01:58] back at his lecture and realize
+[02:00] how profound his influence was on the on
+[02:03] the industry. Um you know, to concretize
+[02:05] that, uh how much uh compute does the
+[02:08] internal pool at Google have today, I
+[02:10] mean?
+[02:11] I'll start out with the easy question
+[02:13] that I can answer.
+[02:14] Um I've seen some Twitter posts that say
+[02:16] we have among the largest computing
+[02:18] infrastructures in the whole planet, and
+[02:20] I think that I'm I'm willing to stand up
+[02:22] behind that one. Okay. Would you say
+[02:23] it's in the tens of gigawatts?
+[02:25] Tens of gigawatts.
+[02:27] Um
+[02:30] I will say that we are aiming for tens
+[02:32] of gigawatts.
+[02:33] >> Over the next 4 years, it'll be well in
+[02:34] the north of tens of gigawatts.
+[02:36] >> Over some some time period, yeah.
+[02:38] >> Yeah. So, we crunched the numbers this
+[02:39] morning. We think about 1 gigawatt to
+[02:42] build out is about how much? Okay, so
+[02:43] what 1 gigawatt is about $40 billion of
+[02:45] infrastructure.
+[02:47] Do the math.
+[02:48] Okay.
+[02:50] And
+[02:51] as much as I hate to say it,
+[02:54] our means infrastructure org is
+[02:55] literally one of the most efficient on
+[02:57] the planet.
+[02:58] Because you know, there was a time when
+[03:00] I was starting out Amp, and we were
+[03:01] looking at how much single cluster
+[03:03] utilization was across the industry, and
+[03:06] some of our portfolio companies, you
+[03:07] know, some of the speakers here, were
+[03:09] running them at 70, 80% utilization, and
+[03:12] some of the other big tech companies
+[03:13] were similar, in fact worse. I'm sure
+[03:15] you saw that. Um you know, the Colossus
+[03:17] cluster is not running at peak
+[03:18] utilization, and I think it's at 11%
+[03:20] MFU, which is honestly MFU is kind of
+[03:22] hard to get up. But at Google, my
+[03:24] understanding is if the if the node
+[03:26] allocation is less than 96%,
+[03:29] it's considered a major outage. Yeah, so
+[03:30] I think what what this uh really points
+[03:32] to is when you hear numbers like uh $40
+[03:35] billion uh per gigawatt, and I've heard
+[03:39] numbers like $50 billion a gigawatt from
+[03:41] other sources, the numbers are going up.
+[03:44] Things are getting more expensive.
+[03:45] I think the most important consideration
+[03:47] isn't how many gigawatts do you have,
+[03:49] it's how much capability and value
+[03:53] you're delivering to your users. And
+[03:55] this is something to really be aware of.
+[03:57] In other words, if I've got a gigawatt
+[03:58] here
+[03:59] and a gigawatt there, they're not the
+[04:01] same.
+[04:03] How much reliability you have actually
+[04:04] really really matters. Like I could go
+[04:06] spend 40 50 billion dollars on a
+[04:07] gigawatt and if I don't do the work to
+[04:10] make sure that every one of those nodes
+[04:12] is super reliable,
+[04:14] so a gigawatt is let's say that's
+[04:18] 150 200,000
+[04:21] TPUs, GPUs, it could be whatever you
+[04:22] want.
+[04:24] One of those go goes down,
+[04:26] maybe your whole computation stops.
+[04:29] If you're not A making sure it doesn't
+[04:31] fail, B when it does fail, figuring out
+[04:33] which one it is and getting it repaired
+[04:35] really fast,
+[04:36] you just wasted a lot of money because
+[04:37] your utilization and what we call your
+[04:40] goodput
+[04:41] is nowhere near what it it needs to be.
+[04:44] If you have the
+[04:45] TPUs deployed, but no one can schedule a
+[04:48] job on them, it doesn't matter how much
+[04:50] money you spent on
+[04:51] So, I think that a lot of these measures
+[04:53] are actually broken.
+[04:55] The measure isn't how much money you
+[04:56] spent per gigawatt, it's actually how
+[04:58] much value you deliver
+[05:01] per dollar.
+[05:03] And if I can spend half the money,
+[05:05] deploy half the capacity and give you
+[05:07] the same capability, awesome. Better if
+[05:10] I can deliver twice the value from that
+[05:12] gigawatt,
+[05:13] I now need to build fewer gigawatts.
+[05:16] Okay.
+[05:17] >> Or
+[05:17] I can only get so many gigawatts.
+[05:19] Energy's massive problem.
+[05:22] And um you know, we had Jensen here last
+[05:24] week and one of the questions I asked
+[05:25] him is how do you He said something
+[05:26] similar which was
+[05:28] Is this why everybody's laptop is signed
+[05:29] by Jensen?
+[05:30] >> Yeah, basically.
+[05:31] >> [laughter]
+[05:31] >> But you should get it Well, no no Sam is
+[05:33] going to yell at us for trying to get
+[05:35] signatures. Okay, we got yelled at as
+[05:37] you guys know because of physical
+[05:38] security.
+[05:38] >> have a GPU by the way signed by Jensen,
+[05:40] so I'm
+[05:41] That's a long line of it's it's a
+[05:43] tradition, right of passage.
+[05:44] So, how do you measure
+[05:47] intelligence, You know, output per unit
+[05:49] of input, right? It's ultimately what as
+[05:51] a systems person we're trying to
+[05:52] optimize. And if the output is this very
+[05:55] heterogeneous output, which is coding
+[05:57] tokens, image tokens, and so on. Like
+[05:59] but the input is this generalizable
+[06:01] input called compute or flops, so to
+[06:02] speak. What How do we reconcile the fact
+[06:05] that the the eval's are just different?
+[06:07] >> We're we're it's a
+[06:08] tough
+[06:09] close to impossible question to answer.
+[06:11] We are working on benchmarks that
+[06:12] measures intelligence per dollar,
+[06:14] actually. And we publish some things
+[06:15] externally. I can send folks references
+[06:18] out of Google broadly. Uh that
+[06:21] captures this question of intelligence.
+[06:22] And then it's intelligence per dollar.
+[06:24] But what I really want to emphasize
+[06:26] though is that it is
+[06:27] um how much you're actually getting out
+[06:29] of it. And so another way to look at it
+[06:30] is
+[06:31] per gigawatt, how much revenue are you
+[06:33] generating?
+[06:34] Maybe revenue's not the right measure.
+[06:35] How many daily active users do you have
+[06:37] for your service?
+[06:39] So it's not how many gigawatts do you
+[06:40] have.
+[06:41] It's
+[06:41] >> daily active users per Okay, got Right.
+[06:43] Like if I'm doing Gemini app,
+[06:45] and I have a gigawatt behind it,
+[06:48] no one cares that I have a gigawatt
+[06:49] behind it or two or four or half. It's
+[06:52] how many daily active users do I have
+[06:53] who are happy?
+[06:55] I have many and then how's that growing?
+[06:56] Okay. Right? And if and now the question
+[06:59] is how do I deliver So this is where the
+[07:01] efficiency part comes in. Yeah.
+[07:03] I want to make sure that every TPU is
+[07:05] up.
+[07:06] But by the way, if I have a bunch of
+[07:08] TPUs and I don't have the compute and
+[07:10] the storage and the networking to go
+[07:12] along with it,
+[07:13] then it doesn't matter how many TPUs I
+[07:14] have, especially in the age of agents.
+[07:16] You actually it's a orchestration of the
+[07:18] whole.
+[07:19] Right? Because if I'm having all my
+[07:21] expensive TPUs sitting around idle
+[07:24] waiting for an agent to finish running
+[07:26] its simulation
+[07:28] through a CPU that have to go get some
+[07:30] data from the storage that might be in a
+[07:32] whole 'nother region,
+[07:34] that's a problem. Okay. So it's the
+[07:35] orchestration as a whole. I think
+[07:37] there's too much fixation on how many
+[07:39] gigawatts of capacity we have. By the
+[07:41] way, I I spend a lot of time making sure
+[07:42] that we have a lot
+[07:43] a lot of megawatts, a lot of gigawatts
+[07:45] of capacity, so I get it. But, there
+[07:47] isn't enough on how much value are you
+[07:49] getting out of it? Are you extracting
+[07:50] the most utility
+[07:52] out of every machine that you build and
+[07:54] deploy? And so, if the if you've closed
+[07:57] the loop to say, I think what I'm
+[07:58] hearing you say is the the eval is the
+[08:00] business metric that matters. In the
+[08:03] case of Google, it's daily active users
+[08:05] or whatever for the Gemini app. But, the
+[08:07] challenge as an infrastructure person is
+[08:10] which you have a
+[08:11] extraordinary history and background
+[08:13] doing, is you're always trying to
+[08:14] general design general primitives,
+[08:17] right? That are not overspecified for
+[08:19] for a particular
+[08:21] output. Yeah. And if intelligence is a
+[08:23] humanity-scale measure,
+[08:26] then how do you reconcile the difference
+[08:28] between designing an infrastructure
+[08:29] primitive that's general for all of
+[08:30] humanity, but that might not align with
+[08:32] the specific measure of intelligence
+[08:34] that matters to Google? Does that
+[08:35] question make sense?
+[08:36] >> It makes sense. I think it's a uh
+[08:39] phil- great philosophical question. The
+[08:41] good news is in practice, what we do
+[08:42] care about are the uh business outcomes
+[08:45] because we have to believe, and it turns
+[08:47] out to be accurate, that
+[08:49] people are going to vote with their feet
+[08:51] and use the services that are giving
+[08:53] them value. In other words, if we have
+[08:54] Gemini DAOs, and they're growing at a
+[08:56] certain rate,
+[08:58] uh for whatever reason, if it's
+[09:01] competing against ChatGPT or Claude or
+[09:04] uh Grok or whatever else,
+[09:06] if people are using it, they're voting
+[09:07] with their feet, they must be getting
+[09:09] the intelligence and the utility that
+[09:10] they need. If they're using uh coding in
+[09:12] one scheme versus another, if we're
+[09:14] delivering the value. Now, a lot of this
+[09:16] does come down to
+[09:18] how many flops do you have? How much HBM
+[09:20] bandwidth do you have? How much ICI or
+[09:22] NVLink or whatever else bandwidth do you
+[09:24] have? All these low-level measures
+[09:25] matter, but in the end, what it rolls up
+[09:28] to is
+[09:29] happy users, paying enterprise
+[09:31] customers, uh developers who are getting
+[09:33] their work done. That's what we're
+[09:35] trying to maximize.
+[09:36] And so, if we have capacity that is
+[09:39] sitting around idle, that's a bug.
+[09:41] Right. Okay. Got it. The value that's
+[09:44] delivered is a great metric. And so,
+[09:46] what we have to now make sure is when we
+[09:47] have these gigawatts of capacity,
+[09:49] the infrastructure layer is fascinating
+[09:52] because there are thousands, millions of
+[09:54] things that can go wrong. You You know
+[09:55] this very well. And each of them,
+[09:58] unfortunately, matter.
+[09:59] And so, it's about systematically going
+[10:01] after it. And And so, in other words,
+[10:03] there is no major breakthrough when we
+[10:04] say,
+[10:05] "Hey, um if in going from 99%
+[10:08] availability to 99.9% availability,
+[10:11] super hard."
+[10:12] I You want to think 99% reliability,
+[10:14] that's pretty good.
+[10:16] If you think about it though, that means
+[10:17] that 3.65 days of the year you're down.
+[10:21] That's not good. Right.
+[10:22] In fact, might be unacceptable. Now
+[10:25] though, I want to go come back to power
+[10:27] for a second because power often times
+[10:28] is your uh biggest constraint. You
+[10:30] talked about 11% um
+[10:33] MFU.
+[10:34] If you look across all the fleets, I
+[10:35] won't tell you what the numbers are, but
+[10:37] if you look at the amount of power
+[10:38] provisioned at the edge of a data center
+[10:40] region,
+[10:41] and how much power is actually used by
+[10:44] the compute,
+[10:46] it's probably a lot lower than you want
+[10:47] it to be.
+[10:49] Reason number one,
+[10:51] over-provisioning for reliability.
+[10:54] So, in other words, to really get to
+[10:56] what the power uh
+[10:58] service wants, which is five nines of
+[11:00] availability, which means 30 seconds of
+[11:01] downtime a year,
+[11:03] you basically have to have 2N.
+[11:05] One plus one redundant feeds. One goes
+[11:07] away, the other basically switches over
+[11:09] immediately.
+[11:10] That means that half your power capacity
+[11:12] is not being used at any given point in
+[11:14] time.
+[11:16] That's what it takes to deliver five
+[11:17] nines of reliability.
+[11:19] Now though, what if you go to your
+[11:20] customers and say, "Hey, would you
+[11:22] rather have 99.
+[11:24] Let's say 9% reliability,
+[11:27] and double the capacity,
+[11:29] or 99.999%
+[11:32] reliability and half the capacity.
+[11:34] Historically,
+[11:35] the answer would have been give me the
+[11:37] five nines.
+[11:39] I can't take the outage. Today though,
+[11:40] if you go to the frontier labs and say,
+[11:43] "Would you rather have twice the
+[11:44] capacity, but then 3.65 days of the year
+[11:46] or 0.365 days of the year you don't get
+[11:49] any of it?" They'll say, "Oh yeah, sign
+[11:51] me up."
+[11:52] Give me more capacity.
+[11:54] I'll take the downtime.
+[11:55] Is that a new phenomenon or is that a
+[11:57] recent phenomenon? It's a recent
+[11:59] phenomenon, right? Because again, now if
+[12:00] you're if you're delivering
+[12:01] historically, if you're delivering an
+[12:02] enterprise grade service, it's five
+[12:04] nines.
+[12:05] Can't be down.
+[12:06] But training a frontier model, it's
+[12:08] about throughput. You'll take the
+[12:10] downtime for a day or two days or three
+[12:11] days a year if the other 362 days of the
+[12:14] year
+[12:15] I'm not speaking for everyone. I'm just
+[12:17] But by by and large, your customers are
+[12:19] telling you your internal customers are
+[12:21] saying Internal and some external. We
+[12:23] will take access over reliability. Yes.
+[12:26] This is a fascinating new development,
+[12:27] but now even getting to that 99.9%
+[12:30] thousand things can go wrong because the
+[12:32] thing I want to emphasize is if we're
+[12:34] serving
+[12:36] a frontier model,
+[12:38] that's hundreds, perhaps thousands of
+[12:40] TPUs or GPUs, it doesn't matter. If
+[12:43] we're training, it's tens of thousands,
+[12:45] perhaps more
+[12:48] of the same accelerators, but the
+[12:50] computation is synchronous.
+[12:52] What this means is that basically all of
+[12:54] the TPUs, all of the GPUs are talking to
+[12:56] each other synchronously. They're
+[12:57] distributing data, all reduce, all
+[12:59] gather,
+[13:00] whatever else it is. One of the nodes
+[13:03] goes down,
+[13:04] everything goes down.
+[13:06] So, literally
+[13:08] is in again, how how do we build
+[13:10] internet scale web services to this day?
+[13:13] Today to dates, if you're building web
+[13:15] search,
+[13:16] it's designed basically to have any rack
+[13:18] go away at any point in time and no one
+[13:20] notices. We barely notice. We do notice.
+[13:22] We we'll go get it fixed, but there is
+[13:24] no uh no outage. Why? Because we have a
+[13:27] backup for all the data
+[13:29] on that rack and at least one other
+[13:31] place in that same cluster. And we have
+[13:33] spare compute capacity and it's
+[13:35] fungible.
+[13:36] So, if you think about TPU or GPU
+[13:38] training inference, every node is
+[13:41] special. Every node has a special
+[13:42] specific expert whatever layer in the
+[13:46] overall model that it's serving. If it
+[13:48] goes away,
+[13:49] propagation stops.
+[13:51] Serving stops.
+[13:53] So, how you manage these things that
+[13:55] actually deliver the value at scale
+[13:57] completely changes. And so, everything
+[13:59] that we developed over the past 20, 25
+[14:00] years, that said, loose coupling, don't
+[14:03] worry about individual failures, all
+[14:05] that's gone out the window, too.
+[14:06] Do you believe flops should flow like
+[14:08] megawatts? Well, they're they're closely
+[14:10] related, but as you said, um what what I
+[14:13] really believe is uh system balance is
+[14:15] what matters most. And so, if you are
+[14:18] over fixated on flops and you don't have
+[14:20] enough HBM bandwidth or if you don't
+[14:22] have enough SRAM or if you don't have
+[14:23] enough network bandwidth, then it
+[14:25] doesn't matter how much flops you have.
+[14:27] Like, we we we can build infinite flops
+[14:30] and not connect it and connect it via
+[14:32] via thin pipes to one another or put
+[14:35] very little HBM bandwidth or very little
+[14:37] HBM capacity. That's easy. Scaling flops
+[14:40] is easy.
+[14:41] Building a coordinated supercomputer
+[14:43] that scales out to 10,000, 100,000-ish
+[14:46] TPUs that has the right balance point,
+[14:50] super hard. And this balance point is
+[14:51] the the key key insight. So, um I'll
+[14:54] share with you all um
+[14:57] I I
+[14:58] I used to be professor. I I love this
+[15:00] room, by the way. Uh seeing seeing this
+[15:02] room, I I I took undergraduate classes
+[15:04] in a room like this about a
+[15:06] another school up the road at Berkeley.
+[15:08] >> [snorts]
+[15:08] >> We're we're we're we're we're equal
+[15:10] opportunity systems people, right, guys?
+[15:12] Yes, it turns out Berkeley does pretty
+[15:14] good work in systems, as well.
+[15:15] >> Yes. Uh your work is great. But uh one
+[15:18] of the things that I loved learning most
+[15:20] about and that has really stayed with
+[15:21] me, I'll share it with you all in case
+[15:22] you don't know it, is uh Amdahl's law.
+[15:25] Who here knows about Amdahl's law?
+[15:27] Oh, no. No, Amdahl's law?
+[15:29] >> Amdahl's law.
+[15:30] Okay, good. Sorry, I failed as a
+[15:32] professor. Please go ahead. Okay, so the
+[15:34] Amdahl's law of system balance,
+[15:36] basically this is late '60s, so
+[15:38] before I was born,
+[15:40] um he came up with this law that said
+[15:43] for every million instructions per
+[15:45] second that you built into your parallel
+[15:47] system, your your distributed
+[15:49] computation, you would need um megabyte
+[15:53] per second of IO.
+[15:55] So, in other words, if you're going to
+[15:56] provision a million instructions per
+[15:57] second, think of it as flops today,
+[16:00] you better have
+[16:02] that IO to back it up because compute
+[16:04] without data is useless and you have to
+[16:06] be able to feed it. And now, shockingly,
+[16:08] over just a it was 1967 he came up with
+[16:11] this, so almost 60 years,
+[16:13] this has held.
+[16:15] Now, he was building
+[16:18] small scale in the late '60s. Now, we're
+[16:20] talking about 10,000, 100,000, sometimes
+[16:23] spread across even a wide area network.
+[16:27] You have to provision a network because
+[16:29] almost all your data is across the
+[16:31] network today. So, your IO is network
+[16:33] IO. You have to provision for every some
+[16:36] number of flops, some amount of HBM
+[16:39] bandwidth, some amount of network
+[16:40] bandwidth,
+[16:41] or you're going to starve,
+[16:44] you're going to
+[16:45] uh basically waste your money.
+[16:47] If you don't build to this ratio, you'll
+[16:49] have huge [snorts] amount of flops that
+[16:52] aren't doing anything.
+[16:53] To some extent, this is what's happening
+[16:55] today with the very low AMFU utilization
+[16:57] that we have.
+[16:58] Why? Because with the with the move to
+[17:00] mixture of experts, sparse computation,
+[17:03] actually the hardware today, all of it,
+[17:07] actually,
+[17:08] isn't built at the right system balance
+[17:10] point to manage the fact that actually
+[17:13] you now need a lot more memory bandwidth
+[17:15] relative to the computation ratios. Mhm.
+[17:17] So, when you think about evaluating your
+[17:19] system's utilization,
+[17:21] super key. That I mean the reliability
+[17:23] part, I really want to get this across,
+[17:25] but then system balance is also super
+[17:27] key.
+[17:28] If you don't have the right system
+[17:29] balance, you're wasting your money. So
+[17:32] when you say 40, 50 billion dollars per
+[17:34] gigawatt,
+[17:35] yes, but if you had to spend 55 billion
+[17:39] dollars
+[17:41] and make sure that that gigawatt was
+[17:42] balanced or reliable, you'd do it.
+[17:46] So I think the key here is because
+[17:49] otherwise you're not going to get the
+[17:50] value out of it. If you say, "Hey, I put
+[17:52] one with my gigawatt, I got all these
+[17:54] gigaflops, teraflops, petaflops,
+[17:56] exaflops, yottaflops, whatever it is."
+[17:59] Awesome, but what do you actually get
+[18:01] out?
+[18:02] And what you get out depends on system
+[18:04] balance,
+[18:06] and it depends on reliability. But now,
+[18:09] going back to the agents, system balance
+[18:11] isn't just for your TPUs and GPUs, it's
+[18:13] the balance to the CPUs that are sitting
+[18:16] next door, the storage that's sitting
+[18:18] next door or in the next rack, the
+[18:20] network that connects it all together.
+[18:22] Like the did not not the high-speed
+[18:24] NVLink or ICI network, but the data
+[18:26] center network that connects it all
+[18:27] together.
+[18:28] It breaks my brain a little bit to try
+[18:29] to figure out how do you decouple the
+[18:31] individual
+[18:33] bottlenecks in the memory storage
+[18:35] bandwidth
+[18:36] uh supply chains and align that in a
+[18:39] predictable fashion to accomplish system
+[18:41] balance. How does one even approach that
+[18:43] problem? So this is for those of you who
+[18:45] took architecture, undergraduate or
+[18:47] graduate architecture, you've got your
+[18:49] seven-stage pipeline, right, with the
+[18:51] instruction fetch and decode and
+[18:54] access, right? And how do you actually
+[18:57] That's how we got super scalar
+[18:58] performance.
+[18:59] >> Right. Seven stages, super complicated
+[19:02] within the core.
+[19:03] Now we've got like 127 stages.
+[19:06] >> Right. Within a CPU is possible to get
+[19:08] that microarchitecture
+[19:11] more or less
+[19:12] balanced, but even there hit getting the
+[19:14] right balance point is a super tough.
+[19:16] That's why you get pipeline bubbles.
+[19:17] That's why you you say, "Okay, how many
+[19:18] cycles per instruction do I really have
+[19:20] and how do I drive that uh down
+[19:22] actually?" Okay. So, now extend this out
+[19:24] across 100,000 nodes, it is an
+[19:25] impossibility. 100% MFU is not possible.
+[19:30] So, that that should be like there's I
+[19:31] mean you could with a toy uh just like
+[19:34] shot it out and say, "Go."
+[19:36] But, in general for a real computation,
+[19:38] you're not going to get perfect balance
+[19:40] because there's like let's say there's
+[19:41] just little micro variation in one cache
+[19:45] hit rate of one TPU GPU versus another.
+[19:49] That will cause a pipeline bubble. All
+[19:50] right, so now your MFU because now
+[19:52] you're waiting for the data to come from
+[19:53] another node, your MFU just went to So,
+[19:55] you have this compounding Yep. and it'll
+[19:57] multiply.
+[19:58] And let's talk for a second cuz what you
+[20:00] described is the computational one. Like
+[20:01] I'm talking about now you add on
+[20:03] network. No, no, procurement. Oh.
+[20:05] >> [laughter]
+[20:06] >> Like
+[20:07] how do you like
+[20:08] I mean literally the the world can't
+[20:10] produce enough memory. I
+[20:12] uh
+[20:13] Yes. I'll ask you if this is true or
+[20:15] not. There's there's reports that one of
+[20:17] the frontier labs
+[20:19] cornered the market on memory recently
+[20:21] through a buying a bunch of call options
+[20:23] and then the rest of the industry
+[20:24] revolted. Is that true?
+[20:26] I don't know if it's true or not. I I
+[20:27] read the same uh or I I I can't um keep
+[20:30] up with the X. So, I have the same feet
+[20:33] whatever it This is from a group chat
+[20:34] this morning, but I got
+[20:35] >> morning. Okay, this this actually came
+[20:37] out um three or four months ago. Oh,
+[20:39] then this the group chat is behind. It's
+[20:40] a This one in this particular case the
+[20:41] group chat is behind. You know, these
+[20:43] things uh yes, at the supply chain is a
+[20:46] massive massive issue. I'm not
+[20:47] responsible for the supply chain and and
+[20:49] procurement. Uh
+[20:50] the problem is that things just continue
+[20:52] to go up and up and up every month and
+[20:55] the lead time is years. So, in other
+[20:57] words, basically if you want to say, "I
+[20:59] want a gigawatt of capacity." If I want
+[21:01] a net new gigawatt of capacity
+[21:04] my lead time is somewhere around two or
+[21:06] three years.
+[21:07] It doesn't matter if I've got my 40 or
+[21:09] 50 billion dollars.
+[21:10] Just for
+[21:13] buying everything and building it, it's
+[21:14] a very physical process. So, gigawatt
+[21:17] into end, I got to go get that uh
+[21:19] capacity of power somewhere. We have a
+[21:21] final project here, which is the
+[21:23] one-person frontier lab, and they have
+[21:25] increasingly less time, but look, the
+[21:27] the project is a microcosm of life, and
+[21:30] what you just heard is A mean saying
+[21:32] there's a bottleneck he can't throw more
+[21:33] money at to clear. Sure.
+[21:35] So, if you could prompt them to solve it
+[21:37] from a technological perspective, what
+[21:39] could they do to help unblock that that
+[21:41] bottleneck? And we're going after it on
+[21:43] on multiple fronts, because pulling that
+[21:44] in, in other words, if I had the ability
+[21:46] so many times so many times, actually,
+[21:48] if I had the ability to go spend more
+[21:50] money and get more capacity tomorrow,
+[21:52] it'd be an easy decision. But if you're
+[21:54] saying, "Hey, you now have to commit to
+[21:56] how much capacity you want in 2 years'
+[21:58] time."
+[21:59] Commit. Like, you can't No going back.
+[22:01] Today, you have to say exactly how much
+[22:03] capacity you need in 2 years' time.
+[22:05] Okay. Basically, there's going to be one
+[22:07] of two outcomes. There's a third that's
+[22:08] infinitesimally small probability.
+[22:10] Outcome number one is you predict too
+[22:13] little, and then you're going to be
+[22:14] really upset that you're leaving
+[22:16] opportunity on the floor.
+[22:18] Outcome two is you over predicted, and
+[22:20] now you wasted a bunch of money.
+[22:22] There's some other possibility which
+[22:23] says you predicted perfectly, which
+[22:24] never happens. So, if you could pull
+[22:27] that in, and now you said, "Okay, how
+[22:28] much capacity do you need tomorrow?"
+[22:30] you're probably going to nail it. Or if
+[22:32] you over predict, you over predict by,
+[22:34] you know, .05% or something.
+[22:36] >> Mhm.
+[22:37] How do you pull that lead time in?
+[22:39] And actually, this is a technical
+[22:41] problem.
+[22:42] This is a truly a technical problem,
+[22:45] where from procurement to manufacturing,
+[22:48] like, right now, if I wanted to have a
+[22:49] gigawatt, I'd have to go build a new
+[22:51] building.
+[22:52] A big building, probably multiple
+[22:53] buildings, actually. I have What does
+[22:55] that mean? I have to go now get some
+[22:57] land.
+[22:58] Maybe I've got some land buffered up.
+[23:00] But if I don't, I'm in trouble, because
+[23:02] I now have to go do permitting.
+[23:04] That'll take months.
+[23:05] >> Right. Indeterminate. Right. Who knows,
+[23:07] etc. So, may but by saying, "Okay, well,
+[23:09] you know what? The land is kind of
+[23:10] cheap. So, let me have a bunch of land
+[23:11] on the side."
+[23:13] Okay, now is the land prepared for a
+[23:15] building to go down? Actually, you
+[23:16] probably have to grade it.
+[23:18] Okay, let's let's go ahead and spend the
+[23:20] money to grade it ahead of time, too.
+[23:21] Now, I'm ready. But now, I put down the
+[23:23] pad. Do I go procure the power? That
+[23:25] starts getting expensive.
+[23:27] I do I go to the utility? The utility
+[23:28] now, everybody's going to the utility
+[23:30] saying, "I want a gigawatt. I want 5
+[23:32] gigawatts. I want 10 gigawatts."
+[23:34] They'll say, "Sure. I'll get you that.
+[23:36] But you have to agree to pay me for all
+[23:37] of that for the next 20 years."
+[23:39] You want a gigawatt? Sign this contract
+[23:41] that says you will pay me for a gigawatt
+[23:43] 24/7
+[23:45] for 20 years. Why? Because there's no
+[23:46] capacity to back it on the grid anymore.
+[23:48] It used to be if I went to the utility
+[23:50] and said, "I want a gigawatt."
+[23:52] They'd say, "Sure. I've got a gigawatt."
+[23:54] Well, I wouldn't go for a gigawatt. I'd
+[23:55] say, "Give me 10 megawatts." And they'd
+[23:56] say, "Sure. 10 megawatts, no problem.
+[23:59] I've got that. You don't even have to
+[24:01] You don't need to sign a contract.
+[24:03] It's so much slack capacity. I'll get
+[24:05] you 10 megawatts."
+[24:07] >> [clears throat]
+[24:07] >> No No longer true. But is My
+[24:09] understanding is the reason
+[24:10] grid-connected capacity is so acutely
+[24:13] under supplied is because hyperscalers
+[24:15] are saying, "Well, we only want sites
+[24:17] that are expandable." Mhm. And so,
+[24:18] everything under
+[24:20] 100 megawatts is just stranded. Yes. But
+[24:23] that's a bunch of stranded unutilized
+[24:24] capacity in America. What if you could
+[24:26] If you were the chief energy officer of
+[24:28] America and you're trying to, you know,
+[24:29] drive up utilization of those stranded
+[24:31] assets, what what would you do? Um so, I
+[24:33] think the 100 megawatts if if you look
+[24:36] at it, it'll add up to something, but
+[24:38] it's not going to add up to the majority
+[24:39] of the of the demand. I think that just
+[24:42] from a scale and operations perspective,
+[24:44] if we really want to go after this, we
+[24:45] actually would We should unstrand some
+[24:47] of those 100 megawatt sites, for sure. I
+[24:49] think that as serving takes off, that
+[24:51] will happen naturally. I see. So, in
+[24:53] other words, we are up until recently in
+[24:57] a place where most demand was for
+[24:58] training, and training does need large
+[25:00] contiguous chunks of infrastructure. As
+[25:03] we move to more and more of the demand
+[25:05] going to a serving, that's going to
+[25:06] shift naturally. Because the serving is
+[25:08] more fungible.
+[25:09] >> It's more fungible, it's smaller. I
+[25:10] don't need a gigawatt to do training. I
+[25:12] don't need 500 megawatts to do training.
+[25:14] I can serve some number of tokens uh per
+[25:17] minute coming from a smallish
+[25:19] deployment. So, I think we're going to
+[25:20] understand that somewhat naturally, but
+[25:22] I don't think that's going to fulfill
+[25:23] the needs because there is going to be
+[25:25] benefits uh to scale. Uh and we are
+[25:28] going to have to figure out how we get
+[25:30] larger amounts of power concentrated
+[25:32] delivered to some number of locations.
+[25:34] >> Yep. Makes sense. I could go on for
+[25:37] hours. I mean, uh but we should get
+[25:39] switch to questions. The question is, if
+[25:41] you were Stanford student again, what
+[25:42] technical problem would you obsess over?
+[25:44] You know, I I will say that uh I get a
+[25:47] uh this I think it's a really good
+[25:48] question, but the answer I'll give is to
+[25:52] go the all of them really, really
+[25:55] matter. Honestly. In other words, there
+[25:56] is no one bottleneck. And predicting the
+[25:58] future is really hard. So, let me give
+[26:02] you an example. When I was a graduate
+[26:03] student, uh what uh everyone said is
+[26:06] absolutely, positively don't work in
+[26:08] artificial intelligence. Like it's this
+[26:10] the worst thing to work work in.
+[26:13] And that that was true again after 10
+[26:14] years, and then true after another 10
+[26:16] years, and now look what's what's
+[26:17] happened. Trying to predict the future
+[26:19] really, really hard. I I would say
+[26:22] pick the problem domain that you are
+[26:25] most intrinsically excited about.
+[26:29] Because that that passion
+[26:31] for it is that's that's what's going to
+[26:32] carry you forward. And then um
+[26:35] in this model, I would say everything
+[26:37] from algorithms to hardware engineering
+[26:39] to chip design to operating systems to
+[26:42] model architecture to it all matters.
+[26:45] Which which is really good. So, probably
+[26:49] pretty good chance that
+[26:51] uh what you pick is going to be really
+[26:53] really important.
+[26:55] And so if you And if you pick something
+[26:56] solely because
+[26:58] your prediction is that it's going to be
+[26:59] the most important one, but you don't
+[27:00] like it,
+[27:02] I think that that outcome will be the
+[27:04] bad outcome.
+[27:06] Because also pretty good chance that
+[27:07] you'll have mispredicted.
+[27:08] I [clears throat] have a quick I have a
+[27:09] quick question based on the You know,
+[27:11] many of you submitted your
+[27:14] your project ideas and there were 500,
+[27:16] so it's taking me a while, but I'm
+[27:18] steadily reading all of them cuz I don't
+[27:19] want to have Claude
+[27:21] hallucinate. How many people here feel
+[27:23] like you picked a project idea because
+[27:25] you were truly intrinsically motivated
+[27:27] by it?
+[27:30] Good number. Okay, that's actually very
+[27:32] helpful.
+[27:33] Wasn't clear to me based on the readings
+[27:34] cuz there's
+[27:36] surprising similarity between many of
+[27:39] the problems you guys are interested in.
+[27:41] And I wish we were seeing more diversity
+[27:43] in in those problems, but that's that's
+[27:45] for another time. Next question.
+[27:47] Question is what's your favorite story
+[27:48] from your time at Google? There were a
+[27:49] lot of uh favorite stories and um yeah,
+[27:52] thank thanks for reminding me of the
+[27:53] great time I had at Duke as a as a
+[27:55] professor.
+[27:56] You know, the the stories that are I
+[27:58] mean, we've had of course many joyous
+[27:59] moments, many funny moments, um
+[28:01] but I think that for me,
+[28:04] um the moments that are best are the
+[28:07] ones where you learn the most.
+[28:09] And so the one that actually comes to
+[28:11] mind just top top of mind is when the
+[28:13] original TPU V2 design was happening.
+[28:17] And we were going to go build this
+[28:20] supercomputer at the time, 256 nodes,
+[28:22] it's gotten much bigger, over 9,000
+[28:24] nodes now.
+[28:25] And we were debating what um network to
+[28:28] use.
+[28:29] This was around 2015, what network
+[28:31] technology to use.
+[28:33] And uh you know, my primary area of
+[28:35] research understanding at the time was
+[28:38] networking.
+[28:39] And the conventional wisdom from 45
+[28:42] years or whatever at the time of
+[28:43] networking was any whatever you were
+[28:46] going to do in networking, you were
+[28:47] going to use Ethernet.
+[28:49] And some really smart folks said, "No,
+[28:53] this domain, we want a distributed
+[28:55] shared memory system, read-write
+[28:57] semantics, point-to-point, not switched.
+[29:01] And
+[29:02] Ethernet is the wrong solution."
+[29:05] You know, I I was like, "What what the
+[29:07] heck? I mean, look, I I have 40 years of
+[29:09] history behind me and
+[29:11] always been right. Me and me and a
+[29:12] thousand other people have always been
+[29:14] right."
+[29:15] But then when I When we dug into it,
+[29:17] back and forth, and it was one of these
+[29:19] super spirited debates. Not a not an
+[29:21] angry debate, to be clear, right? But it
+[29:23] was a, you know,
+[29:25] smart people,
+[29:26] whatever you want to say, really going
+[29:28] at it. And really convinced um
+[29:31] uh that they were right.
+[29:33] So, it turned out I was wrong.
+[29:35] It turned out that actually you don't
+[29:37] want to use Ethernet for a TPU
+[29:39] supercomputer. And that has stood the
+[29:41] test of time for the past decade. Um
+[29:43] I got it wrong.
+[29:45] I I learned something.
+[29:46] And And so, the best thing about Google,
+[29:48] actually, I would say is uh how often
+[29:53] I get to learn something. In that story,
+[29:55] who was the person who was the first
+[29:56] principles thinker that came to that
+[29:57] conclusion first and then evangelized
+[30:00] that standard? Hard to say, but probably
+[30:02] Norm Jouppi.
+[30:04] Stanford PhD. So, yeah. Yeah, Norm is
+[30:07] >> Maybe maybe he learned something. Um
+[30:09] next question. Question, what What was
+[30:10] it like during the ChatGPT code red? You
+[30:12] know, I think this was it was a great
+[30:14] time. And I think it remains I think
+[30:16] that Google has changed as a company. I
+[30:18] was This is um
+[30:21] when I really first started seeing
+[30:22] Sundar in action up close. And I now
+[30:25] report to him. I didn't at the time, but
+[30:27] one of the things that he did in that
+[30:28] moment was he did a fairly big reorg. Uh
+[30:32] the biggest part of it was bringing
+[30:33] Brain and DeepMind together. Probably
+[30:34] many of you have heard that. Uh it was a
+[30:36] fantastic move. He also brought
+[30:38] different infrastructure teams together.
+[30:40] Uh
+[30:41] under my leadership. that was the the
+[30:44] lower headline, but I think also turned
+[30:46] out to be a good move, not because of
+[30:47] me, but because it allowed us to move
+[30:49] with sort of more speed and more
+[30:53] unification.
+[30:54] I I I would say that seeing how the
+[30:57] people came together
+[31:00] was was really fantastic. The culture at
+[31:02] Google is different than it was 3 and
+[31:04] 1/2 years ago.
+[31:05] I would say it's been a reinvention. I
+[31:08] think that we're actually through that
+[31:10] now. You know, if you'd ask me a year
+[31:11] ago, I'd say that we were through it,
+[31:13] probably not. I think we're now at this
+[31:14] point through it. Sundar deserves a lot
+[31:17] of credit. Demis Hassabis
+[31:19] and Jeff Dean deserve a lot of credit
+[31:21] for
+[31:21] for it as well, but really I I'm I I
+[31:25] speak of November 2022
+[31:27] often actually internally and frankly
+[31:30] fondly.
+[31:31] I can repeat the question if you if you
+[31:32] like.
+[31:32] >> do. Yeah. So, I think
+[31:35] one of the premises networking is a
+[31:36] bottleneck at all all layers. We at
+[31:38] Google have been leveraging uh optical
+[31:40] circuit switches to remove that
+[31:42] bottleneck. And so, are is are you
+[31:45] worried am I worried that we're going to
+[31:47] limit ourselves given the fact that we
+[31:49] can't reconfigure these optical circuit
+[31:51] switches at per packet granularity? Is
+[31:53] that assumption Sorry, I interrupted
+[31:54] you. Go ahead. Yeah, go ahead. Uh good
+[31:56] question. So, we we don't restrict
+[31:58] ourselves to optical circuit switching.
+[32:00] Optical circuit switching plays a role
+[32:03] in our networking, but I mean the the
+[32:05] lecture which you're referring to, the
+[32:07] presentation I made in terms of all
+[32:09] layers, for instance you would not use
+[32:10] optical circuit switching for the
+[32:11] on-chip network.
+[32:13] No way. Not not applicable. And you
+[32:15] would not use optical circuit switching
+[32:18] for
+[32:20] portions to large portions of the WAN.
+[32:22] But even within the data center, where
+[32:24] we do use it extensively, it's not the
+[32:26] sole technology.
+[32:27] It's an augment. In other words, we have
+[32:29] a lot of electrical packet switches, a
+[32:31] lot of electrical packet switches. And
+[32:32] if you look at the TPU,
+[32:34] within a rack, it is a point-to-point
+[32:36] network, but every connection today
+[32:38] between TPUs within a rack is
+[32:42] copper.
+[32:43] Like there's a direct cut because that
+[32:44] is the right technology.
+[32:46] Between racks, we have
+[32:48] optical circuit switches.
+[32:50] But the optical circuit switches
+[32:51] essentially creates today a
+[32:53] three-dimensional torus. Mhm.
+[32:56] Why do we do this? The reason is
+[32:58] reliability.
+[32:59] So, if you think about it, if I lose a
+[33:01] TPU,
+[33:03] I now have again lost my entire
+[33:06] um lattice.
+[33:08] If information is flowing through this
+[33:10] torus by pairwise connectivity, I lose
+[33:12] that one TPU, everything is gone away.
+[33:14] What I can now do with my optical
+[33:16] circuit switches I can remove that rack
+[33:18] wholly.
+[33:19] I can plug in another rack.
+[33:21] And those within a rack today we have 64
+[33:23] TPUs. Those 64 TPUs can take in the
+[33:26] exact position of the 64 TPUs that I
+[33:29] took out.
+[33:30] But what does the optical circuit switch
+[33:31] do? And this would require some pictures
+[33:33] and um uh some slides probably.
+[33:36] Basically, what it then says is imagine
+[33:37] that I have the ability to take fiber,
+[33:41] unplug it, replug it to another rack
+[33:43] without any humans.
+[33:45] That's what the optical circuit switch
+[33:46] does essentially. So, what is a optical
+[33:48] circuit? It's a um chip
+[33:51] about this big, square.
+[33:52] It has 136 mirrors on it.
+[33:55] More could be more, could be less.
+[33:57] Each mirror can be rotated in three
+[33:59] dimensions.
+[34:00] Essentially, what we do is we take every
+[34:02] rack and all the fiber that's coming out
+[34:04] of that rack will be connected to the
+[34:05] optical circuit switch.
+[34:07] The fiber, now it's light shining out
+[34:09] through the fiber, comes into the
+[34:11] optical circuit switch shining down on
+[34:13] those mirrors.
+[34:14] So, light comes in, hits a mirror,
+[34:17] gets reflected in a particular direction
+[34:18] depending on how I rotate the mirror
+[34:20] under Mem's control. These tiny mirrors
+[34:23] just and tiny motors.
+[34:24] It will get reflected precisely to go
+[34:26] out and out the port.
+[34:28] But I can program what output port it
+[34:30] goes out.
+[34:31] So, in other words, essentially what it
+[34:32] gives me is a programmable topology.
+[34:35] So that if I decide that a rack needs to
+[34:36] be virtually removed, virtually removed.
+[34:38] This is all under software control.
+[34:41] And then another rack gets plugged in
+[34:43] in the exact same position that that
+[34:45] other rack got removed, I now can
+[34:47] maintain my topology. The torus becomes
+[34:49] whole again. And I can do this in let's
+[34:50] say seconds.
+[34:52] So, essentially what the real
+[34:54] differentiator has been
+[34:56] for TPUs is the ability to have much
+[34:59] higher levels of availability.
+[35:01] I can now recover from failures
+[35:04] instantaneously.
+[35:05] Right? As long as I have a few spare
+[35:08] racks,
+[35:09] quote-unquote, lying lying around.
+[35:11] And the spare racks, by the way, could
+[35:12] be doing smaller computations. They
+[35:14] don't have to be doing the gigantic
+[35:15] computation.
+[35:16] That's place one. Place two that it
+[35:18] becomes useful is
+[35:19] let's say I told you about the compute
+[35:21] problem and the storage problem. Right?
+[35:22] We're doing agents. I now, one more
+[35:25] level above that, have a different
+[35:26] optical circuit switching layer where I
+[35:27] can say, "Point the mirrors to that
+[35:29] cluster over there
+[35:31] where the storage that I need is
+[35:32] located."
+[35:33] I now can short circuit many layers of a
+[35:36] general purpose electrical packet switch
+[35:38] that I would have to have normally
+[35:39] provisioned and built to go to that
+[35:40] distant cluster, and basically create a
+[35:42] direct connect.
+[35:44] So, really think of an op- So, do I I
+[35:46] still have lots of electrical packet
+[35:47] switches.
+[35:48] But I now have many fewer than I would
+[35:50] have needed
+[35:51] where I can program which cluster I can
+[35:53] talk to. This is You're right, it's not
+[35:55] per packet. But if I know that I'm going
+[35:57] to run this 5-hour job,
+[35:59] and this 5-hour job needs the storage
+[36:01] over there,
+[36:02] point the mirrors over there. Mhm. The
+[36:04] next 5-hour job needs the storage over
+[36:05] there.
+[36:07] Okay, as part of Borg,
+[36:09] scheduling the job, it would say, "Point
+[36:11] the mirrors over there for the next 5
+[36:13] hours." I see.
+[36:14] That that saves me from provisioning
+[36:16] layer upon layer upon layer of network
+[36:19] and miles and miles of fiber,
+[36:21] essentially allowing me to not have
+[36:23] infinite bandwidth wherever I want it.
+[36:24] It's not fully fungible because you're
+[36:25] right, if at a second granularity I
+[36:27] said, "Oh, wait a second, I want to go
+[36:28] over there." It's not that I can't, I
+[36:29] still have electrical packet switches
+[36:31] over there.
+[36:32] Just not with the full bandwidth.
+[36:34] The full bandwidth is pointed over there
+[36:35] for the next 5 hours.
+[36:37] Or however long I decide I need to move
+[36:39] back over here.
+[36:40] It's a kind of a deep question, but so
+[36:42] optical circuit switches, they have
+[36:43] their role.
+[36:44] They're not a magic bullet that solves
+[36:46] all problems. We use a lot of electrical
+[36:48] packet switches. Why is the torus the
+[36:51] topology settled on versus others?
+[36:53] Originally for uh ML training, the
+[36:56] number one collective was
+[36:59] uh all reduce rather than all tall.
+[37:02] And for an all reduce, actually, you the
+[37:04] torus is the perfect um
+[37:06] topology because you essentially are
+[37:07] disseminating parameters to everyone
+[37:10] with potentially a little bit of
+[37:11] computation, a little tiny bit of
+[37:13] computation on each distribution. So,
+[37:16] the best and fastest way to do
+[37:18] dissemination of data for this
+[37:20] particular style is with an all reduce.
+[37:22] Now, if you are doing an all to all,
+[37:24] turns out the switch topologies have
+[37:26] have their benefits as well. For um that
+[37:29] regime, what is the optimal topology?
+[37:31] Optimal if if you truly need to do all
+[37:33] reduce, I'm sorry, all to all uh with
+[37:36] arbitrary communication, the switch
+[37:38] topology, the standard factory clo- clo-
+[37:41] topology would be the best, but it winds
+[37:43] up that model designers can work around
+[37:45] the topology in very clever ways.
+[37:48] And they do. Yep.
+[37:50] Uh next question. The question I'm not
+[37:52] going to take your assumption your
+[37:53] assumption was all chips are becoming
+[37:55] obsolete, that is not true. However,
+[37:57] your question was how does Google think
+[37:58] about hardware depreciation, correct?
+[38:00] Okay, let's take that. Yeah, so all
+[38:02] chips are um not becoming obsolete.
+[38:04] There's so much demand that our um older
+[38:07] generation chips continue to see very
+[38:09] heavy use at Google, and this is true at
+[38:11] uh whether it's older generation TPUs or
+[38:13] GPUs, it's true across the industry.
+[38:14] H100s are
+[38:16] massive demand despite the fact that the
+[38:18] Reuben has been announced, etc.
+[38:20] Fantastic chips as well, H100s and
+[38:22] H200s, and V200s, and GB200s, etc.
+[38:25] as well. So, we depreciate our hardware,
+[38:28] our compute hardware over 6 years at
+[38:30] Google. I think that is more or less
+[38:32] standard across the industries. I think
+[38:33] some people, a few people might do five,
+[38:35] but 6 years I believe is standard. We
+[38:38] are seeing use at least for that period
+[38:40] of time, and typically longer for for
+[38:43] our hardware. So, it works works out
+[38:45] well.
+[38:46] How do we plan? This is the problem that
+[38:47] we were talking about earlier. It's it's
+[38:49] very very hard to plan for the future
+[38:51] because we're having to make these
+[38:53] predictions fairly far in advance for
+[38:56] one saving grace is when we're
+[38:58] provisioning watts and data center
+[39:00] space.
+[39:01] That's fungible. In other words, it
+[39:03] could be generation X, it could be
+[39:04] generation X + 1, it could be generation
+[39:06] X + 2, it could be generation X - 1. So,
+[39:09] we first need to have an envelope for
+[39:11] watts.
+[39:13] But the lead time for these chips are
+[39:14] also significant. You got to get your
+[39:16] orders in early, and you have to plan
+[39:18] plan for those as well. I can tell you
+[39:20] that
+[39:21] we have a planning is a massive effort,
+[39:24] massive and complicated effort, and fast
+[39:26] changing. Because let's say that I have
+[39:28] a plan, and then a new use case comes
+[39:31] up. There's a new invention internally
+[39:32] at Google, a new product launch,
+[39:34] and it needs a particular kind of
+[39:36] capacity. Now I have to figure out how
+[39:38] to fit that in. I have to replan. So,
+[39:41] essentially, by the way, another very
+[39:42] interesting domain is how do you plan
+[39:44] under uncertainty, and how do you
+[39:46] dynamically replan quickly
+[39:48] based on all the new information that
+[39:50] you have, demands that you have,
+[39:52] customers that come in. A new cluster
+[39:54] cloud customer comes in and wants to buy
+[39:55] a bunch of
+[39:57] GPUs, but it's not the GPUs that I
+[39:59] ordered. It's a different kind of GPU.
+[40:01] How do I order these new ones, get them,
+[40:03] and by the way, they want they want to
+[40:05] build close to their cluster in
+[40:07] Minnesota. I'm making all this up.
+[40:09] But so, like all these constraints come
+[40:11] in, and now we have to replan
+[40:12] dynamically, and essentially daily based
+[40:16] on the new information that we get.
+[40:18] Awesome. Next question. Yeah. How do you
+[40:20] see robotics capabilities being
+[40:22] unblocked? Yeah,
+[40:24] I think
+[40:25] really exciting domain and I think that
+[40:27] this is you know, to me if I think about
+[40:29] the internet revolution, it really was
+[40:31] the coupling with the mobility
+[40:33] revolution that
+[40:35] made it truly the impact that it was,
+[40:37] right? Basically taking the internet
+[40:39] into the real world, making it mobile. I
+[40:41] I I think I'm biased, so you you all can
+[40:43] check this, but I think that the best
+[40:45] example that we have of
+[40:47] really advanced robotics out there in
+[40:49] the world working in very complex
+[40:51] scenarios is Waymo.
+[40:53] And so I think that's a good example of
+[40:55] this scaling approaches. In robotics, I
+[40:59] think in many cases you're going to find
+[41:01] that latency really matters, but safety
+[41:03] is the primary consideration.
+[41:05] And I think you're going to have very
+[41:06] similar scaling requirements, but
+[41:08] safety, reliability will just
+[41:11] shoot through the roof in terms of your
+[41:13] considerations and that's going to then
+[41:15] argue for
+[41:17] locality and essentially whatever you
+[41:19] want to call it single-threaded
+[41:21] programming. I don't mean
+[41:21] single-threaded as in okay, there's only
+[41:23] one one core on the CPU or whatever on
+[41:25] the TPU, but essentially you you can't
+[41:28] have variability. Like if if there's a
+[41:30] safety question, you can't say oh wait,
+[41:32] I had a context switch of 10
+[41:33] milliseconds and I wasn't running when
+[41:35] the safety
+[41:36] whatever algorithm needed to be running.
+[41:38] So I do think that the similar scaling
+[41:40] laws are going to apply, but the scale
+[41:43] that you can count on for robotics is
+[41:45] going to be much much less. If you're
+[41:47] counting on 20,000 TPUs in a data center
+[41:51] 1,000 miles away
+[41:52] for for your robotics application to
+[41:54] work,
+[41:55] probably depending on the robotics
+[41:57] application,
+[41:58] may or may not work.
+[42:00] The question is are there do you have
+[42:02] any thoughts on the SpaceX Anthropic
+[42:03] partnership that was announced today
+[42:05] where they're going to
+[42:07] you
+[42:07] Anthropic is
+[42:09] going to be able to use some compute
+[42:10] from the former XCI Colossus cluster.
+[42:13] Similar announcement on cursor. So,
+[42:17] cursor is going to be leveraging a bunch
+[42:18] of capacity on SpaceX XCI.
+[42:21] And I think what you're seeing here is
+[42:23] massive demand for inference compute
+[42:25] today. And so,
+[42:27] really if you think about it, you'd have
+[42:29] to say that coding agents really
+[42:32] exploded. They've been around for quite
+[42:33] some time. So, I I do know that, but
+[42:35] they really exploded
+[42:37] 4 5 months ago.
+[42:39] And nobody nobody predicted it at this
+[42:41] level. And so, nobody essentially had
+[42:44] enough lead time to say I need more
+[42:46] GPUs, more TPUs to handle this explosive
+[42:48] demand for serving.
+[42:50] People are now
+[42:51] looking around and saying what capacity
+[42:53] can I get where?
+[42:54] And I don't know the inside story of
+[42:56] whatever Elon and Dario discussed or
+[43:00] whoever. But, you know, clearly good
+[43:02] opportunity for Anthropic to leverage a
+[43:03] bunch of available capacity that
+[43:06] SpaceX had less useful.
+[43:08] What got me into this field? Uh, and
+[43:10] what um
+[43:12] convinced me to switch from being a
+[43:13] professor to
+[43:14] my job at Google.
+[43:16] Uh,
+[43:17] I was lucky in that for whatever reason,
+[43:19] I was I remember I was 6 years old. I
+[43:22] was in um
+[43:23] uh,
+[43:24] Iran at the time actually. My family
+[43:25] moved to the US when I was 6. So, it was
+[43:27] right before we moved. I saw a magazine
+[43:29] cover.
+[43:30] And it had a computer on the magazine
+[43:32] cover.
+[43:33] And somehow
+[43:35] I I decided I was going to become a
+[43:38] computer programmer. Never seen or
+[43:40] touched the computer, but I decided
+[43:41] that.
+[43:42] Um, I think my defining characteristic
+[43:43] is I'm very stubborn. I never change my
+[43:45] mind. And
+[43:47] fortunately, I loved it. So, when I was
+[43:48] in high school, I was I was the kid I
+[43:51] was that kid, right? And this was a a
+[43:53] while ago. I was
+[43:55] in the lab programming
+[43:57] all the time. So, boring story. I I
+[44:00] still love it uh, to to this day.
+[44:03] Uh, and then I loved it so much that I
+[44:06] really um decided I had to get a PhD. I
+[44:09] I needed to understand the material. It
+[44:10] wasn't about um
+[44:12] anything other than really love for the
+[44:14] material.
+[44:15] Becoming a professor was natural. I came
+[44:18] to Google because I was I'd been a
+[44:19] professor for
+[44:21] 12 13 years and actually never had a
+[44:23] real job.
+[44:24] I had jobs in research labs, but that
+[44:26] didn't count. So, I said, you know, if
+[44:27] I'm teaching all these people, I better
+[44:29] know something about what it's like to
+[44:31] be in industry. So, I came to Google on
+[44:32] a one-year sabbatical.
+[44:34] I loved being a professor and actually I
+[44:36] was quite um haughty about um people
+[44:39] working in industry. Meaning, I couldn't
+[44:42] understand why anyone would want to work
+[44:43] in industry. No No offense to
+[44:45] uh anyone here because I was so biased.
+[44:48] I admit I was biased.
+[44:50] Um I got to Google very very fortunate.
+[44:53] So, Google at the time I joined, 2010,
+[44:56] there were seven people between me and
+[44:58] the CEO.
+[44:59] All seven of them, uh including Eric
+[45:02] Schmidt, the CEO at the time, had a PhD
+[45:03] in computer science.
+[45:05] So, here's this guy who knew nothing
+[45:06] about um
+[45:07] industry. Literally nothing.
+[45:09] Uh
+[45:10] any other place I would have gone, I
+[45:12] think that there would have been like
+[45:13] organ rejection or I would have been
+[45:14] like, "Oh, I I was so right. Industry's
+[45:15] terrible."
+[45:17] Uh Google was a match to me. And uh took
+[45:19] me a while, probably 3 years, to figure
+[45:22] out that uh I was having so much fun
+[45:23] that I didn't
+[45:25] I wouldn't go back to being a professor.
+[45:27] But I I
+[45:28] miss it actually and I love it. A
+[45:30] fantastic job. Uh one of the best jobs
+[45:32] ever. Uh but the opportunity to really
+[45:35] put ideas into practice and Google is
+[45:37] the kind of place where yes, it is about
+[45:39] um business impact and it's about the
+[45:41] outcomes, but it's also about um
+[45:44] doing the right thing for people, our
+[45:46] users, and doing the right thing about
+[45:49] before technology. In other words, it's
+[45:50] like solving hard technical problems.
+[45:52] Really valued at the company.
+[45:54] Good question and I think there are a
+[45:55] lot of good firms out there, honestly.
+[45:57] So, I I think it really uh I'm very
+[45:59] optimistic about the space and I think
+[46:01] there are a number of uh strong firms.
+[46:03] Really it was um
+[46:05] uh evaluation of their technology,
+[46:07] evaluation of their people, how far
+[46:09] along we were with them relative to
+[46:11] others.
+[46:12] Uh it really I wouldn't read too much
+[46:14] into it about um
+[46:16] this one is the very best or this one is
+[46:18] the second best, etc. Cerebras is
+[46:19] fantastic. We're big believers,
+[46:20] obviously. Uh but I think there's going
+[46:23] to be a a number of winners in this
+[46:24] area.
+[46:26] The question, what do you what do you
+[46:27] see as next for TPUs to beat um GPUs?
+[46:29] Are you saying that even a goal? Is that
+[46:31] even a goal? Not even a goal. I I mean I
+[46:32] do get this uh question fairly
+[46:34] frequently. I think it's a good and
+[46:35] reasonable question, but I think that uh
+[46:37] good news is that the market is
+[46:38] expanding so dramatically that there is
+[46:41] no beating or there's no competing per
+[46:44] se. In other words, there's no winning
+[46:46] and uh losing. I think it's about
+[46:47] driving impact. So, I mean we we buy and
+[46:50] sell uh huge number of GPUs. We use a
+[46:53] lot of the huge number of GPUs. GPUs are
+[46:55] fantastic products.
+[46:56] And I think they're going to and I have,
+[46:58] by the way, all the respect in in the uh
+[47:00] world for uh Jensen. Would uh uh
+[47:03] would would call him for advice uh on on
+[47:05] a number of things uh for sure. He's
+[47:07] he's amazing. His company is amazing.
+[47:09] But I would say that we're going after
+[47:11] different uh domains and uh different uh
+[47:14] customer use cases, etc. What I'll say
+[47:17] broadly is for TPUs, uh we just uh a
+[47:20] couple weeks ago announced our latest
+[47:21] eighth generation TPUs,
+[47:23] 8i. I stands for inference and 8T. T
+[47:26] stands for training.
+[47:28] And so, for the first time we're
+[47:29] launching two chips in one year.
+[47:32] Why am I mentioning these two? It's
+[47:34] because we're we for the first time are
+[47:36] specializing the TPU line. In other
+[47:38] words, previously we had one chip for
+[47:40] both serving and training.
+[47:42] And that was the right decision
+[47:44] based on everything we could see because
+[47:46] we could have probably we always could
+[47:47] have built two chips, but if one chip is
+[47:49] 5% better for one and the other chip is
+[47:52] 5% better for the other, it's actually
+[47:54] better to have the one fungible chip.
+[47:56] Right now, the needs are diverging so
+[47:58] much that we're actually seeing big
+[47:59] uplift, major uplift in specializing for
+[48:01] inference and training.
+[48:03] What I see coming um moving forward is
+[48:06] uh further increase in specialization.
+[48:09] Why? Because general-purpose CPUs,
+[48:12] they've
+[48:13] for many years, a decade plus, have
+[48:15] slowed in their rate of performance
+[48:17] efficiency improvement year over year.
+[48:19] And so, what that means is that now you
+[48:20] actually have to pick the workloads that
+[48:23] um are large. And you can't necessarily
+[48:26] say, "Hey, just wait a year and your
+[48:28] CPUs will get twice as fast." because
+[48:30] that won't be good enough to keep up
+[48:31] with the demand. We have to pick our big
+[48:33] workloads. Inference and training are
+[48:35] two great examples where we can now say,
+[48:37] "Hey, we can actually do something,
+[48:38] let's say, twice as good." because we
+[48:40] specialize. The lesson in hardware
+[48:41] design is the more you specialize,
+[48:45] the better performance you can get for
+[48:47] the subset of workloads that you can
+[48:49] run. CPUs, of course, by the way, CPUs
+[48:51] aren't going away. Like they're they're
+[48:52] general-purpose, they can do anything.
+[48:54] Uh a TPU can't do anything, but for the
+[48:56] domains where it runs, it's literally
+[48:59] 100x more efficient than, let's say,
+[49:01] CPU.
+[49:02] So, we're we're we're in the process of
+[49:04] finding those use cases
+[49:07] one by one and saying, "Okay, now and
+[49:09] maybe it won't even be a TPU."
+[49:11] Like maybe there's going to be some
+[49:12] other big workload that doesn't require
+[49:15] tensors, matrix algebra.
+[49:18] Maybe. Or there'll be some other one
+[49:20] that needs a different system balance
+[49:22] point. By the way, that's the key
+[49:22] observation between AI and AT. The
+[49:25] memory-to-compute-to-networking
+[49:26] ratios are different.
+[49:28] Right, so you you actually would design
+[49:29] the chip differently because that's what
+[49:31] that application needs. We're going to
+[49:32] keep looking and specializing for the
+[49:35] different domains.
+[49:37] The The questions are on on unblocking
+[49:39] your own production bottlenecks from
+[49:41] from provide vendors and suppliers like
+[49:43] TSMC. Yeah, we're we're deeply engaged
+[49:45] across the the supply chain. And um and
+[49:48] so,
+[49:49] I I I'll say it's um the simple answer
+[49:51] is it's a domain that we're comfortable
+[49:54] with. uh You know, my team right now is
+[49:56] in
+[49:57] Taiwan and South Korea and Thailand etc.
+[50:01] As well as as we speak. So it it is a
+[50:04] complex issue but I I'm actually not
+[50:07] worried about being able to secure a
+[50:10] supply.
+[50:11] Our fair share of supply at Google. I
+[50:13] think the challenge is again it comes
+[50:16] down to the efficient use of that
+[50:17] capacity. That's going to be as key as
+[50:19] anything.
+[50:20] Now the total demand in in the world is
+[50:23] going to be significant but I think from
+[50:26] a supply chain perspective if you I mean
+[50:27] maybe I'll just give a generic answer.
+[50:29] If you are a vendor for
+[50:33] a component.
+[50:34] Let's say it's let's say it's a
+[50:36] capacitor. Do you want to have one
+[50:38] customer?
+[50:39] I'll leave it as a as a hypothetical.
+[50:42] And let's say that customer was going to
+[50:44] say I'm going to
+[50:45] buy you out for
+[50:46] 3 years [clears throat] all your
+[50:47] capacitors whatever you got. I'll buy it
+[50:49] all up.
+[50:51] I would say that's not good for the
+[50:52] vendor actually. Even if they might make
+[50:54] more money in one or two or three years.
+[50:57] Because so the flip side of it is
+[51:00] um
+[51:01] as component vendors
+[51:03] they want to have some diversity.
+[51:05] You know again for whatever it is SEC
+[51:07] filings who's your how many how many
+[51:10] customers make up 90% of your revenue.
+[51:13] If that answer is one or two
+[51:15] investors aren't so super happy because
+[51:17] now you're beholden to exactly one or
+[51:19] two customers.
+[51:21] I I think this is a sort of
+[51:23] misunderstood point and I'm going to try
+[51:24] to connect two different questions here
+[51:26] just to help synthesize cuz we are lucky
+[51:28] enough to have a professor who's better
+[51:29] [laughter] than me.
+[51:30] But if you've noticed many times when
+[51:32] you guys ask questions you place on
+[51:34] context
+[51:35] and there's an assumption in there about
+[51:37] the industry and then you ask the
+[51:38] question.
+[51:39] And many times I've noticed over the
+[51:41] course of the quarter
+[51:42] you guys use these words like winner
+[51:44] loser
+[51:45] you know,
+[51:46] there's a sort of embedded zero-sum
+[51:48] mindset that I've picked up in this
+[51:50] class and I don't know why that is.
+[51:52] But
+[51:53] it's a it's a it's a
+[51:56] constraint of your own making. There's
+[51:58] no such thing as winners and losers in
+[51:59] the real world. They're just people who
+[52:01] get done and who don't.
+[52:03] People who have impact and who don't.
+[52:05] And so, I would encourage you guys to
+[52:07] really
+[52:09] uh
+[52:09] think first principles about some of
+[52:11] these assumptions. I mean, just here
+[52:12] we've had somebody who's who his answer
+[52:14] just demonstrated that, right? He said
+[52:16] I think the question had some assumption
+[52:18] like, "Oh, you know, Nvidia is locking
+[52:19] up all the all the production at TSMC.
+[52:21] What are you going to do about it?
+[52:22] You're going to lose."
+[52:23] He's like, "Well, actually, you know,
+[52:25] turns out vendors don't want
+[52:26] concentration risk. If you break down
+[52:29] from a first principles how their
+[52:30] business works, then you can see they
+[52:32] actually want Google to have some
+[52:34] percentage of their production demand."
+[52:35] And in infrastructure and
+[52:36] mission-critical supply chains,
+[52:39] you need to have redundancy built in cuz
+[52:40] earthquakes happen, geopolitics happens.
+[52:42] And if you want to be a reliable stable
+[52:44] partner to your customers,
+[52:46] you plan for that.
+[52:47] So, generally I would just let's tone it
+[52:49] down a little bit on the whole
+[52:51] competition stuff because it
+[52:55] it only holds you back. You know, having
+[52:58] I don't know if you'd agree with this,
+[52:59] but I'm fine with the questions, by the
+[53:01] way, but I think the advice back is um
+[53:04] is great in that really
+[53:06] um I I view what we're doing at Google
+[53:08] as a participating ecosystem to lift the
+[53:11] entire industry, but also lift all the
+[53:13] users. It's not going to happen on the
+[53:14] back of any one company. There's no one
+[53:16] company that's going to come out of this
+[53:18] as the winner for for sure. There's
+[53:20] going to be many winners. And by the
+[53:21] way, the other thing that is true
+[53:22] is um the uh huge number of the winners
+[53:25] haven't even been invented yet.
+[53:28] I
+[53:28] some number of you in this room are
+[53:29] going to start some of the winners, no
+[53:31] doubt, over the next uh several years.
+[53:34] Uh there's going to be use cases and
+[53:36] opportunities that none of us, certainly
+[53:38] not me, can predict that that you all
+[53:40] are going to invent. There's going to be
+[53:41] a
+[53:42] There's going to be a lot of winners.
+[53:43] One one caution I want to say though is
+[53:45] we are also going through and this is
+[53:47] not about companies a time of societal
+[53:50] transformation. So so if I if I may just
+[53:53] I know this isn't on the topic of this
+[53:54] conversation, but it's the top of mind
+[53:56] for me. I I would also encourage this
+[53:58] group who is thinking about technology
+[54:00] to also think about our responsibility
+[54:02] as technologists to make sure that we
+[54:04] are building in guardrails and safety as
+[54:07] we deploy our inventions in terms of how
+[54:09] we help drive the societal
+[54:11] transformation. I mean I think 5 years
+[54:13] from now, 10 years from now, how we
+[54:15] work, how we live, how we learn is going
+[54:17] to look a lot different. And we we do
+[54:20] want it to also be better as as a whole,
+[54:23] maybe hopefully significantly better.
+[54:24] And in the ecosystem as this transition
+[54:27] is happening, it's stressful for a lot
+[54:28] of people, there's fog of war, people
+[54:30] don't know, you know, information is not
+[54:32] being disseminated out. What are What
+[54:34] are some areas of misalignment across
+[54:36] the ecosystem that you would encourage
+[54:38] not just them, but other speakers in
+[54:39] this class who are who are watching each
+[54:41] others lectures to think about? Oh, it's
+[54:43] a good good great question. And by the
+[54:45] way, congratulations to to you and Mike
+[54:46] in terms of this class and and all these
+[54:48] students and this this thoughtful
+[54:50] question. I'm just blown away honestly
+[54:51] by the It's all Mike behind the scenes.
+[54:54] the the quality of the discourse here
+[54:56] and the fantastic questions here. Blind
+[54:59] spots, um I think that frankly
+[55:02] I I thought that your feedback to the
+[55:04] room here is fantastic. Probably across
+[55:06] the ecosystem there is a notion of uh
+[55:10] single winner
+[55:11] a bit a bit too much. Yeah. And and
+[55:13] probably also
+[55:15] a bit focus on
+[55:18] individuals
+[55:19] winning and losing. So that sort of
+[55:21] pairwise fight, I won't name any names,
+[55:23] you all know what the names are, but
+[55:24] person X is out against person Y.
+[55:27] And
+[55:28] I don't know how much value that's
+[55:29] adding for to anybody.
+[55:31] From your perspective, what do you think
+[55:32] true bottlenecks are? Yeah, it goes back
+[55:34] to the question of what you would study
+[55:35] if you were coming out of Stanford.
+[55:37] There is no one bottleneck. If I What is
+[55:39] the primary bottleneck? Honestly, it
+[55:41] shifts
+[55:42] daily, weekly.
+[55:44] Yes, I mean, I hear about memory getting
+[55:46] locked up in the supply chain or
+[55:48] some other issue that that might be
+[55:51] coming up. And on a particular day, the
+[55:52] bottleneck might be the reliability of a
+[55:55] particular cluster that for training our
+[55:57] next foundation models. That might be
+[55:59] the bottleneck. I would say the one that
+[56:01] I
+[56:03] have least understanding [clears throat]
+[56:05] of the solution is energy.
+[56:08] In other words, if I can roughly make up
+[56:11] answers [clears throat] that I have some
+[56:11] confidence in for for most topics, but
+[56:14] for us to scale energy to the level that
+[56:16] we need to across the planet, um there
+[56:19] are ways to do it.
+[56:22] There a lot of them are brute brute
+[56:23] force and expensive and expensive not
+[56:26] just in dollars.
+[56:28] So,
+[56:30] uh the biggest innovation bottleneck,
+[56:33] I would say in terms of really getting
+[56:35] what we need,
+[56:36] energy abundance, which also means
+[56:38] affordability,
+[56:40] is Yeah, that's it's probably energy.
+[56:42] And in the energy
+[56:44] space,
+[56:45] which solutions do you think are being
+[56:47] under explored or which
+[56:49] vectors should be could be more
+[56:52] systematically explored?
+[56:54] >> I think that here in the
+[56:56] in the US, we
+[56:59] could look a lot more at
+[57:01] wind, [clears throat]
+[57:02] solar, batteries.
+[57:05] We are We are at Google, for sure.
+[57:07] But this is a manufacturing and scaling
+[57:10] process that has some physics involved
+[57:12] with it. And And physics meaning just
+[57:14] some time.
+[57:16] So, this is an area where we're probably
+[57:18] under invested as again as a as a
+[57:21] community. There was 2 days ago there
+[57:23] was a company that just announced some
+[57:25] money they'd raised
+[57:27] to build data centers
+[57:28] um as a network of distributed floating
+[57:32] uh
+[57:33] bods. Mhm. Is Is that a promising
+[57:35] vector? How would you analyze that
+[57:37] solution?
+[57:38] Yeah, and of course we and others are
+[57:39] looking at the data centers in space. Um
+[57:41] I think that there are a
+[57:43] number of really worth in in space
+[57:45] energy uh 5x more efficient. And if you
+[57:47] get into a
+[57:48] a sun-synchronous orbit, 24/7, no you
+[57:51] know no no or very little battery
+[57:53] needed. I would say there are a number
+[57:55] of promising directions like this. Um
+[57:57] they're all fairly far out and all carry
+[57:59] some risk. So, for me it would be a
+[58:01] portfolio. Uh the
+[58:04] proven technique elsewhere in the world
+[58:06] is
+[58:07] solar, wind, battery.
+[58:09] And pretty pretty affordable, pretty
+[58:11] fast to manufacture, pretty fast to
+[58:13] stamp out uh
+[58:15] significant capacity deployments in
+[58:17] short amounts of time.
+[58:18] Well, when you say far out, you're
+[58:19] talking roughly a decade or so, right,
+[58:21] of 5 to 10 years, we can argue. 5 to 10
+[58:23] years.
+[58:23] >> That's pretty short. It's pretty short,
+[58:25] but we have a lot to do over the next uh
+[58:27] A with some risk. And we have a lot to
+[58:29] do over the next 5 or 10 years. Good
+[58:31] question. At what point does the
+[58:33] hardware stop being
+[58:34] a a bottleneck?
+[58:36] Uh no point in the future that I can see
+[58:38] does the hardware stop being a
+[58:39] bottleneck. So, in other words, I would
+[58:40] say that um right now massive model
+[58:43] innovations,
+[58:44] uh but
+[58:46] also massive bottlenecks. So, we are in
+[58:48] a place right now where um this is uh
+[58:51] Rich Sutton. Uh
+[58:52] won the Turing award a couple years ago.
+[58:54] He he wrote this article. I encourage
+[58:55] you all It's short. It's an essay uh
+[58:57] called the bitter lesson. And it says 70
+[59:00] years of AI experience as
+[59:02] throw more computer at the problem and
+[59:04] you're going to get better results. And
+[59:05] we're we're living that. Um I don't see
+[59:09] again Well, I'll go with the 5 or
+[59:10] 10-year view. I I don't see computes not
+[59:13] being a bottleneck for the next 5 or 10
+[59:15] years. I I'd wait if Personally, I'd go
+[59:18] longer. I'd go much longer, probably.
+[59:20] But um
+[59:22] here's the way I'd look at it. If If we
+[59:23] came up with a um massive algorithmic
+[59:26] break breakthrough. And if you think of
+[59:27] transformers, before transformers there
+[59:30] was a previously dominant algorithm for
+[59:32] learning LSTMs, long short-term memory.
+[59:35] Transformers roughly 5x more efficient.
+[59:38] Like same results, five times less
+[59:40] compute. Amazing.
+[59:41] If we had another
+[59:43] transformers-like thing, transformers
+[59:45] prime,
+[59:46] 5x more efficient,
+[59:48] I'm
+[59:49] I'm pretty sure that we'd still be
+[59:51] constrained on compute.
+[59:52] Like all that capacity would would get
+[59:55] used usefully. Maybe not overnight, but
+[59:59] quickly. The question is how are you
+[01:00:00] thinking about
+[01:00:02] infrastructure,
+[01:00:03] equity of access, of and and the the
+[01:00:06] impact on the environment? Yeah, I I
+[01:00:08] love this question, appreciate this
+[01:00:09] question. You know, our goal at Google,
+[01:00:11] my goal at Google is that our data
+[01:00:14] centers should be a uplift for the local
+[01:00:16] community [cough]
+[01:00:17] and an uplift for the grid. And so
+[01:00:20] whether it's
+[01:00:21] noise, water, and power, across the
+[01:00:25] board the goal is that that these should
+[01:00:26] all be viewed as positives. Of course,
+[01:00:28] jobs and
+[01:00:30] access to technology, but we should be
+[01:00:33] in in my opinion must be coming with
+[01:00:35] uplift to the community. Now, there are
+[01:00:36] concerns, by the way. I don't I don't
+[01:00:38] want to understate them, etc., across
+[01:00:40] the country, across the world, but we
+[01:00:41] really are working proactively. For ex-
+[01:00:44] Let me give an example here.
+[01:00:46] Um PUE,
+[01:00:48] power usage
+[01:00:49] efficiency.
+[01:00:50] Historically at Google, up until the
+[01:00:52] last few years, we had two designs that
+[01:00:55] we considered for how we build our data
+[01:00:56] centers. One that was more power
+[01:00:58] efficient by 10%. 10% is a lot. That
+[01:01:00] says, you know, if you have a gigawatt,
+[01:01:02] you're 10% more efficient, that's 100
+[01:01:04] megawatts that you now get to use that
+[01:01:06] you otherwise wouldn't be able to use.
+[01:01:09] Two designs, one that used
+[01:01:11] more water and one that used
+[01:01:14] essentially no water.
+[01:01:15] The one that uses no water, 10% less
+[01:01:17] power efficient.
+[01:01:19] As a whole, okay, maybe that makes
+[01:01:21] sense. Maybe that makes sense from our
+[01:01:22] bottom line to say, "Well, go use more
+[01:01:24] more water,
+[01:01:25] but you get 10% power efficiency." But
+[01:01:27] in a particular community, that could
+[01:01:29] make zero sense.
+[01:01:31] Right, that would be a net negative, a
+[01:01:32] huge net negative for the community. So,
+[01:01:34] what we've done, uh what I've done, is
+[01:01:36] we've said, "You know what? Actually,
+[01:01:38] unless there is abundant water in a
+[01:01:40] particular community, where the
+[01:01:41] community would say, 'Actually, we'd
+[01:01:42] rather you use less power,
+[01:01:44] we're going to go in with the less power
+[01:01:46] efficient design,
+[01:01:48] but the one that uses almost no water."
+[01:01:50] That needs to apply across the board. In
+[01:01:53] other words, it this needs to be a
+[01:01:55] asset. Another example here is we've
+[01:01:57] recently um developed uh technologies to
+[01:02:00] have a gigawatt of demand response. What
+[01:02:03] this means across the country. What this
+[01:02:05] means is
+[01:02:06] I told you about how the grid over
+[01:02:08] provisions.
+[01:02:09] They over provision for the homes, the
+[01:02:11] communities, for that one week of the
+[01:02:13] year where weather's the coldest or the
+[01:02:15] hottest, where they have to have the
+[01:02:17] most power available for people's homes.
+[01:02:21] What we want to be able to do is we want
+[01:02:22] to say, "Okay, we'll take power
+[01:02:25] the one week of the year, the two days
+[01:02:26] of the year that you need it. You tell
+[01:02:28] us, and we'll give you back 100
+[01:02:30] megawatts. We'll power things down on
+[01:02:32] our data centers." This goes back to the
+[01:02:33] 99% reliability bit. Right, so we'll
+[01:02:36] work with the utility where actually now
+[01:02:39] they can provision less while
+[01:02:40] guaranteeing that the houses, the homes
+[01:02:42] in the community that need them, have
+[01:02:44] the power that they
+[01:02:45] need without having to have 2x the
+[01:02:47] provisioning for the bad 2 days or the
+[01:02:49] bad week of the year. We're happy to
+[01:02:51] take that down time. We're happy to be
+[01:02:54] again an asset to the grid, an asset to
+[01:02:56] the community. We have to do more, by
+[01:02:57] the way. I'm not at all suggesting that
+[01:02:59] this is done, but we very much are
+[01:03:01] taking this. I'm very much taking this
+[01:03:03] super seriously. And what should this I
+[01:03:05] would wrap on this, but what should
+[01:03:06] other Well, that's Let's say that's like
+[01:03:08] a what's your what you're doing there.
+[01:03:09] What should other cloud What what should
+[01:03:12] other infrastructure folks who are
+[01:03:13] scaling capacity in the ecosystem be
+[01:03:15] doing more of that you think we're not
+[01:03:17] doing enough What what I'm
+[01:03:19] casting in the positive what I'm proud
+[01:03:21] of is that when we say and this goes
+[01:03:22] back to the even the first question so
+[01:03:23] it's coming back our first discussion
+[01:03:25] point that you raised.
+[01:03:27] We're not trying to figure out how to
+[01:03:28] build capacity at any cost. It's not hey
+[01:03:31] we need a gigawatt we got to go spend 40
+[01:03:32] billion or 40 whatever the number is.
+[01:03:34] It's optimal scaling is the goal.
+[01:03:36] >> It's optimal scaling and that is
+[01:03:37] efficient delivery of that capacity for
+[01:03:39] our users or customers but it's also how
+[01:03:42] do we make sure that actually we're a
+[01:03:43] great asset a community asset and
+[01:03:45] welcome like that gigawatt is not just
+[01:03:47] an abstract gigawatt in somebody's
+[01:03:48] spreadsheet. It's a massive deployment
+[01:03:51] in the state of Utah and it needs to be
+[01:03:53] an asset for them and that check mark
+[01:03:55] needs to be there. So I would encourage
+[01:03:58] all
+[01:03:59] hyperscalers all builders of capacity to
+[01:04:01] be thinking of it end to end not just go
+[01:04:04] get me a gigawatt but use it efficiently
+[01:04:06] deliver it effectively have it be an
+[01:04:08] asset for the community.
+[01:04:10] Thank you. We might need some of your
+[01:04:12] professorial insights on how we do that.
+[01:04:14] You know we're anyway
+[01:04:16] Thank you so much. I mean
