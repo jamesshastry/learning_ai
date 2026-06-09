@@ -21,13 +21,21 @@ import { removeCommand } from './remove.js';
 import { tagCommand, lecturesCommand } from './tag.js';
 import { addReadingCommand } from './reading.js';
 import { nextCommand } from './next.js';
+import { bookmarkCommand } from './bookmark.js';
+import { correctCommand } from './correct.js';
+import { reprocessCommand } from './reprocess.js';
+import { siteCommand } from './site.js';
+import { planCommand } from './plan.js';
+import { scheduleCommand } from './schedule.js';
+import { translateCommand } from './translate.js';
+import { obsidianCommand } from './obsidian.js';
 
 const program = new Command();
 
 program
   .name('learn')
   .description('Personal learning acceleration system for AI courses')
-  .version('0.3.0');
+  .version('0.4.0');
 
 // Course management
 addCommand(program);
@@ -39,6 +47,9 @@ removeCommand(program);
 processCommand(program);
 ingestCommand(program);
 importCommand(program);
+reprocessCommand(program);
+correctCommand(program);
+translateCommand(program);
 
 // Reading & discovery
 notesCommand(program);
@@ -55,15 +66,20 @@ watchCommand(program);
 reviewCommand(program);
 progressCommand(program);
 nextCommand(program);
+planCommand(program);
 
 // Annotations & resources
 annotateCommand(program);
+bookmarkCommand(program);
 tagCommand(program);
 lecturesCommand(program);
 addReadingCommand(program);
+scheduleCommand(program);
 
-// Export & active recall
+// Export & tools
 exportCommand(program);
 quizCommand(program);
+siteCommand(program);
+obsidianCommand(program);
 
 program.parse();
