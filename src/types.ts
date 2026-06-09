@@ -29,6 +29,7 @@ export interface LectureEntry {
   confidence?: ConfidenceLevel;
   revisit?: boolean;
   personal_notes?: string;
+  tags?: string[];  // Manual topic tags for filtering
 }
 
 export type LectureStatus =

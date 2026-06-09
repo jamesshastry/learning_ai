@@ -14,35 +14,56 @@ import { searchCommand } from './search.js';
 import { askCommand } from './ask.js';
 import { synthesizeCommand } from './synthesize.js';
 import { graphCommand } from './graph.js';
+import { exportCommand } from './export.js';
+import { quizCommand } from './quiz.js';
+import { compareCommand } from './compare.js';
+import { removeCommand } from './remove.js';
+import { tagCommand, lecturesCommand } from './tag.js';
+import { addReadingCommand } from './reading.js';
+import { nextCommand } from './next.js';
 
 const program = new Command();
 
 program
   .name('learn')
   .description('Personal learning acceleration system for AI courses')
-  .version('0.2.0');
+  .version('0.3.0');
 
-// Phase 1: Core commands
+// Course management
 addCommand(program);
-processCommand(program);
-notesCommand(program);
 statusCommand(program);
 refreshCommand(program);
+removeCommand(program);
 
-// Phase 2: Batch ingestion, search, Q&A
+// Content processing
+processCommand(program);
 ingestCommand(program);
+importCommand(program);
+
+// Reading & discovery
+notesCommand(program);
 searchCommand(program);
 askCommand(program);
+synthesizeCommand(program);
+compareCommand(program);
 
-// Phase 3: Knowledge graph
+// Knowledge graph
 graphCommand(program);
 
-// Phase 4B: Learning workflow
+// Learning progress
 watchCommand(program);
 reviewCommand(program);
 progressCommand(program);
+nextCommand(program);
+
+// Annotations & resources
 annotateCommand(program);
-importCommand(program);
-synthesizeCommand(program);
+tagCommand(program);
+lecturesCommand(program);
+addReadingCommand(program);
+
+// Export & active recall
+exportCommand(program);
+quizCommand(program);
 
 program.parse();
