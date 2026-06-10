@@ -1,0 +1,2159 @@
+[00:00] Hi, everybody.
+[00:01] So yeah.
+[00:02] I'm Noam Brown.
+[00:03] Excited to talk
+about this today.
+[00:05] So I'll be talking
+about multi-agent AI.
+[00:07] I'll be taking a
+pretty broad view of it
+[00:09] because there's a lot to cover.
+[00:13] And I guess I'll start
+by motivating it.
+[00:16] I think we have seen that--
+[00:20] so yeah.
+[00:21] First, I want to
+talk about self-play.
+[00:22] So self-play has been behind
+a lot of the breakthroughs
+[00:25] that we've seen in AI,
+especially for games.
+[00:27] Things like AlphaGo, things
+like DOTA and StarCraft
+[00:31] and also poker.
+[00:33] And we haven't really
+seen that in LLMs.
+[00:36] And it's a little
+surprising because if you
+[00:38] look at the trajectory
+of LLMs, it actually
+[00:40] looks a lot like the trajectory
+of something like AlphaGo.
+[00:44] You start with pre-training
+on high quality human data.
+[00:47] This was done for AlphaGo.
+[00:48] It was also done for LLMs.
+[00:50] And then you enable large
+scale inference compute,
+[00:52] and then you have
+recursive self-improvement.
+[00:54] And step 1.
+[00:55] Pre-training on high
+quality human data.
+[00:57] In AlphaGo, this means training
+on a bunch of human go games.
+[01:01] And language models,
+it means training
+[01:02] on large chunks of the internet
+and doing next token prediction.
+[01:07] And then step 2 is enabling
+large scale inference compute.
+[01:10] So in AlphaGo, this was
+Monte Carlo tree search.
+[01:14] And in all the
+different games, there
+[01:16] were different ways of
+doing this large scale
+[01:17] inference compute.
+[01:18] But in AlphaGo was
+Monte Carlo tree search.
+[01:20] And then in LLMs, you
+have chain of thought.
+[01:23] And then step 3, you have
+recursive self-improvement.
+[01:26] And then in AlphaGo,
+this is self-play,
+[01:28] where the AI plays against
+itself over millions,
+[01:31] billions of different games.
+[01:34] And it gets better and better
+over the course of those games.
+[01:37] And in LLMs, we don't
+have that piece.
+[01:40] So why is that?
+[01:42] What's so difficult
+about doing something
+[01:45] like self-play, recursive
+self-improvement in LLMs
+[01:49] compared to all these games
+where it's been so successful?
+[01:53] And I'll give you
+the takeaway, which
+[01:56] is that a lot of people's
+intuitions about self-play
+[02:02] is basically overfit
+to go and chess
+[02:05] and these kinds of two-player
+zero-sum perfect information
+[02:08] games.
+[02:09] And it turns out that when
+you go outside of these games,
+[02:13] a lot of the very
+nice properties
+[02:15] go away, and self-play
+becomes much more difficult.
+[02:21] So to give one
+example of this, I
+[02:23] want to start with just a
+very basic question, which
+[02:26] is, who do you think is
+the better poker player?
+[02:29] Option 1 is someone who, over
+a very large sample size,
+[02:32] wins head to head
+against any other player.
+[02:35] So if this person were to
+play a million hands of poker
+[02:37] against any other person alive,
+they would win in expectation.
+[02:42] They would end up winning.
+[02:43] They would end up up money.
+[02:45] Option 2 is someone who
+makes more money playing
+[02:47] poker than anyone else over,
+like, let's say, a year.
+[02:52] So who thinks option 1?
+[02:56] And then who thinks option 2?
+[02:58] OK.
+[02:58] It seems pretty split, but
+I think most people actually
+[03:01] lean towards option 2.
+[03:03] Now, it's very interesting
+that in poker, this is not
+[03:05] necessarily the same person.
+[03:07] You could have someone who is
+really good at squeaking out
+[03:11] wins against other
+players, but if they're
+[03:14] playing against a really
+weak player, doesn't really
+[03:17] exploit them to the max.
+[03:18] And you could have
+somebody who's
+[03:20] really, really good at finding
+the weaknesses of weak players
+[03:22] and taking advantage of that
+to the fullest extent possible.
+[03:25] But when they're up
+against another top pro who
+[03:27] doesn't have many
+weaknesses, they
+[03:29] end up doing a little bit worse.
+[03:31] So in poker, these could
+be two different people.
+[03:34] In a game like
+chess or a game Go,
+[03:37] we don't really
+consider the possibility
+[03:39] that these could be
+two different people.
+[03:41] If you think about who is
+the best person at option 1
+[03:43] and who is the best person at
+option 2 in a game n chess,
+[03:47] you would just say
+Magnus Carlsen.
+[03:48] It would be the same person.
+[03:51] OK.
+[03:51] So option 1 is what we
+call a minimax equilibrium,
+[03:54] and option 2 is what we'll call
+a population-based response.
+[03:58] Now, typically,
+when we think about
+[04:01] AI for games, when we
+talk about solving a game.
+[04:04] What does it mean
+to solve a game?
+[04:05] Typically, what people
+are talking about
+[04:07] is computing a
+minimax equilibrium.
+[04:08] And that's going to be
+important because that's
+[04:09] an assumption that we
+are making about what
+[04:12] it means to solve a game.
+[04:13] And it's a strong assumption.
+[04:15] It's not necessarily
+what we want.
+[04:17] And in games like
+chess and Go, this
+[04:20] is fine because it ends
+up being the same thing.
+[04:22] But in other games like poker
+and a lot of other settings,
+[04:24] and we'll see that as we go
+beyond two-player zero-sum
+[04:26] games, this actually becomes
+a very significant problem.
+[04:29] This is not necessarily
+the same thing.
+[04:30] And we might actually--
+it's possible
+[04:32] that what we really want is
+a population best response.
+[04:36] But for now, let's just
+take it as an assumption
+[04:38] that what we really want
+is a minimax equilibrium.
+[04:40] And we'll go down the rabbit
+hole of what this involves.
+[04:44] So for starters, what is
+a minimax equilibrium?
+[04:46] A minimax equilibrium
+is a set of strategies
+[04:48] in which no player can
+improve by deviating
+[04:50] to a different strategy.
+[04:52] And in two-player
+zero-sum games,
+[04:54] in particular, playing
+minimax equilibrium
+[04:56] guarantees that you will
+not lose an expectation.
+[04:58] And we're going to measure
+something called exploitability,
+[05:01] which is how much we
+lose to a best response.
+[05:03] So exploitability is
+basically how far away are we
+[05:06] from a minimax equilibrium.
+[05:07] If we're in equilibrium,
+then exploitability is zero.
+[05:11] OK.
+[05:12] So to give you some
+intuition for this,
+[05:15] let's say you're playing
+rock-paper-scissors,
+[05:17] one strategy that you could
+take, not a very good one,
+[05:19] is to just throw rock
+every single time.
+[05:22] And in this case, the best
+response against that strategy
+[05:24] is to throw paper
+every single time.
+[05:26] And our exploitability
+is 1, because we're
+[05:29] losing every single round.
+[05:33] OK.
+[05:34] So you might have a more
+sophisticated strategy.
+[05:35] You might say, like, well, let's
+throw rock the first two rounds,
+[05:38] and then on the third round,
+if our opponent threw paper,
+[05:42] then we're going
+to throw scissors.
+[05:44] Well, in this case,
+the exploitability
+[05:46] is still one, because
+the best response
+[05:49] would be to throw paper
+on the first two rounds
+[05:51] and then rock on
+the third round.
+[05:54] Now, you might say
+this is unfair.
+[05:57] We're assuming that the
+opponent knows our strategy,
+[05:59] and they know that we're
+going to throw scissors
+[06:01] on the third round.
+[06:03] And that is correct.
+[06:04] And this is an assumption
+that we're making
+[06:06] when we talk about equilibria.
+[06:08] And again, this is a
+very strong assumption.
+[06:10] And I think it's fair to
+question this assumption, which
+[06:13] is that our strategy
+is common knowledge,
+[06:14] but the outcomes of random
+processes, like the random seed
+[06:18] is not common knowledge.
+[06:20] So why are we making
+this assumption?
+[06:21] The reason is because
+if you are creating
+[06:25] an AI that is going online and
+being used by billions of users,
+[06:30] then if there are
+weaknesses in that system,
+[06:33] eventually, people will find
+it, and they will exploit it.
+[06:36] And so the idea behind
+minimax, like when
+[06:39] we're measuring
+exploitability, is to say,
+[06:41] OK, well, let's just
+assume that the opponent
+[06:44] has that people have full
+access to our weights.
+[06:49] They know exactly what the
+probability distribution
+[06:53] is over actions, and can
+we be robust despite that?
+[06:58] Now again, this is a very strong
+assumption that we're making.
+[07:01] And I think it is very fair
+to question this assumption.
+[07:04] But for now, we're
+going to go with this
+[07:08] and see what happens when
+we make this assumption.
+[07:10] And what can we do
+to make our agents
+[07:11] robust despite this assumption.
+[07:15] So in rock-paper-scissors,
+the answer is to randomize.
+[07:18] Remember that the strategy
+is common knowledge,
+[07:20] but the outcomes
+of random processes
+[07:23] is not common knowledge.
+[07:24] So in rock-paper-scissors,
+if we just randomize equally
+[07:27] between throwing rock,
+paper, and scissors
+[07:28] with equal probability
+each round,
+[07:30] then our opponent will not
+know what we're going to throw.
+[07:33] And the best they can
+do is just tie us.
+[07:37] And so the exploitability is 0.
+[07:40] OK.
+[07:41] And this is the
+minimax equilibrium
+[07:42] for rock-paper-scissors.
+[07:43] To randomly choose between
+rock, paper, and scissors
+[07:45] with equal probability
+each round.
+[07:47] Now, it's reasonable to look at
+this and say, OK, well, great.
+[07:52] We're able to compute a minimax
+equilibrium that guarantees
+[07:54] we don't lose an
+expectation, but we're not
+[07:56] going to win an expectation
+by playing equal probability
+[08:00] each round.
+[08:01] So how do we actually
+win in a game like poker?
+[08:05] And the answer is that
+in a game like poker,
+[08:09] the strategy is much
+more complicated.
+[08:11] Rock-paper-scissors is
+a very simple example
+[08:13] where you can just play
+any action as long as you
+[08:16] balance them correctly, and
+the best you can do is tie.
+[08:20] But in a more complicated
+game like poker,
+[08:24] if you are playing
+the Nash equilibrium--
+[08:25] if you are playing the
+minimax equilibrium,
+[08:27] it's actually very
+difficult for the opponent
+[08:29] to know what to
+do to counter you,
+[08:31] because there are some
+actions that should just not
+[08:33] be played at all.
+[08:34] In rock-paper-scissors,
+that doesn't happen.
+[08:36] In rock-paper-scissors,
+the opponent
+[08:37] can do anything in
+response and still tie you.
+[08:39] In poker, that's not true.
+[08:41] There are many actions
+that they could make,
+[08:44] which actually are just what we
+call negative expected value.
+[08:47] That actually just
+cost them, even when
+[08:48] you're playing against
+the minimax equilibrium.
+[08:52] So the idea behind minimax
+equilibrium and something
+[08:56] like poker is that your opponent
+is going to make mistakes,
+[08:59] and that's going
+to cost them value.
+[09:02] And because it's a
+two-player zero-sum game,
+[09:04] that means that it's going
+to increase your value.
+[09:06] And in fact, this
+is the strategy
+[09:08] that's been adopted by
+poker professionals now.
+[09:11] This guide to poker, for
+example, says, poker is simple.
+[09:15] As your opponents make
+mistakes, you profit.
+[09:18] So the conventional wisdom is
+play the minimax equilibrium.
+[09:21] And then maybe-- and your
+opponent will make mistakes
+[09:23] and you'll profit off of that.
+[09:25] And then also, over the
+course of the long run,
+[09:28] if you observe weaknesses
+in your opponent,
+[09:30] then you could adapt from the
+minimax equilibrium deviates
+[09:32] and then try to take
+advantage of them.
+[09:37] OK.
+[09:39] So we were aiming for
+minimax equilibrium
+[09:43] because that guarantees
+that we're not
+[09:44] going to lose in expectation.
+[09:45] And in practice, it means
+that we're going to win.
+[09:48] Self-play is this
+algorithm that converges
+[09:51] to a minimax equilibrium.
+[09:52] So self-play is when
+an agent gradually
+[09:55] improves by playing
+against copies of itself.
+[09:57] And the initial strategy could
+even be completely random.
+[10:00] As long as you have a
+sound self-play algorithm,
+[10:05] and I'll talk about what sound
+means, because it's actually
+[10:07] non-trivial, in a
+two-player zero-sum game,
+[10:11] any sound self-play
+algorithm provably
+[10:13] converges to a
+minimax equilibrium.
+[10:16] And so this is actually really
+incredible because this means,
+[10:19] you don't need any data.
+[10:21] You don't need any human data.
+[10:23] As long as you have sufficient
+memory and computes,
+[10:27] any finite two-player
+zero-sum game
+[10:28] can be solved via self-play.
+[10:31] I want to say this
+again, because I
+[10:32] think this is really
+profound and kind of amazing
+[10:35] that in any two-player
+zero-sum game,
+[10:38] you don't need any human data.
+[10:40] If you just do any balanced
+two-player zero-sum game,
+[10:43] you don't need any human data.
+[10:44] If you just have sufficient
+memory and compute,
+[10:46] you can just do
+self-play and converge
+[10:48] to a minimax equilibrium.
+[10:49] And that guarantees
+that you will not
+[10:51] lose an expectation to any
+human or any other player.
+[10:56] We take this for granted,
+but it's actually lucky
+[10:59] that we can get this.
+[11:03] And so this is behind
+a lot of the victories
+[11:06] that we've seen in games
+Go and chess and poker
+[11:09] and real-time strategy games.
+[11:13] OK.
+[11:14] So what do I mean
+by sound self-play?
+[11:16] And what does
+self-play look like
+[11:17] in different kinds of games?
+[11:18] So there's different kinds
+of two-player zero-sum games,
+[11:21] and we'll start by talking
+about perfect information games.
+[11:23] Essentially, what this is just
+independent single agent RL.
+[11:26] You just take
+something like PPO,
+[11:28] and as long as you do a
+sufficient exploration,
+[11:31] it's actually
+pretty easy for this
+[11:32] to converge in theory to
+a minimax equilibrium.
+[11:37] Now, that said, that convergence
+to minimax equilibrium
+[11:41] is a theoretical property.
+[11:42] In practice, you don't
+usually get all the way
+[11:44] to minimax equilibrium.
+[11:46] And in particular,
+you might still
+[11:47] be vulnerable to
+adversarial attacks.
+[11:50] Neural nets are limited
+in their ability
+[11:52] to approximate a
+minimax equilibrium,
+[11:54] especially in complex games Go.
+[11:57] So this could mean that, yes,
+if you had infinite capacity
+[12:02] and infinite compute, then
+you would eventually arrive
+[12:05] at a minimax equilibrium.
+[12:06] In practice, you
+don't have that.
+[12:08] And so you could still be
+vulnerable to exploits.
+[12:11] And this is especially a
+problem because finding exploits
+[12:14] is generally easier than
+defending against exploits.
+[12:17] And especially in imperfect
+information games,
+[12:19] which we'll talk about later.
+[12:21] And so there's actually
+a paper that came out
+[12:24] in 2023, which
+showed that in Go,
+[12:27] in many of the
+leading Go bots, there
+[12:30] were adversarial strategies that
+could be deployed by humans even
+[12:35] that would allow them to defeat
+very, very strong Go bots.
+[12:42] OK.
+[12:42] So that is perfect information
+games and perfect information
+[12:45] games.
+[12:45] It's actually relatively simple.
+[12:47] When you go to imperfect
+information games,
+[12:48] things become a lot
+more complicated.
+[12:50] And one thing that I think
+is surprising to people
+[12:52] is that if we take this modified
+version of rock-paper-scissors,
+[12:56] where the payoffs for
+scissors and paper
+[12:59] are altered to be plus 2
+and minus 2 instead of plus
+[13:02] 1 minus 1, just to break
+the symmetry of the game,
+[13:06] PPO does not converge to
+a minimax equilibrium.
+[13:12] A lot of people, even people
+that are very experienced in RL
+[13:15] don't know this, but I
+think it's pretty important
+[13:17] that there's actually
+nothing in PPO
+[13:20] that guarantees convergence
+to minimax equilibrium
+[13:23] in a game like
+rock-paper-scissors.
+[13:25] And the reason is because
+rock-paper-scissors,
+[13:28] you have to balance
+between multiple actions
+[13:31] with a certain probability.
+[13:33] And there's nothing
+forcing that balance,
+[13:36] that convergence to a particular
+probability distribution
+[13:39] in the PPO algorithm.
+[13:44] So this points to the fact that
+imperfect information games,
+[13:47] there's something
+special about them
+[13:48] that's much more difficult
+than perfect information games.
+[13:52] And why is that?
+[13:53] OK.
+[13:53] So to explain what
+is particularly
+[13:56] difficult about imperfect
+information games,
+[13:59] I want to talk about, we'll
+illustrate this game called
+[14:03] rock-paper-scissors plus.
+[14:04] And this is a visualization of
+the game where player 1 acts
+[14:08] first, and then player
+2 acts after player 1
+[14:11] without observing
+what player 1 did.
+[14:13] So that's just so we
+can view it something
+[14:17] like a perfect
+information game, where
+[14:18] the players act sequentially.
+[14:20] So here, the players
+are acting sequentially,
+[14:21] but player 2 doesn't
+observe what player 1 did.
+[14:23] And so it's kind of like
+no different from them
+[14:25] acting simultaneously.
+[14:26] And we're going to modify
+the payoffs a little bit so
+[14:28] that there's no symmetry
+in the equilibrium is
+[14:33] to play rock and paper with
+40% probability and scissors
+[14:35] with 20% probability.
+[14:37] So the way this works
+is player 1 acts first.
+[14:40] They choose either rock,
+paper, or scissors,
+[14:42] and then player 2
+acts, they choose
+[14:43] rock, paper, scissors,
+and then the payoff
+[14:46] is shown for player 1.
+[14:48] And there's dotted lines
+between the player 2 nodes
+[14:50] to signify that player 2 doesn't
+know which of those nodes
+[14:53] they are actually in.
+[14:55] So for example, if
+player 1 chooses rock
+[14:57] and then player 2
+chooses scissors,
+[14:59] then player 1 wins two points
+and player 2 loses two points.
+[15:05] And like I said, the equilibrium
+for this modified version
+[15:07] of the game is to throw rock,
+paper with 40% probability,
+[15:10] scissors with 20% probability.
+[15:14] OK.
+[15:14] So let's say we do
+depth-limited lookahead search.
+[15:19] So just like we would
+do in a game like chess.
+[15:23] So what does this look like?
+[15:24] Well, you start at player 1.
+[15:26] We're going to do
+a depth 1 search.
+[15:28] Player 1 is going to look at all
+the different actions they could
+[15:30] take, and then ask, what is
+the expected value after taking
+[15:34] this action?
+[15:36] And in an equilibrium, it's
+going to look like this.
+[15:38] It's going to show, well,
+if you throw a rock,
+[15:40] you'll get a payoff of 0,
+paper, you get a payoff of 0,
+[15:42] scissors, you get a payoff of 0.
+[15:43] So it actually doesn't matter--
+[15:45] from player 1's perspective,
+it doesn't matter what they do.
+[15:48] In all cases, they get
+the equilibrium payoff.
+[15:50] And so there's not
+enough information
+[15:53] for them to arrive at the
+equilibrium of choosing rock
+[15:57] and paper with 40% probability,
+scissors with 20% probability.
+[16:02] But the problem is that
+this isn't realistic,
+[16:04] because this is assuming
+that player 2 is
+[16:06] playing the equilibrium.
+[16:07] And that is an assumption you
+can make in a game like chess
+[16:10] or Go, but you can't make in
+an imperfect information game,
+[16:12] because if player 1 were
+to, for example, choose rock
+[16:15] with 80% probability, then
+player 2 would no longer
+[16:19] play the equilibrium.
+[16:20] Player 2 would pick up on
+this, and they would deviate,
+[16:22] and they would
+start playing paper.
+[16:25] And so the value of
+player 1 throwing rock
+[16:28] would decrease
+from 0 to minus 1.
+[16:32] And so this is
+actually fundamentally
+[16:34] why imperfect
+information games--
+[16:35] I mean, one of the reasons,
+but I think the main reason
+[16:38] why imperfect
+information games are
+[16:39] so difficult because
+the value of an action
+[16:43] depends on the probability
+that it is played.
+[16:45] And that is not true for
+a game like chess or Go.
+[16:48] A perfect information game.
+[16:50] In perfect information
+games, the value of an action
+[16:52] does not depend on the
+probability that you play it.
+[16:55] If you're playing
+chess and you want
+[16:57] to open with the
+Sicilian defense,
+[16:59] it doesn't matter if you
+do that 10% of the time
+[17:01] or 90% of the time.
+[17:02] It's not really going to
+change the expected value.
+[17:06] Whereas in a game
+like poker, if you
+[17:08] want to bluff, well, whether
+you're bluffing 10% of the time
+[17:11] or 90% of the time
+matters a ton,
+[17:14] because if you're
+always bluffing,
+[17:16] then the opponent is
+going to pick up on that
+[17:17] and they're going
+to start calling you
+[17:19] more often, and the value of
+bluffing is going to go down.
+[17:22] So what this means is that
+you need an algorithm that
+[17:25] finds the right probability of
+choosing an action, not just
+[17:28] what action to play.
+[17:30] Now, I should caveat
+that a little bit.
+[17:32] I use chess as an example.
+[17:33] The truth is that
+chess these days
+[17:35] is kind of like an
+imperfect information game
+[17:36] because players like
+prepare different strategies
+[17:40] and think about what strategies
+the opponent has prepared for--
+[17:45] but that's modeling chess
+as like a repeated game
+[17:49] that could be viewed as
+imperfect information.
+[17:51] That's not really viewing
+chess as a standalone game.
+[17:57] OK.
+[17:57] So how do we get around the
+fact that we can't use something
+[18:02] like PPO?
+[18:02] We need an algorithm
+that doesn't just
+[18:05] figure out what actions to
+play, but the probability
+[18:07] to play them.
+[18:09] Well, there's a few different
+approaches that can be taken.
+[18:12] The simplest is this algorithm
+called fictitious play.
+[18:15] And the idea is that we'll
+initialize the strategies
+[18:18] for all players arbitrarily.
+[18:19] And then on each iteration,
+each player simply
+[18:21] plays the best response to the
+opponent's average strategy
+[18:24] over all previous iterations.
+[18:27] And if all the players
+play fictitious play,
+[18:29] then the average strategy
+over all iterations
+[18:31] converges to a
+minimax equilibrium.
+[18:34] So to give you an
+idea of what this
+[18:36] looks like for
+rock-paper-scissors,
+[18:38] you initialize the
+strategies arbitrarily.
+[18:39] So let's say we initialize it
+to all the players throwing
+[18:42] rock OK.
+[18:43] So player 1 throws rock,
+player 2 throws rock,
+[18:46] their average strategy
+so far is 100% rock.
+[18:49] And then on iteration 2 you
+compute the best response
+[18:52] to the average strategy so far.
+[18:55] So the average strategy so
+far is to always throw rock.
+[18:57] So the best response to
+that is to throw paper.
+[18:59] And now, you update
+the average strategy
+[19:01] to be 50% rock, 50% paper.
+[19:04] OK.
+[19:05] On iteration 3, you again
+compute the best response
+[19:08] to the average strategy so far.
+[19:10] So the best response
+to 50% rock, 50% paper
+[19:12] is to always throw paper.
+[19:14] And so now the average strategy
+is updated to be 33% rock,
+[19:17] 1/3 rock, 2/3 paper.
+[19:20] On iteration 4, you
+do the same thing.
+[19:21] The best response to 1/3 rock,
+2/3 paper is to throw scissors.
+[19:25] And so then your
+average strategy
+[19:27] is updated to 25% rock,
+50% paper, 25% scissors.
+[19:30] And you can see that as
+you do this more and more,
+[19:33] the average strategy is going
+to slowly converge to a minimax
+[19:37] equilibrium of 1/3, 1/3, 1/3.
+[19:41] So this is one algorithm that's
+been around for a long time.
+[19:43] The truth is that it
+converges very, very slowly
+[19:46] to a minimax equilibrium.
+[19:53] There are modern algorithms
+that converge a lot faster.
+[19:56] And basically,
+what they're doing
+[19:58] is computing a
+regularized best response.
+[20:01] So regret-matching and hedge are
+the two most popular versions
+[20:05] of these algorithms.
+[20:06] And the idea is that whereas
+fictitious play would always
+[20:09] compute the exact best response,
+regret-matching a hedge pick
+[20:12] a regularized best response.
+[20:13] So in this case, you're going
+to have some kind of value.
+[20:17] And then you look at the
+expected value of each
+[20:19] of the actions and take the--
+[20:24] just choose proportional
+to the amount of mass
+[20:30] that's over that line.
+[20:32] So in this case, you look at
+the expected value of paper
+[20:36] and expected value of rock.
+[20:37] And you see how much are
+they over that dotted line.
+[20:41] Scissors is below the
+dotted line, so just
+[20:43] put zero probability on that.
+[20:44] And then for rock
+and paper, you just
+[20:47] choose them with a
+probability that's
+[20:48] proportional to the amount
+of mass that's over the line.
+[20:52] Now, I should point
+out there's a lot
+[20:53] of similarities between these
+kinds of algorithms and gradient
+[20:56] descent.
+[20:57] And there's a lot
+of deep literature
+[20:58] into this that I won't go into,
+but there are strong connections
+[21:01] there.
+[21:04] So this is what it
+would look like if you
+[21:08] ran regret matching, which
+is like this improved
+[21:11] version of fictitious play.
+[21:12] So on the x-axis here, we
+have the number of iterations
+[21:14] that you've done.
+[21:15] And the y-axis is the
+average probability
+[21:17] for each action in
+rock-paper-scissors.
+[21:19] And you can see
+over time, it slowly
+[21:21] converges to playing one
+third, one third, one third.
+[21:25] Now, there's a whole
+body of literature
+[21:27] that I won't go into
+in this talk that
+[21:31] shows you can
+converge much, much
+[21:32] faster with better algorithms.
+[21:34] So one for example is
+linear regret-matching.
+[21:37] And this is what it looks like.
+[21:39] It converges orders
+of magnitude faster
+[21:42] compared to just
+regular regret-matching.
+[21:47] So these algorithms, the
+regret-matching algorithms,
+[21:50] they're iterative algorithms.
+[21:52] They slowly converge to the
+optimal probability of playing
+[21:56] each action correctly.
+[21:57] And these are the algorithms
+that were ultimately
+[21:59] used to defeat top
+humans in poker, which
+[22:02] was what my PhD work was on.
+[22:05] So we were able to use these
+algorithms to defeat four
+[22:08] of the world's best heads up no
+limit Texas Hold'em poker pros.
+[22:13] And this was actually
+done without neural nets.
+[22:16] The main challenge for
+poker was, how do you do--
+[22:21] one, how do you do search in
+imperfect information game?
+[22:24] And two, how do you converge
+to an equilibrium in a game
+[22:28] with hidden information?
+[22:30] And regret-matching
+was a key part of that.
+[22:34] OK.
+[22:35] So there are limitations
+to fictitious play,
+[22:37] regret-matching, and hedge.
+[22:38] In particular, they tend
+to have poor performance
+[22:41] in single-agent RL.
+[22:42] And this has always been
+a really annoying quirk
+[22:46] of these algorithms,
+because there's
+[22:48] a lot of great algorithms
+for single-agent RL
+[22:50] that don't work for
+imperfect information games.
+[22:56] And there's a lot
+of algorithms that
+[22:58] can converge to an equilibrium
+in imperfect information games,
+[23:02] but don't have very good
+performance in single-agent RL
+[23:05] settings.
+[23:07] So it'd be really nice if we
+just had a single algorithm
+[23:09] that we could
+deploy in all cases,
+[23:11] but that really wasn't
+the case for a long time.
+[23:14] There has been very recent
+work from a few different folks
+[23:17] on developing
+algorithms that actually
+[23:21] do have really good performance,
+both in single-agent RL settings
+[23:24] and multi-agent RL settings
+that converge to an equilibrium
+[23:28] quite quickly.
+[23:31] So I think that this
+probably is the future.
+[23:33] But this is still an area
+undergoing rapid development.
+[23:44] OK.
+[23:44] So I've talked a lot about
+two-players zero-sum games
+[23:46] so far.
+[23:47] I'm going to shift
+away from that.
+[23:48] I want to take one quick
+aside, and talk about, why
+[23:52] haven't I mentioned LLMs yet?
+[23:54] And there's actually a
+very good reason for this.
+[23:55] It's that because
+we've been talking
+[23:57] about two-player zero-sum
+games this whole time.
+[23:59] And in two-player zero-sum
+games, if what you're computing
+[24:02] is a minimax equilibrium, then
+communication is never useful.
+[24:07] And this is actually,
+you can prove this.
+[24:09] It's never useful to
+talk to the opponents
+[24:13] if you're playing a
+minimax equilibrium
+[24:15] in a two-player zero-sum game.
+[24:18] So I get asked this
+sometimes, is it
+[24:20] ever useful to talk
+to the opponent?
+[24:21] The answer is simply no.
+[24:23] And there's a very
+simple proof, which
+[24:26] I'll give the
+intuition for, which
+[24:28] is that in a two-player
+zero-sum game,
+[24:31] there could be multiple
+minimax equilibria,
+[24:32] but they're all going to
+have the same unique value
+[24:35] for players 1 and 2.
+[24:37] So there will be some
+unique value for player 1.
+[24:39] And then player
+2's value is simply
+[24:40] the opposite of that value.
+[24:42] That's the definition.
+[24:43] Like, the fact that
+it's the opposite
+[24:44] is what makes it zero-sum.
+[24:48] And so if there was some cheap
+talk action for player 1,
+[24:52] then there's three
+possibilities.
+[24:53] Either taking that action
+would increase v1, decrease v1,
+[24:58] or it would have no effect.
+[25:01] If it were to increase
+v1, then player 2
+[25:04] would simply ignore it because
+it's going to hurt their value.
+[25:08] So they're just not going
+to listen to whatever
+[25:10] player 1 was saying.
+[25:12] If it decreases v1, then player
+2 should simply not say it.
+[25:16] And so the only
+remaining possibility
+[25:19] is that it has no effect.
+[25:21] And so we can see that
+in a minimax equilibrium,
+[25:23] there is no reason for the
+players to talk to each other.
+[25:26] It's either one
+player or the other
+[25:28] is going to realize
+that it's not worth it.
+[25:33] OK.
+[25:34] So that was two-players
+zero-sum some games.
+[25:36] Now let's move to the, I
+think, more interesting part,
+[25:38] which is what about
+non-two-player zero-sum games.
+[25:41] We've seen that there's a
+lot of these nice properties
+[25:43] for two-player zero-sum
+games, minimax equilibrium,
+[25:45] unique values, all this stuff.
+[25:47] What about non-two-player
+zero-sum games?
+[25:50] And we're going to see that a
+lot of the properties that--
+[25:55] the nice properties that we saw
+in two-player zero-sum games
+[25:57] actually don't carry over.
+[25:58] And so that creates
+a real dilemma for us
+[26:00] about what do we do.
+[26:03] And the central
+claim that I'm going
+[26:04] to make in this
+section of the talk,
+[26:08] and I think this is a
+really important point,
+[26:10] is that if your goal is to
+learn to cooperate with humans,
+[26:14] then avoiding using
+human data is a dead end.
+[26:20] The only way, in my opinion, to
+learn, the only scalable way,
+[26:24] in my opinion, to learn
+to cooperate with humans
+[26:26] is to use human data.
+[26:30] And this is, first of all,
+relatively controversial
+[26:33] because there's a lot of
+research on multi-agent RL
+[26:37] that's focused on learning
+to cooperate with humans
+[26:39] without using human data.
+[26:41] And I mean, I will
+make my spicy claim,
+[26:44] which is that I think
+that is a dead end.
+[26:47] And this is also, in
+truth, kind of unfortunate,
+[26:50] because I mentioned earlier that
+in two-player zero-sum games,
+[26:53] we have this beautiful
+property that you actually
+[26:55] don't need any human data.
+[26:56] If you just do self-play with
+sufficient memory and compute,
+[27:00] then you will converge to this
+minimax equilibrium, which
+[27:02] is this unbeatable
+perfect optimal
+[27:04] strategy in the
+two-player zero-sum game.
+[27:07] And what I'm saying here is
+that actually that's not true.
+[27:09] And when it comes to
+non-two-player zero-sum games,
+[27:11] there's simply no
+way around the fact
+[27:13] that you need human data
+if you want to do well
+[27:16] when playing with humans.
+[27:20] OK.
+[27:21] So why is this?
+[27:21] I think I can actually
+convince you--
+[27:23] my hope is that I
+can convince you
+[27:25] pretty easily with this
+demonstration in the ultimatum
+[27:27] game.
+[27:29] And by the way, I
+think this is really
+[27:31] like one of the most
+important slides
+[27:33] in this whole presentation.
+[27:35] So the ultimatum game is this
+a popular game theory game.
+[27:40] And the way it works
+is Alice is given $100,
+[27:44] and first, Alice has to offer
+Bob between $0 and $100.
+[27:49] And then Bob must decide whether
+to accept or reject that offer.
+[27:54] If Bob accepts,
+then Alice and Bob
+[27:56] keep their money according to
+the split that Alice offered.
+[28:01] And if Bob rejects, then
+Alice and Bob get nothing.
+[28:06] So for example, if Alice
+were to offer Bob $30
+[28:12] and Bob accepts, then Bob
+gets $30, Alice gets $70.
+[28:16] If Bob rejects, then
+Alice and Bob both get $0.
+[28:21] So I want you to
+think for a second.
+[28:24] OK.
+[28:25] I want you to think
+about two things.
+[28:27] First of all, what
+is the minimum amount
+[28:29] that you would accept as
+player 2 in this game?
+[28:33] And then the second
+thing I want you
+[28:34] to think about is if you were
+to do self-play RL from scratch
+[28:37] without any human data, what do
+you think it would converge to?
+[28:43] OK.
+[28:44] So I'm curious.
+[28:45] Like how many people would
+accept, let's say, less than $40
+[28:51] in this game?
+[28:52] $40.
+[28:53] OK.
+[28:54] Some people.
+[28:55] Surprisingly few.
+[28:57] Please raise your hand if
+you're going to accept.
+[28:59] So how about less than $30?
+[29:01] $30 or less.
+[29:02] OK.
+[29:02] That's a pretty good amount.
+[29:04] OK.
+[29:04] What about $20 or less?
+[29:06] Still some $10 or less?
+[29:09] Who would accept $1?
+[29:11] Really?
+[29:12] Oh.
+[29:14] OK.
+[29:17] I'll tell you that
+in general, people
+[29:20] tend to be willing to
+accept between 20% and 30%.
+[29:23] And then if you
+offer too low, they
+[29:26] will reject simply because
+that's human nature.
+[29:30] Does anybody want to
+guess what the minimax--
+[29:34] well, not the
+minimax equilibrium,
+[29:35] but a Nash equilibrium
+is in this game?
+[29:39] Yeah.
+[29:40] 50/50?
+[29:42] Well, could Alice do better?
+[29:46] If Alice's objective is to get
+as much money for themselves
+[29:48] as possible, then could they
+do better than offering 50/50?
+[29:53] OK.
+[29:54] So what would the optimal
+strategy be for Alice?
+[29:59] Yeah.
+[30:00] Do you want to say?
+[30:00] AUDIENCE: [INAUDIBLE]
+[30:01] NOAM BROWN: Yeah.
+[30:02] So the optimal strategy,
+well, a optimal strategy.
+[30:05] And there's actually a
+lot of details to this
+[30:07] that I won't go into.
+[30:08] But the intuitive
+optimal strategy
+[30:10] is that Alice offers the minimum
+amount possible, $1 or 1 penny
+[30:14] or 1 fraction of a penny.
+[30:16] And then Bob is faced
+with a decision.
+[30:18] Do they accept this small
+but positive amount of money,
+[30:22] or do they go with 0?
+[30:24] And from a purely game
+theoretic perspective,
+[30:27] if Bob is simply trying to
+maximize their utility, which
+[30:30] RL agents are ultimately
+about maximizing reward,
+[30:33] then it makes sense for Bob
+to take that trivial amount
+[30:38] of money and Alice to get the
+vast majority of the spoils.
+[30:44] But of course, if you were to
+deploy this in the real world,
+[30:47] this would be a
+terrible strategy.
+[30:49] I don't think there
+aren't that many people.
+[30:51] There are some, I guess.
+[30:52] But there aren't
+that many people
+[30:52] that would accept a dollar
+in this kind of game.
+[30:58] Now, there's two responses
+to this that you could take.
+[31:06] Like, one is to say,
+the humans aren't
+[31:08] doing what the math is saying.
+[31:09] It's the humans that are broken.
+[31:11] The algorithm is fine,
+and we should just
+[31:13] ignore this whole problem.
+[31:15] But I don't think that's
+the right approach.
+[31:17] I think the right approach
+is to say, well, OK.
+[31:19] There's something wrong with
+our optimization algorithm
+[31:22] if it's not going to-- if
+ultimately what we care about.
+[31:24] And there's a question of what
+do we ultimately care about,
+[31:27] but if we ultimately
+care about is doing
+[31:28] well in this kind
+of game with humans,
+[31:31] then there's something wrong
+with just doing pure self-play
+[31:36] in this kind of game.
+[31:39] Now, it's tempting
+to say, well, we're
+[31:42] not giving it the right
+priors or something like that.
+[31:48] we're not doing it
+as a repeated game.
+[31:50] If it was a repeated
+game, then there
+[31:52] would be reputation
+dynamics and they
+[31:54] would learn to offer some
+larger amounts of money,
+[31:59] so that Bob would be more
+willing to accept or something
+[32:04] like that.
+[32:06] And that's ultimately
+where this whole literature
+[32:08] comes from of trying to
+modify this kind of game
+[32:12] to get the behavior
+that you would
+[32:14] get by playing with humans.
+[32:17] And ultimately, this
+is a rabbit hole
+[32:18] that I've seen a lot
+of researchers go down.
+[32:20] And unfortunately,
+yes, maybe you
+[32:23] could do something, like kind
+of works in the ultimatum game.
+[32:26] But as you go to more and
+more complicated settings,
+[32:28] this is ultimately not
+going to lead to success.
+[32:32] And one example of
+why this is the case
+[32:34] is that it turns out
+the ultimatum game
+[32:36] is actually very
+culturally-dependent.
+[32:38] There are some cultures where
+people will accept 20% very
+[32:42] easily, and there are some
+cultures where if you offer
+[32:45] anything less than
+50/50, they will reject.
+[32:48] Now, how are you going to learn
+about this cultural difference
+[32:52] without any human data?
+[32:55] The simplest and most effective
+way to address this problem
+[32:58] is to collect a
+lot of human data,
+[33:00] understand how humans
+play this game,
+[33:02] and then figure out the optimal
+strategy in response to that.
+[33:09] OK.
+[33:10] So I think what
+really, in my opinion,
+[33:13] prove this point
+is the work of I
+[33:18] and my colleagues on diplomacy.
+[33:20] So diplomacy is a
+seven-player game.
+[33:22] It's a natural language
+negotiation game.
+[33:24] And the objective is to control
+a majority of the map of Europe.
+[33:28] So this is a popular
+strategy game.
+[33:29] It was introduced in the 1950s,
+and it's still widely played
+[33:33] today.
+[33:34] And it's a seven-player game.
+[33:37] And it was actually JFK and
+Kissinger's favorite board game,
+[33:40] apparently.
+[33:42] Now, each turn involves private
+natural language negotiation,
+[33:47] where-- and this is
+I think what's really
+[33:48] fascinating about this game.
+[33:50] Is that the actual tactics
+are not that complicated.
+[33:52] It's really all the complexity
+comes from negotiating
+[33:54] with the other players.
+[33:55] And so every turn, you
+will spend about 15 minutes
+[33:58] negotiating with the
+other players in private,
+[34:01] and then everybody writes down
+their moves simultaneously,
+[34:03] and then all the moves are
+executed at the same time.
+[34:07] And because the moves
+are done simultaneously,
+[34:11] there's a lot of
+trust building that
+[34:13] is necessary in this
+game and a lot of-- yeah.
+[34:16] A lot of trust and betrayal.
+[34:18] Like, you will negotiate with
+somebody and say, hey, look,
+[34:21] can you do this
+with me this turn?
+[34:23] And they might
+say, yes, and then
+[34:24] they might not follow through
+on that with their actual moves.
+[34:27] They might backstab you instead.
+[34:29] So there's a lot of complexity
+in the negotiations.
+[34:34] And it's long been considered
+a challenge problem for AI.
+[34:37] There's research going
+back to the '80s.
+[34:39] But research really
+started picking up in 2019
+[34:41] with the rise of
+large language models.
+[34:46] OK.
+[34:47] So one thing that's really
+important in diplomacy
+[34:48] is that support is really key.
+[34:50] So you can see on the left here,
+if two different powers try
+[34:56] to send units into
+the same territory,
+[34:57] they're both going
+to bounce back.
+[34:59] Neither player is
+going to go in.
+[35:00] So what the red player can
+do is they can support one
+[35:03] of their units to go in there.
+[35:04] And then it's a two versus one.
+[35:06] And so then the red player
+will go into the territory
+[35:09] and the purple
+player will go back.
+[35:11] But the key thing in diplomacy
+is that supports can actually
+[35:14] come from other players.
+[35:15] So the green player can
+also support the red player
+[35:17] into that territory.
+[35:18] So red could go to green
+and say, hey, look,
+[35:20] could you please support
+me into this territory.
+[35:22] I will help you out
+next turn or something,
+[35:24] or I'll help you out
+somewhere else on this turn.
+[35:26] And the green player
+can say, sure.
+[35:28] And they could write
+down the support order
+[35:30] and then red player gets in.
+[35:35] OK.
+[35:37] So like I said, this is a
+seven-player very complicated
+[35:42] natural language
+negotiation game.
+[35:44] For now, let's talk about
+the non-language version
+[35:49] of this game, where there's
+just moves being written
+[35:51] and all the communication is
+implicit through the moves.
+[35:54] This is still a very
+complicated game,
+[35:56] but it just simplifies a lot
+of the experiments for us
+[35:59] so that we can really focus in
+on the non-two-player zero-sum
+[36:02] aspect of this game, rather
+than the natural language part.
+[36:06] Now, my colleagues
+and I developed
+[36:10] this algorithm called
+Dora, which learned
+[36:13] to play no press diplomacy.
+[36:15] So that's non-language
+diplomacy purely
+[36:17] through self-play
+in a way that's
+[36:19] very similar to AlphaZero.
+[36:23] So pure self-play from scratch
+in the game of diplomacy.
+[36:27] And sure enough, the win
+rate in a two-player version
+[36:30] of diplomacy was massive.
+[36:33] It was clearly superhuman.
+[36:36] And then we put it into
+games in seven-player games,
+[36:43] sometimes with other
+Dora agents and sometimes
+[36:45] with other agents that
+were trained on human data.
+[36:48] And what we found is
+really interesting.
+[36:53] So if you played one
+copy of search bot,
+[36:57] if you played a game with
+one copy of search bot
+[36:59] and six copies of
+Dora, search bot,
+[37:03] is this other
+diplomacy AI that was
+[37:05] trained on a lot of human data.
+[37:06] Search bot would do terribly.
+[37:08] Search bot would only win
+about 1% of the games.
+[37:10] And because this is
+a seven-player game,
+[37:12] if you're winning 14%, that
+means that you're tied.
+[37:15] So if you're winning one
+seventh of the games,
+[37:17] that means that you're
+tying the other players.
+[37:20] Search bot only won 1%.
+[37:24] But if you played
+one copy of Dora
+[37:26] versus six copies of
+search bot, then Dora only
+[37:29] won 11% of the games.
+[37:33] So that means that search bot,
+which was trained on human data,
+[37:39] was losing in games with six
+other Dora bots that were not
+[37:44] trained on any human data.
+[37:45] But one copy of
+Dora was also losing
+[37:48] to six copies of search bot.
+[37:51] And what this points to is that
+there are different equilibria
+[37:54] in this game.
+[37:56] Dora stumbled upon
+one equilibrium,
+[37:58] that makes a lot of
+sense, when it's playing
+[38:00] with other copies of itself.
+[38:02] But if you stick that
+same agent into a game
+[38:05] with a bunch of other bots
+that were trained differently,
+[38:08] trained on a human
+equilibrium or something
+[38:10] close to a human
+equilibrium, for example,
+[38:12] then Dora wouldn't know what
+to do and it would do terrible.
+[38:19] OK.
+[38:19] So this points to the
+fundamental problem
+[38:23] with non-two-player
+zero-sum games.
+[38:24] In two-player zero-sum games,
+this doesn't really happen.
+[38:28] You can train a
+bot whatever method
+[38:31] you want as long as it converges
+to a minimax equilibrium.
+[38:33] As long as it converges
+to an equilibrium.
+[38:35] It's going to do great against
+some other bot that was trained
+[38:37] in a totally different way.
+[38:38] It doesn't matter.
+[38:39] In non-two-player
+zero-sum games,
+[38:41] that property isn't there.
+[38:42] And so this actually
+does become a problem.
+[38:47] So this kind of gets
+to the-- remember
+[38:52] I mentioned earlier that
+there is this question of what
+[38:54] do we actually want?
+[38:55] Do we want a minimax
+equilibrium or do we want
+[38:58] a population best response?
+[38:59] And I said that--
+[39:01] I mean, people were
+pretty split on which
+[39:03] one was actually better.
+[39:05] Conveniently in a lot of
+two-player zero-sum games,
+[39:08] there's not a big difference
+between these two.
+[39:10] In chess, for example, it's
+like typically the same agent
+[39:13] or the same human.
+[39:17] When you go to non-two-player
+zero-sum games,
+[39:19] minimax equilibrium is
+just not useful anymore.
+[39:23] And so we can't really
+use that algorithm.
+[39:27] We can't really use
+that equilibrium.
+[39:30] And the only thing really
+that's left that's meaningful
+[39:33] is the population best response.
+[39:38] And then the question is,
+well, who's the population?
+[39:42] Is the population other
+copies of yourself?
+[39:44] Is the population humans?
+[39:49] But depending on what
+the population is,
+[39:52] you're going to need
+data on that population.
+[39:55] So this is why you
+need human data.
+[39:57] If ultimately what
+you care about is
+[39:58] performance with humans.
+[40:02] OK.
+[40:02] So the solution that we
+ended up taking in diplomacy
+[40:05] and that I recommend
+as probably the best
+[40:08] solution for general-sum games
+or non-two-player zero-sum games
+[40:13] is collect a lot of human
+data and train an imitation
+[40:16] model of those humans.
+[40:20] Scale inference time compute to
+better model the human players,
+[40:23] not necessarily
+to do better, not
+[40:25] necessarily to make the
+imitation models achieve better
+[40:28] performance, but to better
+model what the humans
+[40:31] would actually do.
+[40:33] And then third, scale RL with
+these human imitation models,
+[40:37] essentially as part
+of the environment.
+[40:40] This is the approach that
+we ultimately ended up
+[40:42] taking in diplomacy,
+and it ultimately
+[40:45] ended up working quite well.
+[40:47] In no press diplomacy, we
+entered a bot that was trained
+[40:51] in this way in a 200-game real
+human tournament with 50 games
+[40:57] for each bot.
+[40:58] So we entered four
+different bots,
+[40:59] and our bot, which was
+trained in this way,
+[41:03] ultimately ended
+up doing the best.
+[41:04] It ended up getting first place.
+[41:08] We trained two other bots.
+[41:09] One was Dora, which
+ended up doing actually
+[41:13] quite poorly below the
+average human performance.
+[41:16] And then a couple
+other bots that
+[41:17] ended up doing relatively well,
+but not as well as the approach
+[41:20] that I just suggested.
+[41:24] We also use this to train a bot
+for the full natural language
+[41:29] version of the game.
+[41:30] And here, we did extremely
+well, though not first place.
+[41:34] So we entered this
+agent, Cicero,
+[41:36] which again, negotiates
+fully natural language
+[41:39] with actual humans.
+[41:40] And we entered it anonymously
+in a natural language diplomacy
+[41:43] league.
+[41:44] And it placed in the
+top 10% of players
+[41:45] and second of 19 players
+that played 5 or more games,
+[41:48] and the average score was more
+than double the average human
+[41:51] score.
+[41:55] Now, I think the main reason
+why we only got second place
+[42:01] and didn't get first is
+that we were bottlenecked
+[42:04] by the quality of our LLMs.
+[42:07] This was back in late 2022.
+[42:09] Language models were good, but
+not as good as they are today.
+[42:12] And so I think if we really
+made a focused effort taking
+[42:15] a similar approach
+today, I think
+[42:16] we'd be able to
+do extremely well.
+[42:22] We also use this in Hanabi.
+[42:23] I think this is really
+interesting because there's
+[42:25] been a lot of papers on how to
+achieve cooperation with humans
+[42:29] in the game of Hanabi,
+and we actually
+[42:31] had a paper in 2022 that managed
+to do better than expert humans
+[42:35] when cooperating across a wide
+spectrum of human players.
+[42:39] And again, it used this
+approach imitate humans,
+[42:42] scale inference compute to
+better model the human behavior,
+[42:46] and then basically do RL with
+those human imitation models
+[42:50] as part of the environment.
+[42:55] OK.
+[42:57] I now want to talk a little
+bit about agent-agent LLM
+[43:01] cooperation.
+[43:02] So so far, I've been talking
+about competing with humans,
+[43:06] cooperating with humans.
+[43:08] But one aspect where you
+don't really need human data
+[43:12] is if you just want the AIs
+to cooperate with each other.
+[43:17] OK.
+[43:19] So why would we want to do this?
+[43:20] I guess to motivate
+agent-agent LLM cooperation.
+[43:23] I want to talk about one.
+[43:25] I'm guessing that you've
+all discussed this already
+[43:27] in your course,
+but basically, O1
+[43:30] is this reasoning model that is
+very effective at scaling test
+[43:34] time compute.
+[43:35] So the longer the model thinks,
+the better the performance.
+[43:40] And so we've been able to
+get these models to think
+[43:42] for longer and longer.
+[43:43] And even on top of that, even
+better is that as we developed
+[43:46] more sophisticated
+versions of these models,
+[43:49] the whole plot of inference
+versus performance curve
+[43:54] has shifted to the left.
+[43:56] So you're abl to get the same
+performance at a much lower
+[43:58] inference today.
+[44:01] And this is getting
+better and better.
+[44:02] And this is behind a lot
+of the recent successes
+[44:05] in like crazy
+benchmark performance.
+[44:07] And I want to take
+a moment, in case
+[44:08] you haven't seen this plot,
+to really just drive home
+[44:11] that this is like progressing
+very rapidly today.
+[44:15] This is a plot of
+Codeforces performance.
+[44:19] In early 2022, GPT-3.5 came
+out, and it could barely code.
+[44:23] I mean, it's like it's still
+impressive that it could code
+[44:25] at all, but it was below the
+5th percentile for competition
+[44:28] coders in Codeforces.
+[44:31] GPT-4 came out in early 2023.
+[44:33] Again, still maybe close to 5th
+percentile among competition
+[44:37] coders.
+[44:37] Not a very good coder.
+[44:39] GPT-4o came out.
+[44:40] Now you're looking
+at 10th percentile.
+[44:42] This is mid 2024.
+[44:44] OK.
+[44:45] So that's starting to get on the
+radar but still not very good.
+[44:49] And then you have the
+reasoning paradigm.
+[44:51] And then things really
+start to take off.
+[44:53] So you have O1 preview, which
+came out in September of 2024.
+[44:57] And it's already above
+the median competition
+[44:59] coder in Codeforces
+[45:01] O1 comes out,
+that's in December,
+[45:05] so about three months later.
+[45:07] And it's above the
+90th percentile.
+[45:09] O3 came out.
+[45:10] That was in April of this year.
+[45:13] And it's above the
+99th percentile.
+[45:16] And we recently announced
+that we placed first
+[45:19] among all humans in the ICPC,
+one of the leading coding
+[45:25] competitions in the world.
+[45:27] And so you can see that this
+is very steep trajectory
+[45:33] where things are progressing
+very rapidly today.
+[45:35] It's a very exciting, very
+interesting time in AI.
+[45:41] OK.
+[45:41] So I mentioned that we can
+have these models think
+[45:45] for longer and longer and just
+keep getting better performance.
+[45:47] Now, there's obviously a lot
+of challenges with getting them
+[45:50] to think for longer and longer.
+[45:52] GPT-5 thinking can think for--
+[45:54] I think Pro can probably
+think for 15 or 20 minutes,
+[45:57] depending on the problem.
+[46:00] Well, can we push
+that much longer?
+[46:02] Can we get it to think
+for hours, days, weeks.
+[46:06] Well, at a certain point,
+latency becomes a problem.
+[46:09] People don't want to sit
+around and wait for three weeks
+[46:11] to get a response
+from GPT-5 Pro.
+[46:15] And the problem here is
+that chain of thought
+[46:17] is inherently serial.
+[46:19] So one of the motivations for
+multi-agent AI is latency.
+[46:24] Latency eventually
+becomes a bottleneck.
+[46:26] And there are other test
+time scaling techniques
+[46:29] other than just serial chain
+of thought that are parallel.
+[46:34] So for example, best
+of n and consensus.
+[46:37] The idea behind best of
+n is that you sample--
+[46:41] well, let's start
+with consensus.
+[46:43] So consensus, you just
+sample from the agents
+[46:47] a dozen or 100 different times.
+[46:50] And then you look for
+the most common response.
+[46:53] So if you're taking
+a math exam, you just
+[46:55] ask the model a dozen
+times, see which
+[46:58] answer ends up being the most
+common, and submit that answer.
+[47:00] And you can actually get
+a pretty substantial boost
+[47:03] in performance
+just by doing this.
+[47:05] In fact, here is the plot
+from the O1 announcement,
+[47:10] where the shaded area is when
+you do consensus with 64 agents.
+[47:13] And so you can see
+that you're getting
+[47:15] a pretty substantial boost on
+this competition math benchmark
+[47:21] by doing consensus
+over 64 samples.
+[47:27] But there are issues
+with consensus.
+[47:28] So one, for example,
+is that this only
+[47:30] really works if you have
+a very, very short answer.
+[47:34] If you're writing
+essays, you can't really
+[47:36] do consensus over the essays
+because you're never going
+[47:38] to write the same essay twice.
+[47:42] So something else you could
+do is, for example, best of n.
+[47:45] And the idea of best of n is
+you sample multiple times,
+[47:50] and then you have some way of
+judging which answer is best.
+[47:55] And this works really
+well if the answer
+[47:57] is very easily verifiable.
+[47:59] So for example, if you're
+solving a Sudoku puzzle,
+[48:01] you could try to solve that
+Sudoku puzzle 10,000 times
+[48:04] and very easily check whether
+any of the answers are correct.
+[48:07] And if one of the
+answers is correct,
+[48:09] you just go with that answer.
+[48:11] So best of n, in
+many ways, actually
+[48:15] works better than consensus.
+[48:16] But it, again, also
+has its limitations
+[48:18] because you need
+a problem that's
+[48:23] really easy to verify whether
+you have the correct solution.
+[48:28] So there's all these different
+techniques that you can use.
+[48:32] And there are trade offs,
+but the general trade off
+[48:35] is that they are lower latency
+but less compute efficient.
+[48:41] Another motivation is diversity.
+[48:44] So when O3 came out, there was
+a lot of complaints that it
+[48:50] couldn't multiply really large
+20-digit numbers or something.
+[48:55] And I always thought this was
+really interesting because I
+[48:58] don't think there are many
+humans that could multiply
+[49:00] 20-digit numbers reliably.
+[49:03] And we don't really
+expect humans to do that.
+[49:05] We don't expect them because
+they can use a calculator
+[49:08] and just plug it in.
+[49:11] And similarly, language
+models also can use tools.
+[49:15] A language model
+can-- instead of--
+[49:18] today, probably actually,
+I haven't tried,
+[49:19] but my guess is that if you
+ask GPT-5 thinking and ask it
+[49:22] to multiply like 2 15-digit
+numbers, it'll probably do it.
+[49:25] It'll take a very
+long time, but I think
+[49:26] it'll probably get it right.
+[49:28] But it doesn't really make
+sense for it to do that.
+[49:30] In the same way, that doesn't
+really make sense for a human
+[49:33] to multiply 2 15-digit
+numbers by hand.
+[49:40] So in the same way that
+you would want a language
+[49:43] model to use a calculator
+because it is more efficient,
+[49:47] it's more reliable, it's more
+efficient, it just makes sense,
+[49:51] there are a lot of
+different models out there.
+[49:54] And some models
+are better suited
+[49:55] for some problems than others.
+[49:57] And it might be the case that
+your most capable, largest model
+[50:02] could do the task that you
+want, but it doesn't really
+[50:06] make sense for them to do it.
+[50:08] It's just not as efficient
+as a cost effective--
+[50:11] or they might just not be as
+good at it as some other model.
+[50:15] And so in the same way that you
+would want a model to be able
+[50:17] to call a calculator when it's
+asked to multiply 2 15-digit
+[50:21] numbers, there are times when it
+makes sense for an agent to go
+[50:25] to another agent and
+hand off a task to them.
+[50:28] So another motivation
+for multi-agent AI
+[50:31] is that diversity is a strength.
+[50:36] You can use the best model for
+the particular query that's
+[50:39] at hand.
+[50:40] And I would argue that
+routing is already
+[50:43] a form of multi-agent AI.
+[50:45] The idea behind routing is that
+you send a query to some model,
+[50:49] the model looks at
+that query and decides
+[50:51] which model is actually
+best to answer that question
+[50:54] or to give that response.
+[50:56] And then it will route
+the question to that model
+[50:58] and then return the
+response back up.
+[51:05] OK.
+[51:06] So The state of
+multi-agent AI today.
+[51:11] As of today, I would
+say it's actually--
+[51:14] when it comes to
+LLM cooperation,
+[51:16] I would actually say, it's not
+as impressive as it could be.
+[51:21] We're seeing a lot of
+scaffolds and these
+[51:24] tend to be very heavily
+engineered and very brittle.
+[51:28] And, they do work in some cases.
+[51:30] I think that there has
+been some clear successes.
+[51:33] But there's clearly
+something still
+[51:34] missing from these systems.
+[51:39] I think it's actually
+a very exciting time
+[51:41] to be working on multi-agent.
+[51:43] AI actually, because we've seen
+a lot of success from AI models
+[51:49] in a lot of different
+domains, and we haven't really
+[51:51] seen a clear success
+when it comes
+[51:54] to multi-agent AI
+in the way that we
+[51:57] have seen for a lot of other
+measures of intelligence.
+[52:03] But it seems like the
+models are nearing
+[52:05] the point where they can
+be effective for this sort
+[52:07] of thing.
+[52:09] It's also a really exciting
+time for multi-agent AI,
+[52:11] because the fact is, the
+field of multi-agent AI
+[52:13] has been around for a
+very, very long time.
+[52:16] People have been working on this
+problem for dozens of years.
+[52:20] And there's always
+been this question
+[52:23] of how do you get the AIs to
+communicate with each other?
+[52:26] How do you get them to even
+coordinate in the first place?
+[52:30] And with LLMs, we have a very
+clear answer to that now.
+[52:32] The answer is you just get them
+to talk in natural language
+[52:35] to each other.
+[52:35] And it just works.
+[52:37] And again, if you've
+only been in the field
+[52:40] for a couple of years,
+you take that for granted.
+[52:42] Of course, you can
+use LLMs to just talk
+[52:45] to other agents in natural
+language, and they understand.
+[52:49] There have been whole lines
+of research, whole PhDs that
+[52:52] have been spent just
+trying to figure out
+[52:54] how to get these agents
+to develop language
+[52:56] so that they can
+talk to each other.
+[52:57] And now, that's just
+a solved problem.
+[53:00] So it's a very exciting time to
+be working on multi-agent AI.
+[53:03] And I think that there's
+a lot of potential
+[53:07] to do exciting things now.
+[53:10] There was this blog
+post that came out
+[53:11] a few months ago from
+cognition that basically
+[53:13] said, don't build multi-agents.
+[53:16] And I actually think
+it's a great blog post.
+[53:18] So I think are two blog
+posts that came out
+[53:20] in the past few months
+about multi-agent AI,
+[53:22] one from Cognition,
+another one from Anthropic.
+[53:24] I think they're both
+really worth reading.
+[53:25] I think they're both
+really interesting.
+[53:27] They talk about their
+experiences building
+[53:28] scaffolds for multi-agent AI.
+[53:29] And they talk about where it
+works and where it doesn't work
+[53:32] and what's still missing.
+[53:36] And in the Cognition blog
+post, one of the things
+[53:38] they say is basically, they
+went through this whole rabbit
+[53:42] hole of building
+multi-agent systems.
+[53:44] It kind of worked, but
+it was also very brittle.
+[53:46] And their main takeaway was that
+the technology isn't there yet.
+[53:50] And they say,
+however, agents today
+[53:52] are not quite able to engage
+in this style of long--
+[53:54] OK.
+[53:55] So I'll say the longer part.
+[53:58] "If we really want to get
+parallelism out of our system,
+[54:00] you might think to let
+the decision makers
+[54:02] talk to each other
+and work things out.
+[54:05] This is what us humans
+do when we disagree.
+[54:08] If engineer A's code causes a
+merge conflict with engineer B,
+[54:12] the correct protocol is to
+talk out the differences
+[54:14] and reach a consensus.
+[54:16] However, agents today are not
+quite able to engage in this
+[54:19] style of long context
+proactive discourse,
+[54:22] with much more reliability than
+you would get with a single
+[54:25] agent."
+[54:27] And so basically, he goes
+on to say, "at this moment,
+[54:32] it doesn't feel like these
+agents are able to do it,
+[54:36] but the technology is
+progressing very rapidly,
+[54:38] and it feels like we are on the
+cusp of being able to do these
+[54:41] things."
+[54:41] And so I think it's a really
+exciting time for multi-agent.

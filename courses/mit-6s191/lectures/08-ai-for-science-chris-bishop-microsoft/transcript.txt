@@ -1,0 +1,1643 @@
+[00:12] It is my great pleasure and honor to
+[00:14] introduce our first guest speaker for
+[00:17] introduction to deep learning 2026 and
+[00:20] he's a very special one. Chris Bishop is
+[00:23] a technical fellow at Microsoft. This is
+[00:25] the highest technical distinction that
+[00:27] one can receive. And the founding um the
+[00:30] founder of Microsoft research AI for
+[00:33] science which is a global organization
+[00:36] overseeing a portfolio of work at the
+[00:38] intersection of machine learning, AI and
+[00:41] the natural sciences. And Chris comes
+[00:43] from a background deep in physics and
+[00:46] machine learning and has brought that to
+[00:49] a really unique perspective in terms of
+[00:51] thinking about bringing AI and deep
+[00:53] learning to real world problems in these
+[00:55] domains. And he's also done great
+[00:58] contributions for the community in terms
+[01:00] of deep learning education publishing
+[01:03] seinal books on machine learning and
+[01:05] deep learning in particular. So please
+[01:08] join me in giving him a big round of
+[01:10] applause and welcome to Dr. Chris
+[01:12] Bishop.
+[01:21] >> No.
+[01:23] >> Thank you, Alberta. I'd like to begin by
+[01:26] asking you to think for a moment about
+[01:29] what you consider to be the greatest
+[01:31] scientific discovery ever made.
+[01:34] Now, I haven't given you a metric, so
+[01:36] this is really a matter of opinion. I'm
+[01:37] sure there will be many different
+[01:39] opinions here, but in my view, the most
+[01:42] extraordinary thing that science has
+[01:44] ever uncovered is the fact that our
+[01:45] world is described by mathematics.
+[01:49] It's not obvious, right? Making marks on
+[01:51] a piece of paper allows you to predict
+[01:52] the future. It's extraordinary.
+[01:55] And it's not just mathematics. It's very
+[01:58] simple mathematics. Even if you're not
+[02:00] familiar with these equations, um I
+[02:02] think you'll agree these are very simple
+[02:03] equations. And yet these equations,
+[02:05] perhaps a little bit of relativity uh
+[02:07] sprinkled on top really describes
+[02:10] everything that we experience in our
+[02:12] everyday lives. Everything we can
+[02:13] experience without using specialist
+[02:14] equipment.
+[02:16] So that's extraordinary. But these
+[02:18] aren't just rough and ready models of
+[02:20] the world. They have extraordinary
+[02:22] precision. So the electron, which is one
+[02:25] of the building blocks of matter, is
+[02:27] like a little magnet. And we can use
+[02:29] theory to calculate the strength of that
+[02:31] magnet. And this is what we come up
+[02:33] with. And the error bars at the end are
+[02:35] because we neglect some terms in a kind
+[02:38] of series expansion. And then we can go
+[02:40] and do an experiment and we can measure
+[02:43] uh that magnetic moment. And this is the
+[02:45] number we come up with. Again, there are
+[02:46] some experimental error bars. And you'll
+[02:48] see that these agree to 13 significant
+[02:51] figures. That's just staggering
+[02:54] precision.
+[02:58] So we live in a world that's described
+[03:01] by mathematics where areas like the
+[03:04] earth's atmosphere, materials, new
+[03:07] drugs, we have the equations that
+[03:09] describe them very precisely.
+[03:13] So we ought to be able to just design a
+[03:15] new drug on a computer and we're done.
+[03:17] But we can't. And the reason is rather
+[03:20] ironic. Those equations are very simple
+[03:22] to write down, but solving them turns
+[03:24] out to be extremely difficult.
+[03:27] So we could say that the underlying
+[03:29] physical laws necessary for the
+[03:30] mathematical theory of a large part of
+[03:32] physics and the whole of chemistry and
+[03:34] that includes biochemistry which is just
+[03:36] complex chemistry of course are thus
+[03:38] completely known. The difficulty is only
+[03:42] that the exact application of these laws
+[03:44] uh leads to equations much too
+[03:46] complicated to be soluble. Now those
+[03:48] aren't my words. Those were said by the
+[03:50] theoretical physicist Paul Durat nearly
+[03:52] a hundred years ago.
+[03:55] So, we're in this fascinating but very
+[03:57] frustrating situation that for a century
+[03:59] now we have these beautiful simple
+[04:00] equations that describe the world with
+[04:02] exquisite precision and yet we're
+[04:04] frustrated because we can't solve them
+[04:06] in order to go and tackle lots of real
+[04:08] world applications.
+[04:13] So the question is how can we best use
+[04:16] the knowledge of those equations in
+[04:18] order to accelerate scientific discovery
+[04:20] and to address that I just want to step
+[04:22] back for a moment and think about the
+[04:24] scientific discovery process itself.
+[04:27] So we have a scientist and of course
+[04:29] today a scientist would generally be a
+[04:31] team of scientists or a team of people
+[04:33] from many different disciplines working
+[04:35] together but let's just uh call that a
+[04:37] scientist. The scientist formulates
+[04:39] hypothesis.
+[04:41] Uh those hypotheses are then tested
+[04:43] against experiment. This is really the
+[04:44] foundation of the scientific method
+[04:46] gathering evidence from the real world.
+[04:49] So those observations from the
+[04:51] experiment can then uh inform the
+[04:53] scientist and the scientists can go and
+[04:55] modify their hypothesis. For example, if
+[04:57] you're looking for a drug, you're
+[04:58] searching the vast space of potential
+[05:00] drug molecules. You dream up by whatever
+[05:03] mechanism some candidates you synthesize
+[05:05] in the laboratory, test them against
+[05:07] proteins. Some of them bind, some of
+[05:08] them don't. And you use that information
+[05:10] to refine your list of uh drug
+[05:13] candidates.
+[05:14] So that fundamental iterative loop of
+[05:17] science of course has been with us for a
+[05:18] long time. Um and it doesn't operate in
+[05:21] isolation. Uh the scientist of course
+[05:23] talks to other scientists, reads the
+[05:25] literature. So this is part of a whole
+[05:26] scientific ecosystem.
+[05:29] One development that I think is very
+[05:30] important happened really in the 1960s
+[05:32] with the development of digital
+[05:33] computers and for the first time this
+[05:35] really allowed us to bring those
+[05:37] equations in into play because we can
+[05:39] solve the equations in uh for other than
+[05:42] toy problems by using digital
+[05:44] computation. It's very very expensive
+[05:46] typically to do that but it gives us a
+[05:49] different kind of oracle since we know
+[05:51] that the equations are accurate. Instead
+[05:53] of doing an experiment we can do a
+[05:54] simulation. Of course, there are pros
+[05:56] and cons to experiment and simulation,
+[05:58] and they're sort of complimentary, but
+[06:00] it adds another uh pathway, if you like,
+[06:02] to the scientific process.
+[06:05] Now, we're in the early dawn, I suppose,
+[06:08] of a of a remarkable AI revolution,
+[06:10] which is touching many things,
+[06:12] including, of course, scientific
+[06:13] discovery. And so AI is really impacting
+[06:17] every aspect of this process from the
+[06:19] formulation of hypotheses. How could we
+[06:21] design a million molecules rather than
+[06:23] half a dozen? Something that a human
+[06:25] alone couldn't do. Um analyzing data
+[06:29] from experiments and helping us
+[06:30] interpret them. Um driving automated wet
+[06:33] labs. There are several companies I
+[06:35] think in even in the Boston area looking
+[06:36] at um automated wet labs and how can AI
+[06:39] help to automate and accelerate the
+[06:41] experimental process. and of course
+[06:43] helping the scientist in their uh
+[06:45] day-to-day work
+[06:47] addressing that vast literature of
+[06:49] millions of papers. A human being can't
+[06:51] read the papers but an AI can read the
+[06:53] papers and and and that's incredibly
+[06:55] valuable. Um and so AI is impacting this
+[06:57] whole process. This is enormously
+[07:00] exciting and enormously important.
+[07:01] Microsoft is very involved in this. We
+[07:03] have a platform called the discovery
+[07:04] platform which is an agentic AI platform
+[07:06] built on Frontier LLM that's helping to
+[07:09] accelerate this whole discovery process.
+[07:12] That's not what I'm going to talk about
+[07:13] today. I'm going to talk about a
+[07:16] different and very exciting way of using
+[07:18] those fundamental equations to
+[07:20] accelerate scientific discovery and it's
+[07:22] what we'll call uh AI emulator.
+[07:25] So
+[07:27] the AI emulator provides a third
+[07:29] pathway, a third kind of oracle to use
+[07:32] within this scientific discovery loop.
+[07:35] And I'm so excited about this that um
+[07:38] four years ago I made a pitch to the
+[07:39] chief technology officer of Microsoft to
+[07:41] sort of give up my lab director job and
+[07:43] form a new team called AI for science.
+[07:45] And this is this is what we're focused
+[07:46] on in the AI for science team and is
+[07:48] very complimentary to what we're doing
+[07:50] in Microsoft with the discovery
+[07:51] platform.
+[07:54] So to understand what an emulator is, I
+[07:57] want to again just step back a minute
+[07:59] and look at a very important theorem at
+[08:02] the heart of machine learning.
+[08:05] which has this wonderful name of the no
+[08:07] free lunch theorem.
+[08:09] So the no free lunch theorem essentially
+[08:11] says you cannot learn purely from data.
+[08:15] You can only learn from data in the
+[08:17] context of some kind of assumption. Um
+[08:21] sometimes called prior knowledge,
+[08:22] sometimes called inductive bias. It's
+[08:24] phrased in different ways from different
+[08:26] perspectives, but it all comes down to
+[08:28] the same thing. You make a prediction by
+[08:30] combining data with some assumptions.
+[08:33] Now you're all familiar with large
+[08:35] language models. And in large language
+[08:37] models, we use data, lots of data. It's
+[08:40] very, very data intensive. In fact,
+[08:42] we're using data at an unprecedented
+[08:44] scale. And it's that scale to extremely
+[08:46] large internet scale data sets that's
+[08:48] allowed large language models to achieve
+[08:50] their extraordinary capabilities.
+[08:53] The assumptions, the inductive bias are
+[08:55] fairly lightweight. We have uh
+[08:57] attention. you know, prediction for the
+[08:59] next token depends um to greater or
+[09:01] lesser degrees on previous tokens and
+[09:03] that waiting is itself data dependence.
+[09:05] That's the attention mechanism that's at
+[09:06] the heart of the transformer. But it's
+[09:08] very very general, very lightweight
+[09:10] inductive bias.
+[09:12] In science, we're in the opposite
+[09:14] regime. In science, data is scarce. It's
+[09:17] expensive. It can take a student a year
+[09:19] to figure out the 3D structure of one
+[09:21] protein. That's one data point. Um and
+[09:24] yet we have uniquely in science this
+[09:27] very rich inductive bias. We know the
+[09:29] equations that describe the world. So
+[09:32] how can we combine that expensive data
+[09:35] with this rich inductive bias?
+[09:40] So let me just click down a level and
+[09:43] say a little bit more about what I mean
+[09:44] by inductive bias. So we have these
+[09:46] equations. If you're not familiar this
+[09:47] is Shreddinger's equation. We won't be
+[09:49] doing any maths in the talk, don't
+[09:51] worry. But this equation describes the
+[09:54] properties of matter at the atomic
+[09:56] level. Um describes uh it's an equation
+[09:59] for an object called pi the wave
+[10:01] function. I'll say a little bit more
+[10:02] about the wave function uh a little bit
+[10:04] later but a a relatively simple equation
+[10:08] that certainly should be part of our
+[10:09] inductive bias. That's part of our prior
+[10:11] knowledge.
+[10:13] We have other things too. Um invariance
+[10:16] and equivarian. So here's a molecule. If
+[10:18] I calculate and measure the molecule is
+[10:20] just in a vacuum, it's not interacting
+[10:22] with anything and it has some energy. I
+[10:24] could calculate the energy. If I rotate
+[10:26] the molecule, the energy must be
+[10:28] unchanged because space is isotropic. So
+[10:31] that's called an invariant property.
+[10:33] Now, if the molecule is represented by
+[10:35] the coordinates of all the nuclei of the
+[10:37] atoms in three dimensions, when it's
+[10:39] rotated, all those numbers will change
+[10:40] in some complicated looking way. That's
+[10:43] what we feed into the neuronet. But the
+[10:45] output must remain the same. So that
+[10:47] would be called invariance. If the
+[10:49] molecule has a magnetic moment, then
+[10:51] when the molecule rotates, the magnetic
+[10:53] moment must rotate with the molecule and
+[10:55] that's called equivariance. So again,
+[10:58] that's a property that we want our
+[10:59] solution to satisfy.
+[11:02] And in fact, that idea is really the
+[11:03] foundation for a whole sub field of of
+[11:06] deep learning called geometrical deep
+[11:07] learning. Very beautiful and fascinating
+[11:09] field.
+[11:10] Um, we have conservation laws. Energy is
+[11:12] conserved, mass is conserved, momentum,
+[11:14] electric charge and so on. exact
+[11:15] conservation laws of the physical world
+[11:17] and again would like to respect those.
+[11:20] So how are we going to
+[11:23] exploit these inductive biases?
+[11:26] We could um and and a lot of work has
+[11:29] gone into this. We could design
+[11:30] specialist neural network architectures
+[11:32] that sort of bake them in automatically
+[11:34] instead of having a general feed forward
+[11:37] you know multi-layer perceptron. we
+[11:39] structure the network uh in in a
+[11:41] particular way um we can make sure that
+[11:44] no matter what the values of the
+[11:46] parameters and the weights it will
+[11:47] always satisfy some conservation
+[11:49] property or some equivarian property
+[11:51] that's a very beautiful and very elegant
+[11:53] uh again subfield um the equations so we
+[11:57] can always write an equation as
+[11:58] something equals zero so the something
+[12:01] squared can be a term in the loss
+[12:02] function we ought to drive that term to
+[12:04] zero then the equation is satisfied and
+[12:06] there are lots and lots of other ideas
+[12:07] that people have explored.
+[12:10] They work. They can be quite good. But
+[12:13] there's a little catch.
+[12:16] And the catch is something called uh
+[12:18] this become known as the bitter lesson.
+[12:20] Um this was a blog written yes 2019 by
+[12:23] Rich Sutton. So Rich is one of the
+[12:24] pioneers of uh reinforcement learning.
+[12:27] Um if you haven't read this,
+[12:31] every single one of you by the end of
+[12:32] today should take five minutes and go
+[12:34] and read this blog. And if you work in
+[12:36] the field, I suggest that on the first
+[12:38] day of every month, you go and reread
+[12:39] this blog. Could save you a lot of pain.
+[12:43] What it essentially says is that
+[12:47] over the years, many people have
+[12:49] improved the performance of machine
+[12:51] learning systems by baking in additional
+[12:53] prior knowledge.
+[12:55] But they've always lost out to somebody
+[12:58] else who simply had more data. Because
+[13:01] the speed of computers has been growing
+[13:03] exponentially, we've been able to train
+[13:05] bigger models with more data. And so
+[13:06] provided you have provided data is
+[13:08] available, an important caveat, you can
+[13:10] just use more compute to scale the
+[13:12] model. And the more data eventually
+[13:14] overtakes the clever prior knowledge.
+[13:19] So here's the dilemma. We have these
+[13:21] beautiful equations. We're not going to
+[13:22] just ignore them. Um and yet we know
+[13:25] that data eventually um wins out. So how
+[13:29] can we reconcile these?
+[13:32] So the way we reconcile them is this
+[13:34] concept of a deep learning emulator. And
+[13:37] you can think of this as a sort of shift
+[13:39] of mindset. So there's shredding's
+[13:41] equation and we would think of
+[13:43] shredding's equation as an equation that
+[13:45] we could solve let's say to predict the
+[13:47] property of a molecule. We're trying to
+[13:49] design a new drug. We want molecules to
+[13:51] have certain properties. In principle we
+[13:52] can solve shredding's equation but it's
+[13:54] very very expensive. In fact, the cost
+[13:57] of solving Shreddinger's equation grows
+[13:58] exponentially with the number of
+[14:00] electrons. So, we're really forced to
+[14:01] look at relatively small systems.
+[14:05] But instead of solving Shredding's
+[14:07] equation a fresh every time we want to
+[14:09] solve a new problem, let's do something
+[14:11] different. Let's ahead of time solve
+[14:15] Shreing's equation lots and lots of
+[14:16] times for lots of different systems. Say
+[14:18] a whole bunch of different molecules.
+[14:19] That'll be expensive, but we kind of do
+[14:21] that once. and that generates a data set
+[14:24] and we'll use that as a training data
+[14:26] set for machine learning.
+[14:29] Then in the second phase we will train a
+[14:31] neural network trained on that synthetic
+[14:33] data
+[14:36] that again will be computationally
+[14:38] expensive nothing like the cost of
+[14:40] training a frontier LLM because remember
+[14:42] the data is expensive to calculate the
+[14:44] data sets are not huge so the models are
+[14:46] not huge so this this second stage um is
+[14:48] not too expensive but it but it still
+[14:50] costs something and once we've trained
+[14:52] that neural network we'll call that a
+[14:54] deep learning emulator and we can think
+[14:57] of that as an emulator ator of the
+[14:59] software that would solve the equation
+[15:01] directly. So think about solving the
+[15:04] equation directly we'll call that a
+[15:05] simulator.
+[15:07] It produces data and the data is used to
+[15:11] train the emulator. And if we get this
+[15:13] right, once the emulator is trained, it
+[15:16] should produce the same answer that the
+[15:18] simulator would produce, but it will be
+[15:22] very very much faster because solving
+[15:24] those differential equations is an
+[15:26] iterative numerical process that is
+[15:27] computationally very intensive. Whereas
+[15:30] once the network is trained, it's a feed
+[15:33] forward network and it can just it's
+[15:34] just a function and we can calculate
+[15:36] that extremely quickly. Now, if we're
+[15:38] going to do this once off, it wouldn't
+[15:40] make sense. But if we're going to use
+[15:41] that emulator thousands or millions of
+[15:43] times, we're going to amatize the cost
+[15:45] of all the data generation and the
+[15:46] training um over those over those future
+[15:49] uses.
+[15:53] So what are the benefits of using
+[15:56] emulators?
+[15:58] So remember we're training on synthetic
+[15:59] data generated by simulation. And so by
+[16:02] simulation I mean you know conventional
+[16:05] software the kind that's been around for
+[16:06] many decades that iteratively and
+[16:08] directly solves the differential
+[16:10] equations slow and expensive but we use
+[16:12] that synthetic data to train the
+[16:14] emulator.
+[16:16] Now that data is very richly labeled you
+[16:20] know it's very easy to collect images
+[16:23] but if you want to use those images for
+[16:24] training a neural net you may have to
+[16:26] label them and labeling them is the
+[16:27] expensive part. cutting somebody going
+[16:29] through and saying this is a bicycle,
+[16:30] this is a tree and so on. The data here
+[16:32] is automatically labeled. Whatever
+[16:34] quantity we want to predict once we've
+[16:36] solved equation and got the wave
+[16:37] function, we can just calculate the
+[16:39] properties, let's say, of the molecule
+[16:40] in in in that case. So the data is
+[16:43] perfectly labeled. We don't have to
+[16:45] worry about personally identifiable
+[16:47] information. You know, if you deal with
+[16:48] a medical domain and you're dealing with
+[16:50] um patients medical records, you
+[16:52] obviously have to be extremely careful
+[16:54] about privacy and consent and so on.
+[16:56] Here we're just dealing with the
+[16:57] solution of differential equations.
+[17:00] And this is a very important point. The
+[17:02] quantity of data is is unlimited in a
+[17:05] practical sense. We can always generate
+[17:07] more data as long as we've got the
+[17:09] compute to do so. So people who training
+[17:12] frontier LLMs complain that they run out
+[17:15] of data. Well, we'll never run out of
+[17:17] data here because we can always generate
+[17:19] more data. And the scale and complexity
+[17:22] of the problems we're trying to solve is
+[17:25] such that more data will always be
+[17:27] useful. It will always improve the
+[17:29] results and the predictions we can
+[17:31] obtain because we're attacking such a
+[17:32] vast problem. So from a practical point
+[17:34] of view, we can always generate more
+[17:36] data just by using compute.
+[17:39] And the other thing to appreciate is the
+[17:41] compute that I'm talking about here in
+[17:43] data generation is not the extremely
+[17:45] expensive huge clusters of highly
+[17:48] interconnected top-end GPUs used to
+[17:51] train frontier models. This could be
+[17:53] single GPUs. It could even be CPUs.
+[17:57] We can also exploit underutilized
+[18:00] compute. In a company like Microsoft, we
+[18:02] have huge compute resources all around
+[18:04] the globe. Some of those compute
+[18:05] resources get more intensively used in a
+[18:07] region during the daytime than at the
+[18:09] night time. There's always some
+[18:10] underutilized compute. And because the
+[18:14] process of generating these training
+[18:16] points is uh massively parallel. Um we
+[18:20] can launch many many jobs. So maybe some
+[18:22] of them get preempted because a customer
+[18:23] come comes along and obviously they get
+[18:25] priority for the compute. But we can
+[18:26] very efficiently soak up a lot of
+[18:28] underutilized or unutilized compute in
+[18:30] the in the training process.
+[18:33] And then most important of all, really
+[18:35] the fundamental reason we're doing this
+[18:37] is that trained emulator is much faster
+[18:39] than the simulator. And typically, I
+[18:42] would say more than three orders of
+[18:44] magnitude. Usually, the first thing you
+[18:46] try, you're about a few thousand times
+[18:48] faster than the original simulator. Of
+[18:50] course, it depends a lot on the on the
+[18:52] actual application domain, but that's a
+[18:54] good rule of thumb. You're looking at
+[18:56] factors of several thousand acceleration
+[18:58] and sometimes much more. And that that's
+[19:01] huge. I mean the factor of a thousand is
+[19:03] is quite transformational. Now I'll show
+[19:06] you a concrete example uh a little bit
+[19:08] later. In fact I'll show I'll show it to
+[19:10] you now. In fact um so let me make this
+[19:12] concrete by giving you a sort of an
+[19:14] everyday example which is weather
+[19:15] forecasting. So if you go to your phone
+[19:17] and you look up the weather forecast,
+[19:19] it'll tell you what the weather in
+[19:20] Boston is going to be for the next few
+[19:22] days. Where does that come from?
+[19:25] That forecast comes from something
+[19:27] called numerical weather prediction. So
+[19:30] numerical weather prediction involves
+[19:32] solving some relatively simple looking
+[19:35] differential equations a bit like
+[19:37] Shredding's equation. They're partial
+[19:39] differential equations over a number of
+[19:40] variables. They're not the fundamental
+[19:42] equations of physics but they're easily
+[19:44] derived from the fundamental equations
+[19:46] of physics and they describe the way um
+[19:49] air flows and the effects of corololis
+[19:51] force and pressure gradients and
+[19:53] condensation in the air and so on.
+[19:57] We need a supercomput because we have to
+[20:00] solve this with quite fine time steps in
+[20:02] order to get good accuracy. We need
+[20:03] quite a a rich spatial grid in in three
+[20:06] dimensions. Um and we have to solve it
+[20:09] quickly because we have to solve it
+[20:10] faster than the actual weather. We to
+[20:13] get a forecast you have to overtake the
+[20:14] reality. So you have to solve it quite a
+[20:16] bit faster than the real weather is
+[20:17] evolving um in order to get a forecast.
+[20:20] So national centers around the world um
+[20:24] you know the UK Met Office or Nur in the
+[20:26] United States will have supercomputers
+[20:27] and they'll run these launch these big
+[20:29] jobs every six hours or or whatever um
+[20:32] initialized with the current state of
+[20:34] the weather and then trying frantically
+[20:35] to predict accurately what the weather's
+[20:37] going to do a few days ahead.
+[20:40] Now this is a great target for an
+[20:41] emulator because for several decades now
+[20:44] many organizations around the world have
+[20:45] been using supercomputers to simulate
+[20:47] the Earth's atmosphere. So there's a
+[20:49] huge amount of simulated data available
+[20:52] uh much much of which is in the public
+[20:54] domain and readily available and can be
+[20:55] used to train emulators and quite a
+[20:58] number of teams have trained emulators
+[21:00] from various different uh groups in
+[21:02] industry and academia and it's been very
+[21:03] successful. Um I'll focus a little bit
+[21:05] on on what we've done. We've done um
+[21:08] something a little bit different. We've
+[21:09] taken it a step further and rather than
+[21:11] just produce an emulator of a particular
+[21:14] simulator, we've trained an emulator on
+[21:16] very diverse data. So data from many
+[21:19] different simulators, different length
+[21:21] scales, different different resolutions,
+[21:23] different time scales and so on in order
+[21:26] to force the model to learn uh more
+[21:28] fundamentally about the dynamics of the
+[21:30] earth's system, the atmosphere and the
+[21:31] oceans.
+[21:33] Now we call this a foundation model
+[21:35] because what we can then do is fine-tune
+[21:37] it for particular applications. Um and
+[21:39] and there are quite a few of these, but
+[21:41] I'll just mention one of them. So one
+[21:43] problem is to predict the flow of
+[21:45] pollutants particularly nitrogen oxides
+[21:48] uh through the atmosphere.
+[21:50] Now data uh sensors for pollution are
+[21:54] relatively sparse compared to weather
+[21:56] sensors. I mean this building probably
+[21:57] has a little weather station on the
+[21:58] roof. There are weather sensors um all
+[22:00] over the place. So data for weather is
+[22:02] extremely dense and very very rich. Data
+[22:04] for pollution um is is much sparer. If
+[22:08] we just use the pollution data to
+[22:09] predict pollution flows, we don't get
+[22:11] particularly good results. But instead,
+[22:13] if we use an earth system model, a
+[22:14] foundation model, trade all that weather
+[22:16] forecasting data as a foundation model
+[22:18] and then fine-tune it, we get much more
+[22:20] accurate prediction. So, this is the
+[22:22] state-of-the-art for predicting uh
+[22:24] pollution flow through the atmosphere.
+[22:26] So, that's one example, one practical
+[22:28] example of um an emulator. And because
+[22:33] it's so much faster than running
+[22:34] simulators, it's several thousand times
+[22:36] faster. So, for example, we can produce
+[22:38] the UK 8day weather forecast in 1 minute
+[22:41] on a single A100 GPU.
+[22:44] It's very disruptive. It's not just, oh,
+[22:46] it's faster. That's good. Um, it's it's
+[22:49] actually very disruptive. It changes the
+[22:51] way we think about weather forecasting.
+[22:54] So, it's it's it's very exciting.
+[22:57] But it's not just weather. This is very
+[22:58] very broadly applicable. For the rest of
+[23:00] this talk, I'm going to focus on the
+[23:02] molecular scale, predicting the
+[23:04] properties of molecules and materials.
+[23:07] That's the focus of of my team. This is
+[23:10] still a vast space. There's still a lot
+[23:12] to do here. Um many many different uh um
+[23:15] applications. You can see some of them
+[23:17] listed here. But but let's just dive
+[23:19] into this and see how we apply this in
+[23:21] the molecular scale. So let me just give
+[23:24] you another example here. This is a
+[23:25] model we built called Matagen. Um I
+[23:28] think you'll all have come across
+[23:29] diffusion models for generating images
+[23:31] where you um take images and you add
+[23:34] noise and then you train a neural net to
+[23:36] dn noiseise the image successively. This
+[23:38] is the same idea but now for crystals.
+[23:41] So crystals specified by saying um what
+[23:43] is the the unit cell right is a periodic
+[23:46] system. So you specify the coordinates
+[23:47] the the axes of the unit cell the types
+[23:50] of atoms and how many there are and
+[23:51] where they're located. Um and so we can
+[23:55] take known stable crystal structures,
+[23:58] add noise, um and then learn to den
+[24:00] noiseise them. So this is the a little
+[24:02] video of the denoising process. So
+[24:04] starting from random and then it's
+[24:07] dinoising to choose the types of atoms,
+[24:09] the uh geometry of the unit cell and the
+[24:12] locations of the atoms within the unit
+[24:14] cell.
+[24:16] Um and when it's finished, what we
+[24:18] should have here is a stable
+[24:19] configuration of atoms, a stable
+[24:21] material. So if you just put atoms down
+[24:23] at random and sort of let go, they'll
+[24:24] all rearrange themselves. They wouldn't
+[24:25] like it. Um what what we're trying to do
+[24:27] with Mataggen is to generate new stable
+[24:30] crystal structures.
+[24:32] Now we don't just want to generate
+[24:34] crystals at random. Of course, what we
+[24:36] want to do is generate crystals that
+[24:37] have desired interesting properties. So
+[24:39] Matagen is a conditional diffusion
+[24:42] model. So it can take as input
+[24:44] properties of materials, electronic
+[24:47] properties, magnetic properties,
+[24:49] mechanical properties and so on. And so
+[24:51] what you see here are examples of
+[24:53] different crystals generated by mataggen
+[24:56] having different uh desired um physical
+[25:00] characteristics.
+[25:02] So if you think about the molecular
+[25:07] pro the problem of designing new
+[25:08] materials and new molecules as a search
+[25:10] problem the space that we're searching
+[25:12] is vast. If we just consider small
+[25:15] organic molecules, the number this this
+[25:17] space has been quite well characterized,
+[25:20] the number of small organic molecules
+[25:23] with drug-like characteristics is about
+[25:25] 10 to the^ of 60. It's like the number
+[25:28] of atoms in the solar system. It's a
+[25:29] colossal space. So finding a new drug is
+[25:32] searching that vast space to find a
+[25:34] molecule with a long laundry list of
+[25:37] desired properties. It's a huge search
+[25:39] problem. materials probably an even
+[25:41] bigger space. When you're into proteins,
+[25:44] it's a, you know, colossal combinatoric
+[25:46] space. The space that we're trying to
+[25:47] search in finding new molecules and
+[25:49] materials is is truly vast. Something
+[25:51] like Mataggen, it doesn't immediately in
+[25:54] one shot produce the miracle material.
+[25:55] But what it does do is help you focus on
+[25:58] a region of chemical space where you're
+[26:00] more likely to find uh examples which
+[26:03] have the desired properties. So if you
+[26:06] then subsequently generate those
+[26:09] potential materials and run a screening
+[26:11] using an an emulator that calculates the
+[26:14] property. We have an emulator called
+[26:15] matter sim that does that. That emulator
+[26:18] that screening is thousands of times
+[26:20] faster. But you've got another huge
+[26:21] acceleration by looking at good
+[26:23] candidates to start with. You're not
+[26:24] generating crystals at random and then
+[26:26] testing to see if it's a magnet. You're
+[26:27] saying uh please generate magnets that
+[26:30] have relatively low rare earth metal
+[26:32] content or whatever it might be. and
+[26:33] then you're looking in the right region
+[26:34] of chemical space. So that's really a
+[26:36] further acceleration.
+[26:40] So I'll talk a bit more that's crystals.
+[26:41] Let me talk about molecules. Um before I
+[26:44] do though again let's just you know
+[26:46] click down a level and say what is it
+[26:47] we're really trying to do when we when
+[26:49] we're looking for a new material or new
+[26:50] molecule.
+[26:52] What we're really doing is solving a
+[26:54] fundamental tradeoff between three
+[26:56] different things.
+[26:58] So these things are accuracy, speed, and
+[27:01] generality.
+[27:04] You could have any two of those, no
+[27:07] problem at all, but you need all three.
+[27:10] And they trade off against each other.
+[27:13] And so it's finding interesting regions
+[27:15] of that space with better trade-offs
+[27:17] than we have before. That's sort of
+[27:18] fundamentally what my my team does in
+[27:20] effect.
+[27:22] Um speed here is computation. It's cost
+[27:25] generality because we wanted to
+[27:27] generalize. We obviously don't want to
+[27:28] make predictions for things we already
+[27:30] know about. We want to generalize at
+[27:31] least to other um parts of chemical
+[27:34] space that are broadly similar. Um and
+[27:36] we need accuracy that's sufficient to be
+[27:38] of practical value. Let me say a little
+[27:40] bit more about accuracy.
+[27:42] There's a particular threshold of
+[27:44] accuracy that we strive for. It's called
+[27:46] chemical accuracy. Um its value is about
+[27:48] a kilo calorie per mole. And it roughly
+[27:52] speaking chemical accuracy is the
+[27:54] accuracy you would need to achieve such
+[27:56] that your computational model is as good
+[27:58] as experiment. If you can get to
+[28:00] chemical accuracy, you're kind of in the
+[28:02] ballpark where you could imagine doing
+[28:05] far fewer laboratory experiments and now
+[28:07] doing computational experiments instead.
+[28:09] But it's a very high bar to achieve. And
+[28:12] one way to see that is is with an
+[28:14] analogy. Um if you were asked to weigh
+[28:16] the captain of the boat, you could do
+[28:17] that by weighing the boat with the
+[28:19] captain and weighing the boat without
+[28:21] the captain and then subtracting them.
+[28:23] Now, mathematically that's exact, but in
+[28:26] practice the boat um is is much heavier
+[28:30] than the captain. And so to get a
+[28:32] reasonably accurate value for the weight
+[28:33] of the captain, you would have to
+[28:35] measure the boat plus captain with very
+[28:37] high precision. And it's like that in
+[28:39] chemistry. The energy changes involved
+[28:40] in a chemical reaction are of course
+[28:43] everything. They're crucial and yet
+[28:44] they're a small fraction of the total
+[28:45] energy of the system. And so when you
+[28:47] calculate the energy of the system, you
+[28:49] need very high precision. That's
+[28:50] chemical accuracy. So chemical activity
+[28:52] is a very high bar. Um that's that makes
+[28:54] this a very tough problem.
+[29:01] So I'm going to take a moment now to um
+[29:03] and I'm told this is a fairly intense
+[29:04] course. So we're going to be fairly
+[29:06] intense for the next few minutes and I'm
+[29:07] going to take you on a little journey of
+[29:09] a story which I think is absolutely
+[29:10] fascinating and it's one of the the core
+[29:12] projects in my team. Um we're just going
+[29:15] to look a little bit further at
+[29:16] Shreddinger's equation, what it means to
+[29:17] solve it and why it's hard. So
+[29:19] Shreinger's equation is equation for
+[29:21] this object called the wave function
+[29:22] denoted s and it's a function that is in
+[29:25] very high dimensional space. So so x1 to
+[29:28] xn are the coordinates in space of the
+[29:31] electrons the electron positions in
+[29:33] space and s is a function jointly across
+[29:36] that entire space. So it's um it's a
+[29:41] very large space. Here's the caffeine
+[29:43] molecule. It has um two dozen atoms. Has
+[29:46] about 100 electrons.
+[29:48] So for the caffeine molecule, Z is a
+[29:50] function of a 300dimensional space.
+[29:54] Now uh for the experts in the audience,
+[29:57] the following would be a slight
+[29:58] oversimplification. It's not incorrect.
+[30:00] It's just a simplification. Um but
+[30:03] imagine we're going to try and solve
+[30:04] that by dividing that threedimensional
+[30:07] space up into a grid. Now if it's in one
+[30:09] dimension, you know, we could divide it
+[30:10] into a thousand points. That's no
+[30:12] problem. In two dimensions, the grid
+[30:13] would be a th00and by a thousand. So
+[30:15] that's a million points. three
+[30:16] dimensions that would be a billion and
+[30:18] so on. The number of grid points is
+[30:19] growing exponentially with the
+[30:21] dimensionality of the space and so it is
+[30:24] when we solve Shreing's equation the
+[30:25] cost grows exponentially with the number
+[30:27] of electrons and that means that this
+[30:30] tiny molecule which is a lot smaller
+[30:31] than many drug molecules is already out
+[30:34] of reach. Nobody's been able to
+[30:35] calculate directly the properties of the
+[30:37] caffeine molecule by direct solution of
+[30:38] shreddingers equation and we want to
+[30:40] solve much much bigger systems than
+[30:42] this. So that's the challenge that
+[30:44] really Durac was referring to nearly 100
+[30:46] years ago.
+[30:48] But something really interesting
+[30:50] happened in 1965.
+[30:53] Walter Con discovered that instead of
+[30:56] calculating the wave function, we
+[30:58] actually don't need the wave function at
+[30:59] all. Instead, we can calculate a much
+[31:02] simpler quantity which is just the
+[31:04] electron density. The density of
+[31:06] electron density of electronic charge
+[31:08] over space. So it's a function just of
+[31:11] three dimensions.
+[31:13] And whereas it's exponentially costly to
+[31:17] compute the wave function and the wave
+[31:19] function tells us everything we need to
+[31:21] know. Um instead we can compute the
+[31:24] density uh which only has cubic cost in
+[31:27] the number of electrons and all the
+[31:29] things we want to know. We can calculate
+[31:30] them from the electron density without
+[31:32] ever needing the wave function.
+[31:35] Now, we're all familiar in computer
+[31:36] science with problems that are
+[31:38] exponentially or combinatorically hard
+[31:40] and then we have some approximation
+[31:42] scheme that allows us to solve it in in
+[31:44] realistic time and often those work very
+[31:46] well in practice um even though
+[31:47] potentially they're approximate. What's
+[31:49] extraordinary here is that this is
+[31:50] exact.
+[31:53] This is an exact transformation of an
+[31:55] exponential problem into a cubic
+[31:56] problem. And that's so extraordinary
+[31:58] that in 1998 Walter Comb was given the
+[32:01] Nobel Prize in chemistry for the
+[32:02] discovery of density functional theory.
+[32:05] And density functional theory has become
+[32:08] one of the most highly cited um topics
+[32:11] in the whole of science. Here you can
+[32:13] see the exponential growth in the number
+[32:15] of papers as digital computers became
+[32:17] available and it became more and more
+[32:19] practical to use density functional
+[32:21] theory. You can see this has become
+[32:22] hugely important in many different
+[32:24] fields. Roughly speaking, this is the
+[32:26] only practical method we have of solving
+[32:28] Shreddinger's equation for for realistic
+[32:31] systems. And if you look at um national
+[32:35] supercomputers, this is from a national
+[32:36] supercomputer center in the US. And you
+[32:38] look at their scientific simulation
+[32:39] workloads, you find quite often that
+[32:41] density functional theory accounts for
+[32:43] maybe a third of the entire workload of
+[32:46] that supercomput when it comes to
+[32:47] scientific simulation. So it's hugely um
+[32:51] hugely important in practice and and
+[32:53] quite an extraordinary result.
+[32:56] Um and again if you like a little little
+[32:58] cartoon analogy to help you remember
+[32:59] this after the talk here's one way to
+[33:00] think about density functional theory.
+[33:02] So it's an analogy um in
+[33:04] three-dimensional space we have this
+[33:05] plastic molecular model. So think of
+[33:07] that as like the wave function. It's
+[33:09] something very complicated. It's living
+[33:10] this three-dimensional space. Normally
+[33:12] we would calculate the wave function
+[33:13] then calculate everything from the wave
+[33:15] function. But instead, we don't need to
+[33:18] work with the wave function. We can work
+[33:20] with this lower dimensional projection,
+[33:22] like a kind of shadow in this
+[33:23] two-dimensional space. And that's what
+[33:25] density function theory is. And by the
+[33:27] way, this isn't AI generated. Somebody
+[33:29] had actually plugged these bits of
+[33:30] plastic together and took a photograph.
+[33:31] So, congratulations to them.
+[33:36] Now, at this point, you're probably, you
+[33:37] know, you're probably a bit suspicious,
+[33:39] right? I mean, we've got this
+[33:40] exponentially hard problem. Somebody
+[33:42] comes along and now I can solve it all
+[33:43] in cubic time. Uh, and it's exact. It
+[33:46] sort of sounds a bit too good to be true
+[33:48] and in a way it is a little too good to
+[33:49] be true. There is a catch.
+[33:52] So Con wrote down a set of equations um
+[33:55] the con sham equations which are
+[33:56] iterative equations. Instead of solving
+[33:58] Shredding's equation you solve the cone
+[33:59] sharm equations. Um they have cubic cost
+[34:03] cubic in the number of electrons but
+[34:04] they contain a term it's a very small
+[34:06] term called the exchange correlation
+[34:08] functional. It's a contribution to the
+[34:10] energy but it's critical because as as
+[34:12] you as we saw we have to have very high
+[34:14] precision. Although that's a relatively
+[34:16] small term, it's essential that we get
+[34:18] this uh exchange correlation functional
+[34:20] term um to be accurate. And con showed
+[34:24] that it's universal. In other words,
+[34:26] there is a single exchange correlation
+[34:28] functional that describes the whole of
+[34:30] molecular space. All the crystals,
+[34:32] proteins, molecules, everything, one
+[34:34] universal exchange correlation
+[34:36] functional. He wasn't however able to
+[34:39] write down an explicit analytical form.
+[34:43] So it's sort of a mystery. It's it's an
+[34:44] unknown.
+[34:46] So what do people do in practice? Well,
+[34:48] over the last 60 years, people have
+[34:51] invented handcrafted
+[34:53] um approximations to the exchange
+[34:56] correlation functional. Today there are
+[34:58] about 800 of these um in use. It's
+[35:01] sometimes called the zoo. Um sometimes
+[35:03] called Jacob's ladder because they can
+[35:05] be arranged in a kind of sequence. Some
+[35:07] some cheap ones that are not very
+[35:09] accurate or some very expensive ones
+[35:10] that are quite accurate. And so there's
+[35:12] a trade-off there. Um but these
+[35:15] functionals, these uh handcrafted
+[35:17] functionals, uh each of them applies to
+[35:19] some particular subdomain. Some are
+[35:22] applied to molecules, some to crystals,
+[35:23] some are good for metals. Um and and and
+[35:25] so on. Um what's missing is this this
+[35:28] universal exchange correlation
+[35:30] functional. And there's this nice paper
+[35:32] written in 2002 in science called in
+[35:34] pursuit of the divine functional which
+[35:36] really sort of lamenting the fact that
+[35:38] the whole field had had gone down this
+[35:40] rabbit hole of these handcrafted
+[35:42] approximate functionals and lost sight
+[35:44] of the fact that exchange that uh that
+[35:47] density functional theory is an exact
+[35:49] theory and there is this universal
+[35:50] functional. We should get back to the
+[35:52] heart of this of trying to find that
+[35:53] universal functional.
+[35:57] So
+[36:01] the DFT zoo then is this gives us this
+[36:03] trade-off. This is a graph on the
+[36:05] vertical axis is um the error um in kilo
+[36:08] calories per mole. So we want to get
+[36:10] down into that blue region that chemical
+[36:12] accuracy or better. That that's what
+[36:14] we're aiming for. And here are a bunch
+[36:16] of different um handcrafted functionals.
+[36:19] You can see on the left we have some
+[36:21] that have cubic scaling. So they sit
+[36:23] within the overall cubic framework of
+[36:24] density functional theory. That's
+[36:25] wonderful. They're very affordable, but
+[36:27] the accuracy is terrible. Much much
+[36:29] worse than chemical accuracy. Um, we we
+[36:32] then have uh functionals that are much
+[36:33] more expensive like n the^ 5. They're
+[36:36] starting to approach chemical accuracy,
+[36:38] but they're getting very very expensive.
+[36:40] And yet we know
+[36:43] from con and his Nobel Prize that
+[36:45] there's a single universal functional
+[36:47] that applies across the whole of
+[36:48] chemical space that should give us
+[36:50] chemical accuracy or better um with
+[36:52] cubic scaling.
+[36:54] So that leads to the idea of could we
+[36:56] not learn the exchange correlation
+[36:58] functional using machine learning. kind
+[37:01] of an obvious idea really and quite a
+[37:03] few people have looked at this over the
+[37:05] years and
+[37:08] sometimes the results have been quite
+[37:11] good in terms of accuracy but the most
+[37:14] accurate of these are very slow and so
+[37:17] nobody has been able to produce an
+[37:18] exchange correlation a machine learn
+[37:20] exchange correlation functional that is
+[37:21] both accurate and fast
+[37:24] so we've had a project in the AFS
+[37:27] science team that's been going since the
+[37:28] beginning so more than three years now
+[37:30] we've we've
+[37:31] been doing it kind of under the radar
+[37:32] but we sort of went public a few months
+[37:34] ago. Um we've been doing um a couple of
+[37:38] things that are different. So let me
+[37:40] just explain. Um so we've produced a
+[37:42] machine learned exchange correlation
+[37:43] functional called Scala. So Scala is
+[37:45] from the Italian for for ladder. Um and
+[37:49] the idea is we've got electron density.
+[37:51] So within the cone sham equations at any
+[37:53] given time we're updating electron
+[37:55] density. We need to know its energy. um
+[37:58] there's a bunch of these big terms. We
+[38:00] can easily calculate those, but that's
+[38:02] not accurate enough. We need this final
+[38:04] term, the exchange correlation term. And
+[38:06] that's where machine learning comes in.
+[38:08] And so, um essentially the electron
+[38:11] density is represented by a point cloud.
+[38:13] Maybe have a million points. And one of
+[38:15] the challenges here is that the
+[38:17] dependence of the energy is non-local on
+[38:19] that uh on that electron density. and uh
+[38:23] even pair-wise interactions on a million
+[38:25] times a million would be out of hand. So
+[38:27] what we do is we have um a lower
+[38:30] dimensional representation centered on
+[38:31] the atoms and we use message passing
+[38:33] from the point cloud to the atom centers
+[38:35] then between the atom centers then back
+[38:37] out to the to the electron point cloud
+[38:39] and that gives us a scalable model
+[38:41] that's also able to learn uh the
+[38:43] exchange correlation functional
+[38:45] accurately. So that's one innovation.
+[38:47] The other is just uh you guessed it more
+[38:49] data. So we spent a lot of time over the
+[38:51] last three years solving Shreddinger's
+[38:53] equation using standard quantum
+[38:55] chemistry methods to produce highly
+[38:57] accurate training data for the exchange
+[38:59] correlation functional. In fact an order
+[39:00] of magnitude and the totality of all the
+[39:02] public data um previously available.
+[39:06] Um and so here's just a glimpse at some
+[39:08] of the results. So this is a graph. The
+[39:09] vertical axis is just the the total
+[39:11] energy of the of the molecule and the
+[39:15] horizontal axis is another standard
+[39:17] benchmark looking at more general uh
+[39:19] chemistry properties. Um some of which
+[39:22] go beyond what we actually use in in
+[39:24] training. And you can see that uh Scala
+[39:27] achieves chemical accuracy on the
+[39:28] fundamental question of um uh
+[39:31] atomization energy and is comparable
+[39:34] with um other functionals having cortic
+[39:38] scaling for uh for more general
+[39:40] chemistry. The the limitation here of
+[39:43] Scala as exists today is that it applies
+[39:45] only to molecules not yet to materials
+[39:48] and it deals only with the so-called
+[39:50] main group elements. So we don't yet
+[39:51] cover transition metals, but it's very
+[39:54] interesting that even even in its
+[39:56] current form, it generalizes quite well.
+[39:58] Um perhaps to do with the fact that
+[40:00] we're learning a universal functional.
+[40:02] So perhaps that generalization is is
+[40:03] less surprising. But we're just
+[40:05] tremendously excited about this. We're
+[40:07] really hitting hard on a a 50-year-old
+[40:09] grand challenge at the at the heart of
+[40:11] physics.
+[40:14] So I'm going to um finish by just asking
+[40:16] a question. Well, how far can we push
+[40:18] this? We said direct solution of
+[40:20] Shreddinger's equation for the caffeine
+[40:21] molecule that's out of reach. Biology
+[40:23] looks crazy big and complicated. Can we
+[40:26] push this to biology? So let's just see
+[40:28] how far we can go. So here's the whole
+[40:30] of biology in one slide in case you were
+[40:32] wondering how biology works. So we start
+[40:34] with sequence. DNA sequence leads to uh
+[40:37] an RNA sequence and then that is um uh
+[40:41] then uh specifies the amino acid
+[40:44] sequence uh which is the protein. That
+[40:46] protein then folds up into a
+[40:47] three-dimensional structure and then
+[40:49] that structure uh along with the
+[40:51] dynamics of the proteins determines
+[40:53] function. So sequence determines
+[40:55] structure determines function.
+[40:58] Um
+[41:01] sequence um DNA sequence and protein
+[41:03] sequence those were actually two Nobel
+[41:06] prizes both awarded to Fred Sanger in
+[41:08] Cambridge at the the other Cambridge.
+[41:10] Sorry about that.
+[41:12] Um and and of course yeah before last
+[41:16] now I guess we had uh Nobel prizes in um
+[41:20] in protein structure the
+[41:21] threedimensional structure what we
+[41:23] really care about is the function and
+[41:25] the function of proteins is not about
+[41:26] static structure it's about dynamics
+[41:28] proteins open and close they dock with
+[41:30] other proteins they interact with
+[41:31] molecules and so on. So the last big
+[41:33] piece of this puzzle is to do with the
+[41:35] dynamics of how proteins change shape
+[41:38] and how they interact.
+[41:40] So we can we can again in principle we
+[41:43] know all the equations and so we can
+[41:44] just compute and and this field is
+[41:46] called molecular dynamics. So here's a
+[41:48] molecule um each uh each of those balls
+[41:51] of course represents one of the atoms
+[41:53] the the positions of the nuclei. Um so
+[41:55] we can represent each each atom in terms
+[41:58] of its position and its velocity at each
+[42:00] instant of time. And all we have to do
+[42:01] is solve Newton's second law of motion.
+[42:04] So we can treat them classically and we
+[42:06] just update the positions of each atom
+[42:09] uh step by step through time just
+[42:11] following Newton's second law of motion.
+[42:14] Um the challenge here is that the force
+[42:16] term which is the gradient of the energy
+[42:18] that energy comes from quantum physics.
+[42:20] So that's determined by the electrons.
+[42:22] And so there are two massive challenges
+[42:25] here. One is that at each step of that
+[42:27] integration in principle we should go
+[42:29] back and solve shredding's equation
+[42:30] which we've already seen is extremely
+[42:32] hard. There's another challenge here as
+[42:35] well. It's called the curse of
+[42:36] sequentiality. So this shows you on a
+[42:38] kind of log scale the different time
+[42:40] scales involved. Right on the on the
+[42:42] left hand side there we have the the
+[42:45] fundamental vibrations and rotations of
+[42:48] the atoms. That's happening on a phentoc
+[42:50] time scale. So if we're to integrate
+[42:52] Newton's laws for the atoms, we have to
+[42:55] follow those vibrations. That means we
+[42:57] have to have a time step which is of the
+[42:59] order of a phentoc.
+[43:01] But the interesting stuff happens on
+[43:03] much larger time scales. Things like
+[43:05] protein folding happening on time scales
+[43:06] of milliseconds for example. So there's
+[43:09] our integration step. And the problem is
+[43:11] we need something between 10^ the 6 or
+[43:13] even 10^ the 15 sequential steps to
+[43:16] follow that dynamics. Remember at each
+[43:18] step we should compute the forces using
+[43:21] uh quantum physics.
+[43:23] Um and you may think well that's okay.
+[43:25] Computers are getting exponentially
+[43:26] faster. We just have to wait a few
+[43:28] weeks. But the problem is this is
+[43:29] intrinsically sequential and computers
+[43:31] haven't got faster for many years now.
+[43:33] If anything, they're getting slightly
+[43:34] slower. What they are doing is becoming
+[43:36] massively parallel. So the speed up we
+[43:38] see in computers through GPUs is through
+[43:40] massive parallelism. The clock speeds
+[43:42] haven't really changed for quite a
+[43:43] while. So this is intrinsically
+[43:45] sequential. So it's sort of a double
+[43:46] whammy. It's a really really hard
+[43:48] problem.
+[43:50] Um so can we use emulation to to get a
+[43:53] handle on this? And this is something
+[43:55] from um a couple of years ago now where
+[43:58] what we do is um we we make several
+[44:02] carefully controlled approximations. The
+[44:04] first is to take we take a protein very
+[44:06] large molecule and we look at individual
+[44:09] chunks of that protein. So we don't
+[44:11] model individual atoms. We group them
+[44:13] together into chunks and then we compute
+[44:15] the forces between the chunks. We use
+[44:17] density functional theory for that. So
+[44:19] the bigger the chunks, the fewer the
+[44:21] things we have to integrate. that as the
+[44:22] chunks get bigger, so the force the
+[44:26] relationship of the forces become more
+[44:27] complicated and there's a trade-off. So
+[44:29] the chunks are as big as we can make
+[44:31] them while still producing an accurate
+[44:33] machine learned emulator. So we we
+[44:35] compute forces for lots of different
+[44:36] configurations using DFT, train an
+[44:38] emulator and that emulator is now very
+[44:40] fast. So now we can run molecular
+[44:41] dynamics on these chunks of protein but
+[44:44] at each stage the update is just a call
+[44:48] to a trained emulator. So extremely
+[44:50] fast, no iteration needed. So here we
+[44:53] can do
+[44:55] um molecular dynamic simulation for
+[44:57] proteins up to about 10,000 atoms. So
+[44:59] that's an extraordinary advance. Look
+[45:01] back to that caffeine molecule and where
+[45:02] we were before and here we are doing
+[45:04] molecular dynamics at uh the scale of a
+[45:07] 10,000 atom protein. So again you can
+[45:09] see that sort of hierarchical process of
+[45:12] using data from one level to train the
+[45:14] emulator at the next level. And we can
+[45:16] take that even a step further and use
+[45:19] data from molecular dynamic simulations
+[45:21] combined with experimental data to avoid
+[45:24] having to do the dynamics alto together
+[45:25] and actually directly sample from the
+[45:27] equilibrium distribution. So this is
+[45:29] work that was published in science um a
+[45:31] few months ago and we're super happy
+[45:33] that the editors chose to put it on the
+[45:35] front cover which is which is always
+[45:36] nice.
+[45:38] So yes, we can by using the power of
+[45:40] emulators, we can extend this even to
+[45:42] the scale of uh of biological molecules.
+[45:46] Um I'm going to finish, I have to admit,
+[45:49] with just a shameless plug for a book.
+[45:51] This is a course on deep learning. So
+[45:53] I'd like you all to at least uh be aware
+[45:54] of this book. It's called Deep Learning.
+[45:56] Um published at the end of uh 2003. Um
+[45:59] it's free uh freely available online. If
+[46:02] you go to bishopbook.com um you can get
+[46:04] a see a get a high resolution um uh
+[46:08] digital version of the book. Um but also
+[46:11] if like me you quite like old-fashioned
+[46:13] physical books um then you might be
+[46:15] interested to know that this is actually
+[46:16] produced using a traditional binding
+[46:19] technique called stitch signatures. So
+[46:20] most books today are produced by gluing
+[46:22] the pages in on edge. They don't fold
+[46:24] flat and if you open them more than two
+[46:25] or three times the pages fall out. This
+[46:27] is good oldfashioned stitch signatures.
+[46:29] You print on a big sheet of paper and
+[46:31] fold it, fold it, fold it, trim it and
+[46:33] then stitched in with cord. So the book
+[46:35] lays flat and it should should last for
+[46:36] many many years. Um, also delighted I
+[46:40] just heard that for the second year
+[46:41] running this is Spring of Nature's
+[46:43] bestselling book. So Spring of Nature
+[46:45] and all their subsidiary publishing
+[46:47] houses publish together something like
+[46:49] 13,000 new titles every year. And for
+[46:53] two years running since this was
+[46:54] published, it's the overall number one
+[46:55] bestselling book. So really, really
+[46:57] delighted by that. Uh but actually the
+[46:59] thing that I'm most proud of about this
+[47:00] book is it was written with my son Hugh
+[47:03] who's also in the machine learning
+[47:04] field. So thank you all for your
+[47:06] attention. I think we have a little bit
+[47:08] of time. I'm happy to take questions.
+[47:09] Thank you.
+[47:18] >> Thank you. So
+[47:21] >> thank you so much
+[47:21] >> Chris for a fantastic and inspiring
+[47:24] talk. So we're going to take questions.
+[47:26] We're going to run the mic so that we
+[47:29] ensure that we capture that. So please
+[47:31] if you have a question raise your hand
+[47:33] and we'll go from there.
+[47:40] >> So previously you said that uh biology
+[47:42] is mostly sequence to structure to
+[47:44] function and you talked a lot about the
+[47:47] work you've been doing with protein
+[47:49] structure and molecule structure in
+[47:51] general. I was wondering uh what kind of
+[47:53] work have you been doing in molecule and
+[47:55] protein function especially?
+[47:58] >> So the main project that we work on is
+[48:00] called the biomolelecular emulator and
+[48:01] so the first the first major output of
+[48:04] that was the science paper that that you
+[48:06] you saw the front cover of and the focus
+[48:09] there is really addressing that that
+[48:10] third part. So we view sequence you know
+[48:13] we have this high throughput sequencing
+[48:14] that allows us to you know sequence your
+[48:16] entire DNA for $1,000 or whatever it is.
+[48:18] incredible technology. Uh structure is
+[48:21] sort of large static structure is sort
+[48:22] of largely solved. What's unsolved is
+[48:24] this is the dynamics of proteins. So our
+[48:26] focus is on the protein dynamics. And
+[48:29] we're really doing something quite
+[48:31] ambitious because we're trying to solve
+[48:33] what's sometimes called the sampling
+[48:34] problem. It's not specific to proteins.
+[48:36] It's it's just very generic of how you
+[48:38] sample from these complex distributions
+[48:40] efficiently. And the goal is to so one
+[48:43] way you can always do this is just to
+[48:44] run molecular dynamics forever. And you
+[48:47] know in the infinite time limit it will
+[48:49] sample the different think of an energy
+[48:51] well with you know an energy surface
+[48:53] with different wells. Um you will sample
+[48:55] them all in the correct proportion and
+[48:57] that's essentially what you want to
+[48:58] know. Um that's that's an infinitely
+[49:01] expensive route. We want to be able to
+[49:02] avoid the dynamics altogether and just
+[49:04] know what are the what are the sort of
+[49:06] the energy wells and what are the
+[49:08] relative proportions of the time the
+[49:10] protein will spend in those in those
+[49:12] wells. So what those those wells
+[49:14] correspond to is say a protein which um
+[49:16] I don't know maybe the spike protein on
+[49:18] the on the um um uh co 19 virus has an
+[49:22] open confirmation a closed confirmation
+[49:24] but if you if you look at down a
+[49:26] microscope all the atoms are wiggling
+[49:27] and jiggling and it's kind of wiggling
+[49:28] and jiggling in this sort of closed
+[49:29] thing and then bing springs open and
+[49:31] it'll wiggle and jiggle for a long time
+[49:32] in this open configuration. When it
+[49:35] springs from open to close it's crossed
+[49:36] one of those energy barriers. If those
+[49:38] barriers are high that's a very rare
+[49:40] event. So in molecular dynamics you
+[49:42] simulate for a very very very very long
+[49:44] time and then you'd see one of these
+[49:45] rare events. That's kind of crazy right?
+[49:47] And as you get as you get high energy
+[49:48] barriers it becomes extremely
+[49:50] inefficient. So we want to find ways to
+[49:52] just you know given the protein just
+[49:54] tell me just sample directly from that
+[49:56] equilibrium distribution. And what we
+[49:58] saw in that in that first paper is the
+[50:00] sort of the first light dawn really that
+[50:02] yes this looks like it could be
+[50:04] possible. What we've done so far is one
+[50:06] protein in vacuum. What we really need
+[50:08] to do now is proteins interacting with
+[50:10] each other, proteins in the presence of
+[50:11] water. Then it becomes, you know, we get
+[50:14] closer to clinical and biological
+[50:15] relevance then. But very exciting that
+[50:16] we can do one protein in isolation. So
+[50:19] yeah.
+[50:22] >> Uh thanks for a great talk. Um I was
+[50:25] wondering for emulators um we still have
+[50:27] to know free lunch theorem and um how
+[50:31] can you expect or not even guarantee but
+[50:33] expect that these emulators will apply
+[50:37] um I guess for problems like solving
+[50:40] like a 10 electron shorting equation.
+[50:43] How can an emulator that's only seen
+[50:45] like a two or three electron systems be
+[50:48] expected to solve these more complex
+[50:49] like completely intractable problems
+[50:51] that are you can't solve using a single
+[50:54] even a single time and then I guess the
+[50:57] second question is um for uh systems
+[51:00] like uh weather which was one of your
+[51:02] examples where I imagine data is already
+[51:06] um you already have a ton of data why
+[51:08] would you want to use emulators as
+[51:11] opposed to just training it on the data?
+[51:13] Right. So I think there are several
+[51:15] there was at least three questions in
+[51:16] there. So let me make several comments I
+[51:18] hope will address the question. The
+[51:19] first one about the no free lunch
+[51:20] theorem. Um you know you could have a a
+[51:23] model that that encodes as I mentioned
+[51:26] let's say rotational equivariance. You
+[51:28] bake it into the structure of the model.
+[51:30] Much simpler thing to do is just
+[51:32] replicate the data. So if you know this
+[51:33] molecule has a certain energy um it's
+[51:36] trivial to just rotate the molecule in
+[51:38] the computer. We just it's just simple
+[51:39] 3D geometry. And so let's have a hundred
+[51:41] copies of that molecule in different
+[51:42] orientations all labeled with the same
+[51:44] energy. So 100 times as much data that's
+[51:46] called data augmentation really really
+[51:47] simple to do and eventually ultimately
+[51:50] that and that means you can use much
+[51:51] more general architectures and you learn
+[51:53] the invariance. The downside you don't
+[51:55] learn it exactly if you bake it in it's
+[51:56] exactly true but really what the bitter
+[51:58] lesson is telling is at the end of the
+[51:59] day just more data and just learn these
+[52:01] things. Um I think the second question
+[52:03] you're asking there is about it was a
+[52:05] great question actually very insightful
+[52:07] question. So let me just explain how I
+[52:09] interpret that question then. So we
+[52:11] spent a ton of time and energy and
+[52:13] effort over three years generating high
+[52:14] accuracy quantum chemistry data in order
+[52:16] to learn the exchange correlation
+[52:18] functional in order that we can then run
+[52:20] DFT because DFT is still an iterative
+[52:21] process still has cubic scaling. It's
+[52:23] not a a single pass. The functional is a
+[52:25] is a is a fast emulator is embedded in
+[52:28] this and and then we might run DFT to
+[52:30] generate training data to learn a thing
+[52:31] that we call a force field that would
+[52:33] predict the properties of molecules very
+[52:34] fast. Why do we bother? Why don't we
+[52:36] just take that expensive quantum
+[52:37] chemistry data, forget DFT, just train a
+[52:40] fast emulator? That emulator would be
+[52:42] certainly be very fast. What we miss out
+[52:44] is effectively a way in which we've
+[52:46] incorporated a lot of inductive bias.
+[52:47] That machinery of density functional
+[52:50] theory has a lot of physics baked into
+[52:52] it. In particular, I glossed over all of
+[52:54] this and I did apologize to the experts
+[52:56] earlier, but that wave function for
+[52:57] instance has to be anti-ymmetric. Um
+[52:59] that that that's why atoms exist. It's
+[53:02] Pal's exclusion principle. The the
+[53:03] electrons can't occupy the same state.
+[53:05] they have to fill up different different
+[53:06] shells. That's really critical physics
+[53:08] to understanding the atom. In principle,
+[53:11] if we could if we could generate vast
+[53:13] amounts of quantum chemistry data with
+[53:15] high accuracy very cheaply, yeah, maybe
+[53:17] we could learn that stuff in the in the
+[53:19] in a sort of data augmentation sense.
+[53:21] But but in reality, the the power of DFT
+[53:24] is it encodes so much physics. You saw,
+[53:26] I think, in the diagram there, there's a
+[53:28] lot of physics that we can calculate
+[53:29] fairly straightforwardly. It's the
+[53:31] exchange correlation term that's that's
+[53:33] hard. But but but but you but to throw
+[53:35] away all of that physics is to give up
+[53:37] an enormous amount. So so that's why we
+[53:40] want to use DFT in that hierarchy. Um
+[53:43] and then I think you know part of it too
+[53:46] you're you're asking about
+[53:46] generalization
+[53:48] partly is it embeds a lot of physics but
+[53:51] also and and we're working out good ways
+[53:53] to test this but there's this beautiful
+[53:55] fact that the exchange correlation
+[53:57] function is universal. So in that in
+[53:59] that zoo, somebody invents one that's
+[54:00] good at crystals, somebody invents one
+[54:02] that's good at, you know, molecules or
+[54:04] whatever. Um, but here because it's
+[54:07] because we're learning a universal
+[54:09] functional, we hope that should help
+[54:10] with generalization and we do see
+[54:12] remarkable generalization to chemistry
+[54:14] problems outside the domain in which it
+[54:15] was tested and we hypothesized that in
+[54:17] part that may be due to the universality
+[54:20] of the exchange coination functional. So
+[54:22] I hope that in a roundabout way
+[54:24] addressed your questions but very
+[54:25] insightful question. Thank you.
+[54:27] >> Amazing. We'll take two more questions.
+[54:30] >> So I have a question related to the no
+[54:33] free lunch theorem. It seems to me that
+[54:36] here you have no free lunch and no free
+[54:39] dinner in a way because you I mean
+[54:43] typically in the no free lunch is kind
+[54:44] of a bias variance tradeoff with the
+[54:48] capacity of the model or the models that
+[54:49] you're considering but here you're
+[54:51] simulating data. So you're essentially
+[54:54] adding kind of a second
+[54:58] distribution over which you are uh
+[55:02] having a no free algorithm right and a
+[55:04] second bias variance trade-off. So I'm
+[55:08] curious about how that plays out in your
+[55:10] like fundamental trilmma if like
+[55:12] simulating data is better than actually
+[55:15] getting real world data and if at some
+[55:17] point you measure somehow like the sim
+[55:19] to real
+[55:22] bound between the simulated data and the
+[55:25] real world data essentially this happens
+[55:29] a lot in reinforcement learning you in
+[55:30] robotics for example.
+[55:33] >> Yeah. So I I um I mean
+[55:37] two comments I guess one is that the
+[55:38] experimental data will always be
+[55:39] fundamental at the end of the day that
+[55:41] we're not changing the scientific
+[55:42] method. It doesn't matter how brilliant
+[55:43] our theory is or how many nature paper
+[55:44] we get. If it doesn't agree with the
+[55:45] experiment we're wrong we have to re
+[55:47] rethink. So there's one role for
+[55:49] experiment. But also um what I've talked
+[55:52] about today is what I think is a is a is
+[55:54] a very substantial advance by many
+[55:56] orders of magnitude in our ability to do
+[55:58] computational science. But that doesn't
+[56:00] mean we're going to just throw away
+[56:01] experiments and and and so on. So uh so
+[56:04] the second role of experimental data is
+[56:06] is is um very much to complement um the
+[56:09] computational data. In fact in the case
+[56:11] of the um uh protein dynamics that I
+[56:14] showed you the science paper that's
+[56:16] actually trained on a lot of molecular
+[56:18] dynamics data but then actually
+[56:19] fine-tuned using experimental data for
+[56:21] X-ray defraction measurements. So
+[56:23] there's clearly a role there. So in
+[56:25] terms of the you know the no free dinner
+[56:26] theorem. I like the that's a good good
+[56:28] good terminology there. Um but you know
+[56:31] it it's still a fundamental cornerstone
+[56:34] of machine learning that we have to
+[56:35] combine um prior knowledge with um with
+[56:39] data and this is a very interesting way
+[56:42] I think of extracting that prior
+[56:44] knowledge in the form of data. So it
+[56:45] really I think takes on board the the
+[56:47] idea of the bidder lesson and the fact
+[56:49] that uh scaling the data is always a
+[56:51] very powerful thing to do but by
+[56:52] generating the data from the equations
+[56:55] then then we're effectively
+[56:56] incorporating that prior knowledge. So
+[56:58] I'm not sure if that really addressed
+[56:59] your your question there but um uh
+[57:02] >> amazing final question.
+[57:05] Hi. Um so about u cellular and genetic
+[57:08] therapeutics
+[57:10] um understanding of uh protein protein
+[57:13] interaction between um therapeutic trans
+[57:16] genes and host cellular machinery. It is
+[57:20] extremely crucial to have an idea about
+[57:22] this before we dive into invivo studies
+[57:25] for any kind of therapeutics. So do you
+[57:29] think um AIdriven biomolecular dynamics
+[57:32] could help the predicting of offtarget
+[57:37] interactions or any kind of stability
+[57:39] issues before one moves towards the
+[57:42] invivo studies of that particular
+[57:44] therapeutic?
+[57:45] >> Yeah, that's such a great question and
+[57:47] and of course the answer is I certainly
+[57:48] hope so. I think we've been surprised at
+[57:51] how far I mean we're really starting
+[57:52] from Shredding's equation and the idea
+[57:54] that we push this all the way to you
+[57:56] know the dynamics of a single protein
+[57:57] seems remarkable what you're talking
+[57:59] about with you know invivo studies and
+[58:01] the whole machinery of the cell this is
+[58:03] orders and orders of magnitude more
+[58:05] complex still so I don't imagine that in
+[58:07] my lifetime or you know the next hundred
+[58:09] years I don't know that we're going to
+[58:10] have a a first principle simulation of
+[58:12] an entire human cell that's derived
+[58:14] entirely from Shreddinger's equation for
+[58:16] example that that seems crazily out of
+[58:19] reach
+[58:19] But I do think we're approaching the
+[58:21] point where things like offtarget
+[58:23] interactions of drugs could be informed
+[58:27] through um molecular dynamic simulations
+[58:29] accelerated through the through the use
+[58:31] of emulators. And that would be very
+[58:32] exciting because of course in in drug
+[58:34] discovery a lot of drugs fail at the
+[58:36] clinical stage through toxicity through
+[58:37] through offtarget interactions. The more
+[58:40] we can do at the discovery phase to
+[58:41] eliminate those um the faster drug
+[58:44] discovery can be and the cheaper drug
+[58:45] discovery can be. So I am hopeful that
+[58:48] these techniques will have real clinical
+[58:50] relevance within the next uh two or
+[58:52] three years or so. But but but we'll
+[58:54] we'll we will not for a long time I
+[58:57] think be simulating anything as complex
+[58:59] as a human cell using using these
+[59:00] techniques. But nevertheless I think
+[59:02] they can make a very practical
+[59:03] contribution.
+[59:05] >> Amazing. One more big round of applause
+[59:06] for Chris Bishop.

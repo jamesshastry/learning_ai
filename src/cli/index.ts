@@ -29,6 +29,7 @@ import { planCommand } from './plan.js';
 import { scheduleCommand } from './schedule.js';
 import { translateCommand } from './translate.js';
 import { obsidianCommand } from './obsidian.js';
+import { auditCommand } from './audit.js';
 
 const program = new Command();
 
@@ -42,6 +43,7 @@ addCommand(program);
 statusCommand(program);
 refreshCommand(program);
 removeCommand(program);
+auditCommand(program);
 
 // Content processing
 processCommand(program);

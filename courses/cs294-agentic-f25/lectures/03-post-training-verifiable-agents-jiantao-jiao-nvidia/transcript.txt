@@ -1,0 +1,2934 @@
+[00:00] JIANTAO JIAO: Good
+afternoon, everyone.
+[00:02] Very excited to be
+here to be talking
+[00:04] about the post-training
+verifiable agents.
+[00:07] So the Agentic AI, of course,
+is a super exciting course.
+[00:11] I believe that you'll be able to
+learn a lot from lots of people.
+[00:16] First of all, that
+disclaimer that everything
+[00:18] I talk about here in the
+lecture or the views expressed
+[00:21] are solely those of the
+guests with me are not
+[00:27] representative of the company,
+including NVIDIA or UC Berkeley.
+[00:31] So we'll be focusing on
+post-training verifiable agents
+[00:35] which is a very important
+topic in building
+[00:37] highly reliable agent systems
+from the basic requirements
+[00:41] of building agentic models.
+[00:44] So how do the
+agentic models differ
+[00:48] from traditional
+large language models?
+[00:51] From the very early days
+when LLMs was first produced,
+[00:56] we use a technique
+called reinforcement
+[00:58] learning from human feedback.
+[00:59] At that time, the
+language model was really
+[01:02] trained to align really
+well with human preference.
+[01:05] For example, they
+interact with you.
+[01:08] They really understand
+what you are saying,
+[01:09] make you feel better.
+[01:12] But later, essentially
+all the frontier labs
+[01:15] and all the mobile
+vendors started
+[01:17] to add this agentic
+capabilities to their models.
+[01:20] And precisely for
+agentic model, the model
+[01:24] is really aligned with
+the environment feedbacks.
+[01:28] By environment, it actually
+means something very specific.
+[01:30] Later I will detail.
+[01:32] They are designed to
+provide interactions
+[01:34] to maximize verifiable rewards
+in addition to human preference.
+[01:38] So basically when
+you are actually
+[01:40] talking to those
+agentic language
+[01:42] models they are supposed
+to really understand
+[01:45] your intentions very well,
+because it's designed
+[01:48] to first maximize
+human preference,
+[01:50] but also, at the same
+time, it's designed
+[01:52] to help you accomplish tasks.
+[01:54] That's extremely critical.
+[01:56] And for evaluating the
+quality of task completion,
+[01:59] we usually use
+something different
+[02:01] from generic reward models,
+because for certain tasks,
+[02:06] maybe there will be a
+few correct answers,
+[02:09] and there will be
+really wrong answers.
+[02:11] You absolutely cannot do that.
+[02:13] And usually for
+human preference,
+[02:15] the situation is
+slightly different.
+[02:18] So a brief recap
+of earlier models
+[02:20] that were trained to
+be great chatbots.
+[02:23] So what we trained
+usually is the following.
+[02:25] Say you collect lots of
+human assistant chats.
+[02:29] Human say something,
+assistant says something.
+[02:31] Then later, you would like to
+rank the assistant responses
+[02:34] based on human preference.
+[02:36] Maybe you do crowdsourcing,
+ask lots of people,
+[02:41] and then you collect
+this human preference.
+[02:44] Then you try to figure out
+reward modeling technique
+[02:47] to come up with a reward
+model, basically based
+[02:50] on the human assistant
+interactions trying
+[02:52] to grade whether a certain
+response from the AI assistant
+[02:56] is good or not.
+[02:57] Once you get really high
+quality reward model,
+[03:00] we like to start training
+the language model
+[03:02] so that it can actually
+behave better in terms
+[03:05] of maximizing human preference.
+[03:07] There are many algorithms
+you can use here.
+[03:09] So here I also include the SFT.
+[03:11] Sometimes people
+say SFT, which is
+[03:13] the abbreviation for
+supervised fine tuning,
+[03:16] is mostly used for strictly
+mimicking the expert behavior.
+[03:20] I include here
+because SFT actually
+[03:22] is also being used
+a lot even when
+[03:24] you are given a reward model.
+[03:26] So the intuition is that
+I can use the reward
+[03:29] model to grade multiple
+different responses
+[03:32] from the assistant.
+[03:33] Then basically, I can only
+choose those assistant responses
+[03:38] that rank very high
+by the reward model
+[03:40] then conduct super fine
+tuning on those responses.
+[03:43] I can also use
+other reinforcement
+[03:45] learning algorithms
+like PPO and TRPO,
+[03:47] any algorithm you
+come up with or you
+[03:50] have heard of finally
+to produce a model
+[03:52] to maximize human preference.
+[03:54] Hopefully by talking
+to that model,
+[03:56] you feel that it's
+really engaging.
+[03:57] Model really understands you.
+[03:59] You feel very happy about this.
+[04:01] Feel free to also stop me
+when you have questions.
+[04:05] What more is necessary?
+[04:07] So it turns out one of the
+key applications of LLMs
+[04:10] is actually agency tasks.
+[04:12] Conversations is not verifiable.
+[04:14] They are also usually no
+clear single correct answer.
+[04:17] They use a really
+sophisticated reward model
+[04:20] to model preference and records
+interaction with the user only.
+[04:24] But in terms of enterprise
+applications of LLMs, many tasks
+[04:30] they actually require
+the deep interaction
+[04:33] between the human,
+sometimes multiple people,
+[04:36] multiple assistants,
+and many other entities,
+[04:39] including the environments,
+specific code repo,
+[04:43] specific software system,
+and many different tools.
+[04:46] So basically, you
+need to make sure
+[04:49] that LLM is able to
+understand the feedback given
+[04:51] by many different
+entities, understand
+[04:53] the full state of
+this environment,
+[04:56] and also make sure
+that LLM is performing
+[04:58] a certain task it's
+able to really produce
+[05:02] the correct answer.
+[05:03] And there is a
+very clear verifier
+[05:05] demonstrating whether the
+answer is correct or not.
+[05:07] And you should really not
+produce the wrong answers,
+[05:10] because that's going to make
+the whole system totally crash.
+[05:14] So sometimes people
+say that you can
+[05:16] use other deterministic
+system to help fix that.
+[05:18] But one thing
+people have found is
+[05:20] that if the LLM is
+not strong enough
+[05:22] in producing essentially
+right answers,
+[05:25] it's very, very hard to
+build a reliable system,
+[05:28] even after you do lots
+of software engineering
+[05:30] on top of this.
+[05:31] So precisely for
+today's models, they
+[05:34] are trained to be great agents.
+[05:37] The user no longer asks the
+question saying, how are you?
+[05:40] You start very
+engaging conversations.
+[05:42] Your user has a very clear
+target, sometimes even vague,
+[05:45] but there's something
+user wants to accomplish.
+[05:47] That's able to achieve this
+is having to book flights.
+[05:50] I want to talk to
+my server assistant.
+[05:52] Then LLM needs to be
+able to understand
+[05:54] this and the precisely execute.
+[05:58] So there are many different
+ways to evaluate the outputs
+[06:01] of the LLM and the system.
+[06:03] There are different
+rubrics defined by people.
+[06:07] You can also write down
+different ground truth.
+[06:09] You have a very clear recording
+of the environmental states.
+[06:13] And you also conduct
+lots of unit tests
+[06:15] to check the output of LLMs.
+[06:18] By doing this, you get
+a very good signals.
+[06:20] You understand whether the
+output of LLM in this case
+[06:22] is right or not.
+[06:24] And then you start
+to use lots of
+[06:25] other post-training algorithms.
+[06:27] Again, super fine
+tuning, PPO, GRPO
+[06:32] to actually improve the model.
+[06:34] So eventually, the
+goal is that you
+[06:36] want to construct a very strong
+agentic model to maximize
+[06:39] correctness by interacting
+with the sandboxes with very
+[06:44] complex tools, I
+will try to make
+[06:46] everything very
+precise later when
+[06:48] we go into the details of this.
+[06:51] OK, but what is needed to
+train the verifiable agent
+[06:55] models in particular, it
+is a very important topic
+[06:58] lots of people in the
+community are focusing on.
+[07:01] I would say that there
+are three core steps
+[07:04] and each one is actually
+very challenging.
+[07:06] These days it really
+requires the collaboration
+[07:09] of many people across
+industry, across academia
+[07:12] to contribute to
+this, so that we'll
+[07:14] be able to get a very,
+very strong agency language
+[07:16] models in the future.
+[07:18] So the first step I say to get
+good verifiable training data
+[07:22] to train the agents without
+high quality training data,
+[07:25] we simply cannot produce very
+high quality agent items.
+[07:29] I'll be talking
+about the challenges
+[07:31] behind getting very high
+quality training data.
+[07:34] The step two is
+actually evaluation.
+[07:37] You collect the data.
+[07:38] You figure out your
+training approach.
+[07:41] You train the
+model, but then you
+[07:43] need to really understand
+whether it's good or not.
+[07:45] So generally, there is
+a very dangerous trend
+[07:48] of really entering
+into this illusion
+[07:52] that we feel we
+collect the data.
+[07:55] The data is
+comprehensive enough.
+[07:57] Then we only test the
+things that are really
+[07:59] aligned with our data.
+[08:00] It really appears that
+everything is working really
+[08:02] well.
+[08:03] Then suddenly we test
+everything in the wild.
+[08:05] Things start to break.
+[08:06] So how do we define
+a verifiable agents?
+[08:09] We are talking about
+some concrete examples.
+[08:13] Maybe I'll try to make
+it even more concrete.
+[08:15] For example, one thing could
+be that you're solving a math
+[08:19] problem, Then the computer also
+has access to certain tools,
+[08:25] for example, Python coding tool.
+[08:27] Then after accessing the coding
+tool, writing lots of codes,
+[08:31] understanding the
+problem, finally, the LLM
+[08:33] is supposed to
+produce an answer.
+[08:35] For example, the final answer
+to the math problem is number 2.
+[08:39] Now, I want to make sure it's
+precisely the right answer.
+[08:44] So it's just one example.
+[08:46] The other examples in
+software engineering you're
+[08:48] able to produce a code a script.
+[08:51] And then there are
+many different ways
+[08:54] to check the
+validity of the code.
+[08:56] For example, there are so
+many different unit tests
+[08:58] I can write that you need to be
+able to pass all of these tests
+[09:01] to make sure that
+finally it's correct.
+[09:04] It turns out it is really
+complicated question.
+[09:06] So there are so many different
+verifiers you can build.
+[09:10] And the current
+challenge everybody
+[09:12] is facing in the community
+is that we haven't
+[09:14] got enough strong verifiers
+to really make sure
+[09:18] that we capture all the corner
+cases of the intelligence.
+[09:23] So the third step is
+actually also about training.
+[09:27] So this is also a
+very complex topics.
+[09:31] Till today many people community
+are trying very hard to research
+[09:34] on this, which is that I
+got very good training data.
+[09:37] I also figured out how
+to evaluate my agents.
+[09:40] But what exactly is the best way
+of feeding the data to the model
+[09:45] so that the model's
+intelligence, in fact,
+[09:47] actually improves?
+[09:49] And in some sense, when
+we think about building
+[09:53] the verifiable agents, we
+really think about this
+[09:55] essentially as the
+training of human being.
+[09:58] So when you are training like
+an engineer in a company, what
+[10:02] usually you do is that you
+first give some instructions.
+[10:05] You say, well, maybe
+you are supposed
+[10:07] to write code in
+this way, or you
+[10:09] are supposed to
+operate the software
+[10:10] system in a certain way.
+[10:12] Then the person started doing
+that, started writing code,
+[10:15] started interacting with
+the software system,
+[10:17] submitting tickets,
+things like that.
+[10:20] Then sometimes they
+will make mistakes.
+[10:22] They will receive some feedback.
+[10:24] And the key challenge
+is that for human, you
+[10:28] can just tell the
+human, well, here's
+[10:30] the feedback I give to you.
+[10:31] What about next
+time you do better?
+[10:33] But for the machine,
+the hardest part
+[10:36] is to transform this
+natural human interaction
+[10:39] into something that's
+implementable by an algorithm.
+[10:41] So the algorithm needs to make
+sure once the LLM first attempt
+[10:46] something but it made
+a mistake, I give LLM
+[10:49] a very detailed feedback.
+[10:50] How do I guarantee the
+next time that LLM also
+[10:53] attempts the same question,
+the quality of this time
+[10:56] actually improves?
+[10:57] If I'm not able to achieve
+this, then basically I'm
+[11:01] not able to replicate
+this natural feedback loop
+[11:04] of human learning,
+then we're going
+[11:06] to really hit a plateau
+of the final intelligence
+[11:08] of the system.
+[11:10] So that's why the step three
+is also extremely critical,
+[11:12] and we'll also be spending a
+lot of time talking about step
+[11:15] three, including some approaches
+people have taken in the past.
+[11:18] But I really want to
+emphasize that all
+[11:21] the three steps they require
+very extensive research
+[11:24] at this point.
+[11:25] So it's actually a fascinating
+opportunity for everyone
+[11:27] to get into the
+field at this point.
+[11:30] OK, talking about
+the first thing,
+[11:32] getting good training data.
+[11:34] So agentic models maximize
+verifiable rewards.
+[11:39] What exactly would be the core
+components of training data
+[11:43] that we specify to really make
+sure that they are actually
+[11:48] of high quality?
+[11:49] So I first want to emphasize
+three different things.
+[11:52] They are kind of very related.
+[11:54] In certain literature maybe
+they are combined together,
+[11:57] but I think that things
+are slightly different.
+[12:00] So I would emphasize
+three different aspects
+[12:04] of the data sets.
+[12:05] The first is called
+the environment.
+[12:07] So how do I think about the
+environment for the agent?
+[12:10] So say you build a coding agent.
+[12:15] So basically the agent
+takes in your instructions
+[12:18] trying to generate a code in a
+way or formulates the code repo.
+[12:22] Maybe the code repo
+has some issues.
+[12:24] There are certain bugs.
+[12:25] You're supposed to fix that.
+[12:26] Then the environment
+basically encodes
+[12:28] the whole state of this repo.
+[12:31] For example, the
+prefix and suffix
+[12:34] of the code scripts and lots
+of files we have loaded.
+[12:38] Lots of downstream tasks
+we need to deal with.
+[12:42] They describe the states
+of the environment,
+[12:44] and also it includes
+lots of system
+[12:47] prompts people have already
+set up for different parts
+[12:50] to work together.
+[12:51] The second part I want
+to talk about is tools.
+[12:54] So basically, the
+agentic LLMs they
+[12:58] are trained to generate tokens
+that are consumed by software
+[13:00] tools to provide additional
+relative information
+[13:03] to the model.
+[13:04] So precisely, you should
+think of this as additional--
+[13:08] in software engineering
+language, additional APIs
+[13:11] provided to the system.
+[13:12] For example, you call the
+system while the user asks you
+[13:16] a question, what's
+today's weather?
+[13:19] LLM is not supposed
+to know that,
+[13:21] but LLM really knows that it
+has access to certain APIs
+[13:24] that's able to access
+to this weather.
+[13:26] The LLM is supposed to be
+producing the exact API
+[13:29] call to the external system.
+[13:32] Then external system
+assistant should
+[13:34] be able to feedback the
+concrete information regarding
+[13:37] today's weather.
+[13:37] The LLM should be able to
+internalize that, and then
+[13:41] finally present the
+final answer to the user.
+[13:44] So the APIs could provide
+additional information,
+[13:48] and the APIs could actually
+also help change the environment
+[13:51] states.
+[13:51] So basically, you're
+working in environments
+[13:54] the state is really complex.
+[13:55] Has lots of different
+moving parts.
+[13:57] Then maybe you are
+given certain tools
+[13:59] to help you modify the
+states, because maybe in order
+[14:02] to actually accomplish
+certain task,
+[14:04] there will be certain states
+that needs to be changed.
+[14:06] Maybe even the user
+doesn't know that.
+[14:08] But as a very strong agentic
+LLM the system is supposed
+[14:12] to know that user gives
+a task, then the agent
+[14:15] is supposed to be able
+to decompose the task,
+[14:18] figure out what exactly are
+the right tools to call,
+[14:20] change the environment
+states if necessary,
+[14:22] and finally produce the answer.
+[14:25] And the point story is really
+about checking the answer.
+[14:28] So basically model are
+trained to generate tokens.
+[14:31] It produced the answer.
+[14:33] But how do I even know if
+the answer is correct or not?
+[14:35] We need to build the
+so-called verifiers.
+[14:38] The verifiers will tell
+you whether you have really
+[14:40] succeeded in
+accomplishing the task.
+[14:43] In some sense, it's
+also quite challenging
+[14:45] because there are lots of
+intricate issues related
+[14:48] to evaluation.
+[14:50] Maybe you really produce
+the right answer,
+[14:53] but it took you so many steps
+and consumed so many tokens.
+[14:58] Maybe LLM is actually
+also supposed
+[15:00] to penalize you due to this.
+[15:02] So even for that, turns
+out it's really very
+[15:05] good to think about verifiers
+not as a single number checking
+[15:08] it is correct or not.
+[15:10] Think of this
+really as a vector.
+[15:13] Talking about evaluating
+the quality of the model
+[15:16] from many different
+perspectives.
+[15:18] It can be unit tests for
+code we just talked about.
+[15:21] Math checker for proofs
+or for web tasks.
+[15:23] You can also check whether
+you have really accomplished
+[15:26] certain tasks on your browser.
+[15:28] So those are the three aspects.
+[15:31] Then I want to talk about
+some of the challenges
+[15:33] in preparing the data.
+[15:35] So the first step is to get
+good training data in training
+[15:40] this very strong agentic LLMs.
+[15:42] And in order to really make
+sure it works in the wild,
+[15:46] it appears that you need to
+really follow a principle
+[15:49] to say I need to understand
+many different environments.
+[15:52] I need to have a system
+that's able to use
+[15:54] many different kinds of tools.
+[15:56] I also need to make sure
+that system does well
+[15:59] under so many
+different verifiers.
+[16:01] That actually is
+very interesting,
+[16:04] and it's also the
+lessons learned
+[16:05] by the whole community
+over the past two years,
+[16:10] showing that one definitely
+shouldn't be tricked
+[16:15] to believe that the whole system
+is working very well when you're
+[16:18] actually only working with very
+few environments, very limited
+[16:22] verification, because the system
+would indeed break once you go
+[16:26] beyond the scope of your data.
+[16:28] And the key challenge here
+is to really make sure
+[16:31] that you've got enough coverage.
+[16:33] So here I want to give you
+some more examples talking
+[16:36] about what we have been
+discussing on a high level.
+[16:42] Say, you want to train a
+very strong agentic system.
+[16:45] And then there are so
+many possible combinations
+[16:49] of environments,
+tools, and verifiers.
+[16:52] For example, in environments
+there can be math.
+[16:56] For math environments
+you are given a problem,
+[17:01] then you interact with the user,
+and LLM provides the answer.
+[17:04] Then you could have a math
+verifiers, proof checker.
+[17:10] And then in the
+environments, you actually
+[17:12] could also have access to
+different coding tools.
+[17:14] That's why these days
+sometimes when you use ChatGPT,
+[17:17] you see that you
+ask a math question,
+[17:19] ChatGPT actually
+would call Python
+[17:23] try to write some scripts to
+really verify that the answer is
+[17:25] actually correct.
+[17:27] Or you are working with
+enterprise software.
+[17:30] For example, here I talk
+about the sales assistant.
+[17:32] Then it could access
+different software API tools.
+[17:35] Maybe a salesperson wants
+to ask todays weather.
+[17:38] I want to get news.
+[17:40] Maybe I also want to access a
+database built in my system.
+[17:43] Maybe I want to understand
+who actually are my customers?
+[17:47] What exactly is the
+progress with customers?
+[17:51] And maybe I want to really write
+really a precise query language
+[17:56] to query the database
+and also to make sure
+[17:59] that I'm able to internalize
+the outputs from the database.
+[18:03] So many different types
+of environments, tools,
+[18:06] and verifiers.
+[18:07] It's very important we
+achieve very good coverage.
+[18:11] And it's always an
+interesting challenge
+[18:13] to make sure that
+we indeed covered
+[18:15] all the important
+aspects we care about.
+[18:18] So that's why it's also
+super exciting time
+[18:20] to do research because always we
+got something more to work on.
+[18:27] One thing I want to
+really emphasize,
+[18:30] which is a very rare quality.
+[18:33] And these days when we look
+at open source community,
+[18:36] it's actually one thing that's
+really lacking at this point.
+[18:42] So generally one
+thing one has observed
+[18:46] is that it's very easy
+to think about one
+[18:50] rule to verify a certain
+answer and just put it down
+[18:53] as a single verifier.
+[18:55] But the thesis that has appeared
+again and again in the community
+[18:59] was that whenever we thought we
+have built a very high quality
+[19:03] verifier in checking
+the answer of the LLMs,
+[19:06] turns out we have missed
+some corner cases.
+[19:08] So here I'm just showing
+you something very basic,
+[19:11] which has already been
+covered by the community,
+[19:13] but there are way
+more complex examples
+[19:15] showing that it's actually
+quite difficult, where,
+[19:18] for example, let's say
+the user has a question.
+[19:21] I want to ask how much change
+would I get back if I buy
+[19:24] a drink for $0.50
+and give a dollar.
+[19:27] The LLM could give
+multiple different answers.
+[19:30] So basically it can
+give 1/2, 2 over 4.
+[19:34] Then in terms of the
+verifier quality,
+[19:36] you are really supposed
+to say that all of these
+[19:38] are correct because they
+actually indeed tell you what's
+[19:43] the right amount of change.
+[19:45] However, the question
+could actually also include
+[19:49] something more stringent.
+[19:51] For example, in addition
+to just asking you
+[19:54] how much change
+would I get back,
+[19:56] I have an additional request.
+[19:57] Please just give me
+the simplest form.
+[20:00] So once I have that, the
+verifier also is supposed to be
+[20:03] different because
+supposed to be 1/2.
+[20:06] Then in these cases
+in particular,
+[20:10] it's very easy to
+make mistakes when you
+[20:12] are constructing the verifiers.
+[20:14] And those cases are usually
+very costly because generally,
+[20:18] these days LLMs are
+already quite strong.
+[20:20] You'll give LLM a
+very simple question,
+[20:22] it will be able to answer it.
+[20:24] And only in those
+challenging cases
+[20:27] would they sometimes
+make a mistake.
+[20:29] But if you verify
+it's also wrong,
+[20:31] didn't capture the
+nuance in the question,
+[20:35] you absolutely cannot further
+improve the quality of the LLM.
+[20:38] So that's actually
+one thing we really
+[20:40] want to emphasize which is false
+positive, false negative, which
+[20:46] is better or worse--
+[20:48] more significant.
+[20:50] And actually, in
+our experiences,
+[20:52] I would say that
+it's very important
+[20:55] to minimize both types of
+errors, because, of course,
+[21:01] it's also because in
+different applications
+[21:05] you assign different weights
+to different types of errors.
+[21:08] But in reality,
+you can always find
+[21:11] the interesting
+applications where
+[21:14] a particular type of error,
+either false positive or false
+[21:17] negative, could produce
+catastrophic results.
+[21:21] So you really want to make sure
+that doesn't really happen.
+[21:24] You want to conduct minimal
+software engineering to finally
+[21:27] fix the outputs of the LLMs.
+[21:30] So I'm just showing this as an
+example trying to convince you
+[21:33] it's actually quite challenging
+to write very good verifiers,
+[21:36] because there are
+lots of nuances
+[21:38] in evaluating the final output.
+[21:42] OK.
+[21:44] So then we talk
+about the first part,
+[21:46] which is how to get a very high
+quality training data in order
+[21:50] to train a very, very
+good agentic LLMs.
+[21:54] Now then I'll be talking about
+the second components, which is
+[21:58] getting good evaluation data.
+[22:00] So it's kind of connected
+to training data.
+[22:04] But in reality we focus on this.
+[22:06] We do try to view this
+from different perspective
+[22:10] in some sense, even trying to
+tackle certain aspects that
+[22:14] are not really being
+paid attention to
+[22:16] in training, because the
+intuition is that we really
+[22:20] want the training
+to be generalizable.
+[22:22] So basically, in
+collecting training data,
+[22:25] there's absolutely no
+way we have collected
+[22:28] all the data in the world.
+[22:29] For example, just to think about
+the amount of data human being
+[22:33] would produce when we are
+interacting with internet,
+[22:37] when we are interacting
+with a browser,
+[22:40] or when we are doing math
+proofs, or when engineers code,
+[22:44] that's basically unlimited.
+[22:46] There absolutely is no way
+we just cover all of them.
+[22:49] So the whole point
+is that you want
+[22:52] to build a very good
+pipeline to make sure
+[22:55] that once you achieve solid
+coverage of training data,
+[22:58] it's supposed to generalize to
+many environments you haven't
+[23:01] really seen, because
+there's absolutely
+[23:03] no way you see all of these
+different environments.
+[23:07] That's actually one task
+that this good evaluations
+[23:11] is supposed to capture.
+[23:12] For example, here I'm just
+listing very few targets
+[23:18] of a good agency model.
+[23:20] Later I'll be talking about
+some existing evaluation
+[23:22] systems people have already
+built to capture those targets.
+[23:26] For example, one thing,
+I want agents to work
+[23:29] with many different tools.
+[23:31] It's so natural.
+[23:32] If the agent can only work
+with a few different tools.
+[23:34] I give a new one.
+[23:35] Maybe the user
+modifies the tool,
+[23:36] then the system just breaks.
+[23:38] We really cannot tolerate that.
+[23:40] It's also expected to work
+for many different use cases.
+[23:42] It's also very natural because
+maybe the user today also comes
+[23:47] up with a different use case.
+[23:48] You also do not want
+the system to break.
+[23:50] It operates with
+software system 1,
+[23:53] but there's software system
+2 with slightly modified API.
+[23:56] You want this to also
+continue to work.
+[23:58] And another core
+aspect, in particular,
+[24:02] in the human
+interactions I think
+[24:04] is also being surfaced
+again and again
+[24:06] is that agents are expected to
+work under vaguely specified
+[24:09] instructions.
+[24:10] So in the very early days of
+agentic systems when people
+[24:14] are designing, evaluation
+it's always like the user
+[24:17] will have a very clear target.
+[24:19] The user will say,
+please conduct this.
+[24:22] Then you see the LLM
+behave very intelligently.
+[24:25] It's really to be able
+to decompose the problem,
+[24:28] execute the task, calling
+the APIs in the right way.
+[24:31] But later in reality, people
+really found in the wild
+[24:35] when people started to
+interact with those agents,
+[24:38] they have absolutely no
+idea what they want to do.
+[24:41] So basically, asking
+random questions,
+[24:44] they are actually
+hoping the agent
+[24:46] who tell them what
+they should do in order
+[24:48] to accomplish this task.
+[24:50] So in some sense, it
+really means that you
+[24:52] need a very smart system.
+[24:53] The system should be able to
+understand human intentions
+[24:56] by proactively
+talking to people,
+[24:58] but also, at the same time,
+produce very precisely
+[25:02] formatted outputs so
+that they can actually
+[25:05] interact with very rigidly
+formatted software systems.
+[25:10] So number four
+agents are expected
+[25:13] to work under many
+different software systems.
+[25:15] For example you use
+cursor in programming.
+[25:18] I built a system for cursor.
+[25:20] Works very well.
+[25:21] Suddenly you change
+to another system.
+[25:23] I use exact same LLM.
+[25:25] Completely breaks.
+[25:27] It's definitely not ideal.
+[25:29] And if that really
+happens, that also brings
+[25:31] people to question the
+quality and the intelligence
+[25:34] of your large language
+model, because maybe the LLM
+[25:38] is just simply
+isn't smart enough
+[25:39] to understand those changes.
+[25:41] This generally will
+be very problematic.
+[25:44] The fifth one is very generic.
+[25:46] I call here expected
+to be robust.
+[25:48] It's really because there are
+so many things could actually
+[25:51] go wrong in
+interaction with humans
+[25:54] and with software systems.
+[25:55] Human beings may not
+really know what they want,
+[25:58] and the software system could
+also sometimes produce issues.
+[26:01] You want to make sure
+that the LLM really
+[26:04] behaves as a really smart
+person just like high quality
+[26:10] engineers who'll be able to
+debug all the different issues
+[26:14] that emerge in our daily life.
+[26:17] So the slides will also
+be made available online.
+[26:21] Here I just want to give you
+some more concrete examples
+[26:23] of what people have
+already done in the past.
+[26:26] So those benchmarks,
+they actually they do map
+[26:32] to the specific requirements.
+[26:34] We have been talking about here.
+[26:35] For example, one tool is
+about the different tools
+[26:39] and different use cases.
+[26:42] So on the left, I'm showing
+the shelf benchmarks
+[26:45] which actually cover
+many different use
+[26:46] cases, many different tools.
+[26:48] And there's also number four on
+the different server systems.
+[26:53] So here I'm talking about
+different agent harnesses which
+[26:57] have been also
+described in detail.
+[26:59] And number three,
+five here is focusing
+[27:01] on unit test
+evaluations checking
+[27:04] robustness of the outputs.
+[27:08] OK, so maybe I'll
+start from the left.
+[27:10] So in the past couple
+of years, the community
+[27:15] has developed some really
+significant benchmarks trying
+[27:20] to push the intelligence
+LLMs higher and higher,
+[27:24] the benchmarks are
+getting harder and harder.
+[27:26] Generally, people have
+achieved a tremendous progress.
+[27:30] And indeed, for our
+observations, certain tasks that
+[27:34] in the past were believed
+to be very hard for LLMs,
+[27:37] these days they can
+actually solve them.
+[27:39] And it turns out they really
+produce a very significant
+[27:42] productivity gain.
+[27:43] Here I'm talking about
+a couple of them.
+[27:45] For example, a
+SWEBench is really
+[27:49] challenging the LLMs to
+really solve this very, very
+[27:53] sophisticated GitHub issues.
+[27:55] Many times it really needs to
+involve so many different tools
+[27:58] to solve these issues.
+[27:59] And also through solving
+SWEBench also made
+[28:02] people understand
+that you're actually
+[28:04] supposed to be interacting
+with different harnesses.
+[28:07] I want to really emphasize
+this because there
+[28:10] is a very complex GitHub issue
+you need to solve, but to solve
+[28:14] it, many people
+actually operating
+[28:16] in different environments.
+[28:18] For example, in
+one environments,
+[28:19] maybe you have a function
+called openThisFile.
+[28:22] You are supposed to just call
+this function to open the file.
+[28:25] Maybe in another
+environment you do.
+[28:28] You do not have this function.
+[28:29] You have some other
+command line tools
+[28:31] you call to actually
+accomplish the same task.
+[28:34] So the whole point
+is that in order
+[28:36] to check your capability
+in solving SWEBench,
+[28:40] you're actually not
+supposed to be only sticking
+[28:42] to a particular harness.
+[28:44] You're supposed to be trying
+so many different ones showing
+[28:47] that for this particular
+task, maybe when I give you
+[28:50] this set of different tools,
+another set of different tools,
+[28:53] slightly different
+formulas or tools,
+[28:55] are you able to solve
+it in all circumstances?
+[28:58] If you can, it really means that
+your intelligence has already
+[29:02] achieved a certain threshold.
+[29:04] That's actually an
+extremely important point.
+[29:07] There also are different other
+benchmarks like TauBench, BFCL,
+[29:11] also from Berkeley,
+ComplexFunctionBench covering
+[29:14] a very wide variety of different
+tools, different application
+[29:17] scenarios, just to make
+sure that you do not overfit
+[29:20] to a particular application.
+[29:22] And there are also different
+unit test evaluations.
+[29:26] For example, those
+actually would
+[29:29] be the focus of many community
+members for a long time ago
+[29:33] saying that I want to
+check the structured output
+[29:37] adherence, which means
+that maybe in many cases
+[29:40] I want you to produce
+a JSON output.
+[29:43] I really want to make sure it
+is really exactly right JSON.
+[29:46] So I want to make
+sure you do not really
+[29:48] need me to later write a very
+complex software engineering
+[29:52] code to correct the
+mistakes produced by LLMs.
+[29:55] There has been lots of
+attempts in the past
+[29:57] to produce such software
+engineering tools somehow
+[30:00] to reduce the burden on LLMs.
+[30:03] But later, essentially
+what everybody observed
+[30:06] is that if the LLM itself
+is not intelligent enough,
+[30:10] it's not able to produce
+very high quality JSON
+[30:13] or structured outputs,
+it becomes essentially
+[30:15] impossible for anyone
+to fix the issues later,
+[30:19] because lots of
+issues really involve
+[30:21] very nuanced understanding
+of the system.
+[30:23] And it really requires a
+system with very high level
+[30:26] intelligence.
+[30:27] So basically you cannot easily
+fix it using very simple rules.
+[30:31] So one point to summarize
+what we talk about, which
+[30:36] is a holistic environment.
+[30:37] We want to make sure we check
+all kinds of capabilities
+[30:40] of LLMs, humanity's last exam,
+general scientific knowledge,
+[30:46] AIME in math,
+SWEBench in coding.
+[30:49] It's supposed to be combined
+with different harnesses.
+[30:52] And I want to make
+sure that we really
+[30:55] create a super strong, super
+intelligent model that's
+[30:59] able to solve all of these tasks
+under all kinds of combinations
+[31:02] of evaluations to convince
+ourselves that indeed we
+[31:07] have made progress in terms of
+enhancement of intelligence.
+[31:10] So keeping the definition
+of intelligence holistic
+[31:13] is extremely important,
+because these days we
+[31:17] are trying to utilize
+the systems to increase
+[31:19] our productivity.
+[31:21] And one thing has come
+up again and again is
+[31:24] that the system we are dealing
+with in practice as a scientist,
+[31:30] as an engineer, as a researcher,
+it's just so complicated.
+[31:33] So in order to make sure the
+system can actually help us,
+[31:38] we want to make sure
+it is smart enough.
+[31:42] So to continue what
+we talked about,
+[31:46] good evaluations need to
+count for all of these things.
+[31:49] Evaluate how many different
+tasks and verifiers,
+[31:52] many different ways
+of letting the agent
+[31:53] explore in a benchmark
+sandbox by seeing
+[31:57] how the accuracy changes as
+you swap out the harnesses.
+[32:00] You make sure that
+if you see sometimes
+[32:03] a very significant
+performance drop
+[32:05] maybe means that you did
+something wrong in training.
+[32:08] Then you need to figure out new
+ways of training to fix this.
+[32:11] You also need to deal
+with many different tools.
+[32:13] How to use different tools
+in different action spaces?
+[32:17] Ideally, you really
+stick to the same model
+[32:19] so that the model needs to
+itself figure out what to do.
+[32:21] So in summary, evaluation
+is extremely important.
+[32:25] Lots of people here
+are also working
+[32:27] on very significant
+topics in evaluation.
+[32:31] It is definitely
+something we need
+[32:33] the help from the
+whole community on,
+[32:37] because only by collectively
+working on this can
+[32:41] we really understand the
+limitations of existing
+[32:44] agentic system
+and make progress.
+[32:47] So it really needs to be
+holistic and good measure.
+[32:50] One last thing I
+want to talk about
+[32:52] before we go into
+the training aspects
+[32:55] is actually also
+about maybe approaches
+[32:59] to combine different tasks
+and harnesses to evaluate.
+[33:03] So basically, say,
+you have already
+[33:06] come up with lots of
+different evaluations.
+[33:09] For example, checking
+the quality of math
+[33:12] to quality of codes, swapping
+harnesses, making sure things
+[33:15] are actually good.
+[33:17] Well, then you saw
+some good numbers.
+[33:20] So are you still really
+sure that you didn't really
+[33:23] overfit all these benchmarks?
+[33:24] Because maybe in this process of
+iterating on your post-training,
+[33:29] you have collected some data
+which is really similar to some
+[33:33] of the data in your evaluation,
+or in the whole community maybe
+[33:38] certain models have
+already been contaminated.
+[33:40] Maybe certain evaluations
+should no longer really work.
+[33:43] Are you really sure
+it's not happening?
+[33:45] When you see a high number
+on a certain benchmark,
+[33:47] say on SWEBench, are you really
+sure your LLM is actually
+[33:50] very strong?
+[33:52] So I would like to
+emphasize that there's also
+[33:55] a very important community
+effort to continuously trying
+[33:59] to check the quality of
+evaluations, which is also
+[34:02] important aspects
+of LLM research.
+[34:06] So basically several aspects
+one could consider one thing
+[34:09] is about harness.
+[34:10] So basically, suppose at the
+very early days maybe LLMs are
+[34:15] not intelligent enough.
+[34:17] There will be
+certain benchmarks.
+[34:18] Maybe all the LLMs would score
+very low on these benchmarks.
+[34:22] But maybe these days for example
+like GSM8K everyone scores
+[34:26] very high on this benchmark.
+[34:27] Then you say, well, I
+achieved a 5 point improvement
+[34:29] on this benchmark.
+[34:31] It's really unclear you have
+actually made some progress,
+[34:34] because there's also maybe
+likely for the specific base
+[34:37] model you work on,
+the model has already
+[34:39] been exposed to certain data
+that's very similar to a GSM8K
+[34:43] evaluation.
+[34:44] You really do not
+know what's going on.
+[34:46] You need to continuously
+monitor hardness.
+[34:48] You also need to continuously
+monitor separability.
+[34:51] By that I mean that when
+you ask LLM a question
+[34:55] and you ask many different LLMs
+the same question, ideally,
+[34:59] you are supposed to see that LLM
+that's supposed to be stronger,
+[35:03] they answer the question better.
+[35:05] The LLM that's
+supposed to be weaker,
+[35:07] they do not answer as well.
+[35:10] In that case, we would like
+to say that the benchmark is
+[35:13] able to separate the
+capabilities of LLMs,
+[35:17] because if that
+doesn't really happen,
+[35:18] or you observe that while the
+weak LLMs, the strong LLMs they
+[35:22] produce very similar
+scores, maybe
+[35:25] the reaction should
+be that you abandon
+[35:26] this benchmark, because there
+must be something that has gone
+[35:30] wrong in the past, either in
+training or in some other types
+[35:34] of evaluation, that has maybe
+has hurt the credibility
+[35:37] of this particular benchmark.
+[35:39] There is also, of course, issue
+of diversity, which is also
+[35:42] the topic we have been
+talking about again and again
+[35:46] which is that you need to
+have very good coverage.
+[35:48] So if you do not have
+very good coverage,
+[35:50] you produce high number--
+[35:52] maybe on the data sets you
+only have 50 different prompts.
+[35:56] They are all very
+similar to each other.
+[35:58] You produce a high score.
+[35:59] It doesn't really mean
+that your system actually
+[36:01] is behaving very well.
+[36:03] So all these are very
+important topics,
+[36:05] and it's really a very
+significant community effort
+[36:08] to make sure that we do
+not fall into the pitfalls.
+[36:15] So many benchmarks
+that really is public.
+[36:18] So all the data is available.
+[36:20] There are attempts people have
+to create the private benchmarks
+[36:24] to really track the progress.
+[36:26] Clearly, there are so actually
+lots of individuals, community
+[36:31] members, and
+companies, they would
+[36:33] like to create the private
+benchmarks to really check that.
+[36:36] So in some sense, maybe
+the situation everyone
+[36:41] wants to see would be that we
+need to see way more benchmarks
+[36:45] being proposed, because
+private benchmark is good,
+[36:48] but if you have a
+very static benchmark,
+[36:50] then people will try
+to fit so many times
+[36:53] and maybe still will
+lose credibility.
+[36:55] And ideally, let's say
+for public benchmarks,
+[36:59] if the community can continue to
+produce more and more benchmarks
+[37:03] in all kinds of
+different environments,
+[37:05] then it's actually
+very hard for everyone
+[37:08] to overfit to all of them.
+[37:09] Then there was a
+saying that, well,
+[37:12] suppose you have only five
+benchmarks in the world,
+[37:15] you benchmark them.
+[37:17] So basically, you claim
+your model is really
+[37:19] the best out of the five,
+maybe it may not really
+[37:23] work on all other benchmarks.
+[37:25] But if the community
+has collectively
+[37:28] produced 1 billion benchmarks
+covering essentially everything
+[37:33] we do in reality, math,
+coding, computer use,
+[37:36] whatever, then say that
+someone comes up and say
+[37:40] that I have overfit all
+1 billion benchmarks,
+[37:44] then maybe you have
+already achieved AGI,
+[37:46] because they really have
+already covered everything
+[37:49] that you care about.
+[37:51] So in some sense
+benchmarking efforts
+[37:55] is really a very strong
+community effort.
+[37:57] So we really would
+only be able to succeed
+[38:00] when more and more people are
+producing very high quality
+[38:03] benchmarks covering
+their use cases.
+[38:05] So that's actually
+also an aspect
+[38:08] I personally feel that
+academia can really
+[38:11] make a very strong
+contribution, because there
+[38:15] are many people working on so
+many different topics so trying
+[38:19] to really capture what is
+actually missing in the existing
+[38:23] training of the agentic systems.
+[38:26] Great.
+[38:27] Then we'll be talking about
+the third part, training well.
+[38:34] What does the
+training agent mean?
+[38:36] So training is a
+very complex topic.
+[38:39] These days we still have new
+algorithms coming up every day,
+[38:43] but generally, I want to talk
+about the principle of training.
+[38:47] So in terms of
+training, you want
+[38:50] the agent LLMs to
+attempt different actions
+[38:53] in your specific environment
+and see what gets it
+[38:56] to the final answer the best,
+whichever gets you the best
+[39:00] results, you want a model
+to reinforce and repeat.
+[39:04] So here I'm talking
+about this paradigm.
+[39:07] Say that on the left
+there is agentic,
+[39:09] which is supposed to be smart.
+[39:11] You are tuning the genetic LLMs.
+[39:13] So you give the agentic
+LLM a certain task.
+[39:16] You say, well, please
+accomplish a certain task.
+[39:19] Try to do it.
+[39:20] Then LLM would make
+lots of attempts.
+[39:22] Attempts here I'm
+showing 1 to 5.
+[39:24] Go to the environments.
+[39:26] Maybe each attempts it tries
+to call different tools,
+[39:29] try to retrieve
+different information,
+[39:31] try to make a final decision.
+[39:32] Now, finally, there's
+a verifier saying, oh,
+[39:35] for each attempt is it
+correct or not correct.
+[39:38] How much cost has it incurred.
+[39:41] Then ideally, even without the
+demonstrating how we train this,
+[39:47] we already know the target.
+[39:48] The target would be that I want
+to make sure at the very end,
+[39:52] after training, the
+LLM is able to generate
+[39:56] the correct trajectory so
+the attempt is successful,
+[40:00] maybe ideally also
+with the minimal cost.
+[40:02] And there could also be
+other aspects I care about
+[40:05] in final evaluation.
+[40:06] So what are some aspects or
+some core characteristics
+[40:10] you focus on in the
+whole training process?
+[40:12] I'm talking about two here.
+[40:13] There could be many others.
+[40:15] One thing I want to emphasize is
+that you want each attempt to be
+[40:18] very different from each other.
+[40:21] Since you want the model
+to reinforce or discourage
+[40:23] many different
+styles of attempts.
+[40:25] It's just like a human being.
+[40:27] Suppose I want to teach
+a kid to do something.
+[40:30] Then ideally, if the
+person is able to come up
+[40:34] with multiple
+different approaches,
+[40:36] they are very different
+from each other,
+[40:39] then ideally some of them
+is correct, some of them
+[40:41] is incorrect.
+[40:42] After I gave very
+detailed feedback,
+[40:45] I hope the person
+can learn very fast.
+[40:47] But the issue is that
+if the person is only
+[40:50] able to come up with a
+single answer and it's wrong.
+[40:53] Then by telling the
+person it is wrong,
+[40:56] it did give some
+information, and then
+[40:59] it really appeared that it is
+slightly harder for actually
+[41:02] for the training
+algorithm to work.
+[41:04] Appears as you didn't provide
+enough amount of information,
+[41:07] at least for many
+algorithms, to be
+[41:09] able to improve the
+quality of agency systems.
+[41:12] And a second aspect I
+also want to emphasize
+[41:15] is that every
+attempt would cause
+[41:18] compute to sample and process.
+[41:20] You ask LLM am as
+a person to say,
+[41:23] oh, what about you try this?
+[41:25] They tried it, and
+it's totally wrong.
+[41:28] You ask them to try 100 times,
+all of them are totally wrong.
+[41:32] That wouldn't be
+very satisfactory
+[41:34] because each attempt costs lots
+of money and lots of resources.
+[41:38] You do not want
+very silly attempts.
+[41:40] So somehow we are really
+in a delicate situation.
+[41:43] So if we give LLM a
+question, it's super easy,
+[41:46] all the attempts
+are exactly correct,
+[41:49] it didn't learn anything.
+[41:50] But ask LLM to attempt many
+times with all failures,
+[41:54] caused lots of money,
+resources, and you also
+[41:58] need to spend lots
+of time figuring out
+[42:00] how to make the LLMs learn.
+[42:02] So it's a really
+complicated process.
+[42:04] Till today, I believe the
+whole community is still
+[42:07] trying to figure out what's the
+right way to deal with this.
+[42:09] But I think that by
+connecting this better
+[42:12] with the human
+learning process, it
+[42:14] did raise lots of really
+fascinating questions
+[42:16] about that.
+[42:18] So we want to talk about some
+of the existing approaches taken
+[42:23] by the community.
+[42:24] And I really want to emphasize
+that the existing approaches may
+[42:27] not really represent the
+best approaches one can take.
+[42:30] So lots of research to be done.
+[42:33] In general, also from a
+certain point of view,
+[42:37] if we really go back to
+machine learning theory,
+[42:40] certain approaches
+being proposed here
+[42:42] are also not exactly right.
+[42:44] So one big issue we are dealing
+with in training LLMs is that
+[42:48] the theoretical foundation
+usually cannot connect very well
+[42:51] with existing practices.
+[42:53] So it's really, I believe,
+the task of whole community
+[42:56] to come together to
+figure out how we can
+[42:59] propose better formulations.
+[43:00] But to connect
+what I talked about
+[43:02] before, there are
+generally will be
+[43:06] two stages in training
+the agentic systems.
+[43:09] The first stage we call
+super fine tuning or SFT.
+[43:13] So it is basically
+imitation learning.
+[43:16] I would like to imitate
+demonstration trajectories that
+[43:19] achieve correctness.
+[43:21] What that really means is that
+suppose at the very beginning
+[43:24] the LLM doesn't know anything.
+[43:25] You give LLM a task, and
+it output some garbage.
+[43:30] And that's exactly what
+the situation we talk about
+[43:32] of the silly attempts.
+[43:34] That cost lots of
+money and resources.
+[43:36] We didn't make any progress.
+[43:38] In that case, usually to jump
+start the whole system what
+[43:41] you would do is
+that you would like
+[43:43] to connect some
+demonstration trajectories.
+[43:46] You say, well, here's
+a particular query.
+[43:48] I would like to show you as
+a human being the right set
+[43:52] of actions you need to take.
+[43:54] Maybe access this database.
+[43:56] Also, access another API.
+[43:58] Talk to another system.
+[43:59] Finally, this whole trajectory.
+[44:01] I just show you that.
+[44:02] What about you try
+to replicate this?
+[44:05] Next time I ask you
+exactly the same question,
+[44:07] what about you try
+to produce exactly
+[44:09] the same answer as a
+demonstration I've just
+[44:11] shown to you.
+[44:13] So the hope is that
+I want to minimize
+[44:15] any silly or
+non-meaningful attempts.
+[44:17] The second stage is that
+well, maybe you are already
+[44:21] entered the stage where
+I give you a question.
+[44:23] Sometimes you make mistakes,
+but it's not totally wrong.
+[44:27] Actually, sometimes you
+are reasonably correct.
+[44:30] In this case, I would like
+to let you to explore,
+[44:32] because the more you explore by
+yourself, the better you learn.
+[44:37] In some sense, very
+similar to the philosophy
+[44:39] of human learning.
+[44:40] Say, in school, if
+a professor only
+[44:42] gives us the precise
+answer to the question.
+[44:45] So you just copy this.
+[44:46] We are not allowed to
+produce any homework
+[44:49] to be graded by the professor,
+and we don't get any feedback.
+[44:54] Then maybe different people will
+make mistakes in different ways.
+[44:57] I have this particular
+type of mistake.
+[44:59] I want to know it was wrong.
+[45:00] Nobody gave me that because
+the professor only gave me
+[45:02] the exact right answer.
+[45:04] There's new question coming up.
+[45:05] I have no idea that I
+actually tend to make
+[45:07] certain type of mistakes.
+[45:09] So the real way to learn
+is to let the model explore
+[45:12] and reinforce
+trajectories to achieve
+[45:15] correctness and discourage
+the ones that do not.
+[45:18] Going back to the
+previous point,
+[45:20] you actually also want
+the model to produce
+[45:22] very diverse trajectories
+so that if you go wrong,
+[45:26] I want to see you go wrong.
+[45:28] Then I tell you it goes wrong.
+[45:30] Instead you say, well,
+essentially everything
+[45:32] is correct, but they
+are always the same.
+[45:34] Then you didn't really
+learn too much about this.
+[45:36] You want to reinforce
+diverse, great attempts
+[45:39] from the current
+model and discourage
+[45:41] diverse and bad attempts.
+[45:43] Both sides need to be diverse
+because diversity really
+[45:47] accelerates the
+learning process.
+[45:50] So to really talk about the
+details SFT stage and RL stage,
+[45:56] I personally feel it's very
+intuitive because the maps
+[45:58] really well to human
+being learning.
+[46:00] At SFT stage, it's
+basically maximize
+[46:02] the likelihood of sampling
+the demonstration trajectories
+[46:05] and minimize likelihood
+of sampling anything else.
+[46:08] Give you the
+particular trajectory.
+[46:10] Say, well, what about
+you sample this?
+[46:13] Hopefully, it really
+works very well.
+[46:14] It's just here so that we can
+sample meaningful trajectories.
+[46:18] So one key aspect of SFT is
+that demonstration samples
+[46:22] needs to be diverse.
+[46:24] So basically, if you give
+me very few SFT samples,
+[46:28] very similar style, then
+maybe what has happened
+[46:31] is that the model is not able to
+generate diverse attempts later
+[46:34] in RL stage, which is bad.
+[46:36] And similarly for the
+second requirements--
+[46:42] here I wrote a requirement
+that SFT should be light--
+[46:46] the intuition is also
+exactly the same,
+[46:48] because if you have conducted
+very heavy SFT, which
+[46:51] means that you have
+basically tried
+[46:53] to teach the model for
+every question I collected
+[46:55] in the training set, I tell
+you what is the right answer.
+[46:59] And I tell you,
+please remember this.
+[47:02] It is exactly only right answer.
+[47:05] Then later, the model
+will lose the ability
+[47:07] to figure out
+answers by its own.
+[47:09] And in reality,
+the real issue is
+[47:12] that no matter how big the
+collection of your training data
+[47:15] is, it can never cover every
+aspect of our interaction
+[47:20] with LLMs and with humans.
+[47:22] So if you really only
+teach LLM to exactly follow
+[47:26] your demonstration
+answers, generally, it
+[47:29] will really fail for tasks that
+are actually auto distribution.
+[47:33] So in RL stage.
+[47:36] So here I'm talking about
+the technical details.
+[47:38] You can find the details in
+essentially every paper in RL.
+[47:42] And throughout the
+stage, I want to sample
+[47:44] very meaningful
+but very different
+[47:46] actions for the tasks,
+the environment and tools.
+[47:48] You have limited compute.
+[47:50] You want to make sure you
+get as diverse answers
+[47:52] as possible, as
+meaningful as possible.
+[47:55] Then you figure out how correct
+each action sequences, how
+[47:59] rare and useful
+certain actions are.
+[48:01] Then you try to figure out
+how to update your LLM so
+[48:05] that the next time when you
+try to generate the answers,
+[48:07] you generate more of
+the correct answers.
+[48:10] You generate less the
+incorrect answers.
+[48:13] That appears to be
+the hardest part.
+[48:15] So in some sense it's
+also similar to what
+[48:19] we observe in human
+learning, which
+[48:22] is that when the professor
+gives the students a task,
+[48:27] then everyone
+submits the homework,
+[48:30] and the hardest thing
+is really to make sure
+[48:32] that the next time when
+there's a new task coming up,
+[48:35] everyone is asked to
+submit the homework again,
+[48:38] how to make sure that you really
+have produced a better answer.
+[48:41] So generally, for human
+beings, people actually
+[48:46] differ in this way.
+[48:48] So many people by giving
+the same feedback,
+[48:51] actually, they produce
+many different answers once
+[48:54] given a new set of tasks.
+[48:56] That's exactly the same
+situation for RL algorithms.
+[48:58] Use different RL algorithms.
+[49:00] They give you same
+amount of data.
+[49:02] Then later turns out the
+quality of the system
+[49:05] actually is different.
+[49:07] Summarize, SFT is just
+here to discourage
+[49:09] meaningless and low-quality
+rollouts attempts,
+[49:13] and RL is here to truly
+reinforce intelligence.
+[49:16] So I indeed have
+prepared some more slides
+[49:19] talking about the
+details of RL because I
+[49:22] do believe that it's a very
+critical research topic.
+[49:25] The question that has been
+a certain work actually
+[49:30] also work from
+coming from NVIDIA
+[49:33] talking about maybe
+in certain cases
+[49:36] one can remove the SFT stage.
+[49:38] We conduct more RL--
+[49:41] by the way, it's also a trend
+demonstrated by many frontier
+[49:43] labs--
+[49:44] consume more compute.
+[49:46] So that actually also
+go back goes back
+[49:49] to one of the core
+things I talk about when
+[49:52] we are talking about
+training algorithms is
+[49:54] that these days it's really
+unclear what is actually
+[49:58] the correct training algorithm.
+[50:01] So because in some sense,
+for those of you who
+[50:05] are very familiar with
+machine learning theory
+[50:08] you know that the current
+algorithm formulation
+[50:13] for some combination
+of SFT and RL,
+[50:15] they actually do not align
+very well with machine
+[50:17] learning theory.
+[50:19] If you started from a
+theoretical perspective working
+[50:22] on simplified models, you
+wouldn't be doing this.
+[50:25] You'd be doing something else.
+[50:27] And unsimplified
+models something else
+[50:29] would work so much better
+than these approaches
+[50:31] we currently take LLMs.
+[50:34] So that's a very big issue.
+[50:36] So that's why we believe that
+more exploration in terms
+[50:42] of different architecture,
+different algorithms, better
+[50:45] ways of utilizing
+data, both pre-training
+[50:47] and post-training data is very
+critical in our community,
+[50:51] because currently it would be
+very nice if we can move closer
+[50:55] to the theoretical principles
+while doing something that's
+[50:59] implementable in practice.
+[51:01] These are actually currently a
+really important research topic,
+[51:05] so I personally would
+encourage everyone
+[51:09] to really dive very deep
+into this, because I believe
+[51:14] we definitely have not
+converged in terms of what's
+[51:17] the right algorithm to use.
+[51:19] As you see, when I talk about
+later certain issues related
+[51:24] to the algorithms, I by no
+means mean that those are maybe
+[51:29] the really right
+approaches we follow,
+[51:33] that they will continue to be
+right even 10 years from now.
+[51:36] But maybe my purpose
+is really to show you
+[51:40] certain observations people
+have made in the past
+[51:43] in running certain algorithms.
+[51:45] Hopefully, it can motivate you
+to design new algorithms that
+[51:50] actually work better.
+[51:53] Maybe one perspective
+LLM could be considered
+[51:55] is like pattern matching.
+[51:58] Then you want to
+train the system
+[52:00] to be able to conduct
+critical thinking
+[52:04] and also be able to
+invent something new.
+[52:08] First of all, my feeling
+is that it's generally very
+[52:13] difficult to understand
+what exactly LLM is doing,
+[52:16] because when you really think
+about how do human beings learn?
+[52:22] In many cases, suppose
+we are actually
+[52:24] trying to solve exam questions
+while we are attending a class,
+[52:28] we are also doing
+pattern matching.
+[52:31] When we are in school,
+professor shows us one problem.
+[52:34] Then there's an answer.
+[52:35] Then here's the next problem.
+[52:36] Very similar.
+[52:38] We are also doing
+very similar things.
+[52:40] So me personally,
+I feel that it will
+[52:44] be fascinating to combine
+everything related
+[52:49] to human learning with LLM
+learning, which is exactly what
+[52:53] we are trying to show here.
+[52:55] So we have got some good
+intuition about human learning.
+[52:58] We figure out how
+humans can learn better.
+[53:00] But the issue is that many
+humans have no idea how
+[53:03] they actually learned.
+[53:06] They did something.
+[53:07] They got some feedback.
+[53:08] The next time they
+did something else.
+[53:10] But here we need to
+write down an algorithm.
+[53:13] That's actually
+the hardest thing.
+[53:14] We have no idea how
+to write an algorithm.
+[53:16] And in terms of human
+learning, there are so
+[53:19] many things we want to
+learn, and there are so
+[53:21] many ways to evaluate a person.
+[53:23] Just like these days, students
+take exams from all courses.
+[53:28] Are we really sure all
+the exams are really fair?
+[53:30] They evaluate a person, the
+students in a right way.
+[53:33] It's super interesting.
+[53:35] So one point I'm
+trying to make here
+[53:38] is that it's a so
+fascinating area
+[53:41] to think about that we
+are actually absolutely
+[53:43] at the infancy of the area.
+[53:45] We really haven't figured
+out what's the right way
+[53:48] to train those systems
+and also deploy them
+[53:51] in certain other
+critical applications.
+[53:53] But we have made
+interesting observations,
+[53:55] which is what I'm
+trying to show here.
+[53:57] Hopefully, the
+observations are insightful
+[54:00] and can stimulate
+some of the research
+[54:03] that people in this course
+can actually do in the future.
+[54:09] So now let's dive
+slightly deeper
+[54:14] into reinforcement learning.
+[54:15] I want to talk about
+three core aspects.
+[54:18] I believe that we still need
+to do a lot more research
+[54:21] around those aspects,
+potentially new aspects,
+[54:24] but the community has made
+interesting observations.
+[54:27] I want to share the
+observations here.
+[54:29] One idea is to train for longer.
+[54:32] So one intuition, situation
+you don't want to hit
+[54:35] is that you got some data sets.
+[54:38] You get LLM to attempt
+to solve the problems.
+[54:41] You attempt once or twice.
+[54:43] Then later you found that
+it can no longer attempt.
+[54:46] So every time it makes attempt,
+produces the exact same answers.
+[54:50] Saturates.
+[54:51] OK, not able to train longer.
+[54:53] Not ideal because
+for human beings
+[54:56] we really get constant feedback.
+[54:58] We are given a task.
+[55:00] We propose a solution.
+[55:01] We get a feedback.
+[55:03] Next time we propose
+a better solution.
+[55:05] Ideally, later we come up with
+really amazing maybe answers
+[55:10] maybe inventing
+something really new,
+[55:12] conducting
+cutting-edge research,
+[55:14] inventing general
+theory of relativity.
+[55:17] There's a very high bar
+here, but it would not
+[55:20] be very good to say that it
+plateaus very, very quickly.
+[55:25] The second aspect
+observation people have made
+[55:27] is that somehow you need to
+train a more difficult prompt
+[55:30] and tasks.
+[55:32] So intuitively also makes sense,
+such as for a human suppose
+[55:36] you are given a task to learn.
+[55:38] You are only given
+really simple tasks.
+[55:40] You already know how to
+solve it really, really well.
+[55:43] You didn't really
+learn anything new.
+[55:45] That's for LLMs is
+also exactly the same,
+[55:48] but we did talk about some
+of the intricacies related
+[55:51] to this, because
+if the LLM is only
+[55:53] given really difficult tasks
+like solving Riemann hypothesis,
+[55:59] nobody can really solve, and
+nobody can make any progress.
+[56:02] So that's actually also
+a very big challenge.
+[56:04] Turns out it's
+important to convert
+[56:06] the intuition we have
+in human learning to LLM
+[56:09] learning, which is also very
+big ongoing research project.
+[56:14] I've been talking about some
+observations people have made.
+[56:16] The third aspect I
+want to emphasize
+[56:18] is to train a more diverse
+responses with high quality
+[56:21] reward feedback.
+[56:21] So which is very natural.
+[56:23] So for human, if
+you only interact
+[56:26] with very limited subjects,
+for example, you only
+[56:31] study a single subject,
+only take one course,
+[56:35] and then you
+certainly would not be
+[56:37] able to answer the questions
+in the exams of other courses.
+[56:42] You need to do that,
+and so you need
+[56:44] to see many different meaningful
+answers per prompt, as
+[56:48] many answers as possible.
+[56:50] So a good algorithm should
+rely on those pillars,
+[56:54] and they actually are even
+more pillars in practice.
+[56:57] So I will very briefly
+talk about those pillars.
+[57:01] One pillar we talk about is
+being able to train longer.
+[57:05] So there has been
+many observations
+[57:06] in the community
+talking about studies
+[57:09] of entropy mechanism or entropy
+class collapse mechanism.
+[57:13] And actually, many
+different papers
+[57:15] have also very many
+other correlated metrics
+[57:20] capturing something similar.
+[57:21] But the idea is the following.
+[57:23] So on the left, I'm
+showing you a plot.
+[57:25] X-axis is the number
+of training steps.
+[57:27] Basically, you train
+longer and longer.
+[57:28] Y-axis is showing
+performance gain, so
+[57:31] basically how much the
+item has actually improved.
+[57:34] And yeah, I'm also showing
+this y-axis, I have two curves.
+[57:42] One is showing performance gain.
+[57:43] The other is showing
+entropy [? left. ?]
+[57:46] By entropy, I actually
+means that when
+[57:48] the LLM is trying to generate
+its next token as being
+[57:54] specified-- in literature,
+it's a probabilistic inference
+[57:58] because next token is
+sampled from a distribution.
+[58:02] So by entropy, I
+mean that I basically
+[58:04] compute the entropy of the
+token generation probability.
+[58:08] By large entropy,
+it means that there
+[58:10] will be high uncertainty
+in sampling the next token.
+[58:14] Then if we have a
+high entropy, then
+[58:16] very likely if you sample
+the trajectory twice,
+[58:20] you will be able to
+get two very, very
+[58:22] different trajectories.
+[58:23] If the entropy is very
+low, think of the situation
+[58:26] that whenever you
+are given a prompt,
+[58:28] then you ask the model to
+predict the next token.
+[58:31] Then the model is always super
+sure next particular token
+[58:35] is certain token
+with 99% probability.
+[58:38] Then even if you run this
+LLM, you sample it so many
+[58:42] different times, you
+wouldn't be able to sample
+[58:44] many different trajectories,
+because only a single trajectory
+[58:50] has a very, very
+high probability.
+[58:52] So what this plot has shown
+that if you do not intervene,
+[58:56] if you follow many
+different algorithms, what's
+[58:59] going to happen is that as
+the number of steps increases,
+[59:03] the performance would gain.
+[59:05] Indeed, you see, in
+terms of rewards,
+[59:07] the model started to produce
+very high quality answers.
+[59:10] Entropy started to decrease.
+[59:12] So basically, later
+on, we learned
+[59:14] that I'm able to only
+produce one answer.
+[59:18] So then we asked the question,
+is it really possible
+[59:21] that we still produce
+really high quality answers,
+[59:26] but at the same time do not
+achieve this entropy collapse?
+[59:30] So later answers are correct.
+[59:33] Still diverse, being able
+to explore, but ideally,
+[59:38] for every question, I'm
+able to come up with five
+[59:41] different correct answers.
+[59:42] That's so fascinating because
+even for humans, it's actually
+[59:48] very hard for a very hard
+task come up with five
+[59:51] different correct answers.
+[59:54] So there has been some
+observations in literature.
+[59:58] Here I talk about
+two approaches people
+[01:00:01] have taken in the literature
+to alleviate this issue.
+[01:00:07] On the left, I'm talking
+about this on-policy
+[01:00:10] versus off-policy issue.
+[01:00:12] So basically, I increase the
+number of training steps.
+[01:00:18] Then I observe that in terms
+of training rewards, which
+[01:00:21] is the leftmost
+figure, I observed
+[01:00:24] that for either on-policy
+or off-policy algorithms,
+[01:00:29] the rewards actually increase
+in a similar manner, which
+[01:00:33] means that I do get a
+better and better policy.
+[01:00:39] Precisely by on-policy, I want
+to emphasize that it's really
+[01:00:43] exactly emphasize
+refers to the setting
+[01:00:46] that whenever I ask the
+reward model or a verifier
+[01:00:52] to judge the quality
+of the attempts,
+[01:00:54] I only judge attempts
+produced by the LLM itself.
+[01:00:59] So it is called on-policy
+which means that I do not
+[01:01:03] try to give you rewards
+or feedback based
+[01:01:06] on the answers
+produced by other LLMs
+[01:01:09] or produced by
+different weights.
+[01:01:11] I really want to
+give you feedback
+[01:01:13] produced by you at this
+point so that you can really
+[01:01:16] learn the best.
+[01:01:18] So on-policy really
+means that I want
+[01:01:20] you to learn from
+your current mistakes,
+[01:01:24] not the answers produced
+by other people.
+[01:01:26] Intuitively, from the
+perspective of human learning,
+[01:01:30] if the answer is
+produced by the students,
+[01:01:33] then the professor give the
+students very detailed feedback,
+[01:01:38] the student can
+really learn the most.
+[01:01:40] But if the student didn't write
+down the answer themselves, copy
+[01:01:43] it from somewhere else,
+you give feedback, maybe
+[01:01:46] the student can
+still try to learn,
+[01:01:47] but may not learn as well.
+[01:01:49] So that's actually intuition
+we are trying to borrow here,
+[01:01:52] showing that if you use
+on-policy, the [? KL ?]
+[01:01:55] divergence between
+the policy you
+[01:01:57] train to the original
+initial policy is small,
+[01:02:00] and also, the entropy
+still stays high.
+[01:02:05] Yeah, so basically, that is
+a very detailed description
+[01:02:10] showing that on different
+benchmarks, that's
+[01:02:14] like MATH-500, AIME 2024,
+2025 on-policy generally
+[01:02:18] produces much better answers.
+[01:02:21] The second approach, which
+we call balance the update
+[01:02:26] strength, called adjusting
+the clipping thresholds or
+[01:02:31] encouraging exploration.
+[01:02:32] So we're getting a
+very technical here.
+[01:02:35] Maybe I wouldn't be
+spending too much time here.
+[01:02:38] It is from the paper
+[? "DAPO," ?] which is
+[01:02:43] a specific variant of a GRPO,
+the precise formulation is given
+[01:02:49] here.
+[01:02:49] So intuitively,
+this [? RT ?] theta
+[01:02:52] is basically the likelihood
+ratio we use in training.
+[01:02:57] Then generally, to
+make GRPO stable,
+[01:03:00] we need to add clipping
+to this likelihood ratio.
+[01:03:03] It's supposed to be
+fluctuating around 1.
+[01:03:05] You clip at a below 1 minus
+epsilon low, clip at above 1
+[01:03:10] plus epsilon high.
+[01:03:11] And one important
+observation made by the paper
+[01:03:13] is that you need to
+decouple those two epsilons
+[01:03:17] and make the epsilon high
+even bigger than epsilon low.
+[01:03:21] So basically, the
+idea is that you
+[01:03:22] would like to
+encourage the model
+[01:03:24] to increase the probabilities
+assigned to low probability
+[01:03:27] tokens so the model is
+able to explore very well.
+[01:03:31] As you probably
+can see here we are
+[01:03:33] talking about lots of
+hacks in the whole system.
+[01:03:36] So that's the reason why
+I want to really emphasize
+[01:03:39] that different
+hacks may not really
+[01:03:42] represent the final state of
+the art in particular many years
+[01:03:45] later, but I hope the
+insights conveyed by the hacks
+[01:03:48] actually they use.
+[01:03:49] Let's say, if this
+is motivated by PPO.
+[01:03:52] Indeed, PPO also has
+this clipping approach.
+[01:03:55] Here's the core observations
+that you actually
+[01:03:58] wanted to decouple these
+clipping thresholds.
+[01:04:02] So somehow indeed that
+strikes some people
+[01:04:06] as a hack that does perform
+quite well, in particular based
+[01:04:11] on the picture I showed
+here, with a clip
+[01:04:14] higher you see on the
+purple line generally
+[01:04:16] for the performance
+it get higher.
+[01:04:18] And in terms of generalization,
+entropy is also high.
+[01:04:22] Doesn't really collapse.
+[01:04:25] Another aspect
+people have actually
+[01:04:28] considered in the
+past in terms of train
+[01:04:30] longer is actually to add a loss
+to encourage entropy directly,
+[01:04:34] because we have been talking
+about this entropy collapse
+[01:04:37] issue.
+[01:04:38] When you train
+longer, the model only
+[01:04:39] learns to produce one
+answer is not ideal.
+[01:04:43] Then naturally you could
+also add a loss function.
+[01:04:45] You say that, what
+about I try to maintain
+[01:04:48] the entropy at a certain level?
+[01:04:50] And then there are also
+lots of different tricks
+[01:04:52] in constructing the loss.
+[01:04:53] Make sure that the
+entropy always stays high.
+[01:04:56] For example, you have a
+certain entropy level.
+[01:04:58] You want to make sure that
+the loss steers the generation
+[01:05:03] entropy to the particular
+level of the entropy.
+[01:05:07] There are many
+things you can do.
+[01:05:08] Still lots of
+explorations that's
+[01:05:12] necessary, but I hope that the
+intuition is actually is clear.
+[01:05:18] So precisely to encourage
+entropy directly
+[01:05:21] following this paper sky
+work or open reasoner, what
+[01:05:25] they have done is that they
+have a particular entropy loss.
+[01:05:29] So the loss would
+actually encourage
+[01:05:31] you to increase the
+entropy along training
+[01:05:34] so that the entropy
+doesn't really collapse.
+[01:05:37] And hopefully you also achieve
+a higher test accuracy,
+[01:05:39] as been shown on the
+picture on the left.
+[01:05:43] So that's one aspect
+of train longer.
+[01:05:48] There's also another
+aspect aspects
+[01:05:49] of training on more
+difficult prompts and tasks.
+[01:05:53] So in the same entropy
+mechanism paper,
+[01:05:57] actually, along with
+many different papers
+[01:05:59] in the community,
+people have been
+[01:06:01] thinking about how
+to actually capture
+[01:06:04] the aspects of
+separating the model's
+[01:06:09] performance on hard prompts
+and on a simpler prompts.
+[01:06:13] So they have a quite
+interesting plot here.
+[01:06:16] So basically on the left, we'll
+be talking about what exactly
+[01:06:20] we are plotting in
+terms of its covariance.
+[01:06:23] So the intuition is that I
+want to track something which
+[01:06:29] is related to the correlation
+between the generation
+[01:06:35] likelihoods of the
+sequence with the sequence
+[01:06:40] quality or the advantage.
+[01:06:43] So basically, I would like to
+use this covariance between log
+[01:06:49] probability of
+the whole sequence
+[01:06:51] to the advantage we use
+in reinforcement learning.
+[01:06:54] We're getting slightly
+technical here,
+[01:06:56] but without looking
+at too much details,
+[01:06:58] it's basically
+trying to figure out
+[01:07:00] whether I'm able to align
+the confidence of generating
+[01:07:04] certain high-quality answers
+with the final performance.
+[01:07:09] Ideally, what's
+supposed to happen
+[01:07:11] is that the model is supposed to
+be very confident in generating
+[01:07:16] the right answers.
+[01:07:17] It's supposed to be quite
+uncertain in generating
+[01:07:19] wrong answers.
+[01:07:20] That would be fantastic, because
+next time I prompt the model,
+[01:07:24] the model is more likely to
+generate the right answer
+[01:07:26] because it's more confident.
+[01:07:28] So on the right, I'm
+showing a picture
+[01:07:30] basically listing the training
+curves of subsets of data
+[01:07:35] sets corresponding to
+different levels of accuracy.
+[01:07:38] So basically one can see that
+for the curves corresponding
+[01:07:41] to very low accuracy, which
+is the purple curve, accuracy
+[01:07:45] 0.125, you see this
+correlation stays very low.
+[01:07:52] It really means that
+the model is not
+[01:07:54] able to very confidently
+generate the right answers.
+[01:07:57] So for the questions,
+that's actually very easy.
+[01:08:01] You'll be able to see generally
+the correlation is higher.
+[01:08:04] So that's actually also
+an important metric
+[01:08:06] we are trying to track.
+[01:08:08] And on the left, I
+have another figure
+[01:08:10] which is also a very
+interesting observation made
+[01:08:13] by people in the past.
+[01:08:15] It's really about how
+you actually construct
+[01:08:17] the interesting training sets.
+[01:08:19] So what this one has been
+shown is the following.
+[01:08:23] So I would like to train on
+multiple different training
+[01:08:25] sets.
+[01:08:26] I'm showing a couple of
+data sets, DAPO-MATH, GSM8K,
+[01:08:30] Eurus-RL-Data,
+Eurus-RL-Data-Difficult.
+[01:08:33] Difficult is more
+difficult data set.
+[01:08:35] And on the right.
+[01:08:36] I'm basically checking
+the validation accuracy
+[01:08:38] on exactly the same
+validation sets.
+[01:08:40] I'm trying to see by training
+on different data sets
+[01:08:43] actually what's the
+pattern of evolution?
+[01:08:52] And the paper did observe
+something very interesting.
+[01:08:54] For example GSM8K actually
+refers to the curve
+[01:08:58] at the very bottom.
+[01:09:00] So what that process
+shows that well,
+[01:09:03] when we are able to
+train this, and we
+[01:09:06] found different data
+points corresponding
+[01:09:09] to different entropy.
+[01:09:12] One trend was clearly
+when the entropy
+[01:09:14] is higher, the final
+performance is better,
+[01:09:16] which is a very good trend.
+[01:09:18] But the second thing
+one wants to see
+[01:09:20] is that if you only
+train on GSM8K,
+[01:09:23] it really appears as to
+your final validation.
+[01:09:25] Accuracy is low in some sense.
+[01:09:27] It's really because
+GSM8K is too easy.
+[01:09:30] You train this too
+easy data sets,
+[01:09:32] you shouldn't really
+expect the model
+[01:09:33] to behave very well on some
+very challenging tasks.
+[01:09:37] But another really interesting
+observation you can make is that
+[01:09:40] there's Eurus-RL-Data and
+Eurus-RL-Data-Difficult.
+[01:09:44] Then looking at
+the curve, actually
+[01:09:46] the Eurus-RL-Data-Difficult
+difficult also is below
+[01:09:50] the curve of Eurus-RL-Data.
+[01:09:53] And Eurus-RL-Data contains
+the difficult data set.
+[01:09:56] Also, contains something that
+is actually not that difficult.
+[01:09:59] So somehow it also
+shows something
+[01:10:01] about the current
+learning paradigm, which
+[01:10:03] is that you basically blindly
+throw in super hard prompts.
+[01:10:08] You say that, well, I really
+hope you're able to learn.
+[01:10:10] I'll give you a
+very good feedback.
+[01:10:12] Hopefully, you'll
+be able to solve it.
+[01:10:13] Unfortunately, the LLM itself
+or the existing algorithms
+[01:10:17] are not smart enough
+to really capture this.
+[01:10:20] It didn't really learn how
+to actually do very well.
+[01:10:23] So somehow you need
+to somehow combine
+[01:10:26] very well different
+types of data
+[01:10:29] to really make sure it
+can learn very well.
+[01:10:32] So many different approaches
+have been proposed in the past.
+[01:10:36] Here I'm talking about
+one approach proposed
+[01:10:38] in GRPO lead paper,
+which is very intuitive.
+[01:10:41] Still strikes some
+people as hacks,
+[01:10:43] but I think the
+intuition is interesting.
+[01:10:45] It has many intuitions.
+[01:10:47] One intuition was
+basically saying
+[01:10:48] that well, maybe in order to
+provide the signal to the LLMs,
+[01:10:54] suppose it is very hard
+prompt and you got it right,
+[01:10:59] I'm supposed to reward
+you even more because it's
+[01:11:02] supposed to be very hard.
+[01:11:03] If it is very simple
+prompts, you got it right,
+[01:11:06] maybe I shouldn't be
+rewarding you that much
+[01:11:09] because it's simple.
+[01:11:10] You're supposed to have
+already captured this.
+[01:11:13] And there are many aspects
+captured by the paper.
+[01:11:15] For example, there is one answer
+you got this question correct,
+[01:11:19] but unfortunately, you produce
+answer that's too long.
+[01:11:23] I also would like
+to penalize you
+[01:11:24] because you are supposed to
+give a very simple answer.
+[01:11:27] The question is it
+isn't that hard.
+[01:11:30] Of course, also if you
+give something wrong,
+[01:11:32] I also give you really
+a negative feedback.
+[01:11:35] So many things we can do.
+[01:11:37] So in the paper,
+it did show that it
+[01:11:39] has many different
+approaches to actually adjust
+[01:11:44] the corresponding rewards.
+[01:11:46] One can see that if
+you really adjust
+[01:11:48] the weights for different
+samples corresponding
+[01:11:51] to an advantage or
+corresponding difficulty,
+[01:11:53] then performance gets improved.
+[01:11:55] You explicitly penalize the very
+long generations, many others,
+[01:12:00] then the quality
+also becomes better,
+[01:12:02] so could really give rise to
+lots of interesting ideas.
+[01:12:07] OK, so that's on the
+hardware prompt side.
+[01:12:11] Very clearly you can see that
+this problem is quite open.
+[01:12:15] It's really not clear
+in the community
+[01:12:16] that people have figured
+out the right approach,
+[01:12:19] ultimate approach
+in solving this.
+[01:12:21] There's one last aspect
+I want to emphasize,
+[01:12:24] which is called sample better.
+[01:12:25] That also appears to be
+a very important aspect
+[01:12:27] of our algorithm.
+[01:12:29] The whole idea is
+that you should
+[01:12:31] sample better so we can train
+a more diverse responses
+[01:12:34] with high quality rewards.
+[01:12:35] Goes back to the
+original intuition.
+[01:12:37] If you're not able to sample
+lots of diverse queries answers
+[01:12:42] with high quality, then
+you'll be in trouble.
+[01:12:48] So two things I
+want to talk about.
+[01:12:49] On the left, I talk about
+so-called parallel reasoning.
+[01:12:53] Ideas could be very simple.
+[01:12:54] There are so many
+variants of this approach.
+[01:12:56] I'm talking about this
+paper called "GenSelect."
+[01:12:59] Idea is that well--
+[01:13:02] so I actually do
+have this slide here.
+[01:13:04] So basically, when you finally
+ask LLM to produce answer,
+[01:13:09] you say that what
+about you do not just
+[01:13:11] directly give me an answer.
+[01:13:13] Always, I give you a very
+complex prompt on the right.
+[01:13:16] Maybe I ask you to come up
+with 32 different answers.
+[01:13:21] 32 different answers.
+[01:13:22] Then give them a prompt.
+[01:13:24] I say that what about
+you basically select
+[01:13:27] one of the answers from the 32?
+[01:13:29] Then ideally here, as you
+can see from the answers,
+[01:13:32] generally, it's the final
+accuracy becomes so much
+[01:13:35] better because the LLM really
+is given more time to figure out
+[01:13:41] the right answer, and it's
+able to pick the better one.
+[01:13:44] Another one I want to talk about
+is another recent paper called--
+[01:13:49] the proposed algorithm
+called DeepConf.
+[01:13:52] So that intuition is also about
+improving majority voting.
+[01:13:58] So the point is that say
+without this quite sophisticated
+[01:14:04] sampling method, say, you
+want to sample the LLM 32
+[01:14:07] times to produce an answer.
+[01:14:10] You just gave the same
+prompt, try 32 times,
+[01:14:12] get answer, conduct
+final majority voting.
+[01:14:15] But one potential issue is that
+among the 32 times of sampling,
+[01:14:20] maybe certain trajectories
+of very low quality.
+[01:14:23] Maybe you should just know at
+the very beginning or very early
+[01:14:26] on that trajectory
+is just wrong.
+[01:14:28] If you knew this,
+you're actually not
+[01:14:30] supposed to include that in
+the final majority voting.
+[01:14:33] You are supposed to only include
+those trajectories that's
+[01:14:39] actually likely to become
+part of the right answer.
+[01:14:43] So the idea of
+DeepConf is to say
+[01:14:44] that I would like to track
+the generation confidence
+[01:14:48] of these trajectories.
+[01:14:50] For those trajectories with
+very low generation confidence,
+[01:14:53] I just believe that model isn't
+even sure what it's doing.
+[01:14:56] And when the model isn't
+even sure what it's doing.
+[01:14:58] I basically would
+not include the model
+[01:15:02] or assign a very low weight
+in the final majority voting,
+[01:15:05] so that it should be able
+to produce a better answer.
+[01:15:08] So on the right, I'm
+showing some of the results.
+[01:15:11] For example, on the
+same model, gpt-oss-120b
+[01:15:15] if you use the DeepConf
+compared to the consensus, which
+[01:15:19] is basically majority
+voting, it actually
+[01:15:21] improves because indeed
+you are able to discard
+[01:15:25] some of the bad
+outputs of the model.
+[01:15:29] So that's essentially what
+I wanted to talk about.
+[01:15:33] Let me summarize the contents.
+[01:15:38] Putting everything
+together in the SFT.
+[01:15:42] Data, you need to have very
+good expert demonstrations.
+[01:15:45] RL recipe, you need to focus
+on train longer, sample better,
+[01:15:49] train harder.
+[01:15:50] And ideally, what community
+is supposed to be doing
+[01:15:56] is really to solve
+everything as a whole.
+[01:15:58] You want to have
+a collection where
+[01:16:00] we curate environments,
+verifiers, skill up
+[01:16:02] intelligence.
+[01:16:03] You need to figure out
+the best definition
+[01:16:05] of what intelligence is.
+[01:16:06] You need to be able
+to release algorithms
+[01:16:08] to train longer, harder
+problems with diverse responses.
+[01:16:13] You want to crowdsource this
+community with all the community
+[01:16:17] efforts.
+[01:16:18] You also want to make
+sure analyze the strengths
+[01:16:20] and weaknesses of benchmarks
+included in the collection.
+[01:16:23] Everyone can use it and
+also release good algorithms
+[01:16:27] for everybody to experiment on.
+[01:16:29] It's going to be my final slide.
+[01:16:32] Hopefully, after
+today's lecture,
+[01:16:36] we have shared some interesting
+observations we have made,
+[01:16:39] but my real hope is that we
+have stimulated your interest
+[01:16:44] in this area, because one thing
+I really want to emphasize
+[01:16:46] is that this area is
+still very immature.
+[01:16:49] Lots of things we really
+haven't figured out.
+[01:16:51] And the general
+perspective we have
+[01:16:53] is that we really want to bridge
+the gap between human learning
+[01:16:56] and the system learning.
+[01:16:58] Humans engage in many
+different environments
+[01:17:00] focused on some lessons
+more than others.
+[01:17:03] We can explore ourselves
+or learn from teachers.
+[01:17:06] We often evaluate for our
+intelligence on different tasks.
+[01:17:10] How do we exactly do
+that for our LLMs?
+[01:17:13] In many cases, it's
+really unclear.
+[01:17:15] So we really have to encourage
+the community efforts to join us
+[01:17:21] in this whole effort
+to collectively produce
+[01:17:24] the strongest
+agentic intelligence.
+[01:17:27] Thank you.

@@ -1,0 +1,1081 @@
+[00:05] from the research perspective.
+[00:08] And this is actually my
+second time at Berkeley.
+[00:12] The first time I talked
+about this kind of things,
+[00:16] learning from human
+feedback using a technique
+[00:20] called marginal likelihood,
+which was actually developed
+[00:23] here via my PhD advisor, Percy.
+[00:28] It's actually an alternative to
+RL, but with all the emphasis
+[00:32] on exploration.
+[00:34] And also because of
+the log, you have
+[00:36] to do on every single example.
+[00:40] Yeah, anyways, we'll try
+that, but without pretraining.
+[00:45] More recently-- oh, OK.
+[00:51] So more recently, I was very,
+very interested in code LLMs.
+[00:56] I thought, OK, yeah, they
+seem to be really impressive.
+[01:01] Maybe a really good way
+to get to better AI, kind
+[01:07] of following previously, it
+was still language to programs,
+[01:12] now it's called LLMs.
+[01:15] Did a bunch of work on that.
+[01:18] And responsible for--
+partially responsible
+[01:22] for a bunch of
+benchmarks in the space.
+[01:26] And most recently, I
+worked on a gigantic RL
+[01:29] on this code word model project.
+[01:32] That's a really
+recently released.
+[01:35] But today I really want to
+talk about these benchmarks.
+[01:41] So when you create--
+[01:43] and actually, if I'm
+correct, this class
+[01:46] had quite a few lectures about
+benchmark, intro to benchmark
+[01:52] already.
+[01:53] So I won't cover
+specific benchmarks.
+[01:57] But, when you make these
+benchmarks, it's all quite busy.
+[02:02] There's considerations about how
+is this going to be effective.
+[02:08] What's the quality right there?
+[02:10] There's very little
+reflection on them.
+[02:16] So this is what I want
+to talk about today.
+[02:21] So back then, you do a bit
+better, 10% better on ImageNet.
+[02:27] It's a huge data set.
+[02:30] Then there is no
+doubt that this works.
+[02:34] What's happening now is that
+we have these more complex
+[02:40] agentic benchmark.
+[02:41] Well, I mean, HumanEval is no
+longer a complex benchmark,
+[02:44] but it was a generative
+benchmark that takes a while
+[02:47] to make and evaluate.
+[02:50] And many paper report a
+relatively small improvement
+[02:54] on them.
+[02:55] And if you look at the
+traditional standards
+[02:57] of statistical significance,
+many of the improvements
+[03:00] are certainly not significant.
+[03:04] And if you look at the
+sizes, actually benchmarks
+[03:09] are kind of getting
+harder but smaller.
+[03:13] So MNIST was 10,000,
+ImageNet 100,000.
+[03:18] Before real
+generative benchmarks,
+[03:21] the multiple choice
+ones like MLU 10,000.
+[03:25] But once we get to
+these coding benchmarks,
+[03:29] they go down to
+HumanEval, which is
+[03:31] one of the landmark
+benchmarks in the area.
+[03:34] Only 164 examples.
+[03:38] Others, a little bit bigger.
+[03:40] A few that I was responsible
+or partially responsible for.
+[03:44] CruxEval, DS-1000.
+[03:46] We will try too a LiveCodeBench.
+[03:49] We will try to shoot
+for about 1,000,
+[03:52] but still quite a bit
+smaller than before.
+[03:56] And now there are these even
+more complex agent evals
+[04:01] such as SWE-Bench.
+[04:04] Various versions
+Terminal bench, which
+[04:07] often needs hundreds
+of thousands
+[04:10] of tokens and often hours,
+depends on how you run them.
+[04:15] So these tend to be
+also in the hundreds.
+[04:22] So one counterpoint then
+is each question now
+[04:27] can be quite powerful
+and informative.
+[04:32] So because you generate
+a lot of texts or code
+[04:36] or these gigantic trajectories
+when you solve these problems.
+[04:42] And that feels like it should be
+better than say, true and false
+[04:47] or multiple choice or
+classification questions.
+[04:51] And I think we also have a
+certain intuition from humans,
+[04:56] from all your experience
+being a student.
+[05:00] So leading, I guess,
+intellectual contests
+[05:04] have very few questions,
+but not very long answers.
+[05:08] So for instance, not sure why.
+[05:14] But IMO, which the Math
+Olympiad has six questions.
+[05:20] The college version
+has 12 questions.
+[05:24] And they have a
+range of difficulties
+[05:30] And I think it's
+also in the air now
+[05:33] that if you solve a
+major open problem,
+[05:39] you just have to solve one.
+[05:40] And no one is going to
+say, oh, you only solve
+[05:44] one problem that's not
+statistically significant.
+[05:48] And there are many of the more
+daily agentic tasks, which
+[05:53] are more and more economically
+important, such as fixing
+[05:58] issues, find bugs, vibe code.
+[06:00] And I'm sure many
+in other domains.
+[06:05] So here I pose a question.
+[06:07] So what's the case?
+[06:10] Are small benchmarks
+not reliable
+[06:13] even if the contain these
+hard, complex questions,
+[06:16] or, B, can we somehow get more
+out of these complex questions?
+[06:24] And we, in fact, should use
+these small but very hard
+[06:27] benchmarks.
+[06:29] Now, there are
+lots of benchmarks,
+[06:32] lots of leaderboards.
+[06:35] Some of these
+leaderboards really
+[06:37] tell you exactly what the
+model did on each question.
+[06:43] And otherwise, you can also run
+some kind of evaluation suite
+[06:47] and get the individual
+performance.
+[06:53] So in this attempt to
+exploratory data analysis,
+[06:59] I have each thought on this
+plot is a question and model--
+[07:05] actually each column
+represents a model
+[07:09] and each row
+represents a question.
+[07:12] And they are doubly sorted.
+[07:14] So the models are placed
+at how well they do
+[07:19] on average on that benchmark.
+[07:21] That's the x-axis.
+[07:23] We have the models on the--
+[07:25] see the cursor?
+[07:26] Yeah, OK.
+[07:28] You have the models on the
+left being the best models
+[07:32] and the model on the right
+being the worst models.
+[07:35] And the questions are just
+sorted from the easiest question
+[07:41] to the hardest question.
+[07:42] So the y-axis is its rank.
+[07:45] And the color is the accuracy
+of that model on this question.
+[07:55] OK yeah, so we have
+this kind of data.
+[07:59] You see there seems to be a
+clear trend of easy questions
+[08:06] and hard questions.
+[08:09] Good models and bad models
+and somewhat sharp transition
+[08:20] from this plot.
+[08:22] So this was on Math
+500 train of thought.
+[08:30] And we can look at
+many benchmarks.
+[08:33] I try to get a lot of it
+where there's data available
+[08:38] or I can run them.
+[08:42] So some are a bit noisy.
+[08:44] So then we have HumanEval on
+the left, MBPP on the right.
+[08:50] Maybe the division on
+HumanEval is less clear
+[08:53] but it's still clear on MBPP.
+[08:58] Sometimes you cannot get--
+[09:00] so the color gradient
+is because we
+[09:02] have multiple draws for
+each question, where yellow
+[09:09] is like a 0.5 or 50%
+probability of getting correct
+[09:15] on that question.
+[09:18] But sometimes these are
+external benchmarks that's
+[09:21] aggregated by other people.
+[09:24] And then we just get a
+binary correctness judgment.
+[09:29] So SWE-bench leaderboard
+is one of the most
+[09:32] comprehensive with more than 100
+model plus agent participating.
+[09:41] And the LiveCodeBench
+on the right is another,
+[09:48] lead author is
+also from Berkeley.
+[09:55] So even though there
+are binary, you
+[09:57] can still see there are easy
+problems, hard problems,
+[10:03] and some problems
+where no models solve.
+[10:12] So one thing I can
+observe is there's just
+[10:15] from this exploratory
+data analysis,
+[10:18] there's a lot of inconsistency.
+[10:21] So even though the model on the
+left is the best but sometimes
+[10:27] it fails on a easy problem.
+[10:32] And some of the really rather
+bad models that succeed only
+[10:39] maybe 30-something percent of
+the time or they succeed on some
+[10:44] pretty hard problems.
+[10:48] So this suggests to me
+that maybe the problems
+[10:52] in these benchmarks
+are not that special,
+[10:55] and even bad models have
+a chance of getting them
+[10:58] correctly, even though
+maybe a lower chance.
+[11:05] So back to the question
+I posed, can we
+[11:09] make up for low statistical
+power with hard problems?
+[11:14] I think right.
+[11:15] Certainly in some
+cases, you can.
+[11:18] But if you see
+this inconsistency,
+[11:20] you should be pretty suspicious.
+[11:23] So I'm trying to illustrate.
+[11:25] Say you have a
+baseline model where
+[11:29] it's correct on some questions.
+[11:31] And then if you had a strictly
+better model that's better
+[11:37] on more questions, then maybe--
+[11:40] OK, maybe some of
+these questions
+[11:41] are really hard, really
+interesting And somehow it
+[11:46] got them right and
+that could mean a lot.
+[11:50] But the reality seems
+more like the third line,
+[11:55] where maybe you're a
+bit better overall,
+[12:00] or about the same overall,
+but you get some questions
+[12:03] correctly, or sometimes
+better, sometimes worse
+[12:07] compared to the baseline,
+so not always consistent.
+[12:14] And I would maybe
+draw the analogy.
+[12:17] Like if someone can write down
+if probably very hard and long
+[12:23] proof of P0 equal to NP, but
+some but they cannot define what
+[12:28] NP is or don't know some of the
+basic concepts then that maybe
+[12:33] you suspect, OK, maybe
+they copied it somewhere.
+[12:37] If it's truly open problems,
+they cannot copy it somewhere.
+[12:40] But for the problems
+in the benchmarks,
+[12:43] that could be possible.
+[12:46] So that's the inconsistency.
+[12:50] Another thing we can
+look at is really
+[12:54] what is the probability that a
+model gets a question correctly.
+[13:01] So here is zooming in into
+the same kind of chart.
+[13:08] So here, we have
+this question 134
+[13:12] that only some very good models
+get consistently correctly.
+[13:19] So the slightly green here.
+[13:22] But if we draw about 1,000
+samples for each question
+[13:27] and some of the worst overall
+models still has a fair chance
+[13:32] of getting them right.
+[13:34] So in this case, that's
+the relevant number.
+[13:38] You still have 30% chance
+of getting it right.
+[13:43] Some of the others are
+maybe less than 1%, 10%.
+[13:49] Depending on the case,
+actually once you
+[13:52] have some chance of getting
+the question correctly,
+[13:55] making it more and more reliable
+may not be that impressive.
+[14:00] So one could argue that
+actually the first percent
+[14:03] is very important.
+[14:05] So especially if you have
+a verifiable question where
+[14:12] one way or another
+the verification
+[14:13] is easier, maybe a
+proof for something,
+[14:17] then once you have a decent
+chance of getting it correctly,
+[14:19] you can just try, try,
+try again and verify.
+[14:22] And with a little
+bit help, your model
+[14:27] can actually increase
+the reliability
+[14:30] without doing too much in
+actual impressive things.
+[14:39] So I think with that bit of
+exploratory data analysis,
+[14:45] I can convince you that,
+at least for the benchmarks
+[14:50] that we have, these small
+benchmarks are still not
+[14:56] reliable even if they seem to
+contain some hard and very, very
+[15:02] hard agentic problems.
+[15:10] OK, and to give an example from
+daily life, one was my kettle
+[15:18] was broken.
+[15:20] You use to boil water, and
+I took apart the model OK,
+[15:26] what happened?
+[15:28] Can you help me identify
+what's the problem?
+[15:33] Took a picture.
+[15:34] Ask what it is.
+[15:36] It says, oh, it
+appears to be a robot.
+[15:42] So I would trust its
+later advice a lot less.
+[15:51] Then it shows hard problems
+may have many, many steps,
+[15:57] and the probability of error
+will increase exponentially
+[16:00] as the number of steps.
+[16:01] So if you have some constant
+probability of error,
+[16:05] then it's very unlikely that
+you can solve the hard problem.
+[16:08] So there are some
+kind of a gradient
+[16:11] is what I'm trying to say here.
+[16:14] Although sometimes you
+can jump over it, right?
+[16:17] You can still get the
+answer correctly somehow,
+[16:21] but you would trust it less.
+[16:26] And as a result, so probably
+statistical analysis
+[16:31] is still important now.
+[16:34] And since we have
+some time, I want
+[16:41] to try to convey the
+basics of how this works,
+[16:46] especially maybe the
+concept of sampling
+[16:53] from a super population.
+[16:56] In some sense, this is apparent
+from basic stats in textbooks,
+[17:02] but this paper from Alvin
+Miller articulated pretty well
+[17:08] in the context of
+LLM evaluations,
+[17:11] which I think we
+linked for this class.
+[17:15] So here, I introduce
+a bit of notation
+[17:20] to make the case of drawing
+multiple samples clear later,
+[17:26] which is a bit different
+from his notation.
+[17:30] So first of all, if we have--
+[17:32] so xi is a question.
+[17:34] x is not a-- so it's
+the i-th question.
+[17:37] We have n total questions.
+[17:39] And usually, what evaluation
+benchmark does is it takes--
+[17:45] when it works on model A,
+it takes all the questions
+[17:50] Ax returns, say, most commonly
+a 0, 1 value, 0 for incorrect,
+[17:57] 1 for correct.
+[17:59] And we get the average, A bar.
+[18:06] And this is the particular
+set of N questions.
+[18:10] But this estimation
+perspective says,
+[18:15] well actually, we can
+draw other questions
+[18:19] all from the same distribution.
+[18:21] And these N questions is just
+the particular representative.
+[18:25] But we can use it to
+estimate the variance
+[18:30] of the real population.
+[18:33] And you can ask what
+those N samples,
+[18:37] and that's the variance
+of Ax estimated
+[18:42] by the empirical
+average on the samples.
+[18:48] And then because the mean is
+computed by averaging N things,
+[18:54] there's the concept
+of the standard error
+[18:57] of the mean, which is less than
+the variance of the population
+[19:05] by the factor of 1
+over square root N,
+[19:10] giving you a pretty clear trend.
+[19:14] Multiplied by the-- you can
+think of the variance as fairly
+[19:19] constant because--
+[19:21] so for instance, if it's 0, 1
+variables, the maximum it can be
+[19:25] is 1 over 4.
+[19:28] And often much smaller.
+[19:30] So already, you
+have an upper bound
+[19:32] on how big your standard
+error of the mean
+[19:35] is without having any data.
+[19:43] But that just gives you--
+[19:46] if you draw repeated samples,
+if you draw other samples
+[19:49] from the same population,
+what's the variance of the mean?
+[19:55] But actually, what we
+are more interested
+[19:57] in is comparing model A and
+model B, and try to answer,
+[20:02] did my model B do
+better than model A?
+[20:09] And this part is
+really for free.
+[20:13] It's just better analysis.
+[20:16] You already have all the data.
+[20:19] So instead of asking
+what's the variance of A,
+[20:21] you just ask, well, what's
+the variance of Ax minus Bx?
+[20:29] So if you have a set of
+samples and they are 0, 1, now
+[20:34] you have some set,
+it's either minus
+[20:39] 1, 0, or 1 with
+some probability.
+[20:44] And this could potentially
+have a large impact.
+[20:48] So if A and B are almost
+perfectly correlated, then
+[20:53] by doing this paired
+variance estimation,
+[20:57] it could be potentially
+reduced to near 0.
+[21:05] So yeah, so that's a
+different version of variance.
+[21:11] And once you have--
+[21:13] which can also be normalized
+to be the standard error.
+[21:16] And once you have
+the standard error,
+[21:17] you compare it to how big
+the difference in mean
+[21:22] is to get the z-score.
+[21:24] And according to the
+theory, the z-score
+[21:29] follows a standard
+normal distribution.
+[21:32] So assuming your n is large-ish,
+which all of our evaluations
+[21:37] still satisfy.
+[21:39] So for instance, being 1 z-score
+away is quite likely to happen
+[21:46] just by chance by 5 since--
+[21:53] so I guess five
+standard errors away
+[21:58] is quite unlikely to happen.
+[22:00] And the very
+conventional standard
+[22:02] is about two
+standard errors away,
+[22:05] which gives a 5% chance
+of happening by chance.
+[22:13] So that's how the basics of
+this statistical analysis works.
+[22:21] And on this human eval data
+set, we have 164 examples.
+[22:28] And typically, your standard
+error will be about 4%
+[22:35] for each individual component.
+[22:38] If you don't pair them up,
+then to produce the 5% p value,
+[22:44] you need about a 10%
+difference in performance.
+[22:49] Even with a paired test, you
+typically still need about 8%.
+[22:54] And these are larger than
+what's reported by many papers.
+[23:03] So yeah, I can also
+give a bit of intuition.
+[23:06] So if we are
+considering unpaired,
+[23:09] it's drawing from
+the distribution.
+[23:12] So suppose A scored 50%
+on this year's exam,
+[23:16] but B scored 60% on
+last year's exam.
+[23:20] They contain different
+exam questions,
+[23:22] but they are drawn from
+the same distribution.
+[23:25] So that's an unpaired.
+[23:27] In the paired version--
+[23:29] so in the unpaired
+version, B might
+[23:31] have done better just because
+last year's was easier,
+[23:34] for instance.
+[23:35] But in the paired
+version, B also
+[23:38] did the exact same exam as A
+with exactly the same questions.
+[23:43] And then typically,
+the 10% difference
+[23:47] seems more significant.
+[23:50] So basically, because they
+did the exact same problems,
+[23:55] we can take advantage of it.
+[23:58] Even though if you met the
+higher standard of unpaired,
+[24:01] that also works.
+[24:06] So one interesting thing about
+LLMs that I work out here
+[24:10] is they can draw multiple
+independent samples.
+[24:16] And especially with the
+agent and reasoning models,
+[24:19] this is becoming more
+and more prominent.
+[24:24] And humans certainly
+can't do this.
+[24:26] If I solve the problem, I
+cannot forget it and reattempt.
+[24:32] So a common
+confusion is actually
+[24:35] thinking that the
+only kind of noise
+[24:37] coming from these devices or LLM
+gives you different predictions.
+[24:43] But according to
+this theory, if you
+[24:47] are sensitive to what
+exact questions are chosen,
+[24:51] that's also a type of noise.
+[24:53] In fact, it could be the
+more important type of noise.
+[25:00] Yeah, but we can
+develop a system
+[25:02] to capture the
+setting, as well, where
+[25:08] you have-- we all, in addition
+to the question variable x,
+[25:11] we also have the noise
+variable epsilon.
+[25:14] And your evaluations,
+you average
+[25:17] over both the questions and
+multiple draws of the model.
+[25:22] And you can estimate
+the variances as before.
+[25:26] And now, actually,
+there's a decomposition
+[25:30] of the total variance
+into first the variance
+[25:36] due to choosing
+different questions,
+[25:38] but averaging over the noise,
+the noise due to sampling
+[25:48] multiple times from the model.
+[25:51] And actually, it's a nice
+identity that adds them up.
+[26:00] And you can, as before, get the
+standard error versions of them,
+[26:07] and then apply the same
+z-scores in now both the paired
+[26:16] and with noise setting.
+[26:19] So I don't need to do
+all the details here,
+[26:22] but I tried to work this out.
+[26:23] I tried to make sure
+they are correct,
+[26:27] and to test run a bunch
+of empirical data,
+[26:32] so maybe others can
+just use the results
+[26:35] without fully understanding
+that and do it themselves.
+[26:43] Yeah, so even though
+you have this ability,
+[26:46] but sometimes it can lead
+to a bit of weirdness
+[26:50] when you can say, I can't
+do this question correctly
+[26:54] with probability 0.8.
+[26:59] So here, we can have--
+[27:01] in this example, we
+have eight questions,
+[27:04] and model A and
+model B. So model A
+[27:08] is overall not that great.
+[27:11] It has a 10% chance of getting
+each question correctly,
+[27:15] but model B has a 100% chance
+of getting the first four
+[27:20] questions correctly,
+but 0 chance of getting
+[27:23] the second four correctly.
+[27:26] This can happen
+if you, say, do RL
+[27:30] and maximize the
+expected reward.
+[27:33] So your expected
+reward increased,
+[27:35] but actually, the set of
+solvable questions decreased.
+[27:42] And it's not completely
+clear which one is better,
+[27:46] even though the average for--
+on average, B is much better.
+[27:52] But if some of the
+errors can be corrected,
+[27:56] say, with a verifier in the
+loop, then A is actually better.
+[28:05] And all of these can be computed
+with a fairly simple variance
+[28:12] and mean estimations.
+[28:14] There is more complexity
+with the correcting of bias.
+[28:17] But one thing you
+don't have to do
+[28:19] is you don't need to compute
+these with bootstrap, which
+[28:23] is a perfectly fine method.
+[28:24] But sometimes, when the answer
+is just p times 1 minus p,
+[28:29] and they say, oh, let's
+compute this with bootstrap,
+[28:33] shows a certain maybe
+lack of thinking.
+[28:37] And we see a lot of examples
+of people doing bootstrap
+[28:40] incorrectly in the literature.
+[28:45] But actually, another
+reassuring thing
+[28:48] is multiple very well
+established theories will
+[28:53] give roughly the same answer.
+[28:57] So namely, bootstrap
+is another viewpoint
+[29:01] on this problem where you say--
+[29:05] I mean, the main idea is
+really if you draw samples from
+[29:11] the empirical distribution--
+that's the samples that you are
+[29:14] actually given--
+[29:16] it roughly behaves the
+same as the drawing
+[29:19] and drawing more samples from
+the unseen super population.
+[29:24] And if you try to
+estimate that way,
+[29:25] you get basically
+the same answer.
+[29:29] Another quite classic method
+is a scientist treating this
+[29:37] as testing a hypothesis,
+where the null hypothesis is
+[29:41] everywhere A and B is
+different, each have
+[29:45] a 50% chance of being better.
+[29:49] And it asks, how likely
+is this random model
+[29:53] to achieve a result as extreme
+as the one you observed?
+[29:59] And this will also
+get about the same--
+[30:02] give you the same result
+as long as the A and B
+[30:07] performance about not too
+far away from each other.
+[30:15] OK, so that's the method.
+[30:21] So I think the main
+contribution of this work
+[30:28] is if I try to do this
+on all the benchmarks,
+[30:34] all the model pairs
+I have, carry out
+[30:38] these different
+type of analysis,
+[30:41] then maybe the numbers
+will be fairly consistent.
+[30:46] And you don't need to say,
+well, maybe my model pairs
+[30:51] is very special and
+different from the others.
+[30:58] So that's what I did--
+[31:02] try to do this on
+all model pairs,
+[31:05] and take the average of all
+the meaningful standard errors,
+[31:11] both the paired and unpaired.
+[31:15] And then I can write this
+down just for each data set.
+[31:22] And one immediate
+observation, then,
+[31:25] is that actually,
+the paired test
+[31:28] tend to return about
+the same result
+[31:34] as the unpaired, which means--
+[31:38] so one way to interpret it is,
+OK, maybe their correlation
+[31:41] is about 50%.
+[31:45] So if you actually apply
+the unpaired method,
+[31:49] you would have to first multiply
+this by square root of 2,
+[31:53] resulting in less power.
+[31:55] But actually, if
+you do the paired,
+[32:00] the standard error
+is about the same.
+[32:03] So yeah, and the
+unpaired standard error,
+[32:09] you can more or less just
+calculate from the accuracy
+[32:13] and the data set.
+[32:18] So hopefully, that
+makes it a lot easier.
+[32:23] But there is a slightly
+weak dependence
+[32:26] on the overall accuracy.
+[32:28] So when your performance
+is near 0 or 1,
+[32:35] the standard error is lower.
+[32:38] But it's not a super
+strong dependency.
+[32:41] And yeah, but if you want
+to get this little bit
+[32:44] of additional accuracy,
+I also gave the estimated
+[32:52] standard error on each
+data set as a function
+[32:55] of its overall accuracy.
+[32:58] So where we are here,
+the green dashed line
+[33:04] is if I treat them all
+as the independent,
+[33:08] and the blue lube is
+the prediction by.
+[33:11] another simple theory
+I will talk about.
+[33:14] But first, we can look at
+a few examples of these.
+[33:18] So for the most
+part, once your model
+[33:22] has a reasonable performance
+on this data set,
+[33:26] it follows this beta
+theory prediction.
+[33:30] But when it's quite bad, then
+maybe it's more independent.
+[33:39] And this holds for almost
+all the data-- yeah,
+[33:43] all the data sets.
+[33:45] And I see it very--
+[33:47] yeah, except with a few
+possible deviations.
+[33:51] One is here.
+[33:53] It's MLU.
+[33:54] It's a multiple choice test.
+[33:56] So when all the models
+are really, really bad,
+[33:59] even your random model can
+get the 1 over 5 or 1 over 4.
+[34:06] So there, it was more
+like independent.
+[34:08] But once the model gets better,
+it follows the beta prediction.
+[34:14] Similar for LiveCodeBench.
+[34:19] And also, quite some--
+[34:22] and you also got the
+same result for swebench
+[34:25] now with more and more data
+points giving more confidence.
+[34:29] And there's just one pair
+of outliers that I saw,
+[34:35] and I dig into it a little bit.
+[34:38] And they were these three fixer
+versus three fixer with a filter
+[34:44] result where you got a
+strict improvement, and thus,
+[34:52] much less standard error.
+[34:57] Yeah, it's a bit reassuring
+to say, OK, this is not
+[35:02] some real universal phenomenon.
+[35:04] It really only applies
+if you are testing LLMs.
+[35:09] So even though these
+are a diverse set--
+[35:14] somewhat.
+[35:15] For a somewhat
+diverse set of LLMs
+[35:17] are trained by different
+people on different data
+[35:22] using different agents, as well.
+[35:24] But they are still all
+LLMs, and does seem
+[35:29] to have similar noise behavior.
+[35:36] OK, so then I try to
+explain this a little.
+[35:40] So why is it that we
+get noise at that level?
+[35:47] So one thing we can do is look
+at the empirical distribution
+[35:51] of the probability of getting
+correct for each tier of models,
+[36:01] from really bad models
+to the best models.
+[36:05] So here, this is the cumulative
+distribution function.
+[36:10] And see, what do they look like?
+[36:13] And it turns out you can
+fit a beta distribution
+[36:17] after accounting for the true
+real zeros, the questions where
+[36:21] no model solved.
+[36:24] And once your performance
+is good enough,
+[36:32] the bimodalness, let's say,
+of the beta distribution
+[36:37] increases, often with roughly
+the parameters summing to 1.
+[36:44] And that corresponds
+to the prediction
+[36:46] that we showed before.
+[36:50] So again, if you use
+this model, then you
+[36:54] can predict how much noise
+there is without having
+[36:58] all the individual results.
+[37:01] And beta distribution
+is this distribution
+[37:05] on the interval 0 to 1 where
+in this range with, I guess,
+[37:12] a parameter summing to
+1, they are bimodal.
+[37:17] Whereas for parameter summing
+to be something bigger, more
+[37:22] unimodal.
+[37:25] So this also appears to
+fit multiple data sets.
+[37:31] Here are MLU pro
+train of thought.
+[37:36] And more discreet predictions,
+like swebench verified, as well.
+[37:44] Now, the empirical predictions
+are step-wise because there's
+[37:48] only so many models where we
+don't have multiple predictions,
+[37:52] but the overall trend
+still seems to fit.
+[38:02] So that's what I wanted to
+say about measuring noise.
+[38:09] There are other works such
+as a run with multiple seeds
+[38:13] or something like measuring
+the variance of your training
+[38:17] curve, which actually tend to
+lead to an underestimation.
+[38:22] So after doing both exploratory
+data analysis and some summary
+[38:29] of it, we can--
+[38:31] in fact, we recommend
+this increasing accuracy.
+[38:36] So if you really just
+want a ballpark figure,
+[38:40] just look at the table.
+[38:42] It tells you what the
+standard error is by data set,
+[38:46] and you don't need to
+do the additional work.
+[38:50] To get a little
+bit more accuracy,
+[38:52] you can look at
+these charts, find
+[38:56] what's the range of your model,
+then read off that chart.
+[39:06] You can also provide your
+results on each question
+[39:17] and use my code.
+[39:18] And then it runs
+all together, gives
+[39:20] your particular
+comparisons in the context
+[39:23] of all the other comparisons.
+[39:26] So if you're getting something
+strange, you immediately know.
+[39:31] But you can also do your
+own tests and calculations,
+[39:36] but it seems fairly
+error prone because there
+[39:40] are several different types.
+[39:47] So noise the thing that I
+think I took the furthest here,
+[39:54] but there are a few
+other things you
+[39:57] could do with this
+kind of data tool.
+[40:01] I think one interesting one
+is you can, say, look at--
+[40:08] see if this works, yeah.
+[40:11] You can look at the
+examples and see,
+[40:17] well is this example
+negatively correlated
+[40:23] with the overall
+model performance?
+[40:27] The better the model is, the
+worse it does on this example.
+[40:30] And we can find
+some such examples
+[40:33] in many of the data
+sets, but a lot of them
+[40:38] are not actual errors
+except on this mbpp
+[40:46] where you have a bunch of
+negatively correlated examples
+[40:50] that are actually either
+inconsistent or somehow
+[40:56] incorrect.
+[41:01] But not all of
+them are mistakes,
+[41:04] so this gives one way to audit
+the quality of the evaluation
+[41:09] set.
+[41:12] Find a few mistakes
+in mbpp, and which got
+[41:15] incorporated into mbpp plus.
+[41:18] You can also try to find
+suspicious models, actually.
+[41:23] So once you say you have
+some suspect examples where
+[41:29] the leading model
+that wasn't cheating
+[41:35] will overlook what's in
+the evaluation data set.
+[41:39] But there may be
+a few model which
+[41:41] gives the exact answer
+from the evaluation
+[41:44] data set on this wrong example.
+[41:48] So if there are a
+few of those, you
+[41:49] can gather some evidence
+on what models maybe have
+[41:54] trained on the evaluation data.
+[42:04] Yeah, I think this is more
+for a benchmark builder.
+[42:09] So that was the
+absolute level of noise.
+[42:14] But an important question is
+really what kind of effect size
+[42:20] can you measure
+with your benchmark?
+[42:23] So this also depends
+on the standard error.
+[42:27] But on many models
+when they release,
+[42:30] they release a series of
+models from small to large.
+[42:35] So a place to get
+signal is when, say,
+[42:39] when you double your model size,
+how much improvements you get--
+[42:43] scaling law, which gives
+a consistent improvement.
+[42:47] And you can ask, OK,
+so on each benchmark,
+[42:51] how much signal to
+noise ratio, really?
+[42:55] Also measure by
+z-score is there.
+[42:59] And here, you have
+still mostly just mostly
+[43:06] a function of the
+size still, but with
+[43:09] the occasional differences.
+[43:14] So MLU can very reliably
+distinguish the next larger
+[43:19] model.
+[43:20] Whereas many of the
+code evaluations,
+[43:24] like the human eval, cannot even
+distinguish doubling the model
+[43:28] size.
+[43:44] A few examples, but OK.
+[43:45] But I think we can end here.
+[43:50] So I give a way to look at
+all the question results.
+[43:55] Spend most of the
+effort characterizing
+[43:57] how big the noise is, but
+also show a few ways to get

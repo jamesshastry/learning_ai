@@ -1,0 +1,2640 @@
+[00:02] maybe there's also a
+lot of very good classes
+[00:06] previously, just like by
+Yang, by [INAUDIBLE], yeah,
+[00:11] by a lot of other
+people in the class.
+[00:12] So I think when I'm [AUDIO OUT]
+I was asked to talk about this,
+[00:16] I'm thinking about, OK,
+what I should talk about?
+[00:18] So this is why I
+chose to talk about--
+[00:21] OK, so probably I should
+talk about something maybe
+[00:24] that's not shared in the
+textbook, but actually is
+[00:26] what is really working
+in our daily work
+[00:29] when we are sharing
+these large-scale models.
+[00:32] So my name is Weizhu Chen.
+[00:34] So here's about me.
+[00:35] So I'm an engineer.
+[00:37] I'm also a researcher as well.
+[00:39] So basically, I lead the
+GenAI team and the CoreAI,
+[00:42] the post-training teams.
+[00:43] So for training, for
+today, most of the effort
+[00:46] is in the reinforced
+learning trainings.
+[00:48] So I got my PhD in
+the Hong Kong UST.
+[00:50] I worked in the MSRA, and I
+came to the US in the 2012.
+[00:54] So basically, I've
+been at Microsoft
+[00:57] for about 20 years, and split
+between the MSRA and the Product
+[01:03] team.
+[01:04] But now actually I'm in the
+Product team, and also--
+[01:07] because I'm more
+passionate about,
+[01:09] how can we build a product
+that's really working?
+[01:11] And it's also interesting.
+[01:13] Actually, I found when I
+am in the Product team,
+[01:17] actually, even my
+research actually
+[01:18] is much more productive when you
+are in the Product team today.
+[01:21] So as you can see,
+most of the work here
+[01:23] actually was done when I
+was in the Product team.
+[01:27] So yeah.
+[01:29] So yeah, I think
+that's about me.
+[01:32] And the next step,
+I think I would
+[01:34] love to talk about, for example,
+just use this as an example.
+[01:38] So how can we build
+this the agentic model?
+[01:41] So my effort here today is more
+about the model training instead
+[01:45] of the model inference, because
+I still truly believe, actually,
+[01:48] if you want to improve
+the model quality,
+[01:50] you need this kind of end-to-end
+training to make things happen,
+[01:52] to build the best models.
+[01:53] So here is just about an
+example of the coding agents.
+[01:57] It doesn't mean we're just
+working on the coding.
+[01:59] We're also working
+on something else.
+[02:01] But I think coding actually
+is a really good example
+[02:04] to share how the model are
+trained today in the industry.
+[02:09] Because a lot of people here
+actually use the Visual Studio
+[02:11] Code, GitHub Copilot,
+Cursor, whatever.
+[02:15] And, for example, just
+like here, it is about one
+[02:18] of the examples.
+[02:19] Just like if you go to GitHub,
+you have the GitHub issue,
+[02:21] and you also have this
+kind of code base.
+[02:25] And basically, that's
+your repository.
+[02:28] So the issue basically
+you would describe, OK,
+[02:30] what they want to solve.
+[02:31] For example, this
+is the bug, I want
+[02:33] to fix this bug,
+something like that.
+[02:34] And that's in the laptop.
+[02:37] And definitely here,
+you have the model.
+[02:41] The model is going to try
+to solve these problems.
+[02:44] But I think besides
+this, there's also
+[02:46] a lot of other things here.
+[02:47] One is about the
+environment simulator.
+[02:50] So because you need to run the
+code, you need to run the test,
+[02:52] and this mostly didn't
+run in your local machine,
+[02:55] and actually, it's
+running in a sandbox,
+[02:57] so you have the very large-scale
+environment simulator.
+[03:01] So yeah, environment simulators,
+most of them, actually,
+[03:05] is running on the CPU today.
+[03:09] But the number of the CPU here,
+definitely it could be at least
+[03:11] 10x of the number
+of the GPU today.
+[03:13] So that's also
+pretty huge today.
+[03:16] And for this kind of
+simulator, basically, you
+[03:18] can do a lot of things.
+[03:19] And the most interesting thing
+is about the language model.
+[03:22] It's going to communicate
+with the simulator
+[03:24] to run so many different
+things for multiple times.
+[03:27] And this is the
+multi-turn conversations.
+[03:29] Basically, you can
+think about it this way.
+[03:31] And finally, the language model,
+will think about, oh, yes,
+[03:33] actually, after I do
+all this kind of thing,
+[03:36] I can generate something
+now to fix the issue.
+[03:38] So you're going to generate
+a pull request, something
+[03:40] like that.
+[03:41] And this pull request is going
+to get back to the users.
+[03:44] And the user will have to
+continue the interaction to say,
+[03:48] oh, maybe you didn't give
+me the right pull request,
+[03:50] I need to change
+something additionally.
+[03:52] So it's this kind of
+multiple-turn conversation
+[03:54] continually.
+[03:56] So that is about a very typical
+agentic model training round.
+[04:02] And definitely there's
+a lot of other things,
+[04:04] and they also want
+to do the unit test.
+[04:06] During this time, the
+environment and the language
+[04:10] model, we ask, OK, Can
+you run test for this?
+[04:12] And then, after,
+actually, you're
+[04:14] going to tell me whether
+the test passes or not.
+[04:19] So basically, for example,
+if you want to say about, OK,
+[04:22] what is about the
+agentic trainings?
+[04:24] Definitely, there are
+so many different things
+[04:26] about the agentic training.
+[04:27] But I think there's are
+a few things definitely
+[04:29] that is very important.
+[04:30] For example, based
+on the examples,
+[04:32] one is about you need to
+be very goal-oriented.
+[04:35] You have a goal you
+want to achieve,
+[04:38] whether it's the math
+problem or whether it
+[04:41] is about you want the
+model to generate the pull
+[04:43] request for you.
+[04:44] So that is the goal.
+[04:46] That is the exact goal.
+[04:47] And this pull request also
+have a lot of requirements.
+[04:49] Just like you need
+to solve the problem,
+[04:51] you need to be able to pass
+all the unit tests, whatever.
+[04:54] And basically, I think another
+thing is about the tool usage.
+[04:57] And this tool usage,
+just like I mentioned,
+[05:01] there's a simulator there.
+[05:02] You have a simulator, and
+you want to ask the simulator
+[05:05] to run a lot of things.
+[05:07] And this tool usage,
+actually, is multiple turn.
+[05:10] It's not a single turn.
+[05:11] Actually, the communication is
+pretty complicated sometimes.
+[05:14] And you also need to-- the model
+also needs to do the planning.
+[05:18] And the planning means
+that actually the model
+[05:20] needs to decide, OK, what I
+should do first and second.
+[05:23] And the model also
+needs reasoning
+[05:25] because actually
+the model is going
+[05:27] to decide what I need to do next
+based on the current status,
+[05:30] based on the current feedback,
+including from the model itself
+[05:34] or including from this
+kind of the simulator.
+[05:36] So it needs to do the reasoning.
+[05:38] That's why, for example, you
+can see that the reasoning
+[05:40] model is so suitable for this
+kind of agentic model training.
+[05:44] There are some reasons there
+because the model really
+[05:47] needs this.
+[05:48] And also, in a real
+system, actually, there's
+[05:51] also needs to consider
+the user interaction.
+[05:55] The model needs to
+listen to the user based
+[05:57] on the current context.
+[05:58] So what is going wrong?
+[05:59] What can be improved?
+[06:00] Something like that.
+[06:01] And to achieve all these goals,
+there are so many things.
+[06:05] But I think for
+today, I will only
+[06:06] talk about a few things
+that is pretty simple,
+[06:08] because I think maybe
+this kind of thing
+[06:10] actually is a
+little bit different
+[06:11] than your understanding
+from some other place,
+[06:14] based on my experience
+in the industry.
+[06:17] So the first one is the
+data because, I think, data,
+[06:20] actually, nobody
+will underestimate
+[06:21] the importance of the data.
+[06:23] But we can also share,
+maybe, for example, what
+[06:26] we have done on the data side.
+[06:28] So the other one is the
+grader is the evaluation.
+[06:30] So I think Yang, in the first
+class, already mentioned,
+[06:34] actually, reinforced learning,
+agentic model training is more
+[06:38] about how you define
+the evaluation,
+[06:40] how you define the grader.
+[06:41] But it's not that easy
+to define the grader.
+[06:44] And the other one,
+actually, I want to say--
+[06:46] talk about is about
+the efficiency,
+[06:48] for example, because
+when you're running
+[06:49] with these kinds of
+thousands of GPUs,
+[06:51] the efficiency actually
+defines a lot of things,
+[06:54] whether you can
+run it very stable.
+[06:56] And the last part, actually,
+I didn't mention here
+[06:58] is what I'm going to talk about
+also, in this kind of direction,
+[07:02] what is the next, what is the
+most interesting thing here?
+[07:07] So for the data--
+[07:10] so I think everybody
+thinks about, know about--
+[07:12] actually, we have
+two kinds of data.
+[07:14] One is about the data, actually,
+that the result can be verified.
+[07:17] We call it verifiable.
+[07:19] So just like math,
+just like coding,
+[07:21] you can run the unit
+test, just like them.
+[07:23] Actually, just like
+the test, A, B, C, D,
+[07:25] you also have the right answer.
+[07:28] I think, in my
+opinion, actually,
+[07:30] it's the verifiable, definitely.
+[07:31] It's super good.
+[07:32] So it's actually bringing
+a lot of intelligence.
+[07:35] But in the real product,
+a lot of things,
+[07:37] actually, is not verifiable.
+[07:39] It's very hard for you to verify
+whether this is the ground truth
+[07:43] or not, and it's pretty open.
+[07:46] For example, there are
+so many different things
+[07:48] that's not verifiable.
+[07:49] Facts like whether we
+show the code to the user,
+[07:52] whether this code is
+in the grid style.
+[07:54] For example, just like
+other-- whether this writing
+[07:56] or this representation
+is in the grid style,
+[07:58] whether you like it
+or don't like it,
+[08:00] is very subjective all the same.
+[08:02] So the other one is writing.
+[08:04] For example, you ask
+the language model
+[08:06] to write a poem for you
+or whatever for you.
+[08:08] Different people have
+different opinions.
+[08:10] So this is not very
+easy to verify,
+[08:13] the safety, or maybe
+this is safe for him,
+[08:16] but it's not safe for
+the other persons.
+[08:18] So I think we already
+know about this.
+[08:20] But I think there's
+also one of the things.
+[08:22] There are two things actually
+I want to talk about today,
+[08:24] one is called the rubrics.
+[08:27] So that's how things work.
+[08:29] Actually, in the InTouch
+lab, we do a lot of rubrics.
+[08:32] And this is also
+something pretty special.
+[08:34] Maybe I'm going to
+show an example.
+[08:37] So it's much more complicated
+than most people think.
+[08:40] And rubrics--
+actually, we basically
+[08:43] have a lot of very good people
+to write this kinds of rubrics.
+[08:46] The other one, actually,
+I want to mention
+[08:48] about is the data synthesis.
+[08:50] So the data synthesis
+is so important
+[08:52] when you're trying to run a
+lot of these kinds of products.
+[08:55] So because the data
+synthesis actually
+[08:57] is the most scalable way, you
+are able to synthesis the data.
+[09:00] And at the beginning,
+maybe previously,
+[09:02] we think about, OK,
+maybe building data
+[09:04] is just some dirty work.
+[09:06] I want to share with you now.
+[09:07] I put the best person,
+best talent, in the team
+[09:09] to build up the data.
+[09:10] How to synthesis
+the data actually
+[09:12] is the most important thing
+to make the model much better,
+[09:15] especially for the
+model in the product.
+[09:17] So for the rubrics--
+[09:19] so let's say about,
+for example, I
+[09:20] think the right side
+actually is examples.
+[09:23] It's an example for the rubrics.
+[09:25] You can think about
+this as the questions.
+[09:27] And actually, the basic
+idea is about you--
+[09:33] this is the question.
+[09:34] You can also ask
+the human expert
+[09:36] to write a ground truth
+based on their opinions.
+[09:39] But I think this is not enough.
+[09:41] This is previously.
+[09:42] But now, actually, we want the
+human to write this criteria.
+[09:46] And it's no surprise to me,
+for example, for a question,
+[09:50] there are 50 criterias.
+[09:51] And each criteria need to be
+super clear and very detailed.
+[09:57] And humans are able to read.
+[09:59] And it's also very structured.
+[10:01] It's also able to
+score, to give maybe,
+[10:05] for example, if you respond
+to this thing-- actually,
+[10:07] the score is 1 or 0 or whatever.
+[10:10] It's able to be scored.
+[10:12] The scoring,
+actually, this define
+[10:14] how the reinforce learning,
+during the learning, actually--
+[10:17] how to run the grader.
+[10:20] And this is going to be
+the input for the grader.
+[10:22] And so basically
+this kind of thing
+[10:24] is the-- definitely
+this is super useful.
+[10:26] For example, justify for this
+the open domain questions
+[10:30] and open questions because
+it's really hard to measure,
+[10:33] so what is the
+right answer or not.
+[10:35] So if you're not able
+to measure it this way,
+[10:38] the way is to split
+into five final grades.
+[10:41] And then for each of
+the pieces, actually, we
+[10:44] manage, OK, this is good or bad.
+[10:45] And we try to measure that.
+[10:47] Because if we cannot measure
+that, you cannot learn.
+[10:49] That's the most important thing.
+[10:50] And the other one,
+actually, I want to say,
+[10:53] is about the effort to write
+out each of the examples.
+[10:58] Actually, for today,
+it's very expensive.
+[11:00] Sometimes, for experts, they can
+spend a few hours or a few days
+[11:05] just writing up all
+these the criteria.
+[11:08] It's pretty normal.
+[11:09] So it's not like just write
+the ground truth anymore.
+[11:12] And you need to be
+very comprehensive.
+[11:14] For example, all the
+criteria I write up together
+[11:17] is able to cover all the
+aspects, for example,
+[11:20] for these questions.
+[11:21] So whether it's able
+to really measure
+[11:23] the answer, because in
+this case, for no matter
+[11:26] which kind of answer,
+you can use the rubric
+[11:28] to measure how good
+is the answers.
+[11:30] And the other one is about--
+[11:33] quality is more important.
+[11:34] So most of this, actually,
+we don't need so many.
+[11:37] We ask the language model to
+do a lot of generalizations.
+[11:40] So quality actually is much
+more important than quantity.
+[11:45] And for here, I just
+want to ask the question.
+[11:47] We said this is expensive,
+quality is important,
+[11:52] but how many is needed?
+[11:55] So I think a very extreme case
+is about, how about we just
+[11:59] have one single example?
+[12:00] We just write one
+single example,
+[12:02] can we get the model to
+learn to a very good quality?
+[12:06] Because when you guys do
+about this kind of [? SFP, ?]
+[12:10] or even if you use this
+thing to train a model,
+[12:13] one single example
+is not enough.
+[12:15] It's always not enough because
+it's very hard to say, maybe,
+[12:19] using one single example.
+[12:20] But we do a work like this.
+[12:26] Yes.
+[12:27] We did do-- this work is
+about-- for the reinforcement
+[12:30] learning with the
+verified rewards,
+[12:33] if you we just use it to train
+with one single example, what
+[12:35] is it going to look like?
+[12:37] So this is for the math work.
+[12:40] Definitely, this
+is important, but I
+[12:42] think when you do the research.
+[12:43] Actually, we use
+a public benchmark
+[12:44] to verify a lot of things.
+[12:46] So you can see that in
+the lab, this diagram,
+[12:50] the interesting thing
+is about this one.
+[12:53] Actually, the top
+line is about--
+[12:55] based on the training
+from 1,200 examples.
+[12:59] And for this green line,
+basically, it's just one use
+[13:02] one single example.
+[13:04] We just use one single example
+to change the reinforcement
+[13:07] learning.
+[13:09] It's really one single example.
+[13:10] We just keep walking, and
+we try to verify the answer,
+[13:15] whether it's correct or not.
+[13:16] And you can see that
+actually you can go up.
+[13:18] You can keep going up.
+[13:19] And finally, actually, it's
+very close to the [INAUDIBLE]
+[13:23] Actually, you're used
+to train with 1,000,
+[13:25] more than 1,000 examples.
+[13:28] This is really, really amazing.
+[13:31] Because if you just
+use one single example,
+[13:33] it means that, actually--
+[13:35] when you do the
+RL, it's really not
+[13:36] trying to remember
+these examples.
+[13:38] It tries to
+understand, actually,
+[13:40] how to solve the math problem.
+[13:42] But the evaluation sets have
+so many different questions.
+[13:45] So the evaluation
+set is the same.
+[13:47] And there is one
+example on the same.
+[13:50] I think the other point I want
+to make is about the variance.
+[13:54] So how to pick this one single
+example is also very important.
+[13:58] It doesn't mean that every
+example is good enough
+[14:00] for you to train using
+one single example.
+[14:03] So how do we pick the one
+single example here is about--
+[14:06] basically, we try to calculate
+the variance for this example.
+[14:10] For example, for
+this problem, we
+[14:12] use the model to draw out
+whether they are very different
+[14:14] or they are almost the same.
+[14:16] So basically, we
+prefer the difference.
+[14:20] We are going to talk
+about how can we encourage
+[14:22] this kind of exploration.
+[14:25] The model and the example
+based on this model
+[14:29] actually have different kinds of
+the rollout in the reinforcement
+[14:32] learning because the
+more rollouts we have,
+[14:35] actually, the
+better we can learn,
+[14:37] we can observe for the model.
+[14:39] And we can see that
+actually, based
+[14:41] on this-- so there's one
+example based on this rating.
+[14:44] For example, this pi 1 actually
+is much better than the pi 17.
+[14:48] I just give an example
+based on the qualities.
+[14:51] So this definitely tells us
+a lot of interesting things
+[14:54] about reinforcement learning.
+[14:57] The RL data actually is
+very different than the SMT,
+[15:02] or the ILHF, or the decomp data.
+[15:06] So I think the
+difference basically
+[15:08] it means the power of the
+exploration is different.
+[15:11] Now, if we you use
+it this way, you
+[15:13] have much more power
+for the exploration.
+[15:16] You are able to
+explore much more.
+[15:19] So we understand-- actually,
+using this example,
+[15:21] it's not just
+about memorization.
+[15:25] It's not just about you trying
+to memorize this problem.
+[15:28] Actually, you use this
+problem to understand
+[15:30] what is the building
+block for math,
+[15:32] how to solve the mass problem
+just using one single example.
+[15:36] And the second one definitely
+is about its extremely high data
+[15:41] efficiency.
+[15:42] There is a difference,
+for example,
+[15:43] what-- the difference
+between IO today,
+[15:46] and what the previous was.
+[15:48] It is super high
+efficiency if you're
+[15:50] able to pick the right data, if
+you have a very good learning
+[15:52] policy.
+[15:54] And definitely, as
+I mentioned about,
+[15:56] the quality really
+matters here a lot.
+[15:59] So that is one of the first
+points I want to make.
+[16:04] The second point I
+want to make, actually,
+[16:07] definitely in the
+industry training,
+[16:09] you have so many
+different examples,
+[16:10] so many different tasks.
+[16:11] For example, just
+like what we say
+[16:13] about when you
+train a code model,
+[16:15] it's not just about
+the pull request.
+[16:16] For the coding
+model, people also
+[16:18] go there to ask a lot
+of non-coding questions.
+[16:20] They also ask a lot
+of question answering.
+[16:24] For example, OK, can you
+write a document for me
+[16:26] based on the code?
+[16:27] So there are so many
+different kinds of datas.
+[16:30] So in the InTouch lab, actually,
+I want to say for the data work,
+[16:34] it's not only about
+the source data itself.
+[16:36] Most of the [? apps ?]
+will actually spent
+[16:38] on how can we mix the data.
+[16:41] For example, this data actually
+is 3%, that data is 20%.
+[16:45] So we just keep changing a lot
+of this kind of data mixing when
+[16:50] you change the final model.
+[16:51] And so the data actually
+is super important
+[16:54] when you do the mix,
+and for example--
+[16:56] it's also very different.
+[16:59] You also keep changing the data
+mixing during the training.
+[17:02] For example, at the
+beginning, probably we
+[17:05] can put in a little bit
+more of the easier data
+[17:08] to get the model
+learn to this level.
+[17:12] The model can learn about this.
+[17:14] But when the training
+moves forward,
+[17:16] the model becomes
+stronger and stronger.
+[17:18] Actually, you are trying to mix
+in more and more difficult data.
+[17:22] That's also how a very
+basic thing we did.
+[17:26] And so you can also try to
+combine more synthetic data.
+[17:31] And for example, if you want the
+data, but you need this data.
+[17:36] You know your model actually
+is very good in these three
+[17:39] categories, but it's not
+very good in the other two
+[17:41] categories.
+[17:42] So how can you solve that?
+[17:44] So the way to solve
+this basically
+[17:46] is trying to
+synthesis more data.
+[17:48] That's the most easy way.
+[17:50] You can try to find more data.
+[17:51] We can also-- if you
+cannot find it, actually,
+[17:53] what you can do is
+the data synthesis.
+[17:56] So that's why I mentioned
+about, besides the rubric data,
+[17:59] this kind of data
+efficiency, the second thing
+[18:02] actually is the data synthesis.
+[18:04] So the good thing is
+it definitely it work.
+[18:08] So for a lot of
+things, I will also
+[18:10] continue to use
+math as the example
+[18:13] when we do the publication.
+[18:14] But actually, so-- math
+is just one of the work.
+[18:17] For example, we try to say, OK,
+does data synthesis is just work
+[18:21] to solve the data
+quality problem,
+[18:23] or you can also try to
+solve some other problem?
+[18:26] So this is also
+another one, is about--
+[18:29] for example, for the math,
+actually, you have the question,
+[18:32] you have the answer.
+[18:33] So can we synthesis
+more questions?
+[18:37] So how can we make sure all
+these questions actually
+[18:40] is the right questions?
+[18:41] You also have the answer
+that's verifiable.
+[18:44] That's a verifiable answer.
+[18:46] So I think for the math--
+and the answer, actually,
+[18:48] we try to synthesis a
+lot of new questions.
+[18:51] But actually, we
+also have a mechanism
+[18:53] to guarantee all
+these new questions
+[18:56] the answer is verifiable.
+[18:58] So this basically means
+that, actually, we
+[19:01] increase the data diversity.
+[19:04] We have more mass.
+[19:05] It's not like the
+original representation
+[19:08] anymore, actually.
+[19:09] We have a way to unlimited--
+[19:11] I cannot say unlimited to
+synthesis a lot of more datas.
+[19:13] And another interesting
+thing is about,
+[19:15] for example, for the
+reinforcement learning,
+[19:17] we know that when we try to
+do the reinforcement learning,
+[19:21] there's also--
+[19:22] some kinds of effect is
+about the entropy collapse.
+[19:26] The entropy is going
+down, actually,
+[19:27] when you're trying to
+improve the qualities.
+[19:29] So we found that actually using
+the data synthesized this way,
+[19:33] it not only improved the
+entropy for the pass@1,
+[19:36] it also improved the pass@k
+significantly as well.
+[19:41] Because sometimes you
+use impute pass@1,
+[19:44] but in the RL training,
+most of the time,
+[19:46] actually, the pass@k
+didn't improve.
+[19:48] But I think just
+like I mentioned,
+[19:50] if you want the exploration, you
+need to improve of the pass@k
+[19:53] as well.
+[19:54] So sometimes we measure,
+we pay a lot of attention
+[19:57] to the pass@k.
+[19:58] It means that actually, you
+just sample multiple answers,
+[20:00] so any of them actually can
+give you the correct answer.
+[20:03] So we found that data
+synthesis is actually
+[20:05] is also very powerful to give
+us a better pass@k as well.
+[20:09] So you can go to read the paper.
+[20:10] And I think that's also
+a very interesting thing.
+[20:13] The other one, because
+we're talk about math,
+[20:16] we also talk about
+the agentic task.
+[20:18] So the agentic data actually is
+super hard to be synthesized.
+[20:22] I cannot share how we synthesis
+that, but I want to share maybe,
+[20:25] for example, the
+Kim-K2 actually,
+[20:27] also give a really good work,
+is about how they synthesis
+[20:30] the agentic datas.
+[20:32] So basically, I think the
+solution is also pretty simple.
+[20:36] So it's just like the
+very typical solution.
+[20:39] You need existing data.
+[20:40] They try to get data
+from the GitHub.
+[20:42] They try to understand, OK,
+this is the tool definition
+[20:44] because you need to synthesis
+so many different things.
+[20:47] Data synthesis today is pretty
+complicated, I want to say.
+[20:50] So basically, they synthesis the
+tool definition, is the task.
+[20:55] And all these kinds
+of things, they
+[20:56] also have the entire pipeline to
+make this kind of data synthesis
+[21:00] to be vulnerable,
+to be scalable.
+[21:02] So for example, they
+tried to synthesis.
+[21:04] They take some
+existing tools first.
+[21:07] And they also try to synthesis
+some tour tool definition.
+[21:12] And the task is
+also synthesized.
+[21:16] For example, which one
+you want to synthesis.
+[21:19] And the agent is
+also synthesized.
+[21:22] And after that, the synthesized
+data and the original data
+[21:25] together-- they
+get it from GitHub
+[21:28] to try to run this
+to train the model.
+[21:30] So basically, you can
+think about the data.
+[21:34] The one point I
+want to make here
+[21:35] is that data synthesis is
+pretty complicated today
+[21:38] in the industry.
+[21:39] And for me, actually, I just
+put a lot of best people
+[21:44] in the team to work
+on the data synthesis
+[21:46] because there's a lot
+of innovation there.
+[21:49] So as a PhD student--
+[21:52] so I think data synthesis
+is actually super important.
+[21:54] If I want to open a startup,
+I would think about maybe--
+[21:57] we'd think about, OK, how
+can we synthesis better data?
+[21:59] Because the training approach
+will converge much easier
+[22:04] than the data part.
+[22:06] It's so hard to
+synthesis the data.
+[22:09] And unfortunately, a lot
+industry lab, maybe they
+[22:12] didn't share with you
+how the data was built.
+[22:14] But I think this definitely
+is the most exciting part
+[22:18] for the data synthesis.
+[22:19] OK, so I think I finished the
+most of the part about the data.
+[22:23] I think definitely there's
+a lot of other things
+[22:25] you can get from a lot of data.
+[22:26] Yeah, but I think the
+other thing actually
+[22:28] I want to mention
+is about the grader.
+[22:31] So the grader, basically--
+[22:34] because the grader, actually,
+because we know about RL
+[22:37] is about experience.
+[22:38] And the feedback,
+for example, can only
+[22:41] be measured by the grader.
+[22:42] So if you are able
+to define what
+[22:45] is the grader for
+the problem, I want
+[22:47] to say at least you
+solve half the problem.
+[22:52] So that is the point
+for the grader.
+[22:54] So for most of our
+work today, every day,
+[22:58] is to figure out what
+to do, what to grade.
+[23:00] It's not that easy.
+[23:01] It's not just about
+the pass rate.
+[23:03] It's about, for example,
+even for the coding,
+[23:05] just like the
+representation, whether you
+[23:07] follow the behavior, whether
+there-- is the product
+[23:09] constraint.
+[23:10] So every day, you
+just think about,
+[23:11] based on the user's interaction,
+what is still missing?
+[23:16] So based on this, actually, you
+understand what are the grade.
+[23:19] And we just-- add
+more and more graders.
+[23:21] And so I think add more grade
+actually is not an easy task.
+[23:26] For example, some
+grader is going
+[23:28] to be conflict with
+some existing grader.
+[23:30] You need to understand about
+how is the relationship
+[23:33] between multiple graders.
+[23:35] And so that's the second part.
+[23:37] The third part, actually,
+what we do every day,
+[23:39] is about how can we actually
+figure out, OK, what do grade?
+[23:43] How can we prepare
+the data to be graded?
+[23:47] So how can you collect data?
+[23:49] So basically, a grader sometimes
+it's just part of the data.
+[23:53] So it's highly related.
+[23:55] And for this kind of thing, we
+want to build a foundation model
+[23:58] because we are also doing
+this kind post-training
+[24:00] of the foundation model.
+[24:01] So there are so many things
+you need to care about, so
+[24:05] many different domains.
+[24:06] Just like medical, just like
+law, all these kinds of things
+[24:09] you need to be able to grade.
+[24:10] And also, there are so
+many different problems.
+[24:13] For example, even
+for the coding,
+[24:14] there are so many
+different problems.
+[24:15] Just like math
+[INAUDIBLE] suggestions,
+[24:17] just like code completion,
+just like coding agents.
+[24:21] And so there's also another
+thing I want to mention.
+[24:23] There's also a lot of
+product constraints.
+[24:25] For example, just like--
+[24:29] let's use the coding as
+an example, coding agent,
+[24:32] because the customer
+is like, OK,
+[24:34] can you always
+produce some progress
+[24:36] to tell me-- because
+this time is pretty long.
+[24:39] Sometimes it's 10 minutes, and
+I just want to go for a coffee.
+[24:42] I don't know, OK, how many
+more minutes you need.
+[24:44] Can you tell me the--
+share with me the progress?
+[24:47] So this is some kind of thing.
+[24:48] We need to make sure,
+actually, the model
+[24:50] is also able to generate
+something like this.
+[24:52] That is the product constraint.
+[24:53] It's not just about
+the pass rate.
+[24:55] It's the single academic
+metrics anymore.
+[25:00] Yeah, so that's what I say.
+[25:03] I think I already finished
+this in a previous talk.
+[25:07] Actually, it's about--
+in the product,
+[25:09] the grader is so complicated.
+[25:10] It's not just about
+the pass rate.
+[25:12] For example, there's a
+lot of Q&A questions.
+[25:14] There's also a
+lot of multi-turn.
+[25:16] How can you create
+the multi-turn
+[25:18] in this kind of
+user interaction?
+[25:20] And how can you
+create the format?
+[25:22] For example, there
+are some tables,
+[25:24] there are some markup language.
+[25:25] You need to make sure,
+actually, all this
+[25:27] is represented in the right way.
+[25:30] You also need to show the
+progress, something like this.
+[25:33] You also need to
+make sure, actually,
+[25:35] the length is not too long.
+[25:36] If you are able to solve the
+problem in the shorter length,
+[25:40] actually, definitely nobody
+will prefer this the verbose.
+[25:44] And we also try to measure
+the time to the pull request
+[25:49] because it's the model.
+[25:50] The model cannot say something
+that is very bad as well.
+[25:52] So that's all the
+thing, actually, you
+[25:54] need a grader to take care of.
+[25:57] So let's just use
+coding as an example
+[26:01] because basically, this
+is the thing actually
+[26:04] everybody is using every day.
+[26:05] So for example, we have
+the unit test grader.
+[26:08] We also have the patch grader.
+[26:09] We also make sure the
+format is right, I think.
+[26:12] And all these kind
+of thing, actually,
+[26:14] is trying to grade whether this
+is a good coding model based
+[26:19] on the interaction so if
+you want to summarize,
+[26:22] for example, which the
+grader we use every day.
+[26:25] These is the three
+most popular ones.
+[26:28] I think the first one
+is very simple, is just
+[26:31] like the unit test.
+[26:32] We call it the verifier.
+[26:34] You are able to verify
+actually this pass or no pass.
+[26:37] And the other one
+definitely is the--
+[26:39] we can use another
+model to do the grader,
+[26:42] to use the large language
+model, using the PROM
+[26:45] or whatever, to say OK, to give
+a score or something like that.
+[26:48] And the other one
+actually is just
+[26:50] like I mentioned in the
+data part, is called--
+[26:52] base it on the rubrics
+to do a lot of grading.
+[26:57] And the other thing actually
+is just like I mentioned,
+[27:00] when you're building
+the product,
+[27:02] you will only put more
+and more grader there.
+[27:06] Because you always want
+to make sure the model is
+[27:08] able to have a--
+[27:09] yeah, to solve some problem.
+[27:12] So I think a lot of thing--
+[27:14] yeah, actually, when you
+put more and more grader,
+[27:16] it's super hard for
+the end of the rollout
+[27:19] to pass all the graders,
+especially at the beginning.
+[27:22] The model is not capable enough.
+[27:24] You want to say, oh.
+[27:25] For example, just like
+a kid three-years-old,
+[27:27] you want to ask them,
+OK, you need to follow
+[27:29] the rule in the university.
+[27:31] So actually, the kid
+don't know about this.
+[27:33] So what we did is basically,
+is about we call--
+[27:37] we didn't try to say
+about this path or not.
+[27:39] Actually, we try
+to do the ranking
+[27:41] to say about, OK, this
+is better than the others
+[27:44] based on the learning
+for these rankings.
+[27:47] And the other one definitely
+is the curriculum learning.
+[27:50] So for some grades,
+you can add at the end,
+[27:52] you don't have to
+add at the beginning
+[27:54] because otherwise, I don't think
+the model can learn anything,
+[27:57] because it's too hard
+at the beginning.
+[27:59] And you also need to understand
+the grader dependency.
+[28:02] For example, this
+grader actually
+[28:03] have a dependent on that one.
+[28:05] If you want to
+solve this one, you
+[28:06] need to solve that one first.
+[28:08] So that is the dependency
+because some graders
+[28:11] is more strict than the others.
+[28:13] So that's also something
+we need to think about.
+[28:16] And actually, you also need
+to think about the efficiency.
+[28:19] For example, some graders--
+[28:20] they need to run in parallel.
+[28:21] So in this case, you can make
+the entire running much faster.
+[28:26] And as long as you
+have the grader,
+[28:28] you try to grade something.
+[28:30] So the model is trying
+to cheat something.
+[28:33] It's going to-- this
+kind of hacking,
+[28:35] cheating, actually,
+based on the grader,
+[28:37] is pretty a normal
+thing because the model
+[28:39] is so smart at this moment.
+[28:41] And we also see a
+lot of surprise,
+[28:44] for example, when the
+model trying to cheat,
+[28:48] trying to do the cheat-- do the
+cheating because the model is
+[28:51] really smart.
+[28:52] For example, the model can
+remove all the test cases
+[28:55] when you try to ask, oh, you
+need to pass all the test case.
+[28:58] Or the model can change all
+the content in the test case,
+[29:01] just have the pass there.
+[29:04] So because, for example,
+for the coding tasks,
+[29:06] some tasks, actually, we also--
+[29:07] another example just
+like a task actually
+[29:10] we need internet access.
+[29:12] For example, just like we use
+a [? three-bench ?] to verify,
+[29:14] this the task.
+[29:15] But the model is very simple.
+[29:17] They just try to go
+for-- go to the internet
+[29:19] to find the right solution and
+then to copy the right solution
+[29:23] as its output.
+[29:25] So I just want to say the
+model is so smart, at least,
+[29:29] and it's so hard to avoid
+this kind of cheating.
+[29:31] So what we did actually is to
+avoid this hacking, cheating.
+[29:35] I think it's the same thing.
+[29:36] So basically, we-- there's also
+a lot of things we did actually.
+[29:41] We tried to use another
+model to check the model,
+[29:44] to check the model's output
+to make sure, actually,
+[29:46] it's not that easy to be
+cheat and to use the model
+[29:49] to regulate the model itself.
+[29:51] We also tried-- we also checked
+so many different places.
+[29:54] So you need to be super careful,
+for example, when you try
+[29:57] to train a model based on this.
+[30:00] And for example, if the model
+is able to change the test case,
+[30:03] we just hide the test case.
+[30:04] We just remove
+all the test cases
+[30:06] when you try to
+run in the sandbox,
+[30:10] and then do the testing.
+[30:11] And then after that, we
+patch the test case back.
+[30:14] So for example, we
+also try to say, OK,
+[30:16] if you're able to cheat--
+[30:18] so I want to give you a very
+high penalty if you cheat again.
+[30:22] Because sometimes
+it's so hard to.
+[30:23] I think I just want to share.
+[30:25] There's so many, these
+kinds of examples,
+[30:27] when you're trying to do the
+grader for the RL trainings.
+[30:30] It's not that easy.
+[30:31] You need to be
+very, very careful.
+[30:33] It's so easy for
+the model to cheat.
+[30:37] OK, I think that basically
+is about our work,
+[30:40] about the data,
+including grader.
+[30:42] So I think in our work
+basically we spend--
+[30:46] I'm not sure whether 50% in our
+daily work is the exact number,
+[30:50] but I think we
+spend a lot of time
+[30:51] in the data and the
+grader when we're trying
+[30:54] to build a model every day.
+[30:56] And the other part, actually,
+what we spend a lot of time on,
+[31:01] is the efficiency.
+[31:02] Because I think
+when you're running
+[31:04] this kind of
+large-scale system, how
+[31:05] can you make it super efficient,
+as efficient as possible?
+[31:08] And efficiency
+definitely also includes
+[31:12] how can you make things
+work, because if it not work,
+[31:14] efficiency is zero.
+[31:16] So that's the part,
+actually, I want to mention,
+[31:20] how we do this today.
+[31:22] So how to make the
+model more efficient?
+[31:25] Because reinforcement
+learning is so expensive.
+[31:28] It's just like saying, oh,
+even for given one example,
+[31:31] as long as you're able
+to give a lot of compute,
+[31:33] it's able to learn
+a lot of things.
+[31:35] I think it doesn't mean that.
+[31:37] Actually, a lot of
+compute is so easy to get.
+[31:39] And it's so expensive.
+[31:41] And this is not only
+about the GPU number,
+[31:43] but this also defines
+the iteration, the speed
+[31:46] of the iteration as well.
+[31:49] And because I think the
+model needs to explore a lot,
+[31:52] so what we did-- and
+definitely, I guess, most
+[31:54] of the InTouch
+lab, there's a lot
+[31:57] of this kinds of asynchronous.
+[31:58] Because reinforcement
+learning, you have the sampler,
+[32:01] you have the trainer.
+[32:02] If they need to
+wait for each other,
+[32:03] they are super slow,
+especially in the large scale.
+[32:06] So I think you can see a
+lot of paper actually today.
+[32:09] It's a lot of lab, actually,
+that is using the asynchronous.
+[32:11] So asynchronous is
+super important.
+[32:13] How to make the
+asynchronous work
+[32:15] is also not that easy,
+especially with scale.
+[32:18] And the other one,
+actually, how fast?
+[32:22] It's just like--
+[32:23] I think the one example
+learning is the instance for us
+[32:27] to understand how important it
+is to enable this kind of policy
+[32:31] exploration.
+[32:32] How can you enable, encourage
+the model to explore?
+[32:35] I think that's also the most
+exciting topic, research topic,
+[32:40] for the RL as well.
+[32:42] There's a lot of optimization
+work that needs to happen here.
+[32:44] How can we enable
+it to explore more?
+[32:46] And so the third one
+actually is about, how
+[32:50] can we control the sampling cost
+because the cost is very high?
+[32:53] So we also do a lot of
+things to make the sampling
+[32:56] cost much lower, so
+actually, your entire job
+[32:59] can run much faster.
+[33:00] So the last one, actually,
+how can we use LoRA in the RL
+[33:05] to make things work much
+better, or much more efficient?
+[33:09] OK, I think asynchronous,
+I just mentioned, I think,
+[33:12] is very simple.
+[33:13] You just make it as
+a policy learning.
+[33:16] And actually, the sampler,
+actually-- because the sampler
+[33:20] is the most slow part,
+especially when you
+[33:22] need to sample, the
+chain of thought,
+[33:24] this kind is long horizontal.
+[33:26] So that's super slow.
+[33:29] The sampler, actually, is much
+even slower than the trainer.
+[33:33] Previously, we say
+about, OK, the trainer
+[33:34] is the most slow one, but
+now actually the sampler
+[33:37] is the much more slow.
+[33:39] Yeah.
+[33:40] So we definitely--
+in our training,
+[33:43] we assign much more GPU to the
+sampler than for the trainer.
+[33:47] So that is how we work.
+[33:49] And how things work--
+so I think this
+[33:51] is just a very simple diagram
+about this kind of asynchronous.
+[33:55] Asynchronous, it
+means that actually--
+[33:57] the trainer and
+the sampler, they
+[33:59] need to-- they don't need
+to wait for each other.
+[34:01] You just keep sampling.
+[34:03] And when you do the
+sampling, actually, you
+[34:04] don't need to be
+the latest policy.
+[34:07] You just keep sampling
+and maybe use the policy
+[34:10] in the last iteration.
+[34:12] I think definitely
+here you need to--
+[34:14] there's a lot of
+work we need to do
+[34:16] to make sure they can converge.
+[34:17] It's not that easy.
+[34:18] And also this the--
+[34:21] yeah, so as you can
+see, basically, often
+[34:24] we just have one
+single trainer, but I
+[34:26] think we have multiple samples.
+[34:28] We call it roller here.
+[34:31] You just need to
+roll the examples.
+[34:32] So this roller actually not
+only need to talk to the grader,
+[34:37] you also need to talk
+to the environment.
+[34:40] For example, to run a
+unit test on this kind
+[34:43] of simulator environment.
+[34:44] The grader also needs to
+talk to the environment
+[34:46] if you need to do something.
+[34:49] And so basically, there
+are some way to think.
+[34:54] Yeah, I think this is
+a very simple diagram.
+[34:57] But to make this really work so
+well, especially with thousands
+[35:01] of GPUs, it's not that easy.
+[35:03] There's a lot.
+[35:03] There's tons of work there
+because a lot of things
+[35:07] can happen as long as the
+thing is asynchronous.
+[35:10] Yeah, for the quality
+and efficiency,
+[35:15] this is-- these too is
+so hard to be balanced.
+[35:19] So the other thing,
+actually, besides, I
+[35:22] think I want to say for the
+reinforced learning, the thing
+[35:26] is about how can we
+encourage how can we
+[35:29] encourage the exploration?
+[35:30] Because the more you are able to
+explore, actually, most likely
+[35:34] you're able to get
+to a better results.
+[35:37] So during the training,
+we want to encourage
+[35:39] this kind of exploration to
+make it actually the policy able
+[35:44] to learn more.
+[35:45] So here, actually, is what
+we did for the exploration.
+[35:52] I can show you a little bit.
+[35:53] So yeah, if you want to get the
+model to be able to explore,
+[35:58] I think there's a few things
+that are so important.
+[36:01] One is about the model
+needs to understand,
+[36:03] needs to be able to
+follow the instruction.
+[36:07] So sometimes, for
+example, you say,
+[36:09] oh, this model is not able to
+produce a good result based
+[36:13] on the reinforced
+learning, based on the RL.
+[36:18] A lot of things is
+because this model is not
+[36:20] able to follow the instructions.
+[36:23] The model is not able to
+follow the instructions.
+[36:25] It is very hard for you
+to do a lot of things.
+[36:27] So in that case,
+you need to continue
+[36:29] to train the model to
+follow the instruction first
+[36:31] before you run the RL.
+[36:34] That's also one of
+the things we learned.
+[36:36] That's also one of
+the thing, actually.
+[36:38] For example, when you see
+the small language model
+[36:40] is not able to produce a
+good result based on the RL.
+[36:44] So I think the first
+thing you should check
+[36:45] is about how good is this model
+in following instructions.
+[36:49] So that's one.
+[36:50] Because why you want it to
+follow the instructions?
+[36:52] So one of the
+thing, for example,
+[36:54] we say about the prompt,
+how can we prompt the model?
+[36:57] Because you can prompt the
+model in a different way.
+[36:59] You can ask the model, oh,
+you can use this method
+[37:01] to solve this math problem,
+you can also use another method
+[37:04] to solve the math problem.
+[37:06] So I think this kind
+of prompting approach
+[37:08] is very naive, but it's
+very, very important.
+[37:11] There are so many things
+you can do in the prompt.
+[37:13] You can even ask another
+model to generate the prompt
+[37:16] because if you're able to
+generate-- have a good prompt,
+[37:19] trying to prompt the
+model in a different way--
+[37:21] and the model is also able
+to follow the instructions.
+[37:25] So this actually gives so
+many different diversity
+[37:29] for the model to see the
+problem in a different way.
+[37:32] So this means that actually the
+model has so many different ways
+[37:35] to run the exploration.
+[37:36] The prompting, actually,
+is super important.
+[37:38] It's not that easy, how
+to build up the prompt.
+[37:41] If you are able to make
+the prompt, much better.
+[37:43] There are so many ways you are
+able to improve the models.
+[37:47] So definitely the other
+thing, actually, we also
+[37:49] want to control the length.
+[37:51] We don't want the model
+to produce unlimited.
+[37:54] And so there are so many ways.
+[37:56] For example, you can
+introduce some noise
+[37:58] to do this kind of exploration.
+[38:00] You can also set up some
+different kinds of tools
+[38:02] just like you can try this tool
+with this for the first time
+[38:06] and try another tool
+set for the second time.
+[38:08] And we can also get
+rid of some tools.
+[38:10] So to encourage the
+model to explore
+[38:12] in different kinds
+of environments--
+[38:14] so that's also another
+way for the explorations.
+[38:18] And the exploration--
+the other thing
+[38:21] we face, actually, because
+we know about reinforcement
+[38:25] learning, there's tool usage.
+[38:28] But the problem is
+about, now today,
+[38:33] the user is able to hook up
+with any of their own tools
+[38:36] when you try to use the model.
+[38:38] You can use the MCP.
+[38:40] You can use the hook
+up with your own API.
+[38:42] And so how can
+you make the model
+[38:44] to learn for different tools?
+[38:46] Because the model, when
+you train the model,
+[38:48] we don't know about which
+tool the user is going to use.
+[38:51] We have no idea, yeah.
+[38:53] But there's only
+one single model
+[38:54] you can hook up with so
+many different tools.
+[38:56] I think the key problem is about
+how can I do this kind of tool
+[38:59] generalization?
+[39:00] How can I generalize the tools?
+[39:01] So that's also one of the
+very important things.
+[39:04] And definitely, we also
+dig a lot of things.
+[39:07] But I think the first thing
+is the instruction following.
+[39:10] The model needs to have a very
+high instruction following
+[39:12] capability if you want the model
+to adapt to different tools.
+[39:16] And the second one definitely
+is about the model can
+[39:19] use the tool in the wrong
+way during the rollout,
+[39:21] but it needs to be
+able to correct itself.
+[39:24] The model needs to reflect, oh,
+if it cannot solve the problem,
+[39:27] can I try a different tool?
+[39:29] And also this, when
+you change the model,
+[39:32] you need to fix the model so
+many different kinds of tools.
+[39:35] And we make sure the
+model is able to use
+[39:38] the tool in the prompt, is
+also part of the prompting.
+[39:41] If the model didn't use the
+tool in the prompt you specify,
+[39:44] you need to give the penalize.
+[39:48] So yeah, you need to try to
+say, the model, actually, you
+[39:53] are not doing the good work.
+[39:54] So that's also part
+of the grader as well.
+[39:58] So the other thing, actually,
+as we know about the efficiency
+[40:01] is about the solution length.
+[40:05] Because, as you know, the
+bottleneck is in the sampling.
+[40:10] But the sampling, the thing
+is about the model where
+[40:12] it keeps just doing sampling.
+[40:15] The model is so smart, OK, If
+this cannot solve the problem,
+[40:17] I will just try
+again, again, again.
+[40:19] And the model will just keep
+doing until, actually, it
+[40:24] is more likely to
+solve the problem.
+[40:26] But I think, actually, this is--
+the user experience is not good.
+[40:29] For example, if the same problem
+and actually one solution
+[40:34] can finished in one minute.
+[40:35] The other one actually needs
+to finish in one hours,
+[40:37] definitely you will
+prefer the one minute one.
+[40:40] And so, definitely,
+we need to have
+[40:42] a balance between the
+performance and the cost.
+[40:45] And so, definitely, we did a
+lot of things to achieve this.
+[40:51] For example, we
+can ask the model
+[40:52] to solve the problem with
+different kinds of constraint,
+[40:55] length constraints,
+and we always
+[40:56] prefer the one with
+shorter answers.
+[40:59] So that's one.
+[41:01] Yeah, but the thing is
+this is always a balance.
+[41:06] If you cannot-- if
+the cost penalty,
+[41:09] the cost penalty for the
+length is actually too low,
+[41:12] the model could use
+unlimited tokens.
+[41:14] Well, the reasoning
+model today, it just
+[41:16] keep doing until you get to a--
+he thinks of a better answer.
+[41:20] But the cost
+penalty is too high.
+[41:23] So basically, actually, you
+also sacrifice the exploration
+[41:27] for the model because you
+don't encourage the model
+[41:30] to explore a longer solution.
+[41:34] So this actually is one of the
+challenges in our task as well.
+[41:39] So our solution is
+also pretty simple.
+[41:40] So basically, for
+example, here is the one
+[41:43] you didn't control the length.
+[41:44] Here is the one you
+control the length.
+[41:46] So in the training,
+definitely, we
+[41:48] want to keep the
+very long rollout.
+[41:50] If the rollout is about,
+for around-- some rollouts
+[41:52] are 30 minutes or one hour.
+[41:54] So we say, OK, now
+we just give up.
+[41:58] You need to have these
+kinds of mechanisms.
+[42:00] So definitely you need
+to have the token cost.
+[42:03] This is pretty straightforward.
+[42:07] It highly depends on
+the number of tokens.
+[42:09] And in the
+evaluations, I think--
+[42:11] in the evaluation, I think
+this is more interesting.
+[42:13] For example, just
+like when you guys
+[42:14] go to see the sweeping to
+verify this the leaderboard.
+[42:18] Most of the people just
+report the pass rate.
+[42:22] They didn't report how
+long is the rollout.
+[42:26] I think this has the problem
+because, actually, this highly
+[42:30] depends on-- the quality
+in this time, the test time
+[42:33] scaling, the quality highly
+depends on the length,
+[42:36] highly depends on
+how much compute
+[42:37] you want to give
+in the test time.
+[42:40] So in our internal
+evaluations, we not only
+[42:43] care about the
+quality, but we also
+[42:44] care about this
+kind of raw length.
+[42:47] So we want to--
+[42:49] in our opinion,
+actually, a lot of things
+[42:51] are not compatible
+if the raw length,
+[42:53] if the test time is
+not in the same level.
+[42:55] So that is also
+what we did here.
+[43:00] There's also a lot
+of other things,
+[43:02] for example, just
+like the long context.
+[43:04] So even, for example,
+there are some model
+[43:07] that is able to support
+up to 1 million tokens.
+[43:09] But there are some cases,
+there's a lot of cases,
+[43:11] actually.
+[43:13] So even 1 million
+tokens is not enough.
+[43:16] But today, actually, for most
+of the model, it is 128k.
+[43:19] So about 128k is not enough
+because the user will just keep
+[43:23] doing, and the [INAUDIBLE]
+can be very long.
+[43:25] And for example,
+for the coding part,
+[43:27] some file actually can be
+also pretty long as well.
+[43:31] And I think the solution
+here-- so I just
+[43:34] use the open-source
+solution to mention
+[43:36] how they solve the problem.
+[43:38] So it's also very basic.
+[43:40] This is the paper from Alibaba.
+[43:41] It's called ReSum.
+[43:43] Basically, it's about
+for any of the roll-outs
+[43:46] or in the history,
+this the early law,
+[43:49] they can try to summarize it.
+[43:52] After they summarize
+that, the summary
+[43:54] is always much shorter
+than the original text.
+[43:57] And they just use the
+summary to replace the text.
+[44:00] And so in this case,
+they can keep walking.
+[44:03] So I think the idea is,
+actually, it's very simple.
+[44:06] And in summarizer, actually, is
+also a totally separate model
+[44:11] as well.
+[44:13] I think in the real
+implementation,
+[44:14] because as you know, the
+detail is all-- yeah,
+[44:18] so there's a lot of
+detail, and there's also
+[44:21] many different kinds
+of implementations.
+[44:23] Whether you want to
+summarize the entire history,
+[44:25] or you just want to
+summarize the COG,
+[44:28] or you want to keep the
+original answer there,
+[44:31] or you want to keep all the
+things you show to the user
+[44:33] there.
+[44:34] So I think there's
+a lot of detail
+[44:35] for different implementations.
+[44:37] But I think this can only--
+[44:38] yeah, you can only
+evaluate this when you
+[44:40] run the experiment by yourself.
+[44:41] There are so many different
+ways to do the summarization.
+[44:45] So the other thing,
+actually, we mentioned
+[44:47] a little bit is about--
+[44:49] is it's about LoRA,
+especially for the LoRA
+[44:55] on the reinforced learning.
+[44:56] So I think one of the
+things, for example, I guess,
+[44:58] maybe a lot of people
+know about noble LoRA.
+[45:01] And there's also a very, very
+good work from John, actually,
+[45:05] is LoRA Without Regret.
+[45:07] That's also very important work.
+[45:09] So I think they give
+a very beautiful work.
+[45:12] How to make LoRA work
+without any regret.
+[45:15] So yeah, definitely, I would
+love to promote the LoRA work.
+[45:18] But I think the other
+thing I want to--
+[45:21] we also have a
+lot of discussions
+[45:23] is about why LoRA
+actually can work
+[45:26] in the reinforcement
+learning trainings.
+[45:29] Because we know about,
+previously, LoRA actually
+[45:32] work sometimes and
+sometimes it didn't work.
+[45:36] It didn't know as good as the
+full fine-tuning, or something
+[45:40] like that.
+[45:40] But I think the answer I try
+to give is about, I think,
+[45:45] LoRA actually is more
+about the regularizations,
+[45:49] because basically
+LoRA is basically
+[45:51] born with the regularizations.
+[45:53] For example, the
+main weight is--
+[45:55] keep fixed.
+[45:57] The main weight didn't change.
+[45:58] So the change, actually,
+in terms of weight
+[46:00] is pretty small, no
+matter how you did it.
+[46:05] And in the reinforced
+learning, definitely you
+[46:07] need much more
+regularization than the SFT.
+[46:12] For the RL, you
+don't want the policy
+[46:14] to move away from previous
+checkpoints too much.
+[46:19] That is one.
+[46:20] The second one, especially
+for the OP policy training,
+[46:24] you all-- you always
+need the regularization
+[46:28] because if the model--
+[46:29] if the policy used for
+sampling and the model used
+[46:32] to change the model
+is very different,
+[46:34] it's very hard for
+the convergence.
+[46:36] So you saw-- this OP
+policy learning also
+[46:39] need a lot of regularizations.
+[46:41] So definitely that
+actually is the--
+[46:45] I think the LoRA
+update very well so
+[46:48] that's why LoRA is so popular
+in the reinforcement learning.
+[46:52] So the other thing,
+actually, definitely, there's
+[46:54] a lot of other
+advantages for LoRA
+[46:56] as well, just like having
+less number of the GPUs.
+[46:58] You don't need so many GPUs.
+[47:00] And it's also more efficient.
+[47:02] You can train a
+little bit faster.
+[47:05] So that's one.
+[47:06] The second one I want to
+mention is not just about LoRA.
+[47:10] It's about in the InTouch lab.
+[47:13] For most of the
+GPUs used, require
+[47:16] the running a lot of
+this kind of experiments,
+[47:18] just like this kind of data
+mix or that kind of data mix.
+[47:24] Because everything
+is a trade-off.
+[47:27] We didn't always
+say about, OK, we
+[47:29] want to get to the best setting.
+[47:31] We didn't use the
+optimal setting.
+[47:33] Instead, we want the
+most efficient settings
+[47:37] even if the quality is one-point
+less or two-point less.
+[47:40] But we can run this experiment
+to 2x faster or 3x faster.
+[47:44] So what we did is about-- we
+take this much more efficient,
+[47:48] suboptimal setting and
+put this as the baseline,
+[47:52] and put this constraint.
+[47:53] And actually, we compare
+all these kinds of changes.
+[47:57] We make all the change
+based on this constraint,
+[47:59] and then we just do this kind
+of side-by-side comparison.
+[48:02] So this, actually, will make
+our innovation run much faster,
+[48:07] 2x or 3x faster.
+[48:08] I think that's pretty normal.
+[48:11] And maybe after you figure
+out all these recipes,
+[48:13] in the final run you
+can run it much longer.
+[48:17] You can take all
+the best settings.
+[48:18] But I think previously,
+actually, we
+[48:20] didn't use all
+the best settings.
+[48:22] So that's another thing.
+[48:23] Maybe you guys
+will feel surprised
+[48:24] why we didn't use
+all the settings, all
+[48:26] the optimal settings,
+because it's too costly.
+[48:30] So yeah, I think
+that basically is
+[48:33] about-- capture most of the
+work I want to present today.
+[48:35] I think, actually, the other
+thing I want to mention
+[48:38] is about-- because I've been
+working on pre-training,
+[48:40] post-training, and
+recently I'm also working
+[48:43] on the reinforcement learning.
+[48:44] I try to think about,
+OK, for example,
+[48:46] if I want to try to understand
+this and explain this
+[48:50] to my 11-year-old, because my
+daughter is actually 11 years
+[48:54] old.
+[48:55] She loves to play LEGO.
+[48:56] And there's one, I actually
+play LEGO with her.
+[48:58] And I try to make all these
+the most important concepts
+[49:03] into LEGO play.
+[49:06] So what is pre-training?
+[49:09] So basically, pre-training--
+they give you a lot of datas.
+[49:12] And this data, actually,
+there's no order.
+[49:16] You don't know what
+is the order here.
+[49:19] So we try to figure
+out-- when you play LEGO.
+[49:22] So for the pre-training
+it's about--
+[49:25] the pre-trainings, they want to
+change the thing without order
+[49:30] into the thing with order.
+[49:32] So what do we mean with order?
+[49:34] Actually, here I try to
+say about pre-training,
+[49:36] you try to learn the LEGO.
+[49:39] I call it LEGO piece, the
+LEGO brick, the LEGO block.
+[49:42] They try to learn these
+kinds of LEGO blocks.
+[49:45] And there are so many of
+the LEGO blocks, just like--
+[49:48] and they want to
+use this LEGO block
+[49:50] to simulate the original data,
+to simulate the wall again.
+[49:55] How to build a LEGO wall?
+[49:57] Actually, this is the data.
+[49:59] But I think after you make
+this kind of change, actually,
+[50:02] this is the order.
+[50:04] So because they know, OK, this
+wall representing the data
+[50:08] is built by a lot of different
+kinds of the structures.
+[50:12] LEGO block, the LEGO bricks.
+[50:15] So I think that's how I try to
+explain this to my 11-years-old,
+[50:19] what is pre-training.
+[50:22] So what is post-training?
+[50:24] And especially for
+pre-training, for example,
+[50:27] when we compare a good model or
+even better model or even better
+[50:31] model, basically,
+you're trying to say
+[50:33] about it can build much more
+complicated LEGO blocks.
+[50:37] And you also have a
+much more efficient way
+[50:39] to assemble the LEGO together
+to build up this the new LEGO
+[50:44] world.
+[50:46] There is the better
+pre-trained models because you
+[50:49] already able to learn something
+that is much more complicated.
+[50:52] The shape is much
+more complicated.
+[50:53] So you just need a smaller
+number of the piece,
+[50:55] able to build up
+this wall together.
+[50:58] So the post-training
+definitely is also very simple.
+[51:02] So basically, you want--
+[51:06] which the LEGO wall
+you want it to be.
+[51:09] So that is the goal there.
+[51:11] And that's your task.
+[51:12] You just put this, all the
+pieces together to build up
+[51:16] this kind of LEGO wall for you.
+[51:19] With the pre-training, actually,
+the LEGO piece is already there.
+[51:22] So that's why,
+actually, pre-training--
+[51:25] with a pre-trained
+model, is able to help
+[51:27] you to do this kind
+of post-training
+[51:29] much more efficiently.
+[51:31] So what is reinforcement
+learning here?
+[51:33] Reinforcement
+learning, basically,
+[51:35] is a learning concept.
+[51:36] It didn't attach--
+you don't have
+[51:38] to be attached to
+pre-training or post-training.
+[51:39] There's already a
+lot of work actually,
+[51:41] is also working on reinforcement
+learning for the pre-training.
+[51:44] So the RL basically
+is just about you just
+[51:48] create millions of this the
+LEGO work or maybe LEGO game
+[51:53] or whatever and just
+get the feedback.
+[51:56] With the good feedback
+you say, OK, I
+[51:57] want to build a
+world more like this.
+[51:59] And without this feedback,
+the bad feedback--
+[52:02] OK, this is not a
+good work, I just
+[52:04] want to destroy and
+use this kind of brick,
+[52:07] like a brick to build
+a new wall again.
+[52:10] So that is the RL, is
+just you're about you
+[52:12] able to figure out this feedback
+and build up these things again.
+[52:16] And one of the
+thing, actually, I
+[52:19] keep thinking about can you do
+something new, maybe totally
+[52:23] different than the water day?
+[52:25] I think it's possible
+because this exploration
+[52:28] maybe, for example, just like
+if you go to a LEGO work there,
+[52:31] you will see, OK,
+most of the shape
+[52:33] actually is that we can
+find it in the reality.
+[52:36] But maybe in the future, maybe
+there's always something new,
+[52:39] actually, you cannot
+find in the reality.
+[52:41] That's about that
+need to come from--
+[52:43] as long as you have this
+very different block,
+[52:45] it is able to build
+something, yeah,
+[52:47] based on his imagination or
+creativity for the model.
+[52:52] Yeah, I think that is about--
+[52:54] I want to say--
+[52:55] OK, so Look Ahead.
+[52:57] Look Ahead to me
+is also very simple
+[52:59] because I only have
+two kinds of things.
+[53:01] One, the only thing
+common is scaling.
+[53:04] So what we do definitely
+is the-- first one,
+[53:08] definitely, we need to
+do the testing time,
+[53:10] testing time scaling.
+[53:12] With the testing time
+scaling, basically, there's
+[53:15] only three things.
+[53:16] So when you try to
+map all the activity,
+[53:18] there's only three things.
+[53:20] One definitely it's a
+different model, a more--
+[53:24] even larger model, especially,
+I think, for the reasoning,
+[53:27] the model need to be deeper.
+[53:29] So a lot of efforts.
+[53:30] For example, just recurrent
+work recently actually
+[53:34] just trying to have a different
+way to make the model deeper.
+[53:37] It's not only about, yeah, I
+think that's super important.
+[53:40] Any way to make
+the model deeper?
+[53:41] Actually, you can help
+with the reasoning.
+[53:43] That's my mind-- my point.
+[53:46] So the other way is just like
+you grow a neural network.
+[53:51] You either make it wider or
+you either make it deeper.
+[53:55] You want to make the
+model power more powerful.
+[53:57] Definitely, there's
+also a lot of things
+[53:58] you can do in the architecture.
+[54:00] So how to make the model wider?
+[54:02] Definitely, there's also
+a lot of other things
+[54:04] you do become the
+parallel thinking,
+[54:06] just like you can do
+the parallel thinking.
+[54:08] You can put multiple ways
+to do the parallel thinking.
+[54:13] And I want to say one of the
+important thing is about--
+[54:16] for what we do today, this kind
+of parallel thinking, basically,
+[54:19] is just about--
+[54:20] you do it after you
+train the model.
+[54:22] After training the
+model, you just
+[54:24] get the model to produce
+multiple results,
+[54:26] and then do the voting or
+use another model picking.
+[54:29] You didn't think about
+how can we consider this
+[54:32] during the model training?
+[54:33] I think that's also one
+of the interesting topics.
+[54:36] It's not just about
+the testing time.
+[54:38] For the training time, I already
+know, OK, for this model,
+[54:42] I just want to use it to
+do the parallel thinking.
+[54:45] It's not just about to get
+a single result, but how can
+[54:47] we do this.
+[54:48] I think there's definitely
+a lot of research here.
+[54:51] The other thing to do, the wider
+I think, is also pretty simple.
+[54:55] You just maybe give
+it to multiple agents,
+[54:57] and so multiple people to
+do the same work for you.
+[55:00] And you see, OK, let them call--
+let them call them together.
+[55:04] You also have a orchestrator
+or a boss or something
+[55:07] like that to ask a lot of
+people to work things for you,
+[55:10] and you can assign
+the task to them.
+[55:12] I think that's also another
+way to make it wider.
+[55:16] And besides the wider,
+it's also the same.
+[55:19] The other direction-- the
+other dimension is longer.
+[55:21] You want to make the task.
+[55:23] The agent is able to run much
+longer, for example, for today,
+[55:27] just like the coding, you just
+get the result in a few minutes.
+[55:30] But maybe in the
+future, actually,
+[55:32] you can ask to do a much
+more complicated task,
+[55:34] and it's able to give the result
+back to you in one or two days.
+[55:38] I think that's
+also pretty normal.
+[55:39] And here, actually,
+there's a lot of things.
+[55:43] Definitely, it is a lot
+of research topic here.
+[55:45] For example, how can we
+solve the long context?
+[55:47] How can we try to memorize
+the behavior previously?
+[55:51] It's not that easy.
+[55:52] You want to memorize the
+behavior from one day ago
+[55:55] or something like that.
+[55:56] Human is very good at this,
+but model is not that good.
+[55:59] So there's a lot of
+things we need to do here.
+[56:02] So the other thing besides
+the testing time is scaling.
+[56:07] So I want to say the
+other thing, actually,
+[56:10] we spent a lot of
+effort in the team
+[56:12] is about the training
+time scaling.
+[56:14] Training time
+scaling, definitely.
+[56:17] And the first one is
+synthesis of the data.
+[56:19] Just like I mentioned,
+we put the best people,
+[56:22] best talent in data synthesis.
+[56:24] I think that there's
+still a lot of things
+[56:26] to do the data synthesis.
+[56:29] Yeah, it's just getting started.
+[56:30] It's not the end of the story.
+[56:32] It's just the
+beginning of the story.
+[56:34] And because for
+today, you can see
+[56:36] that we are often limited by the
+data, instead of the compute.
+[56:41] And how can we make the
+data more efficient?
+[56:44] And we have a lot of
+compute, but I think
+[56:46] we are running out of data.
+[56:47] There's not much data we are
+able to leverage to boost
+[56:50] the model to another level.
+[56:52] And I also think about
+the best model definitely
+[56:55] should be built from
+the best data for today
+[56:58] to define the model.
+[57:00] Basically, I think at least more
+than half is based on the data.
+[57:03] So for all these
+kind of data set.
+[57:07] So agentic data actually
+make this data complexity
+[57:11] into another level,
+I want to say.
+[57:13] It's much more complicated.
+[57:15] And how can we use multiple
+agents to synthesis the data?
+[57:18] How can we synthesis this
+the long horizontal data?
+[57:20] They are so complicated.
+[57:22] There's still a lot
+of things to do.
+[57:24] How can we synthesis
+agentic data?
+[57:26] That's why I present
+this the Kim-K2 paper.
+[57:28] I think they do
+a very good work.
+[57:30] Yes.
+[57:31] So reinforcement
+learning, definitely.
+[57:35] So at the beginning, when I
+tried to think about the RL,
+[57:39] I think it's also pretty simple
+to me besides that example.
+[57:41] I think reinforcement learning,
+for example, if you compare it
+[57:44] to the SFP, just use the compute
+to check for the robustness
+[57:48] for the model for today.
+[57:51] So in InTouch lab,
+basically, it's
+[57:53] not only about the RL is able
+to make the result a little bit
+[57:57] better, it's able to make
+the result much more robust.
+[58:00] Because it's not just
+about the benchmarking,
+[58:03] it's also about,
+OK, for example,
+[58:05] when the user try
+to use another way
+[58:07] to ask the questions,
+actually, you're
+[58:09] able to produce the OK result.
+But SFP is very hard sometimes.
+[58:14] That is why we use the--
+[58:15] RL is so popular.
+[58:17] And actually it uses a lot of
+compute, much, much more compute
+[58:21] than the SAP.
+[58:22] But it did produce
+the robustness
+[58:24] that's super important
+for the product.
+[58:28] And another thing, actually,
+the second point is about,
+[58:30] for the RL, I truly
+believe, actually,
+[58:33] when you change the RL model,
+it will make everything right.
+[58:36] It just keeps going.
+[58:37] The quality will
+just keep going when
+[58:39] you feed it with
+more compute until we
+[58:43] reach the model's limitation.
+[58:47] So that's also very exciting
+because we found a way.
+[58:53] Actually, we are able
+to give the compute.
+[58:55] The model is able
+to become better.
+[58:58] So there's no even
+better way than this.
+[59:01] This is one of the big
+challenge, problem,
+[59:03] how can you make the model
+better with more compute?
+[59:05] It's not an easy problem.
+[59:06] For pre-training, it's not
+able to do this sometimes.
+[59:10] And it's also limited
+by the data as well.
+[59:14] Another thing, actually,
+is about-- for the RL,
+[59:17] where I put a lot of effort in
+the RL, is about its easy to--
+[59:21] it's more about
+the steerabilities.
+[59:25] You're able to guide the RL
+into the direction you want.
+[59:28] This is also very
+different than ILHF.
+[59:31] You train a reward
+model or SFP is so hard.
+[59:35] For example, in the RL, what you
+want the model behavior to be,
+[59:38] you just define a new weight.
+[59:40] It's so flexible.
+[59:42] So that's why we love RL in
+this kind of product setting.
+[59:46] For example, you just say,
+oh, you don't do it this way,
+[59:49] you just need to
+change the gradient.
+[59:51] But say you would do this
+way, that is the bad reward.
+[59:53] If you would do it the other
+way, that is the better reward.
+[59:56] So it's more about this.
+[01:00:00] Yeah, and just like I mentioned,
+we talked about pre-training,
+[01:00:05] we just talked
+about post-training.
+[01:00:07] But I'm not sure whether now,
+actually, in the academic
+[01:00:12] there's a war, or maybe
+in the real setting,
+[01:00:15] OK, there's a pre-training team,
+there's a post-training team.
+[01:00:18] And you just pre-train the
+model and then give it over
+[01:00:20] to the post-training model.
+[01:00:22] But there's a war between them.
+[01:00:25] I'm not sure whether this
+war is really necessary, even
+[01:00:28] though everybody talks
+about pre-training
+[01:00:30] is for the compression,
+post-training
+[01:00:32] is for the behavior.
+[01:00:33] But I guess maybe I want
+to mention, actually,
+[01:00:36] RL, actually, it didn't
+just stick with each side.
+[01:00:40] Maybe in the future, there's
+only two kinds of laws.
+[01:00:43] One is the reinforced
+learning, the other one
+[01:00:44] is the next token prediction.
+[01:00:46] They're just combining
+together to remove
+[01:00:47] the wall between pre-training
+and post-training.
+[01:00:50] That's also possible.
+[01:00:51] But let's see.
+[01:00:52] I also don't know.
+[01:00:54] Also, a lot of
+things, actually, I
+[01:00:55] want to mention is
+about in the future,
+[01:00:57] the best way is the model
+is able to improve itself.
+[01:01:02] These kinds of
+self-improvements.
+[01:01:03] Actually, I think now the
+model is very powerful.
+[01:01:08] It's become possible.
+[01:01:09] And a lot of these
+frontier labs keep
+[01:01:12] working on this
+because if you're able,
+[01:01:14] there's another way.
+[01:01:15] So in the higher
+level compared to RL,
+[01:01:18] it's about if you're able to
+put more compute and more data
+[01:01:20] to the model, is able
+to keep improving.
+[01:01:23] And here, definitely, the data
+in the reinforced learning,
+[01:01:27] actually, you want to
+achieve the same improvement.
+[01:01:30] You need to think about
+how can we build the data?
+[01:01:33] How can you make the
+RL into the game?
+[01:01:36] So I think that's the two
+piece most important to me.
+[01:01:39] And definitely the
+model also needs
+[01:01:41] to be able to do the same
+refraction, able to understand
+[01:01:43] what is going wrong
+previously, and to fix it.
+[01:01:46] And also, the other
+one, actually, I
+[01:01:50] think a lot of
+things, if you want
+[01:01:51] to make this in the previous
+iteration of the model,
+[01:01:54] is not as good as the next
+iteration of the model.
+[01:01:56] So the weak learner is able
+to produce a better learner.
+[01:02:00] So I think that is
+also one of-- we
+[01:02:03] need to figure out the
+methodology about this.
+[01:02:06] Yeah, I think this is actually--
+[01:02:09] it's maybe not
+related to this task.
+[01:02:11] I think it's related
+to our daily work.
+[01:02:13] I think also some
+of the comments
+[01:02:14] is about how can
+we train the model?
+[01:02:16] Because I know so many people
+train the model here every day.
+[01:02:19] I just learned
+from you guys, OK,
+[01:02:20] you volunteered at
+5:00 AM last night.
+[01:02:23] So I think training model
+actually is pretty hard,
+[01:02:26] to be honest because you need
+to open-- to wake up at 3:00 AM,
+[01:02:33] figure, OK, there's something
+wrong to restart the job,
+[01:02:35] and then to discuss
+with the team, actually,
+[01:02:37] what's going wrong here, and
+how can we fix it immediately,
+[01:02:40] quickly relaunch the
+job to save the GPU.
+[01:02:44] And you also, I think-- one
+of the things, actually,
+[01:02:47] I didn't mention a lot, but
+it's super important to us is
+[01:02:50] the infrastructure because
+there's a lot of things I cannot
+[01:02:52] share in the
+infrastructure side.
+[01:02:54] But I think that actually
+is another biggest
+[01:02:56] pain in the reality because
+infrastructure, as long as this
+[01:02:59] the last scale,
+is not so stable,
+[01:03:01] And you will pretty struggle.
+[01:03:03] For example, when something
+is not stable, your job--
+[01:03:05] OK, the GPU fails, that
+GPU did not actually
+[01:03:08] lose the connection.
+[01:03:09] There are so many things,
+actually, in the infrastructure.
+[01:03:12] You are struggle.
+[01:03:13] I think, a lot of
+things, a lot of time,
+[01:03:14] actually, was spent
+in this instability
+[01:03:18] of the infrastructure.
+[01:03:20] And you feel very
+hopeless sometimes.
+[01:03:23] Why this info?
+[01:03:24] How can I train this
+model given this info?
+[01:03:28] And you also-- because
+there's a lot of things.
+[01:03:31] For example, training the
+model is about 90% of the time,
+[01:03:34] actually, things is not working.
+[01:03:36] For the 10% of the
+time things are working
+[01:03:37] it's really making a progress.
+[01:03:39] This means that it is bad.
+[01:03:40] 90% of the time, you are
+not making any progress.
+[01:03:43] You need to have the patience.
+[01:03:45] So that is why training
+the model is so hard.
+[01:03:48] But on the other hand,
+training model is also so fun.
+[01:03:52] I think maybe that is best-- one
+of the best job in the world.
+[01:03:56] So yeah, we are so
+lucky we still--
+[01:03:58] yeah, we are able to have the
+opportunity to train the model.
+[01:04:01] And because with
+so many-- this GPU.
+[01:04:04] And also you also will
+feel the fulfillment
+[01:04:08] when your model you
+train, actually,
+[01:04:10] is able to pick the baseline.
+[01:04:12] Yeah, so I think that the
+fulfillment, this kind of joy
+[01:04:16] is not that easy to
+get from other place
+[01:04:18] because the baseline, actually,
+is the best model in the world
+[01:04:20] sometimes.
+[01:04:22] And so, because I'm working
+with the Product team,
+[01:04:25] so if your model is able
+to be used in the product
+[01:04:28] by so many different peoples,
+and collect the feedback,
+[01:04:31] that's also another kind of
+fulfillment as a researcher

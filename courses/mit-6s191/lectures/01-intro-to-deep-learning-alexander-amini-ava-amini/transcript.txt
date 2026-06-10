@@ -1,0 +1,1569 @@
+[00:15] Okay.
+[00:16] Good morning everyone, or actually good
+[00:17] afternoon everyone. My name is Alexander
+[00:20] Amini and thank you all for joining us
+[00:22] today in MIT 6.S191 Introduction to Deep
+[00:26] Learning. We're super excited to welcome
+[00:28] you to this class.
+[00:29] Uh
+[00:30] my name is Alexander. I'll be your
+[00:31] instructor along with Ava, uh who will
+[00:34] you'll hear from later today as well
+[00:36] with the second lecture.
+[00:38] This is a one-week boot camp on
+[00:40] everything deep learning, right? So,
+[00:42] you'll go from the very beginnings of
+[00:44] neural networks all the way to some of
+[00:46] uh the the most recent LLM advances that
+[00:49] we've had uh even up to last week even.
+[00:53] We'll be covering the the field. The
+[00:55] pace of this field is really truly
+[00:57] remark- remarkable, right? And that's
+[00:58] one thing that we'll keep touching back
+[01:00] on throughout the course in a lot of
+[01:02] detail that we want to see actually not
+[01:04] just what the current state of the art
+[01:05] is, but also remember how we got there.
+[01:08] And I think it's really easy for us to
+[01:11] become desensitized actually with a lot
+[01:13] of the state of the art with AI because
+[01:16] there are so many amazing things
+[01:17] happening and we really are on this
+[01:18] exponential trend. It's really hard for
+[01:21] us to actually remember where we were
+[01:22] just a few years ago. So, I think what
+[01:24] better way to to do that than to see it.
+[01:27] So, exactly one decade ago, uh we
+[01:30] started teaching the class. We created
+[01:32] this class nine years ago. We started
+[01:33] teaching it nine years ago.
+[01:36] One decade ago, in 2015, this was the
+[01:38] state of the art in terms of facial
+[01:40] image generation. So, generating facial
+[01:44] images.
+[01:45] Uh fast forward a couple years to 2018,
+[01:47] you can already see a massive leap in
+[01:50] quality. And then fast forward a couple
+[01:51] more years and you see that extend into
+[01:54] a new dimension of time into generating
+[01:57] videos as well. In fact, this was a
+[01:59] video that we generated for the class in
+[02:01] 2020
+[02:03] to actually introduce the class. If you
+[02:04] guys haven't seen this video, you should
+[02:06] watch it online. It's on YouTube. It
+[02:07] went a bit viral a few years ago when we
+[02:09] started the class.
+[02:11] Now, in the past few years, we've seen
+[02:13] this revolution expand also into natural
+[02:17] language as well. So, in 2022, we had
+[02:20] ChatGPT-3
+[02:22] released and launched to the public
+[02:24] followed shortly by GPT-4 in 2023.
+[02:29] Now,
+[02:30] the jump between 3.5 and 4 was often
+[02:34] times regarded as this massive leap in
+[02:36] AI capabilities when we went from
+[02:38] GPT-3.5 to GPT-4 because really
+[02:41] everybody felt that the the capabilities
+[02:43] were vastly improved between these two
+[02:46] models. And everybody could feel it.
+[02:48] Even non-technical folks could really
+[02:49] feel the capabilities come through.
+[02:52] Now, what you couldn't really see or
+[02:54] what you couldn't feel was what was
+[02:56] happening behind all of those giant
+[02:58] models, right? So, GPT-4 was this
+[03:01] incredible model, but this is what you
+[03:03] don't see. Powering GPT-4 are these
+[03:06] massive and 5, of course, as well, are
+[03:09] these massive data centers, GPU data
+[03:12] centers. They cost hundreds of millions
+[03:13] of dollars to build and tons of
+[03:15] infrastructure to maintain and to
+[03:19] to manage these different data centers.
+[03:22] Now,
+[03:23] these are for large language models.
+[03:25] We've also had this this this revolution
+[03:29] of AI computing capability on small form
+[03:31] factors as well, right? So, just like we
+[03:33] have large language models powered in
+[03:36] the cloud, we've also started to see
+[03:38] small language models
+[03:40] go directly down onto edge devices.
+[03:43] Now, traditionally, this gap between
+[03:45] large language models and small language
+[03:47] models has been very large in a
+[03:50] capability sense. We couldn't really
+[03:52] accomplish huge jumps in capability in
+[03:55] small language world uh that we've seen
+[03:58] in the large language world. But, let me
+[04:00] show you actually what's happening right
+[04:02] now. So, I'm going to switch over my
+[04:04] screen to this screen, which is actually
+[04:06] running
+[04:08] Let's see here. So, this is actually
+[04:10] live on this phone running right here.
+[04:12] You can see everything that's happening
+[04:14] on the phone.
+[04:15] So, what I'll do is I'll show you
+[04:17] actually a language model running
+[04:18] entirely on this phone
+[04:20] right now.
+[04:21] So, we can ask it questions. This should
+[04:23] look very familiar to what you have seen
+[04:25] with GPTs.
+[04:26] So, how are you doing? We can ask it
+[04:28] very simple questions to start.
+[04:30] Now, the thing that you'll notice here,
+[04:32] if I swipe down from the top, this model
+[04:35] is running entirely on airplane mode.
+[04:38] There's no Wi-Fi connected to this
+[04:39] phone. This is entirely offline.
+[04:41] Everything that's being computed is
+[04:43] running on the device itself.
+[04:46] Now,
+[04:47] of course, we can ask it more complex
+[04:49] questions as well. So, here's a question
+[04:51] about finding the zeros in this
+[04:53] equation.
+[04:54] It looks simple at first glance, but
+[04:56] actually, if you read it,
+[04:58] it's actually asking about it in Z7
+[05:00] space. Does anybody know what Z7 space
+[05:02] is?
+[05:04] Anybody? Yes.
+[05:06] If it's integers but like modulo 7.
+[05:08] Exactly. Exactly. So, it's in modulo 7,
+[05:10] the finite space of uh of modulo 7. We
+[05:12] can ask it this question.
+[05:14] It can immediately know the answer. You
+[05:16] can check the answer. It is indeed
+[05:18] correct. We can also ask it to maybe
+[05:20] like give me more explanation.
+[05:27] Right.
+[05:28] Okay. So, it it's able to do this. Now,
+[05:31] let me
+[05:32] go back out, and let me actually show
+[05:34] you another demonstration. Now, these
+[05:36] models are also permeating beyond text
+[05:41] language as well. We can ask questions
+[05:42] directly in audio language. Now, these
+[05:45] are models that are not converting from
+[05:47] to audio audio to text. These are pure
+[05:50] audio models that take audio in and
+[05:52] directly output audio tokens out. So, I
+[05:55] can ask you a question like
+[05:57] "Can you give me a step-by-step guide on
+[05:59] how to give a really compelling talk?"
+[06:02] Sure.
+[06:03] Start by clarifying your main message
+[06:05] and who you're speaking to.
+[06:07] Then, sketch a simple outline with an
+[06:08] intro, a few key points, and a strong
+[06:11] conclusion.
+[06:12] Next, craft a few opening and closing
+[06:15] lines that grab attention and leave a
+[06:16] lasting impression.
+[06:18] And practice your delivery so you can
+[06:20] adjust your pace and body language.
+[06:22] Finally, rehearse your talk, get
+[06:25] feedback, and tweak any weak spots
+[06:27] before the event.
+[06:29] Right. So,
+[06:30] what have we seen? Right. So, this is an
+[06:33] end-to-end audio model. It means that
+[06:35] the latency is extremely low is what
+[06:37] you'll probably notice there because
+[06:38] number one, you don't send anything to
+[06:40] the cloud, so you don't have to wait for
+[06:41] internet times. Everything runs on
+[06:43] device.
+[06:44] And you're directly processing audio.
+[06:46] So, it's extremely responsive. These are
+[06:48] models that can actually understand your
+[06:49] emotion because they don't convert audio
+[06:50] to text. When you convert to text, you
+[06:52] lose emotion. So, you directly capture
+[06:55] the emotion in the speech and you can
+[06:56] directly convey the emotion back to the
+[06:58] user.
+[06:59] Now, this was a model actually developed
+[07:01] by Liquid AI. It released about 1 week
+[07:03] ago.
+[07:04] It's multimodal. It can process all of
+[07:06] these different modalities, text, audio,
+[07:08] and vision.
+[07:09] But, there have been a ton of these
+[07:11] model releases in the past
+[07:13] uh
+[07:14] few years actually since GPT first
+[07:17] launched. And this problem that
+[07:20] traditionally was having between large
+[07:22] language models, the gap between large
+[07:23] language models and small language
+[07:25] models has always been around, right?
+[07:27] This was actually a very special release
+[07:30] for the community because of this
+[07:32] context on the left-hand side. So, I'll
+[07:35] read it out just for everybody to see.
+[07:37] So, it's pretty crazy when you think
+[07:38] about it. One of the biggest wow moments
+[07:40] of GPT was the update from 3.5 to 4. And
+[07:44] now this open-source model that anybody
+[07:47] can download and put on their phone with
+[07:49] only 2 billion parameters
+[07:51] is better than the original GPT-4 model
+[07:54] in terms of every benchmark basically
+[07:56] that comes out, right? And this is a
+[07:58] model again that you can run entirely on
+[08:00] your phone. It's open-source. You can
+[08:02] fine-tune it on your own prem.
+[08:04] Right? So that's the pace of the field.
+[08:06] That's why this class is such an
+[08:07] happening at such an exciting time.
+[08:10] Um so let's dive into it, right? This is
+[08:12] what we'll learn in the class. Let's
+[08:14] dive in by first of all laying some
+[08:16] foundation of what exactly is deep
+[08:18] learning. And to do that we need to
+[08:20] first understand what is intelligence
+[08:22] because deep learning at the heart of
+[08:23] deep learning is AI.
+[08:26] Right? So what is AI first of all? AI is
+[08:28] the practice of building artificial
+[08:31] algorithms to process information in
+[08:35] order to inform some future decisions,
+[08:38] right? At its core, that's what we call
+[08:40] intelligence in fact even. And
+[08:42] artificial intelligence is just the
+[08:44] ability for a machine to do that same
+[08:46] ability. Process information to inform a
+[08:48] future decision.
+[08:49] Now machine learning is nothing more
+[08:51] than a subset of AI that specifically
+[08:55] does this without explicitly programming
+[08:58] a computer on the steps of how to
+[09:00] process that information. It's able to
+[09:02] learn this from data, right? That's the
+[09:05] differentiating point between AI and
+[09:07] machine learning.
+[09:09] And now deep learning is nothing more
+[09:10] than a subset of machine learning which
+[09:13] focuses on the use of neural networks,
+[09:15] specifically deep neural networks, to do
+[09:17] this task of learning from data to
+[09:19] inform future decisions and other tasks.
+[09:22] Right?
+[09:23] So
+[09:24] we'll we'll circle around this theme of
+[09:27] teaching computers to learn a task
+[09:30] directly from raw data. That really is
+[09:32] what this whole class is all about. And
+[09:34] we'll learn about different models to do
+[09:36] that, different ways and different
+[09:38] algorithms to accomplish that main
+[09:39] objective.
+[09:41] This class is split between both
+[09:43] technical lectures as well as
+[09:45] hands-on project software labs. We'll
+[09:48] have several new updates this year,
+[09:49] especially towards the second half of
+[09:52] the week where we start to cover a lot
+[09:54] more of the new advances in AI and deep
+[09:56] learning. And we'll conclude also with
+[09:59] some guest lectures and some project
+[10:01] presentation competitions that will give
+[10:03] everybody the opportunity to win some
+[10:05] awesome prizes.
+[10:09] Yes, also we
+[10:11] John is graciously
+[10:13] offered to host the top winners of the
+[10:15] project presentation for TEDxMIT talks.
+[10:19] So, who has not given a TEDxMIT talk?
+[10:23] Probably most of this audience. So, this
+[10:25] is your opportunity to win a spot on the
+[10:28] big stage and give a TEDxMIT talk as
+[10:31] part of the project pitch competitions.
+[10:34] Um
+[10:35] the software labs are an excellent way
+[10:37] to get hands-on and actually learn how
+[10:39] to deploy and build what we learn about
+[10:42] in the technical lectures directly with
+[10:45] your own
+[10:46] code and programming. We offer software
+[10:49] labs in both TensorFlow and PyTorch.
+[10:51] We'll talk more about this later today.
+[10:53] Okay, so how do the projects labs work?
+[10:57] Right, so every day we have a dedicated
+[10:59] software lab that helps mirror exactly
+[11:01] what you learn in the technical
+[11:02] lectures. Also, you learn this in the
+[11:04] project labs as well. And every day
+[11:07] covers on both sides.
+[11:09] Right, so starting with lab one today,
+[11:10] where where you'll be learning how to
+[11:12] build a music generation model that can
+[11:14] learn how to generate a certain style of
+[11:17] music.
+[11:18] Lab two, which is tomorrow, is going to
+[11:20] be focused on computer vision and facial
+[11:22] detection systems.
+[11:24] And then lab three is a lab dedicated on
+[11:27] large language modeling. You'll
+[11:28] fine-tune your own large language model.
+[11:31] You'll evaluate it. You'll see the whole
+[11:33] process end to end from training all the
+[11:34] way to evaluation and deployment.
+[11:37] And finally, on the last day of this
+[11:39] class, we'll cover a final project pitch
+[11:41] competition. Three to five minutes, very
+[11:44] Shark Tank-like style. You'll get on
+[11:46] stage. You can work individually or in
+[11:48] groups. We'll talk more about the
+[11:49] details for this a bit later throughout
+[11:51] the class.
+[11:53] This class has many amazing resources to
+[11:55] help throughout the week. Uh please post
+[11:57] to Piazza. I think everybody here should
+[11:59] have received the link for the Piazza,
+[12:01] but please uh reach out to us if you
+[12:03] haven't. Um we also have some incredible
+[12:06] TAs who you'll meet throughout the week
+[12:08] and will help support if there's any
+[12:10] questions. All of these slides, by the
+[12:11] way, are online on the website, so feel
+[12:13] free to um
+[12:15] grab any of these links or details from
+[12:17] online as well.
+[12:19] And of course, uh we have an incredible
+[12:21] team. Myself and Ava are your main
+[12:23] instructors, but then we also have uh an
+[12:26] incredible team of TAs and we also have
+[12:28] some incredible guest lecturers lined up
+[12:30] for Thursday and Friday as well that
+[12:32] you'll definitely not want to miss.
+[12:34] And finally, just a huge thanks and uh
+[12:37] call out to our sponsors who, without
+[12:39] their support, this class is not
+[12:40] possible at all.
+[12:42] Okay. So, now let's start with uh some
+[12:44] of the fun stuff. And let's start by
+[12:45] asking ourselves, first of all, a
+[12:47] question that uh
+[12:49] probably is pretty self-explanatory at
+[12:50] this point, right? So, which is why do
+[12:53] we actually care about deep learning so
+[12:55] much, right? Why are you all here? Why
+[12:56] are you so excited about this topic?
+[12:58] And the answer really boils down to what
+[13:01] I believe is is one thing, right?
+[13:02] Traditional machine learning algorithms
+[13:04] really require a level of hand
+[13:06] engineering, human human-guided hand
+[13:09] engineering to teach computers how to
+[13:12] perform a particular task.
+[13:14] Deep learning is so exciting because it
+[13:16] enables us to learn those rules that
+[13:20] traditionally are driven by human
+[13:22] engineering, now by computers and by
+[13:24] data, right? So, the key idea here is to
+[13:26] learn those features directly from data
+[13:28] and to do that in a hierarchical
+[13:30] fashion, right? So if we want to learn
+[13:32] how to detect faces, for example, right?
+[13:35] You may do that. As a human, how would
+[13:36] you detect faces, right? And think from
+[13:39] a first principles way. You would
+[13:40] probably start by looking at an image
+[13:42] and first detecting the lines in the
+[13:44] image and composing those lines together
+[13:47] to see if there are certain corners in
+[13:49] certain parts of the image that resemble
+[13:52] a face and then putting those corners in
+[13:54] different uh configurations together to
+[13:56] see if you can configure an eye or a
+[13:59] nose or a mouth. And if you detect any
+[14:01] of those things, then it's even more
+[14:03] inkling that you're probably uh looking
+[14:05] at a face, right? Deep learning
+[14:07] algorithms are extremely hierarchical in
+[14:09] the same way. They build up features
+[14:11] from very low-level features like lines
+[14:13] and edges to higher-level shapes like
+[14:16] corners and curves all the way up to
+[14:19] mid-level objects and higher-level
+[14:20] objects as well.
+[14:23] Now, applying the fundamental building
+[14:25] blocks of how to learn those
+[14:26] hierarchical representations is actually
+[14:29] something that is not new and not very
+[14:32] recent at all. A lot of these core
+[14:34] algorithms have existed since the 1950s,
+[14:38] 1970s, they really took off a lot. So
+[14:41] why are we really now seeing this
+[14:42] resurgence? And there are really three
+[14:44] answers to this. One is big data. The
+[14:46] data in the world has never been more
+[14:48] prevalent than today and these
+[14:50] algorithms live off of data. This is
+[14:52] what they are feeding off of, right? So
+[14:55] they really need and require massive
+[14:57] amounts of data that the world has now
+[14:59] been able to provide. The second is
+[15:01] hardware. Companies like AMD and Nvidia,
+[15:04] of course, as well are providing new
+[15:06] GPUs that are accelerating parallel
+[15:08] computing and accelerating the
+[15:10] development and the deployment of these
+[15:12] uh algorithms. And finally, software
+[15:15] that you'll get hands-on experience
+[15:16] throughout this class that it actually
+[15:18] democratizes the ability to create,
+[15:20] train, and deploy any of these models
+[15:23] even at relatively large scales.
+[15:27] Okay, so let's start with the
+[15:29] fundamental, the most fundamental
+[15:30] building block of what makes up pretty
+[15:33] much every neural network,
+[15:35] uh and that is the single neuron, right?
+[15:37] Also known as the perceptron.
+[15:39] Right? So, this is really the most basic
+[15:41] building block that's very important to
+[15:43] understand when starting deep learning.
+[15:46] Now, what is the idea of a single
+[15:48] perceptron?
+[15:50] At its core, it's actually extremely
+[15:52] simple. Let's start by first talking
+[15:54] about the forward propagation of
+[15:56] information through this neuron. So, if
+[15:59] you have information and you're passing
+[16:01] it through a neuron, we can define a set
+[16:03] of the inputs to that neuron as X1 to
+[16:07] Xn.
+[16:08] Or here we call it Xm, excuse me.
+[16:11] Okay, so we have m inputs, one to m,
+[16:14] and this one neuron takes all of these
+[16:16] inputs and it has to create some output.
+[16:18] This is the goal of this neuron. Now,
+[16:20] how do we do this? How does this neuron
+[16:22] actually take those m inputs and compute
+[16:24] its output?
+[16:26] It does this by taking
+[16:28] each of those inputs, multiplying every
+[16:31] input with a corresponding weight, or
+[16:34] it's called the weight. Well, every
+[16:36] input has a corresponding weight, so X1
+[16:38] corresponds to weight one.
+[16:41] X2 corresponds to weight two. You
+[16:42] multiply every weight with its
+[16:44] corresponding input, then you add up all
+[16:47] of the answers, and then you pass this
+[16:49] through to the output. With one more
+[16:52] exception, which is that you also pass
+[16:54] it through what's called an activation
+[16:55] function. Here it's denoted as g. So,
+[16:58] you multiply your inputs with your
+[17:00] weights, add up everything into one
+[17:02] number,
+[17:03] and then pass it through some
+[17:04] transformation, which we'll talk about
+[17:05] in a second, and that is your final
+[17:08] answer. That's one number that comes out
+[17:09] of this neuron from m inputs that go in.
+[17:14] Okay.
+[17:15] There's one more detail I left out of
+[17:17] this, which is that we can also have a
+[17:19] what's called a bias term
+[17:21] to this neuron as well. So, in addition
+[17:23] to our
+[17:25] M inputs on the left, we also have one
+[17:28] more weight W0, which is called our
+[17:31] bias. Now, our bias is what can allow us
+[17:34] to shift this this function
+[17:37] up or down, right? And I'll show a
+[17:39] graphical example of this in a second.
+[17:42] Right? But the equation is still the
+[17:43] same. We take every input, multiply by
+[17:45] corresponding weights,
+[17:46] add a bias, pass through our
+[17:48] non-linearity.
+[17:51] So, now that X and
+[17:53] W are actually just lists of numbers,
+[17:56] each of which are M dimensional, we can
+[17:59] actually write this in vector uh form,
+[18:01] right? In linear algebra form.
+[18:03] So,
+[18:04] the output now, Y, is just obtained by
+[18:07] taking the dot product between X and W,
+[18:11] adding this bias, and passing through a
+[18:13] non-linearity.
+[18:14] Right? This simplifies the equation at
+[18:16] least
+[18:17] uh notation-wise quite a lot, right?
+[18:20] From the previous slide.
+[18:21] Now, you might be wondering about this
+[18:23] activation function that I mentioned
+[18:24] previously. I said this is a non-linear
+[18:26] function, right? What does that mean? It
+[18:28] just means that you're transforming
+[18:31] something from the X axis that can be
+[18:32] any real number, anything from negative
+[18:35] infinity to infinity,
+[18:37] into a new real number that sometimes is
+[18:40] bounded, sometimes not, but that
+[18:41] transformation is not linear. So, here's
+[18:44] one example of a non-linear activation
+[18:47] function. This is called the sigmoid
+[18:48] activation function. It transforms any
+[18:51] any number on the X axis into a new
+[18:53] number between 0 and 1.
+[18:55] Right?
+[18:57] In fact, there are many types of
+[18:58] non-linear activation functions that
+[19:00] you'll get exposure with throughout this
+[19:02] class. The sigmoid activation, which you
+[19:04] see in the left-hand side, is just one
+[19:05] example of very common activation
+[19:08] functions in neural networks.
+[19:10] The the central theme that links all of
+[19:13] these together though is that they're
+[19:14] all non-linear. Right? The activation
+[19:17] function with sigmoid on the left is
+[19:19] very commonly used for things like
+[19:21] probabilities because it always outputs
+[19:23] between zero and one, which is the space
+[19:25] that probabilities live in.
+[19:26] On the right-hand side, you have
+[19:28] activation functions that output between
+[19:31] zero and positive infinity, which is
+[19:33] great for introducing non-negativity
+[19:35] constraints into your models as well.
+[19:37] And it's very simple because it's
+[19:39] actually just two linear functions with
+[19:41] a non-linearity between them.
+[19:45] Okay. So, now why do we actually even
+[19:47] need activation functions, right? Why
+[19:49] not just directly use the dot product
+[19:52] that comes from our weights and our
+[19:53] inputs? The point of an activation
+[19:55] function is precisely to introduce
+[19:58] non-linearities into our model.
+[20:00] Right? And why do we care about this?
+[20:02] It's because in real life, real life is
+[20:06] highly non-linear. It's highly complex
+[20:08] and dynamic. And let me show you an
+[20:10] example. So, here's a here's an example
+[20:12] of a data set, just a two-dimensional
+[20:13] data set, not even extremely complex.
+[20:16] But if I asked you to draw a line
+[20:19] separating the green points from the red
+[20:21] points in this data set, it would
+[20:23] actually be really hard. In fact,
+[20:24] there's no line that perfectly separates
+[20:26] the green points from the red points,
+[20:28] and that's because this data is
+[20:29] non-linear. Even though it's just in
+[20:30] two-dimensional space, it's not in
+[20:32] high-dimensional space, but it's still
+[20:34] non-linear and very complex. Now,
+[20:36] imagine you're dealing with real-world
+[20:38] data that's extremely high-dimensional
+[20:40] and also non-linear.
+[20:42] Definitely, you need non-linearities in
+[20:44] your model to handle this.
+[20:46] If I tell you you can make a curved
+[20:47] line, this problem becomes very easy,
+[20:49] right? And that's what it means to have
+[20:51] non-linear activation functions. We're
+[20:52] trying to learn a mapping, a decision,
+[20:54] to classify between red points and green
+[20:56] points, but we allow our model to draw
+[20:59] curves in the edges in this decision
+[21:01] space between the two points.
+[21:05] Let's understand this with maybe a
+[21:06] simple example, and we can walk through
+[21:08] it together. So, let's assume now that
+[21:10] we have a neural network that was
+[21:12] trained with two weights.
+[21:14] So, W1 and W2 is 3 and -2, just as an
+[21:18] example. We trained it, this is the
+[21:19] result that we got. And we want to pass
+[21:21] in a new input to this model. So, we
+[21:24] have two inputs to this model, X1 and
+[21:26] X2.
+[21:27] We obtain the output of this
+[21:29] uh
+[21:30] neuron by
+[21:32] as we saw before, computing a dot
+[21:34] product between our X and our W.
+[21:37] Right? Our W's already trained, so we
+[21:38] can plug in those two weights directly
+[21:40] into this vector here.
+[21:42] Adding our bias,
+[21:44] and then passing through a
+[21:45] non-linearity.
+[21:46] Now, if you look at this, what's inside
+[21:48] of the activation function, this is
+[21:50] nothing more than a two-dimensional line
+[21:53] as a function of X1 and X2, our two
+[21:55] inputs.
+[21:57] We can plot this line, right? This is a
+[21:58] trained neural network, or it's a
+[22:00] trained neuron at least. We can plot
+[22:02] this line and observe what this decision
+[22:06] uh boundary looks like in the space
+[22:08] between X1 and X2.
+[22:11] So, for any new point X1 and X2, if I
+[22:14] want to pass in an input to this neuron,
+[22:17] I can actually plot this point. So,
+[22:18] let's say I I pass in a new input, -1,
+[22:21] +2 is the XY coordinate of this point. I
+[22:25] can plot it in this space, and I can see
+[22:28] that it actually lies on the left side
+[22:30] of this decision boundary. What does it
+[22:32] mean to lie on the left side of the
+[22:34] decision boundary? Well, let's actually
+[22:35] compute it mathematically first, and
+[22:37] then we'll see. So, if we plug in those
+[22:39] numbers to the equation, we'll get 1 + 3
+[22:44] * -1, which is -3,
+[22:46] 2 * 2, which is -4.
+[22:49] Right? Add up all those together, you
+[22:50] get -6. Right? That's a negative number.
+[22:53] That means that we're on the left side
+[22:55] of the decision boundary. When we pass
+[22:58] that through our non-linearity, which is
+[22:59] our sigmoid function, being a very
+[23:01] negative number, that means that we're
+[23:03] going to be further on the left on the
+[23:06] under 50
+[23:07] under .5 on the sigmoid function, so
+[23:09] where it's a very small number close to
+[23:11] zero, .00.
+[23:13] In fact, we can actually draw a
+[23:16] hyperplane between these two parts of
+[23:18] the space and say anything that lies on
+[23:20] the left side of the decision boundary
+[23:23] will always be negative, right? It will
+[23:26] always be negative before the activation
+[23:27] function, it will always be less than .5
+[23:30] after the activation function
+[23:32] if it's sigmoid activation, and anything
+[23:34] on the right is going to be positive
+[23:36] before the activation function.
+[23:38] Now, this is really nice and convenient
+[23:40] that we can visualize this trained
+[23:43] neuron in this way here that for any
+[23:45] input, we can directly visualize exactly
+[23:47] where it lives in this decision space.
+[23:50] But of course, this is only a
+[23:52] two-dimensional space. It has only two
+[23:54] neurons in our neuron Excuse me, two
+[23:56] parameters in our neuron in our neuron,
+[23:59] right? It's extremely small, right?
+[24:00] Modern neural networks have billions of
+[24:02] parameters. So, imagine this plot now
+[24:04] with a billion-dimensional space. This
+[24:07] is what we would be looking at.
+[24:09] Um so, of course, that's not possible,
+[24:11] right? So, this is why this is a helpful
+[24:12] exercise to explain, but of course, we
+[24:15] need uh to actually scale without having
+[24:19] this exact uh visual, but building up
+[24:21] more mathematical intuition.
+[24:24] So, let's do exactly that. Let's scale
+[24:25] this idea now into larger
+[24:27] networks, and let's start by taking that
+[24:30] one neuron and actually building a
+[24:32] neural network out of it to see how this
+[24:35] all comes together, right? So, this is
+[24:37] our original neuron picture, okay? Now,
+[24:41] if there's a few things that you
+[24:42] remember from this class, this is
+[24:43] probably the most important thing is
+[24:45] that you should remember how a single
+[24:48] neuron works, and that's by doing a dot
+[24:50] product, adding a bias, and applying a
+[24:53] non-linearity. It's really three steps:
+[24:55] dot product, add a bias, and apply a
+[24:57] non-linearity. That equation is the core
+[25:01] to so many different parts of deep
+[25:03] learning.
+[25:04] Now, let's simplify the diagram a little
+[25:06] bit now that we got that foundation
+[25:09] settled, right? I'll remove all of the
+[25:11] weight labels, and we'll just have every
+[25:13] line you can remember that every line
+[25:16] will have both an input coming in as
+[25:18] well as a weight associated to that
+[25:20] line. Okay.
+[25:22] Now, Z here, what's shown as Z, is the
+[25:26] result of that dot product plus a bias,
+[25:28] right? This is what's happening before
+[25:30] the non-linearity, right? So, the final
+[25:32] output is simply Y of
+[25:35] G, which is our non-linearity, of Z.
+[25:39] Okay.
+[25:40] Now, let's define a multi-output neural
+[25:43] network now. To do this, we just have
+[25:45] two neurons instead of one. They will
+[25:48] both see the same inputs,
+[25:50] but now they will have their own
+[25:52] independent weights. So, each neuron has
+[25:55] its own three weights.
+[25:56] It sees the same three inputs,
+[25:59] but it now can output two different
+[26:00] answers because it has two different
+[26:02] sets of weights.
+[26:04] Okay.
+[26:05] So, now with this mathematical
+[26:07] understanding, let's see if we can now
+[26:08] build our first layer neural network
+[26:11] layer entirely from scratch.
+[26:14] So, let's do this uh by first
+[26:17] initializing a matrix called W. This is
+[26:21] going to be a matrix that contains all
+[26:22] of our weights for all of our neurons in
+[26:25] that one layer. Okay.
+[26:27] So, we can create now this matrix with
+[26:31] uh of weights, which is going to be
+[26:33] dimensionality of the input space by the
+[26:36] dimensionality of our output space,
+[26:38] right?
+[26:39] Now,
+[26:40] the bias is also important to initialize
+[26:42] here. And then when we create our call
+[26:44] function, our forward pass function,
+[26:46] this is going to show actually how we
+[26:48] can multiply, do the dot product of our
+[26:52] inputs with our weights.
+[26:53] Okay. Right here.
+[26:55] Add the bias.
+[26:57] Apply the non-linearity.
+[26:59] And that's our answer, right? It's the
+[27:01] same equation again.
+[27:04] Okay, we can do this in TensorFlow. We
+[27:06] can also do it in PyTorch. And you'll
+[27:08] notice actually between these two it's
+[27:10] very very similar type of language. Uh,
+[27:13] a lot of
+[27:14] parallels. Basically just different
+[27:15] names for a lot of things, but
+[27:17] the overall frameworks are extremely
+[27:19] similar.
+[27:21] Same foundations. We'll initialize the
+[27:23] weights and the biases.
+[27:26] In the forward pass, we'll compute the
+[27:27] output of this layer by computing a
+[27:30] matrix multiplication of our inputs with
+[27:32] our weights, adding a bias, and then
+[27:34] applying our non-linearity.
+[27:37] Okay.
+[27:38] Now luckily
+[27:40] both TensorFlow and PyTorch have
+[27:42] actually defined that exact layer for us
+[27:44] already. So you don't actually need to
+[27:46] to write that code yourself. You would
+[27:48] just call the layer. In TensorFlow it's
+[27:51] called the dense layer. In PyTorch it's
+[27:52] called a linear layer. They do the exact
+[27:54] same thing. They do the matrix multiply,
+[27:56] add a bias, apply a non-linearity.
+[27:58] So we can just call it instead, right?
+[28:00] We call it with the number of units or
+[28:02] the number of neurons in each layer.
+[28:06] Okay, let's keep building up this
+[28:08] abstraction step by step.
+[28:11] That's a single layer neural network.
+[28:13] This is one where we can have a single
+[28:15] hidden layer now. So this is actually
+[28:17] two layers.
+[28:19] Now we can see how we can do this
+[28:21] transformation from input space to the
+[28:23] hidden layer space with one layer, and
+[28:25] then hidden layer space to output space
+[28:27] with another layer. So now we actually
+[28:29] have two weight matrices, right? The
+[28:32] first weight matrix on the left-hand
+[28:33] side W1
+[28:35] converts the inputs to the hidden layer.
+[28:38] Second weight matrix is W2 which goes
+[28:41] to the output.
+[28:42] Right? Each of these are separate weight
+[28:44] matrices, and they actually have
+[28:45] different sizes as well because your
+[28:46] output shape is different than your
+[28:48] hidden layer shape.
+[28:51] Now, if we look at a single unit,
+[28:53] let's zoom back in now to a single unit
+[28:56] within the hidden layer.
+[28:57] Right? Let's take for example this one,
+[28:59] Z2. This is just the second unit in our
+[29:02] hidden layer of this model. This is the
+[29:04] same perceptron that we saw before,
+[29:06] nothing special here. We compute its
+[29:09] output Z2 by taking a dot product of all
+[29:12] inputs with the weights corresponding to
+[29:15] that neuron, adding its bias, and
+[29:17] applying a non-linearity.
+[29:19] If we took a different node, like Z3,
+[29:22] for example, it would look also the
+[29:23] exact same, except its weights would be
+[29:25] different than Z2's weights. The inputs
+[29:27] are the same, but they see different
+[29:28] weights.
+[29:30] Okay, so this picture looks a bit messy,
+[29:32] so let's
+[29:33] abstract even further so we can keep
+[29:35] building up this this intuition. So now
+[29:38] I'm going to remove all the lines and
+[29:39] just put these symbols here in cases
+[29:42] wherever we have these fully connected
+[29:44] layers. Everything that connects from
+[29:45] input to output with the matrix multiply
+[29:48] in between.
+[29:50] And again, we can actually stack these
+[29:54] fully connected or linear layers on top
+[29:56] of each other with non-linearities
+[29:58] between them to make sure that we have
+[29:59] the non-linearities across our network
+[30:01] as well. And here's an example of how to
+[30:04] do this. You basically stack the same
+[30:06] layers that we saw before now in these
+[30:07] sequential blocks. Sequential just
+[30:10] basically allows you to stack them.
+[30:13] Okay, now finally the the point that
+[30:15] we've been waiting for is how to go from
+[30:18] these neural networks to deep neural
+[30:20] networks. There's nothing more to this
+[30:22] than just stacking a bunch of linear
+[30:24] layers on top of each other. A deep
+[30:25] neural network is nothing more than a
+[30:27] neural network that has more than
+[30:30] usually three layers is what people can
+[30:32] conceptually say.
+[30:34] Right? So this is a network where the
+[30:36] final output is computed by going deeper
+[30:38] and deeper and deeper across each of
+[30:41] these layers to compute and its final
+[30:43] output at the end of the network. And
+[30:45] again, to no surprise, this is done in
+[30:48] the same abstraction code as before,
+[30:50] just having a sequential block and a
+[30:52] bunch of linear layers within that
+[30:53] block.
+[30:55] Okay, this is awesome. So now we have
+[30:57] this good intuition of how to
+[31:00] build up from a single neuron all the
+[31:02] way to a layer to a neural network and
+[31:04] to compose these in the forward pass.
+[31:07] Let's take a quick look at how we can
+[31:09] apply this to a particular problem that
+[31:11] it's it's a good starting problem for
+[31:14] everybody in this class, which is
+[31:16] should will I pass this class, right? So
+[31:18] this is a question, it has a yes no
+[31:19] answer
+[31:21] and there's a lot of data for this
+[31:23] question actually because we've taught
+[31:24] this class for a long time. So we have a
+[31:26] lot of data from past students who have
+[31:28] taken this class. Here's an example. So
+[31:31] we have an X and a Y axis.
+[31:33] X is the number of lectures that you
+[31:34] attend
+[31:36] and the Y axis is the number of hours
+[31:38] that you spend on the final project.
+[31:40] And we also have individual data points
+[31:42] which represent past students who have
+[31:45] taken this class. You can see where they
+[31:46] live in this space.
+[31:49] And then we have you.
+[31:51] You fall right here at 4 5.
+[31:53] Right? You've attended four lectures and
+[31:55] you spent five hours on your final
+[31:57] project and the question is will you
+[31:59] pass this class based off of all of the
+[32:02] other data that you've seen, right? Now,
+[32:04] how can we do this?
+[32:07] We have a neural network that can do
+[32:09] this. Let's try and actually feed it
+[32:10] into a neural network. We have two
+[32:12] inputs
+[32:13] which are the exact two axes that you
+[32:15] saw before, number of class number of
+[32:17] lectures and number of hours.
+[32:19] One input is four, the other input is
+[32:21] five. We can feed these two inputs into
+[32:24] our neural network and we can see that
+[32:27] it predicts an answer of .1 or 10%
+[32:30] probability that you'll pass this class.
+[32:32] Very bad, I know.
+[32:34] Okay, who knows why the the network is
+[32:37] wrong in this case.
+[32:38] Yes. The four
+[32:40] Exactly. Okay, so this is a randomly
+[32:42] initialized network. It is effectively
+[32:44] the same as
+[32:47] a brand new baby, right? It's never seen
+[32:49] the world before. It has never seen any
+[32:50] of the data before. So, the step that's
+[32:52] missing here is that we've just done a
+[32:54] forward pass through the model. Now, we
+[32:56] have to actually teach the model, right?
+[32:57] And the key part of this is that every
+[32:59] time that we have a prediction, the
+[33:01] model predicts .1, there's also a ground
+[33:04] truth answer for every prediction that
+[33:06] we have in our training set. And the
+[33:08] ground truth answer here is is true,
+[33:10] right? It did actually You did actually
+[33:12] pass this class, right? So, there's a
+[33:14] deviation here. There's a difference
+[33:16] between the .1 that the model predicted
+[33:18] and the one that it should be answering.
+[33:22] Now, to train this network, we need to
+[33:24] show it this difference. We need to tell
+[33:25] it when it gets the answer wrong so it
+[33:27] can learn to move closer towards the
+[33:29] correct answer the next time it sees a
+[33:31] four or five, right? If it sees four or
+[33:32] five again, it should now improve on its
+[33:35] answer and should predict something
+[33:36] closer to a one.
+[33:38] We do this by quantifying what's called
+[33:40] a loss. A loss is much nothing more than
+[33:43] just the error, this deviation term
+[33:46] between the prediction and the ground
+[33:48] truth.
+[33:49] Smaller losses means that the model is
+[33:52] is is outputting a higher quality
+[33:55] answer. Larger losses means that the
+[33:57] answer is more erroneous.
+[34:01] So, let's assume of course that the data
+[34:03] is not just from one student, but we
+[34:05] have a data set of many, many students,
+[34:07] right? This is coming from now a loss
+[34:10] over the average of each of those losses
+[34:13] that we have in our data set, right? So,
+[34:15] when training a neural network, often
+[34:17] times we're not going to actually
+[34:18] minimize the loss on a single data
+[34:21] point, but minimize it across the entire
+[34:23] data set, right? And that's to have
+[34:25] higher quality outputs.
+[34:28] Now, if we look at this problem in the
+[34:30] case of classification, a yes-no type of
+[34:33] problem,
+[34:34] then this is where the answers will
+[34:37] typically predict a probability, a
+[34:39] probability of being a yes versus a
+[34:40] probability of being a no, and that's
+[34:42] why we predict between zero and one.
+[34:44] This ties us back to the sigmoid
+[34:45] function from before, right? Because
+[34:47] those outputs are zero and one outputs,
+[34:49] so we can train it in this way.
+[34:52] Right? And we can use losses like the
+[34:53] cross-entropy loss that actually support
+[34:56] matching those two distributions of
+[34:58] probability against each other.
+[35:01] Now, you might be asking yourselves,
+[35:03] "Okay, what if you didn't want to
+[35:04] predict a probability distribution, like
+[35:05] a yes-no question, but rather a
+[35:07] continuous value, like what's the
+[35:09] temperature going to be, or what score
+[35:11] will actually get on the class rather
+[35:13] than will I just pass or fail it?"
+[35:15] In those cases, you care about
+[35:17] predicting continuous values instead,
+[35:19] not probability distributions. So, you
+[35:21] actually want to output and have losses
+[35:24] that encourage deviations that are also
+[35:27] continuous. In those cases, you may
+[35:29] consider things like mean squared errors
+[35:31] or L1 errors, things like this that
+[35:33] simply compare the predicted value minus
+[35:35] the
+[35:36] uh ground truth value, and just
+[35:38] minimizing that absolute difference.
+[35:42] Okay, now let's put all of this loss
+[35:44] information together into the problem of
+[35:46] actually finding the neural network
+[35:48] weights that are optimally suited for
+[35:51] any particular data set or any
+[35:52] particular task.
+[35:54] So, we know that we want to find a
+[35:56] neural network that looks roughly like
+[35:58] this form, right? It we want it to
+[36:00] minimize the loss on our entire training
+[36:03] data set, and this means that we want to
+[36:06] find the W's, the weights,
+[36:09] that minimize
+[36:11] uh the the the the loss here, the J, the
+[36:14] J of W, right? J of W is our empirical
+[36:18] average loss across our entire data set
+[36:21] of N data points.
+[36:24] Okay. So, remember again that W is
+[36:27] nothing more than just a collection of
+[36:29] many, many weights across all of the
+[36:31] different layers in your neural network.
+[36:33] Everything from layer zero, the first
+[36:35] layer, all the way to layer N, which is
+[36:37] your last layer.
+[36:40] Now, our loss function is also nothing
+[36:43] more than just a function that outputs a
+[36:45] single scalar at the end, right? We take
+[36:47] the average loss, the average error
+[36:50] across every data point,
+[36:52] compute its average, and that is our
+[36:54] loss. It's just one number at the end of
+[36:56] the day. And that one number is a
+[36:59] function of our weights.
+[37:01] So, on on here, you can see a
+[37:03] visualization of let's say again, a two
+[37:07] parameter neural network, just two
+[37:09] parameters, W0 and W1. For any
+[37:13] configuration of those two parameters,
+[37:16] we have a particular value of the loss,
+[37:19] which is the height. Okay? There are
+[37:21] some weights that encourage a really
+[37:23] good loss, very low. There are other
+[37:25] weights that are really bad losses, very
+[37:27] high on the curve here.
+[37:30] Right? And the goal is that we want to
+[37:31] find the neural network that has the two
+[37:34] weights, W0 and W1, that have the lowest
+[37:36] loss.
+[37:37] Now, how do we do that?
+[37:39] So, this is called training the neural
+[37:41] network. We start by training the neural
+[37:42] network. We just randomly initialize it.
+[37:44] We'll pick a W0 and a W1 to start with.
+[37:47] Let's say we start here at this black
+[37:48] point. We compute its loss. And then we
+[37:51] compute the gradient. The gradient tells
+[37:53] us the direction
+[37:55] of the slope at that location, right?
+[37:58] Doesn't tell us the slope everywhere,
+[37:59] just tells us at this very local
+[38:01] location, which way is pointing up.
+[38:04] But of course, we want to go down, so we
+[38:05] actually take the negative of the
+[38:07] gradient and take a small step down.
+[38:11] And then we repeat this process. We
+[38:12] compute the new gradient at the new
+[38:14] point, and we take a negative step in
+[38:16] the opposite direction of which way the
+[38:18] gradient is pointing, until we finally
+[38:21] get to the bottom. And this will
+[38:22] actually be guaranteed to converge to a
+[38:25] bottom. May not be the lowest bottom,
+[38:28] right? Because it actually depends on
+[38:29] where you start. You may not find
+[38:31] yourself in the
+[38:33] absolute lowest, but you will find a
+[38:34] bottom, and you'll eventually converge
+[38:36] there.
+[38:38] So, we can summarize this algorithm.
+[38:40] This is known as gradient descent, and
+[38:42] we can write it roughly in pseudocode.
+[38:43] It looks like this. We start by
+[38:45] initializing our weights randomly,
+[38:48] and then we repeat the following process
+[38:50] until convergence. We compute the
+[38:52] gradient at the weights that we're
+[38:54] currently in,
+[38:55] and then we take a small negative step
+[38:57] of our gradient with our weights. So, we
+[39:00] change the gradients to step in the
+[39:02] opposite way that the gradient tells us,
+[39:04] and then we keep repeating this until
+[39:06] there's convergence, until our weights
+[39:07] are not really changing anymore,
+[39:09] and then finally we call those final
+[39:12] weights the trained network of the
+[39:13] model.
+[39:15] Um in code, right? This also is is
+[39:19] is doable in code. We can do this
+[39:22] while looping in a while loop, where we
+[39:23] compute the loss. We can compute the
+[39:25] gradient of our loss with respect to our
+[39:27] weights, and then compute that same
+[39:30] update formula again.
+[39:32] Now, a very important line here is to
+[39:34] look at this term right here, the
+[39:35] gradient, right?
+[39:37] Now, I
+[39:38] glossed over this this point, but
+[39:40] actually the gradient, this is a key
+[39:42] part of this algorithm, because
+[39:43] computing this tells us exactly how to
+[39:45] update our weights on every part of the
+[39:47] iteration, but I never actually told you
+[39:49] how to compute this. So, let's talk
+[39:50] about actually computing the gradient
+[39:53] for a neural network, and this is a
+[39:54] process known as backpropagation. We
+[39:57] already learned about forward
+[39:58] propagation of information through the
+[40:00] model. Now, we'll learn about
+[40:01] backpropagation, which is how to
+[40:03] actually compute the gradient of the
+[40:05] model.
+[40:06] We'll start with a very simple neural
+[40:08] network uh to illustrate this example,
+[40:10] and this is actually probably the
+[40:12] simplest neural network that you can
+[40:13] have, which is just a single neuron
+[40:15] with a single output as well. So, X goes
+[40:18] to a single neuron, goes to a single
+[40:20] output, goes to a loss.
+[40:22] So, let's visualize what this would look
+[40:24] like if we wanted to compute the
+[40:25] gradient of our loss with respect to our
+[40:28] weight W2,
+[40:30] which tells us how a small change in our
+[40:34] uh in W2 affects our loss J.
+[40:38] Okay, so let's write it out as a
+[40:39] derivative. So, this is the derivative
+[40:41] of J with respect to W2.
+[40:44] Right? Now, to compute this, we can use
+[40:46] the chain rule. Right? We can decompose
+[40:49] dJ dW2 into two parts. The first part
+[40:52] being dJ dY
+[40:55] times dY dW2.
+[40:58] Right? This is just uh an application of
+[41:01] the chain rule in linear algebra.
+[41:04] Now,
+[41:05] this is only possible because Y is only
+[41:08] dependent on the previous layer.
+[41:11] Right? Let's suppose now we wanted to
+[41:13] compute the gradients of the weight
+[41:15] before that, which is W1, not W2. So,
+[41:18] let's actually change this to
+[41:20] uh dJ of d
+[41:22] W1.
+[41:24] Now, here,
+[41:25] this is dY dW1. We all We again need to
+[41:28] apply a chain rule again to compute
+[41:30] this. Right? So, we expand it out one
+[41:32] more time. That part turns into dY dZ1
+[41:36] followed by dZ1 dW1.
+[41:40] Right? And if you had a deeper neural
+[41:41] network, you would just keep repeating
+[41:42] this process as you go deeper and deeper
+[41:44] into the model.
+[41:45] And and uh just repeats like this,
+[41:48] right? You can repeat this process by
+[41:49] propagating those gradients that you
+[41:51] compute from the end, from the output,
+[41:53] all the way back in in the in the
+[41:56] topology of the neural network, all the
+[41:58] way back to the input.
+[42:00] And this will allow you to determine how
+[42:02] every single weight impacts your final
+[42:04] loss. Right? That's exactly what the
+[42:06] gradient shows you. It shows you if you
+[42:07] move in some direction, how will the
+[42:10] loss change? Will it go up or down?
+[42:13] Now, that's the backprop algorithm.
+[42:16] In theory, it's just a application of
+[42:18] the chain rule. Right? It's nothing more
+[42:20] than the chain rule.
+[42:21] In practice, this is a lot more complex
+[42:24] because computing the gradient of neural
+[42:27] networks does not look as clean as what
+[42:29] we saw in that previous slide. Right? In
+[42:31] practice, neural network loss topologies
+[42:34] look highly non-convex. Right? There are
+[42:38] a lot of different minimum and it's
+[42:40] highly dependent on the initializations
+[42:43] that you pick in these models and the
+[42:44] regularizations that you apply to make
+[42:47] sure that you can find actually this
+[42:48] minimum.
+[42:50] So, this is a really cool paper from uh
+[42:52] many years ago, 2017, where they
+[42:54] actually tried to visualize what these
+[42:56] high-dimensional neural network loss
+[42:57] landscapes actually look like. Of
+[42:59] course, this is a two-dimensional
+[43:00] representation of something that is, you
+[43:02] know, millions of dimensions. So, it's
+[43:04] you need to take it with a grain of
+[43:05] salt, but even projecting it down into
+[43:07] two dimensions, you can see that this is
+[43:09] a highly nonlinear landscape.
+[43:12] Now, recall the update equation that we
+[43:14] defined during gradient descent and
+[43:17] remember this this parameter that we
+[43:19] also didn't talk so much about. Right? I
+[43:21] said we take a small step in the
+[43:24] opposite direction of the gradient. What
+[43:26] I didn't mention is, you know, how big
+[43:27] is the step? This step here is referred
+[43:29] to as eta, right? This small symbol
+[43:31] here. This is called the learning rate.
+[43:33] This is the rate at which you follow the
+[43:35] gradient. In practice, setting this
+[43:38] learning rate is just a number that you
+[43:40] set. In practice, setting this number is
+[43:43] also quite difficult, right? Because if
+[43:45] you set something that is too small,
+[43:48] then you actually never really reach
+[43:51] some of the the big minimums. Right?
+[43:53] This is a minimum, but the model gets
+[43:55] stuck in it even though it's not the
+[43:57] biggest one. Right? You would actually
+[43:59] and if you set something too large, you
+[44:01] can overshoot and your loss can also
+[44:03] explode
+[44:05] and you never find the minimum, either
+[44:07] minimum.
+[44:08] So, ideally, you want to use learning
+[44:11] rates that are basically just large
+[44:12] enough that you can skip over these kind
+[44:14] of fake local minimums, but get stuck in
+[44:17] these global or close to global minimums
+[44:20] uh to converge there.
+[44:22] So, how do we deal with this? How do we
+[44:24] actually set the learning rate? One
+[44:26] option is just to try a bunch of
+[44:29] different learning rates and see what
+[44:30] works best. And actually, this is not as
+[44:33] crazy of an option as it sounds like. Um
+[44:36] but can you do something smarter than
+[44:38] this? Uh how about we design adaptive
+[44:41] learning rates that adapt to the shape
+[44:44] of our loss landscape. Um that actually
+[44:47] is a much smarter idea because it means
+[44:50] that we can now increase or decrease our
+[44:52] learning rate depending on how large the
+[44:54] gradient is at that location. When you
+[44:56] have a very large gradient, maybe you
+[44:58] want to take a bit of a smaller step. If
+[44:59] you have a small gradient, maybe you
+[45:01] want to adapt or have some momentum that
+[45:04] can carry you through these these local
+[45:06] minimums and pass over them.
+[45:09] And that's exactly what a lot of
+[45:11] different optimizers have come out with.
+[45:13] So, we saw the most basic version of
+[45:16] stochastic gradient descent previously,
+[45:18] but there are a bunch of other
+[45:20] variations of gradient descent
+[45:22] algorithms called Adam, AdaDelta,
+[45:24] AdaGrad, RMSProp, etc. that you'll get a
+[45:28] lot of practice with throughout your
+[45:29] software labs. And in general, these are
+[45:31] actually much better types of optimizers
+[45:34] for the reasons especially around
+[45:36] setting learning rates and making sure
+[45:38] that you can actually find these
+[45:39] minimum.
+[45:40] Um and these are widely studied in
+[45:43] practice, right? You In general, you
+[45:45] will very rarely use the vanilla
+[45:47] stochastic gradient descent SGD
+[45:49] algorithm. You'd probably almost always
+[45:51] use and change this line to something
+[45:53] like Adam or another adaptive learning
+[45:56] rate scheduler or optimizer.
+[46:01] Awesome. Okay, I'll continue now and
+[46:04] just talking about some more practical
+[46:06] considerations, especially now towards
+[46:08] the the end of the technical part of the
+[46:11] lecture, this first lecture. I want to
+[46:12] talk about some of the practical
+[46:14] considerations that you should have when
+[46:16] actually training neural networks.
+[46:18] So, let's go back to the gradient
+[46:19] descent algorithm for a second. We just
+[46:21] saw this this algorithm here.
+[46:23] We saw how we can compute the gradient,
+[46:26] but remember this is done through
+[46:27] backpropagation, and this is a really
+[46:29] expensive process because you have to go
+[46:31] entirely back and compute derivatives
+[46:33] for every single parameter in your
+[46:34] network going from the output all the
+[46:36] way back to the input, and you have to
+[46:37] do this for every single data point in
+[46:40] your data set, right? Not just one data
+[46:43] point, of course. Now, in most real-life
+[46:45] problems, it's not feasible to do this
+[46:47] on every training iteration,
+[46:49] right? You simply would not want to do
+[46:51] that over every data point in your data
+[46:53] set.
+[46:54] So, instead, we're going to define
+[46:56] what's called stochastic gradient
+[46:57] descent, SGD. So, instead of computing
+[46:59] the gradient over your entire data set,
+[47:02] let's compute the
+[47:03] gradient over just one point. Pick a
+[47:05] random point
+[47:07] and compute the gradient with respect to
+[47:09] that one point and step in the opposite
+[47:11] direction of that one point.
+[47:14] Now, that is much, much faster to
+[47:16] compute, obviously, on big data sets.
+[47:18] Computing a gradient on one point is
+[47:20] going to be way more efficient than the
+[47:22] entire data set, but it's also going to
+[47:23] be way more noisy. So, there's a
+[47:25] trade-off there, of course.
+[47:26] Now, the middle ground, what is the
+[47:28] middle ground? Is that you do this over
+[47:30] what's called a mini-batch. So, you
+[47:31] compute some batch size
+[47:33] of data points,
+[47:35] and you compute the gradient with
+[47:36] respect to that batch size. Batch sizes
+[47:39] can range from anything very small to
+[47:41] like a few data points all the way up
+[47:43] to, you know,
+[47:45] uh like most commonly people use things
+[47:47] like 32 is a very common batch size. You
+[47:50] can scale it up. In large language
+[47:51] models, we have batch sizes of, you
+[47:54] know, millions, right? It depends on the
+[47:56] type of data sets that you're using.
+[47:58] But in general, you always want to pick
+[48:00] something much smaller than the size of
+[48:02] your entire data set because you don't
+[48:03] want to be going through your entire
+[48:04] data set every time.
+[48:07] Now,
+[48:08] B is is normally not that large for most
+[48:10] problems. Like I said, this is usually
+[48:12] on the order of tens, hundreds, and even
+[48:16] this gives you a pretty good estimate of
+[48:18] the gradient for most problems.
+[48:20] This increases the accuracy that's going
+[48:23] to be much more accurate than SGD,
+[48:25] stochastic gradient descent, that's only
+[48:26] looking at one point, but it'll also be
+[48:28] much more efficient
+[48:30] than
+[48:31] computing it on the whole data set. So,
+[48:33] it's this nice balance and you can
+[48:34] actually control the balance yourself by
+[48:35] controlling the size of the batch.
+[48:38] Now, the last topic I want to touch
+[48:40] through is overfitting, right? This is
+[48:42] known a very well-known problem in the
+[48:45] field of machine learning, but it
+[48:47] extends also, obviously, into deep
+[48:49] learning as well. Now, what is
+[48:51] overfitting? Overfitting is nothing more
+[48:53] than the
+[48:55] the process of
+[48:58] learning too much into your data, right?
+[49:00] Looking too much into it and overfitting
+[49:02] on the details of that data set that do
+[49:04] not generalize outside of the particular
+[49:07] training data that you've seen. So,
+[49:09] here's a good example, right? If you
+[49:11] start on the right-hand side, and here's
+[49:14] your training data set,
+[49:15] the optimal line that fits this data is
+[49:18] not going to follow all of the intricate
+[49:20] details of the data.
+[49:22] But on the same side, on the other
+[49:24] Excuse me, on the other side, there's
+[49:25] also underfitting as well, where you
+[49:27] don't learn a function that's expressive
+[49:29] enough that captures all of the
+[49:31] intricacies of the data. So, for
+[49:32] example, a linear function on the left
+[49:35] side is going to be underfitting on this
+[49:36] problem because the problem is a
+[49:38] nonlinear type of relationship,
+[49:40] but on the right-hand side, it's also
+[49:42] too high dim the the the learned
+[49:44] solution on the right-hand side is too
+[49:45] high dimensional and too overfitting to
+[49:49] to capture the generalization of the of
+[49:52] the problem. The ideal is somewhere in
+[49:54] the middle, right? Where you don't have
+[49:56] too much complexity and you don't read
+[49:58] into too much other details, so that
+[50:00] when you see brand new data in a test
+[50:02] set or in deployment, you can actually
+[50:04] extend
+[50:06] your solution to have accurate
+[50:08] predictions in that regime as well.
+[50:10] So, to address this problem, how do you
+[50:12] go and toggle between these two sides of
+[50:15] the coin?
+[50:16] It's called regularization, right?
+[50:18] Regularization is the technique that
+[50:20] allows us to constrain how much we want
+[50:23] to underfit versus overfit on a
+[50:25] particular problem. And this is
+[50:27] effectively allowing us to discourage
+[50:31] the learning of very complex models.
+[50:33] This is how we're able to learn billions
+[50:35] of parameter models,
+[50:37] you know, on actually data sets, but not
+[50:41] actually memorizing all of the details
+[50:44] in the data sets or allowing us to
+[50:45] generalize beyond those those data sets.
+[50:48] And this will allow us to improve the
+[50:50] ability of our model to perform even on
+[50:52] unseen data.
+[50:54] The most popular form of regularization,
+[50:57] there are many different ways to
+[50:58] regularize depending on the type of
+[51:00] model,
+[51:01] but I'll talk about one of the most
+[51:03] popular ways. This is the idea of
+[51:05] dropout, right? Dropout is is a
+[51:08] stochastic method. It means that it's
+[51:10] probabilistic. Let's revisit this
+[51:13] this chart, this schematic that we saw
+[51:15] earlier in the lecture from a neural
+[51:17] network.
+[51:18] Right, in dropout, all we do is that we
+[51:20] randomly drop out some activations of
+[51:23] the hidden layers with some probability
+[51:25] that we define. Okay, so let's assume
+[51:28] that we set a probability like .5, 50%.
+[51:32] All this will mean is that we will
+[51:34] randomly pick 50% of the neurons in our
+[51:37] two hidden layers and randomly kill
+[51:41] the outputs from coming out of those
+[51:42] neurons. So, what does that mean? That
+[51:45] this neuron here has to be resilient to
+[51:49] sometimes receiving inputs from this
+[51:50] neuron, but sometimes not receiving it
+[51:52] from this neuron, right? And then on
+[51:55] other iterations, it may receive it from
+[51:57] the other set of neurons. So, what this
+[51:59] encourages is actually the ability that
+[52:01] on every iteration, every neuron is
+[52:04] seeing different pathways through the
+[52:05] network. This is forcing it to not rely
+[52:08] on any one pathway and not memorize any
+[52:10] one pathway too much through its forward
+[52:13] path propagation. And that's actually
+[52:15] able to allow it to generalize as well
+[52:17] because it has to find these
+[52:18] relationships that span across different
+[52:20] pathways. Yes. Are the same activations
+[52:22] set to zero for the entire mini batch?
+[52:24] Same activations are set to zero for the
+[52:26] entire mini batch, but then on the next
+[52:28] mini batch, you have a new set of
+[52:30] activations and new set of neurons that
+[52:32] are set to zero. So, you reset on every
+[52:34] batch.
+[52:37] Awesome. Okay. So, you repeat that on
+[52:39] every iteration. Let me show you one
+[52:41] more technique for regularization as
+[52:43] well that goes beyond dropout. Dropout
+[52:45] is a architectural level of
+[52:48] regularization. This is going to be
+[52:49] beyond architectural level. So, let's
+[52:51] assume for any architecture, you can
+[52:53] have the ability to stop training once
+[52:57] you start to overfit. Sounds easy. Let's
+[52:59] see how you might actually do this,
+[53:01] right? This is called early stopping.
+[53:03] So, we already have this definition of
+[53:05] overfitting, which is simply that we
+[53:08] start to perform better on our training
+[53:10] set than we are on our testing set,
+[53:13] right? That's effectively what it means
+[53:14] to overfit. So, we're no longer
+[53:16] generalizing our learnings from training
+[53:18] into testing, right? Our training is
+[53:21] continuing to improve, but our testing
+[53:23] data is just getting worse,
+[53:25] right? So, we can do this by actually
+[53:27] having two separate data sets, one that
+[53:29] we train on and one that we test on. And
+[53:31] constantly throughout training, we're
+[53:33] evaluating both data sets. Now, in the
+[53:36] beginning, both lines just decrease
+[53:38] together, which is excellent. It means
+[53:39] our model is learning, right? It's
+[53:41] moving from that underfit regime to a
+[53:43] more fit regime. And it continues to
+[53:46] have this trend. Eventually, though, the
+[53:48] network loss will start to plateau, and
+[53:52] the testing loss will start to increase.
+[53:54] Right? This is actually the regime where
+[53:56] we start to see overfitting.
+[53:59] And this pattern typically will continue
+[54:00] for the rest of training.
+[54:02] Now,
+[54:03] the question here is where would you
+[54:05] actually you train the model for all of
+[54:07] these training iterations, you save the
+[54:09] model at these checkpoints across the
+[54:11] x-axis. You can now take this
+[54:14] checkpoint, right? You've saved all of
+[54:16] the checkpoints. You look at the curve,
+[54:18] and you actually say, "Okay, this is the
+[54:19] checkpoint that I want to use because
+[54:20] after this checkpoint, yes, my training
+[54:23] loss continues to get better, but it's
+[54:25] not actually translating to my testing
+[54:27] data set. So, this is the one that I
+[54:29] actually should be using."
+[54:31] And we can see that, you know, after the
+[54:34] early stopping checkpoint, things do get
+[54:36] worse on your testing data. So, you
+[54:38] wouldn't actually want to apply those
+[54:40] checkpoints. This is such a very
+[54:41] powerful idea because it's very general,
+[54:44] this approach. You can really apply this
+[54:45] to any type of model, and you can really
+[54:47] track these these curves, right? It
+[54:48] doesn't require architectural
+[54:49] modifications.
+[54:51] Uh you just monitor the loss of your
+[54:54] neural network over time on two
+[54:55] different data sets, one that you train
+[54:57] on, one that you test on.
+[55:00] Awesome. Okay, I'll conclude the first
+[55:02] lecture now. Just summarize quickly uh
+[55:05] what we've covered. So, we started with
+[55:06] the most fundamental building blocks of
+[55:09] neural networks, which was just a single
+[55:10] neuron. We scaled that up to single
+[55:13] layers and multi-layer perceptrons,
+[55:16] multi-layered neural networks. And we've
+[55:18] learned how we could build complex,
+[55:19] hierarchical learning machines that go
+[55:23] from input to output across a hierarchy
+[55:25] of abstractions. And finally, we
+[55:28] addressed a lot of the practical sides
+[55:29] of actually training these models,
+[55:31] evaluating them, picking the best model,
+[55:33] and so on.
+[55:34] In the next lecture, we're going to be
+[55:35] hearing from Alva on covering sequence
+[55:38] models, right? This is a really exciting
+[55:39] lecture, especially in today's world,
+[55:41] because sequence models power
+[55:43] uh GPTs, right? Everything a lot of
+[55:45] things are sequences in today's world,
+[55:48] right? You think of text is a sequence
+[55:49] of words,
+[55:50] audio is a sequence of waveforms,
+[55:53] video is a sequence of images, right? A
+[55:55] lot of things are sequences, and what we
+[55:58] saw today is only covering
+[55:59] non-sequential data so far in my
+[56:01] lecture. In the next lecture, we'll see
+[56:03] how we can extend that into sequences of
+[56:06] data.
+[56:07] Uh so, we'll take a 5-minute break, and
+[56:09] then we'll just set up, and then uh
+[56:11] we'll continue from there. Thank you.

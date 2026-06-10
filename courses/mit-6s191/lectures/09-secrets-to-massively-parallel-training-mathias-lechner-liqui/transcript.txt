@@ -1,0 +1,1681 @@
+[00:05] [music]
+[00:12] >> Hi everyone.
+[00:13] And welcome back. So it's great to it's
+[00:16] my pleasure to introduce Matthias
+[00:18] Lechner who is the co-founder and chief
+[00:21] chief technology officer of Liquid AI.
+[00:24] Matthias previous to co-founding Liquid
+[00:27] AI, he was a research
+[00:31] researcher here at MIT CSAIL where he
+[00:33] co-invented Liquid Neural Networks and
+[00:36] then he spun off and co-founded Liquid
+[00:38] AI. I've had the privilege of working
+[00:40] with Matthias for the past 9 years from
+[00:42] when he was at MIT all the way to
+[00:45] present day at Liquid where I also was a
+[00:47] co-founder together with Matthias. So
+[00:49] I'm really excited by today's lecture.
+[00:51] Matthias is a leader in the field and
+[00:53] it's a it's a pleasure for me to get to
+[00:55] work with him every day. So I think
+[00:56] you'll all enjoy this lecture greatly
+[00:58] and I'll pass it over to Matthias. Thank
+[01:00] you for joining us. Thank you so much.
+[01:02] Thank you so much Alexander.
+[01:05] Um
+[01:06] It's great to be back at MIT.
+[01:09] And today I'm going to talk about
+[01:11] massively parallel training.
+[01:13] Specifically how we at Liquid AI scale
+[01:15] training runs up to thousands of GPUs.
+[01:20] So quickly to talk about what we cover
+[01:24] in this talk.
+[01:25] A quick intro to Liquid AI. We are MIT
+[01:27] spin-off as Alexander mentioned around 3
+[01:29] years old and
+[01:31] we optimize on foundation for efficient
+[01:33] foundation model. That's what we are
+[01:35] building and we just recently released
+[01:37] half a year ago this LFM2 series of
+[01:39] on-device optimized um
+[01:41] language models and yeah, continue on
+[01:44] that.
+[01:46] So in today's talk, first of all I want
+[01:48] to convince you or
+[01:49] I want to answer the question of why we
+[01:51] scale machine learning models in the
+[01:52] first place.
+[01:54] Then I also want to talk about what we
+[01:56] scale in a way, the different methods
+[01:58] and the different strategies that we
+[01:59] apply to shard and and partition our
+[02:02] workload across a cluster.
+[02:04] And finally,
+[02:06] also how we scale. Specifically about
+[02:08] the frameworks
+[02:10] and and implementation of the methods
+[02:12] that we talk about in different PyTorch
+[02:14] training frameworks.
+[02:17] And finally, I'm also giving like a
+[02:18] quick case study in a way like of what
+[02:21] methods in a way are typically used in
+[02:22] some example training runs that we did
+[02:24] in in in our company.
+[02:28] So first of all, why do we train neural
+[02:30] networks on a GPU in the first place?
+[02:32] And to answer this question, I want to
+[02:34] go back a bit in time to
+[02:36] 20 2011 in a way when AlexNet came out.
+[02:39] And AlexNet really was a image
+[02:41] recognition
+[02:43] uh
+[02:44] neural network.
+[02:45] It was fully was one of the first fully
+[02:46] trained end-to-end, you know, on a GPU
+[02:49] and it really sparked the deep learning
+[02:50] revolution.
+[02:52] And specifically, this model was trained
+[02:54] on two Nvidia GTX 580 GPUs for around 2
+[02:58] weeks.
+[03:00] And if you recap what Alexander and Ava
+[03:03] taught us before in the previous days in
+[03:05] a way, training of a neural network is
+[03:07] essentially just a bunch of matrix
+[03:09] multiplications. There's a lot of other
+[03:10] operations as well involved, but like
+[03:12] the heavy portion is like matrix
+[03:13] multiplications.
+[03:15] So let's look at an example of like a
+[03:17] input X consisting of 256
+[03:22] size in a way times a feature of 4096
+[03:25] like 4K multiplied by weight matrix of
+[03:27] 4K times 4K.
+[03:29] And this operation in a way requires
+[03:30] around eight billion floating point
+[03:33] operations, so additions and
+[03:35] multiplications.
+[03:37] And if you go back like to 2011 in a
+[03:39] way, what was available there? Like a
+[03:41] CPU around that time a typical one had
+[03:43] like around 0.1 teraflops like trillion
+[03:46] floating point operations that it could
+[03:47] execute per second. Compare that to a
+[03:49] like a GPU like this gaming GPUs that I
+[03:52] mentioned before, they could do 16x more
+[03:54] in a way. And um
+[03:56] as I mentioned this model was trained
+[03:58] for 2 weeks on the GPU. So um on CPU
+[04:00] this would take
+[04:01] basically a year because like you have
+[04:04] two uh
+[04:05] two of them times 16x.
+[04:08] Um so yeah, this is all um
+[04:10] the key takeaway of that message is like
+[04:12] we are training neural networks on GPU
+[04:14] because um
+[04:15] uh they're very compute intense and the
+[04:17] type of compute
+[04:18] uh the type of computation in a way that
+[04:20] is you needed for training uh very fits
+[04:23] fits well with GPUs in a way with the
+[04:24] type of operations that are going to be
+[04:26] accelerated.
+[04:27] So this is a long time ago anyway. What
+[04:29] has changed since then in a way to give
+[04:31] you a more modern example of a H100 a
+[04:33] GPU that's still used today for
+[04:35] inference and training a lot um that has
+[04:38] seen right uh around 1,000x more uh than
+[04:40] the the gaming GPU here. So it sees
+[04:43] really like this deep learning
+[04:44] revolution that really started like um
+[04:45] there are a lot of uh hardware
+[04:46] improvements uh that have been made
+[04:48] on that level.
+[04:51] So now that we can we answer the
+[04:52] question of why we train on a GPU, I
+[04:54] also want to convince you uh why uh we
+[04:57] want to train on larger data sets.
+[04:59] And uh to answer this question let's
+[05:01] look at a Llama 2 uh 7B which is an open
+[05:04] source a large language model trained by
+[05:06] Meta in uh 20 uh 23.
+[05:09] And uh
+[05:10] it's open source so they share the
+[05:12] training curve in a way. So on the
+[05:13] x-axis we see the number of training the
+[05:15] data set size basically the number of
+[05:16] training tokens that this model has seen
+[05:18] in training. On the on the on the y-axis
+[05:21] the training
+[05:22] perplexity which is kind of how well the
+[05:24] model fits to the training data. And
+[05:26] like there's a clear trend that with
+[05:28] more uh data the loss gets lower anyway.
+[05:30] And um
+[05:31] yeah.
+[05:32] So basically the takeaway here is like
+[05:34] more training data means a better loss
+[05:36] means a better fit to the data. Of
+[05:37] obviously there's some assumptions that
+[05:39] the training data is fresh and so on and
+[05:40] high quality
+[05:41] um uh but assuming plentiful of data is
+[05:44] available uh more data means uh better
+[05:46] model.
+[05:47] And this is not just me, you know,
+[05:48] showing you the plot and like eyeballing
+[05:50] like this correlation away, but this has
+[05:51] been systematically and scientifically
+[05:53] analyzed in like a thing called scaling
+[05:55] laws
+[05:55] um that really like capture this kind of
+[05:57] loss dependency on the training set size
+[05:59] as a as a power law.
+[06:03] So now that we know that hey, we should
+[06:05] train on more data to get a better
+[06:06] model, I also want to convince you that
+[06:08] we should train a larger model on this
+[06:10] on the same data.
+[06:12] So again, Llama 2 uh they didn't like
+[06:14] Meta didn't just train like one model
+[06:16] variant, but they trained like four
+[06:17] different variations of the same
+[06:19] architecture with uh different number of
+[06:21] parameters in the model. The 7B, the
+[06:23] 13B, the 30 uh uh 34B, and the 70
+[06:26] billion parameter model. And again, they
+[06:28] shared the training uh curves of uh
+[06:30] those training runs.
+[06:31] And one thing that we see is like if you
+[06:33] take any point on the x-axis and look at
+[06:35] the uh
+[06:36] loss of all of the four models, we see a
+[06:38] monotonic decrease of basically a larger
+[06:41] model at the same data uh gives us a
+[06:43] better fit to the data.
+[06:45] So yeah, larger model on same data means
+[06:46] a lower loss, means a more capable
+[06:47] model.
+[06:48] Again, same story as before. This is not
+[06:51] just me uh looking at the plot and and
+[06:52] making this up, but this has been
+[06:54] systematically and scientifically
+[06:55] analyzed in in papers.
+[06:57] So just to recap the first portion, um
+[07:00] the scaling imperative in a way like uh
+[07:02] means like we want to train larger
+[07:03] models with more parameters, and we want
+[07:05] to train them on more data on more
+[07:06] tokens in a way in order to get um
+[07:09] a better performance to kind of drive uh
+[07:11] from the scaling laws uh
+[07:13] uh a better model quality.
+[07:16] To give you some example from industry
+[07:17] like the more on famous example, GPT-3
+[07:19] um really pushed that hard like with a
+[07:21] 175 billion parameter model language
+[07:24] model trained for 300 billion tokens.
+[07:26] Then the Llama 2 that I just showed you,
+[07:27] this largest variant with 70 billion
+[07:29] parameters trained for 2 trillion
+[07:30] tokens, so like uh roughly 10x uh
+[07:33] scaling data. And then finally, um we
+[07:35] just released this week Llama 2.5 uh
+[07:37] 1.2B, which was trained for uh 28
+[07:40] trillion tokens. So another like uh more
+[07:42] than 10x scale up from Lama 2.
+[07:44] Um so, yeah, this shows a clear trend in
+[07:47] the industry like from um scaling the
+[07:49] dataset size. But, interestingly, I just
+[07:51] told you um that we should train larger
+[07:54] models, but the examples that I shared
+[07:55] you um actually the model becomes
+[07:57] smaller.
+[07:58] So, this is a bit
+[07:59] uh actually a counterintuitive. Like,
+[08:00] why is this the case? I just told you
+[08:01] the exact opposite. And the reason for
+[08:04] that is uh that the scaling laws that I
+[08:06] just showed you, they only concern the
+[08:08] training. But, after we train a model,
+[08:10] we actually want to run it. We want to
+[08:11] inference. And those add up the cost
+[08:13] actually like uh if you let's say chat
+[08:14] GPT and so on. Like, there's millions of
+[08:16] users. You train it once, and then you
+[08:17] have like millions of users in a way.
+[08:19] So, actually the inference cost dominate
+[08:20] the compute like the
+[08:22] the lifetime. If you look at the
+[08:23] lifetime of a model, the training
+[08:24] portion is actually only a small
+[08:26] portion. Like, you need to think also of
+[08:27] inference. So, that's why like there's a
+[08:29] big push into more efficient models.
+[08:31] To give you an example, like the the
+[08:32] GPT-3 uh model, like the weights I
+[08:34] cannot even download on my laptop. Uh I
+[08:36] will run off out of storage. Whereas our
+[08:38] LFM 2.5B it runs on a phone um much
+[08:41] faster uh obviously. And uh it actually
+[08:44] runs on a Raspberry. So, like the
+[08:45] Raspberry Pi. So, the efficiency is is
+[08:47] is really important. But, the quality
+[08:49] like uh of LFM 2 is like much better
+[08:51] than like the GPT-3.
+[08:55] Okay. So, now we know we should train uh
+[08:57] more data and bigger models in a way.
+[08:59] And uh there's one way that we can very
+[09:02] easily scale the dataset size um by
+[09:04] leveraging and exploiting effect from
+[09:06] the training algorithm from gradient
+[09:07] descent. And um
+[09:10] basically the idea of data parallelism
+[09:12] is um that each sample in a in a
+[09:15] gradient um back descent update
+[09:17] stochastic gradient descent update is
+[09:19] kind of independent from each other in a
+[09:20] way. And only at the end we kind of
+[09:23] compute when you commit the gradients,
+[09:24] we do a mean over the entire over all of
+[09:26] the gradients for each individual
+[09:27] sample, right?
+[09:28] Um and we can use this fact kind of to
+[09:31] uh scale
+[09:32] uh
+[09:33] uh
+[09:34] can scale the datasets by by using more
+[09:35] than one TPU you the following way. We
+[09:37] just replicate the model with optimizer
+[09:39] states and everything across all the
+[09:41] devices.
+[09:42] Then we just distribute kind of a batch
+[09:44] across the all of the devices in a way.
+[09:46] Each of them individually computes in a
+[09:47] way the gradients. And then at the end
+[09:49] we synchronize and and have like only
+[09:51] one
+[09:52] communication step at the end where we
+[09:54] kind of exchange information. And the
+[09:56] advantage is that yeah, the most heavy
+[09:57] compute of the forward pass and the
+[09:59] backward pass of the model all run
+[10:01] independently and like there's very very
+[10:02] little communication necessary.
+[10:04] So uh in concrete figure in a way like a
+[10:07] let's assume we have a batch size for
+[10:08] 256 samples. We just distribute them on
+[10:11] four cheap use. Each of them gets 40 uh
+[10:13] 64 uh samples in a way. Each of them
+[10:15] computes locally in a way
+[10:17] uh the the gradients and and then at the
+[10:19] end we do just the all reduce mean in a
+[10:21] way where we just have one communication
+[10:23] step anyway. So most of the time the
+[10:25] cheap use are kind of independently
+[10:26] working and the only like one uh
+[10:28] synchronization synchronization step is
+[10:30] necessary.
+[10:31] And this scales linearly. We can just,
+[10:33] you know, stack in and add more cheap
+[10:34] use like infinitely in a way like this
+[10:36] uh yeah, we can in increases basically
+[10:38] increases the batch the effective batch
+[10:40] size in a way.
+[10:41] And this is also in a way the uh
+[10:43] bottleneck of this method in a way
+[10:44] because um at some point the batch size
+[10:47] becomes so large that actually the
+[10:48] generalization of the model suffers.
+[10:51] So uh if you train like a model one with
+[10:53] a small batch size and one with a
+[10:54] gigantic one
+[10:56] uh on the same data on the same test uh
+[10:57] sorry, training data and then evaluate
+[10:59] it on the test set, uh the model trained
+[11:01] on a smaller batch size uh will
+[11:02] outperform the one. It has to do with
+[11:04] like the loss landscape of the
+[11:05] optimization and so on. There's a lot of
+[11:06] papers actually written about this topic
+[11:08] in a way. But in a way that uh just in a
+[11:10] way the take home uh message is just you
+[11:12] know, hey, batch size scaling is the
+[11:14] most naive way to scale the dataset, but
+[11:15] there's a limitation. And we need to
+[11:17] think about if you want to scale in a
+[11:18] way that the throughput of the model of
+[11:19] the training run without scaling the
+[11:21] batch sizes becomes much more
+[11:22] challenging.
+[11:25] So this is about dataset size. So
+[11:26] there's this naive approach at least up
+[11:27] to certain um threshold in a way um of
+[11:30] of scaling dataset. But what about
+[11:31] memory? So, let's look a bit into
+[11:33] exactly like how much GPU memory do we
+[11:35] need to train a model?
+[11:37] And let's take an example of 1 billion
+[11:39] parameter model that has like a that we
+[11:41] want to train on a batch size of 16
+[11:43] uh with like
+[11:44] uh uh
+[11:45] 256 layers and 1K feature size or hidden
+[11:48] hidden dimension.
+[11:50] So, first of all, the
+[11:51] parameters itself, like we usually store
+[11:53] them in 16-bit precision in a way. So,
+[11:55] it adds up to 2 GB. Then, we also need
+[11:57] to have a gradient buffer because we
+[11:58] need to compute the gradient. So,
+[12:00] there's also a gradient that we need to
+[12:01] allocate on the GPU.
+[12:04] Uh and finally, we have the optimizer
+[12:05] states. So, the optimizer I think
+[12:07] Alexander and Albert talked about a lot
+[12:08] about them. Basically, like we want to
+[12:10] have different learning rate like
+[12:11] different parameters learn different
+[12:12] fast in a way. So, we want to we want
+[12:14] not just want to apply gradient descent,
+[12:16] but actually precondition the weight
+[12:17] updates. And we do this uh with with
+[12:20] with Adam in our case for instance. And
+[12:21] this also requires some parameters in a
+[12:23] way that are exactly like uh uh
+[12:25] a multiplier on the on the parameters.
+[12:28] In this case, a 32-bit we store them.
+[12:30] It's just an example. You can actually
+[12:31] also quantize them to some extent. And
+[12:33] then, finally, activations. And the
+[12:35] activations uh why we need them is uh it
+[12:37] has to do with backprop because like in
+[12:39] back propagation, if you remember,
+[12:41] um we first do the forward propagation
+[12:43] in a way. And for the backward
+[12:44] propagation, when when we get the
+[12:45] backward signal in a way, we need to
+[12:47] multiply it by the activations in a way
+[12:48] to kind of
+[12:50] for the computation of the gradients.
+[12:51] So, actually, we need to we need to
+[12:52] remember them.
+[12:54] So, in total, like if you want to train
+[12:55] a 1 billion parameter model in this
+[12:57] simple um calculation here, it adds up
+[12:59] to 28 GB in a way. So,
+[13:01] the message here is again like um
+[13:04] even though the model is small, we need
+[13:05] a lot of GPU memory just to train those
+[13:07] this model even.
+[13:08] So, if you extrapolate this to 70
+[13:10] billion parameter model, this would uh
+[13:12] fit uh that would require 2 TB. And like
+[13:15] the largest GPU single like single
+[13:17] device memory that we have at the moment
+[13:18] like 200 300 400 GB at the moment.
+[13:21] So, yeah, there's no way we can fit
+[13:22] this. So, we need to have better
+[13:24] strategies to kind of reduce the memory
+[13:26] uh requirements of training.
+[13:29] So, one method that you that is used
+[13:31] heavily in industry
+[13:33] is called activation checkpointing.
+[13:35] And it's basically not a free lunch, but
+[13:37] like a trade-off compute to memory in a
+[13:39] way.
+[13:41] And the idea is like if you recall
+[13:43] without gradient checkpointing sorry
+[13:45] without activation checkpointing
+[13:47] for each layer that we compute 1 2 3 4 5
+[13:49] 6 and so on, we need to store the
+[13:51] activations because for the backward
+[13:52] pass we need them.
+[13:55] The idea for for activation
+[13:56] checkpointing is let's only store let's
+[13:58] say that every fourth layer the
+[14:01] activation and then
+[14:02] so it means like for layer one and layer
+[14:04] five will will keep the activations in
+[14:05] memory, but for the other in between we
+[14:07] just discard them.
+[14:08] During the forward pass and then the
+[14:10] gradient the backward pass in a way we
+[14:11] just recompute like that portion in a
+[14:14] way that's currently needed for that
+[14:15] portion. So, let's say in a backward in
+[14:17] a forward pass we just as I mentioned
+[14:19] discard them and then in the backward
+[14:20] path if if we arrive for instance layer
+[14:22] number five
+[14:23] we just recompute the activations from
+[14:26] two three and four and do that and and
+[14:29] finish in a way the the the back
+[14:30] propagation
+[14:31] run.
+[14:32] So, in this scenario here we see like
+[14:34] four x reduction memory in practice it's
+[14:36] it's it's it's a lot so that's why it's
+[14:37] used heavily.
+[14:39] Extra compute it sounds extremely
+[14:41] expensive, but if you think about it the
+[14:42] first forward pass we have to do anyway.
+[14:44] The backward pass we have to do as well
+[14:46] and backward pass also we have to do
+[14:47] back propagation to the input and to the
+[14:49] gradient itself.
+[14:50] And then we just have one additional
+[14:51] forward pass in a way.
+[14:53] So, it's like it sounds like it's twice
+[14:55] the effort like the forward pass is only
+[14:57] like a small portion of it. So, it
+[14:59] doesn't add it doesn't blow up the
+[15:00] compute.
+[15:01] And this is also one of the reasons why
+[15:03] it's used in practice a lot.
+[15:04] Another reason it's used in practice a
+[15:06] lot is because typical GPUs like the
+[15:08] compute tends to be cheaper than memory
+[15:10] in a way.
+[15:12] So, so it's it's used as I mentioned
+[15:13] before heavily in industry.
+[15:17] Another approach to reduce memory is
+[15:19] offloading in a way offloading to CPU.
+[15:21] And this idea is like general to
+[15:23] computer science like in in in our
+[15:25] laptops and so on and everything like we
+[15:27] have a cache where we offload them to
+[15:28] the main memory and this offloads to the
+[15:30] disk in a way when when it becomes um
+[15:32] um
+[15:34] uh the idea is basically like we that we
+[15:35] push infrequently used data to slower
+[15:37] but larger memory keys. Like it's a
+[15:38] standard concept in in computer science.
+[15:41] Um and uh
+[15:43] we could apply this as well to training
+[15:44] of neural networks. Specifically, the
+[15:45] optimizer states are only used at the
+[15:47] very end in a way to precondition the
+[15:48] weight updates. We also have inactive
+[15:50] layers like when we compute a layer 1 to
+[15:52] 10, we don't need layer 100 and so on in
+[15:53] memory maybe. And activations as I just
+[15:56] mentioned as well are very heavily.
+[15:59] And maybe this amortizes over the entire
+[16:01] training run or one one great one update
+[16:03] step in a way because
+[16:05] um the data is not needed all the time.
+[16:07] However, like there's one big issue with
+[16:09] that is the bandwidth. There's like a
+[16:10] huge gap in a way between
+[16:12] um
+[16:13] the data that the GPU has access to
+[16:15] versus the one that the host like the
+[16:16] CPU and so on has access to. It needs to
+[16:18] as well go through this PCI bus and then
+[16:20] also through the another bus to get to
+[16:22] the host memory and so on. So that's why
+[16:24] it's it's it's quite um slow from the
+[16:26] perspective of the GPU.
+[16:28] And this is why it's it is used but it's
+[16:30] used more like for niche applications.
+[16:32] So for instance like fine-tuning of a
+[16:33] large language model. If you want to
+[16:35] train if you want to fine-tune let's say
+[16:36] a a 70 billion parameter model on one
+[16:38] GPU, there's no other strategy that you
+[16:40] can use. You just have to offload parts
+[16:42] to the to the host memory. Another
+[16:43] example is like context length. There's
+[16:45] like a thing called a DeepSpeed Ulysses
+[16:47] that basically say for very long context
+[16:49] length uh you you also offload like part
+[16:51] of the sequence in a way to the CPU
+[16:53] memory and so on. So in in general like
+[16:55] it's scenarios where you need to train
+[16:56] only a little bit. So that's why like
+[16:58] offloading is used maybe more for
+[16:59] smaller training runs but if you really
+[17:01] want to utilize a cluster, there are
+[17:02] there are better strategies.
+[17:05] So we saw that hey, this offloading idea
+[17:07] looks nice in a way but it's not quite
+[17:09] there in a way. Um so let's look
+[17:12] a bit more closely in a how actually our
+[17:14] GPU cluster that we that we get um that
+[17:16] is getting built and so on, like this
+[17:17] gigawatt
+[17:18] clusters that's all over the place at
+[17:20] the moment. Um how they look like uh
+[17:21] inside anyway. So, typically like we
+[17:23] have uh
+[17:24] node that has like a CPU that's
+[17:26] connected to several GPUs. In practice,
+[17:29] for for Nvidia it's like uh eight uh
+[17:30] GPUs on on a single host anyway.
+[17:33] Each of the GPUs has its own cache and
+[17:34] so on, its own HBM, like high bandwidth
+[17:36] memory, as well uh and uh the CPU kind
+[17:39] of the controls it that has its own
+[17:40] memory pool and so on.
+[17:42] And then what happens is like we connect
+[17:44] the GPUs to each other with like a very
+[17:45] high uh in-
+[17:47] uh interconnect with like typically this
+[17:49] is called NVLink in Nvidia domain. It
+[17:51] has different name for names for
+[17:53] different providers anyway.
+[17:54] And this is called scale up. So,
+[17:55] basically we have like one node anyway
+[17:57] where we don't just have one GPU in
+[17:58] there and so on, but we really stack up
+[18:00] up to like the maximum GPUs that we can
+[18:02] fit on a single node anyway. This in in
+[18:04] in typically it means eight. And then
+[18:06] also we uh yeah, they are connected to
+[18:08] this CPU with like a kind of slow bus
+[18:10] anyway. And then we just also do a scale
+[18:13] out anyway where we just add more
+[18:14] machines uh of the same basically of the
+[18:17] replica of the machine anyway to the
+[18:18] network. And then we connect them
+[18:19] together with like a network networking
+[18:22] interface. In the Nvidia case uh
+[18:24] InfiniBand is used here. And and this
+[18:27] InfiniBand is you can think of very
+[18:29] similar to kind of a normal networking
+[18:31] that we use every day anyway to connect
+[18:32] our our machines. The only difference is
+[18:34] that it needs to support like this thing
+[18:36] called uh remote direct memory access.
+[18:38] Because I mentioned before, like if you
+[18:39] move everything that typical network
+[18:41] stack anyway moves uh data around on the
+[18:43] CPU and so on that controls it. But this
+[18:45] uh remote uh direct memory access anyway
+[18:47] is um if you want to two GPUs on two
+[18:49] different nodes want to communicate and
+[18:50] exchange data, you don't want to go
+[18:52] through the host, you know, the CPU on
+[18:54] both machines, but you just directly,
+[18:55] you know, pipe it from the um
+[18:57] uh HBM memory into kind of the the
+[18:59] networking interface.
+[19:03] So, equipped with this knowledge of like
+[19:05] how does actually a cluster look like
+[19:06] that we have this um eight GPUs,
+[19:08] each of them, you know, is is uh very
+[19:11] fast in a way. The interconnect on the
+[19:12] node is much faster than the
+[19:14] interconnect on the scale out fabric and
+[19:16] so on.
+[19:17] Um so
+[19:18] the next option that we have in a way to
+[19:19] train faster and also larger models in a
+[19:22] way is a sharding in a way. And again,
+[19:23] this is a concept very generic to
+[19:25] computer science. Basically, like the
+[19:26] idea is to partition data across
+[19:29] multiple locations in a way.
+[19:31] It's used heavily for instance databases
+[19:33] for meta and so on. They are like also
+[19:34] sharded across the globe and so on cuz
+[19:37] you need the data not everywhere
+[19:39] in one location.
+[19:41] And specifically for neural network
+[19:42] training, there are a lot of options
+[19:43] that we have for sharding. Like we could
+[19:45] like basically shard the model weights,
+[19:46] we could shard the optimizer states, we
+[19:48] could shard the activations. There's
+[19:49] also data and gradients and other stuff
+[19:51] that we could shard.
+[19:53] And um
+[19:55] the key trade-off here is like in a way
+[19:56] that we reduce in a way the memory that
+[19:58] each device in a way
+[20:00] must hold every time in a way
+[20:02] all the time.
+[20:04] But also it adds a communication
+[20:05] overhead. Like there's
+[20:07] you know, for the different strategies
+[20:08] of the different things that we want to
+[20:09] shard. Um actually communicating with
+[20:11] the rest of the network
+[20:13] might look very different.
+[20:15] The simplest case is optimizer sharding
+[20:18] because as I mentioned before, the
+[20:19] optimizer is only used at the end kind
+[20:22] of the precondition the weight update.
+[20:24] And so it's actually used not too often.
+[20:27] All of the methods that I'm I'm going to
+[20:29] speak about from now on and so on, they
+[20:31] assume data parallel that we talked
+[20:33] before in a way is it the default
+[20:34] setting. So like data data parallel in
+[20:37] distributed training, data parallel is
+[20:39] kind of the the standard setting. Not
+[20:40] just single GPU training, but like data
+[20:42] parallel kind of is the default, which
+[20:44] is nice. So in the default here without
+[20:45] sharding data parallel, we have replicas
+[20:47] on each of the two devices here, GPU 1
+[20:49] and GPU 0. Each of them needs to have
+[20:51] like 12 GB in a way in this example
+[20:54] scenario. And with optimizer sharding,
+[20:56] we just split in a way the the the
+[20:57] optimizer states in a way into two
+[20:59] partitions. Um one on GPU 1, one on GPU
+[21:02] 0. And reduces in a way the memory from
+[21:04] 12 to 8 GB.
+[21:07] So this doesn't come for free, but it
+[21:08] adds communication overhead and
+[21:09] specifically the update process on the
+[21:11] of the weights is slightly changed.
+[21:14] So, first of all, the forward and
+[21:15] backward path is completely independent
+[21:17] anyway. So, there's no communication
+[21:18] needed anyway. Um
+[21:20] then at the end anyway, we do a reduced
+[21:22] scatter where basically like each a GPU
+[21:24] they exchange the information on the
+[21:25] gradients. So, they we send the
+[21:26] gradients for the for the specific
+[21:28] shards to the to the shard anyway to the
+[21:30] to the device where the shard is.
+[21:32] Then [snorts] we compute the the weight
+[21:34] update in a way locally. Uh each shard
+[21:36] on their portion only. And then at the
+[21:39] end we kind of all gather kind of we
+[21:40] exchange again the the the weight
+[21:42] updates or the or the updated weights
+[21:44] um across the entire
+[21:46] um
+[21:47] sharding group anyway.
+[21:50] Again here like a lot of memory savings
+[21:51] anyway because optimizer states uh
+[21:53] typically like two variables per
+[21:55] parameter like in the case of Adam for
+[21:57] instance.
+[21:59] And yeah.
+[22:00] Next up uh next strategy is pipeline
+[22:03] parallelism. So, this reduces both
+[22:05] memory, but also is used to improve
+[22:07] increase the throughput um of our
+[22:10] training run.
+[22:11] And the idea is basically if you
+[22:12] remember like a deep neural network, the
+[22:14] the the name deep comes from that we
+[22:16] have many layers. And the idea is,
+[22:17] "Okay, let's just split the model, you
+[22:19] know, and put like let's say layer one a
+[22:21] layer zero to 31 on GPU one a GPU zero,
+[22:24] sorry. The next couple of layers on GPU
+[22:25] one and so on. Next layers on the next
+[22:28] GPU and so on. So, we kind of split in
+[22:29] depth anyway the model and shard it
+[22:31] there."
+[22:32] There's one major issue with this
+[22:34] approach. It's called pipeline bubbling
+[22:36] pipeline bubble basically because if you
+[22:38] think about training, if you remember
+[22:40] again, we have to do the forward pass
+[22:41] and the backward pass. And when you do
+[22:43] the forward pass and compute like layer
+[22:45] one zero one and so on,
+[22:47] all of them sit on GPU zero. So, GPU
+[22:49] zero is like running with 100% but the
+[22:52] others are idling. So, they're waiting
+[22:53] basically for for any workload anyway.
+[22:55] So, nothing comes. So, they're basically
+[22:57] there's a lot of waste. The backward
+[22:59] path, the same story but the reverse
+[23:01] order anyway.
+[23:02] A huge waste, basically.
+[23:04] The idea to solve this problem is micro
+[23:06] batching in a way where you split the
+[23:07] entire batch into smaller units in a
+[23:09] way. So, the the batch size and then you
+[23:11] basically
+[23:12] only GPU zero, you compute the first
+[23:15] micro batch.
+[23:16] Then you forward pass it to GPU one who
+[23:18] does it then the the next layers and so
+[23:20] on. At the same time, GPU zero, you
+[23:22] know, it does already the second micro
+[23:23] batch and so on. And the same in the way
+[23:25] for the backward pass
+[23:28] So, it's a a kind of a simple idea. And
+[23:30] pipeline parallelism is used heavily in
+[23:31] industry and specifically like for
+[23:33] instance two examples of the in industry
+[23:36] is not just use the micro batching, but
+[23:37] they have more sophisticated methods.
+[23:39] So, for instance, Llama 3, they do
+[23:40] actually some bidirectional stuff where
+[23:42] kind of they overlap a kind of forward
+[23:44] and backward pass more
+[23:46] uh
+[23:47] uh
+[23:48] um
+[23:50] interleave it much more, anyway. For
+[23:52] instance, like chief the last chief you
+[23:53] win a pipeline does prioritize for
+[23:54] instance more backward pass early on.
+[23:57] You know, in order to kind of say,
+[23:59] "Okay, the the the previous chief use
+[24:00] can already like back prop that
+[24:02] portion."
+[24:03] Like there's another algorithm from Deep
+[24:04] Seek which was used in this Deep Seek
+[24:06] V3, anyway. It's called 12 pipe that
+[24:08] actually also further separates like
+[24:11] more granular. Like instead of just
+[24:12] micro batches forward backward pass, it
+[24:14] also like separates backward to input
+[24:17] with from backward to weight in a way
+[24:19] into two separate um uh
+[24:23] smaller units kind of that can be
+[24:24] scheduled.
+[24:27] So, this is just, you know, splitting
+[24:28] the network by depth in a way. Um but we
+[24:31] can also split
+[24:33] layer or within a layer, anyway. And
+[24:34] this is called a tensor parallelism. So,
+[24:37] remember like we do a lot of matrix
+[24:38] multiplication, X * W = Y.
+[24:41] And the idea with tensor parallelism is
+[24:43] just that we split uh W, the weight
+[24:46] matrix in the half. We can do this uh by
+[24:48] column in a way with column parallelism
+[24:50] in a way.
+[24:51] Um
+[24:52] and each GPU has like um only a certain
+[24:55] portion of the partition.
+[24:57] Uh and we can do this also in the other
+[24:59] way. Like we can split it by row anyway.
+[25:01] And
+[25:02] sounds the same at the beginning. Like
+[25:04] when I first saw this in a way like I
+[25:06] looks the same. Like what's the
+[25:07] difference? The difference is like
+[25:08] nuanced. It's specifically column
+[25:10] parallelism in a way that X the input
+[25:11] needs to be replicated on both devices.
+[25:14] But the output will be partitioned on
+[25:15] both on basically separate devices. And
+[25:18] for the row parallelism, the inputs can
+[25:20] be partitioned on two different devices.
+[25:22] And the outputs will also be partitioned
+[25:23] on two devices.
+[25:25] So we can actually leverage this fact
+[25:26] for a thing let's call it a transformer
+[25:28] MLP and so on. So you don't have just
+[25:30] one matrix but two in a way you would
+[25:32] stack two layers after another in a way.
+[25:34] You add a non-linearity in the middle.
+[25:35] Otherwise it would be point
+[25:37] like pointless basically.
+[25:39] Um with the with a relu or in this case
+[25:40] gelu activation function.
+[25:42] In this case in a way you basically
+[25:44] start with a replicated input. You would
+[25:46] do the first uh column parallelism. It's
+[25:47] uh partitioned the intermediate states.
+[25:50] And then the second um uh you apply
+[25:52] because the second layers in a row
+[25:53] parallel. So basically the inputs can be
+[25:55] partitioned. And then at the end uh you
+[25:58] produce uh partitioned outputs again.
+[26:00] And then you do one all reduce in a way
+[26:02] to kind of aggregate them again and make
+[26:04] them replicated on the devices in a way
+[26:06] the the the output in a way. So the idea
+[26:08] is in with like stacking one column and
+[26:10] one row after another, we can get away
+[26:12] with sharding two layers with only one
+[26:15] communication step at the end to
+[26:16] synchronize again and and and exchange
+[26:18] with the output information.
+[26:20] So that's why it's used in practice
+[26:21] typically like in that format in a way.
+[26:26] There's other dimensions that we can
+[26:27] split and partition our data sequence
+[26:29] and context parallelism. So um typically
+[26:32] we train on
+[26:33] uh like context lengths let's say in
+[26:34] this case 8K. And we can say okay the
+[26:36] first kind of tokens the 0 to 2000 are
+[26:39] on GPU zero. The next 2000 tokens are on
+[26:41] GPU uh one and so on. And I got a lot of
+[26:44] layers in a neural network like MLPs
+[26:46] layer norms and so on that they're kind
+[26:47] of they don't mix time. So they're time
+[26:49] independent in a way. So there's no
+[26:50] communication actually needed between
+[26:52] the GPUs in this case.
+[26:54] Um there are also like layers that are a
+[26:55] bit more tricky to um paralyze in in in
+[26:59] in length in in sequence, sorry.
+[27:01] Specifically, attention layer that's
+[27:02] used in transformer um model um requires
+[27:05] a bit more care. Like there's a thing
+[27:07] called context parallelism in a way that
+[27:09] there's essentially like
+[27:11] partitions the KV cache. Um and there
+[27:14] are a lot of like algorithms on how to
+[27:15] use efficiently ring attention and so
+[27:17] on. So, it's a bit more basically in in
+[27:18] complex version of of sequence
+[27:19] parallelism.
+[27:21] So, [clears throat] yeah, again, like
+[27:21] sequence parallelism for like the
+[27:22] independent layers, context parallelism
+[27:24] for the for the transformer attention
+[27:25] layers in a way.
+[27:27] And then this is typically used in
+[27:28] practice kind of for long context
+[27:29] training. So, when you train a a large
+[27:31] neural network model, you train them
+[27:32] typically like on short context like 8K
+[27:34] and so on. And then after the main
+[27:36] training phase, you extend the context
+[27:37] length.
+[27:38] So, you train just a couple of like
+[27:40] trillion like a few billion hundred of
+[27:42] billion to be trillion of tokens with
+[27:43] like a longer context length.
+[27:45] So, it doesn't need to be trained from
+[27:46] scratch really with with a 1 million
+[27:48] context.
+[27:51] Um
+[27:52] another or the last um parallelism
+[27:54] strategy in a way is about mixture of
+[27:56] experts. So, the idea with mixture of
+[27:58] experts is like a new type of neural
+[28:00] network architecture on new type of
+[28:01] layer in a way that tries to scale model
+[28:03] capacity. So, try to really use the
+[28:05] scaling laws by scaling model capacity
+[28:07] without adding extra compute.
+[28:09] Because in a traditional sense in a way
+[28:11] if you scale in a way um
+[28:12] the model in size, you know, our weight
+[28:14] matrix becomes bigger and so on and that
+[28:16] means the inference, the training,
+[28:17] everything becomes more expensive.
+[28:18] But the idea with mixture of experts
+[28:20] like let's basically slice up our weight
+[28:22] matrix into like rows.
+[28:24] Um they're called experts.
+[28:26] And there's a router component. And the
+[28:28] router component in a way uh tells in a
+[28:30] way which one we should activate it.
+[28:32] And the rest in a way is assumed to be
+[28:34] zero in a way. So, it's kind of a way of
+[28:36] sparsity is a way of structured sparsity
+[28:38] in a network.
+[28:39] And this used heavily because it's yeah,
+[28:41] as I mentioned, scales the model
+[28:42] capacity without adding additional
+[28:44] compute.
+[28:45] And this leads to a very natural way to
+[28:47] par to shard and partition in a way uh
+[28:50] the mixture of expert layer by just
+[28:51] putting different experts on different
+[28:53] devices. So, let's say in this example
+[28:55] here, we have expert zero and expert one
+[28:56] on device zero, expert two and three on
+[28:59] device one and so on. So, it's kind of a
+[29:00] very natural way to kind of parallelize.
+[29:03] Um there's also again like communication
+[29:05] necessary in a way to kind of make sure
+[29:07] the router the tokens are distributed
+[29:09] and also the the results are aggregated.
+[29:11] An example of mixture of expert
+[29:13] architecture that we trained, you know,
+[29:14] um is like LFM-2 8B uh one uh
+[29:18] A1B, which is like a 8.3 billion
+[29:21] parameter model that has only 1.5
+[29:23] uh active. So, it's like it runs with
+[29:25] the inference speed of a 1.5 billion
+[29:27] model, but has the kind of the capacity
+[29:29] of a 8 billion model.
+[29:31] Um yeah, as I mentioned like it
+[29:33] basically scales the params, um but the
+[29:34] compute to much less extent.
+[29:37] And like there's a major challenge
+[29:39] always the ME architecture is about load
+[29:41] balancing and load balancing in two
+[29:42] aspects. The first aspect is for the
+[29:45] training stability. So, if you want to
+[29:46] if you want to train ME layer actually,
+[29:48] you need to make sure that the router in
+[29:50] a way doesn't overfit in a way and just
+[29:52] routes same like all tokens to one
+[29:54] expert and then you actually train a
+[29:55] small network because the rest is never
+[29:57] activated. So, there's like uh making
+[29:59] sure that the training is stable.
+[30:01] There's a lot of different um methods
+[30:03] that's still being developed and so on
+[30:05] on how to how to kind of balance in a
+[30:07] way the load of the network during
+[30:08] training properly. The second problem
+[30:11] with load balancing is that
+[30:13] exactly with the has to do with the
+[30:14] expert parallelism is because like
+[30:16] imagine we have the expert parallelism
+[30:17] and the load balancing doesn't work and
+[30:19] all the tokens get routed to uh expert
+[30:21] uh
+[30:22] zero and expert one,
+[30:24] it means the GPU uh like one has all the
+[30:26] load and the the rest of the GPUs are
+[30:28] idling kind of. So, you have like a lot
+[30:30] of like um it slows down the training a
+[30:31] lot. So, you need to be really careful
+[30:33] with load balancing. As I mentioned,
+[30:35] there's still still actually actually
+[30:36] free search going on into how to do this
+[30:38] properly.
+[30:41] So, these are all different methods and
+[30:42] strategies kind of to separate and
+[30:44] partition the data and the compute and
+[30:45] scale the training throughput. But, now
+[30:47] I want to also quickly talk about
+[30:49] frameworks and and and tools in a way
+[30:51] that implement some of these strategies
+[30:52] that we talked about.
+[30:54] The first example is DeepSpeed Zero. The
+[30:56] Zero stands for Zero Redundancy
+[30:57] Optimizer.
+[30:58] And it's basically about sharding the
+[31:00] memory.
+[31:01] So, again that the baseline, as I
+[31:02] mentioned before, baseline in
+[31:03] distributed training is always data
+[31:04] parallel. So, data parallel training.
+[31:06] Um there's a stage one of Zero
+[31:09] um where basically it starts optimizer
+[31:10] sharding exactly as we learned before.
+[31:13] Um there's also stage two, which shards
+[31:15] also the gradients.
+[31:17] Has a additional effort, but more on
+[31:19] that later. And then also stage three,
+[31:21] where you partition everything that the
+[31:22] optimizers states, the gradients, and
+[31:24] also the parameters.
+[31:26] The communication pattern for Zero 1,
+[31:28] which is the optimizer sharding that we
+[31:30] showed before, it's basically this
+[31:32] reduce scatter to kind of send the
+[31:33] gradients out to the specific shard and
+[31:35] then they're all gathered to kind of get
+[31:36] the updated uh weights again. Updated
+[31:39] parameters uh are synchronized in a way.
+[31:41] Uh for Zero 2, we do additional reduce
+[31:44] scatter by sending in a way that the
+[31:45] gradients anyway to the corresponding
+[31:47] shard that has the gradients.
+[31:49] So, that's one more step level of
+[31:50] communication. And then Zero 3 anyway
+[31:52] has actually much more than that because
+[31:53] like you for the forward and backward
+[31:55] path, the parameters the parameters have
+[31:57] the problem that we use them much more
+[31:58] frequently than the optimizer states.
+[32:00] So, there's actually much more um
+[32:02] um communication necessary anyway if you
+[32:05] want to shard also the parameters.
+[32:06] In practice, it's still used um because
+[32:08] you you block them together anyway. You
+[32:10] don't do every individual weight,
+[32:11] basically.
+[32:13] And yeah, so basically Zero 3 allows you
+[32:15] really to scale like to multiple GPUs
+[32:17] uh where the model is so big that it
+[32:18] doesn't fit on a single device uh on the
+[32:21] single like memory.
+[32:24] So, this is DeepSpeed uh DeepSpeed. Not
+[32:26] to be confused with DeepSeek, which also
+[32:28] provides a nice architectures and so on.
+[32:30] Um uh there's another method uh like
+[32:33] another way to implement sharding is
+[32:35] Fully Sharded Data Parallel. It's a
+[32:36] basically PyTorch native implementation
+[32:39] of a zero-three style sharding that we
+[32:41] learned before anyway.
+[32:42] It's slightly different um
+[32:44] on on a on a
+[32:46] the the code required in a way to
+[32:47] implement this. But basically you can
+[32:49] think of because it's PyTorch native you
+[32:50] define a nn.Module uh FSDP block in a
+[32:53] way and the FSDP block in a way handles
+[32:56] uh the wrapper in a way handles uh the
+[32:58] sharding for you.
+[32:59] So basically think of of this if you
+[33:01] write your Python script in a way um in
+[33:03] the default setting is that all the data
+[33:05] is sharded fully. Like that's what fully
+[33:06] sharded. And then when your Python
+[33:08] program enters the layer in a way it
+[33:10] does a all gather and kind of gets all
+[33:11] the parameters in a way in the forward
+[33:12] pass. So it like in your Python script
+[33:14] in a way you have access to all the
+[33:15] weights of the layer of the module.
+[33:17] And then when your Python execution
+[33:19] exits the program uh exits the layer,
+[33:21] sorry. Um you discard in a way the fully
+[33:24] the the aggregated uh information again.
+[33:27] Um and only have the partitioned uh um
+[33:30] parameters. Backward pass similar story
+[33:32] but here we need to maybe also
+[33:33] communicate the the gradients and all
+[33:34] those but
+[33:35] you know what very similar. The the
+[33:37] execution engine enters in a way the
+[33:38] backward pass you kind of get the
+[33:40] information that you need and so on.
+[33:42] And um yeah there are several uh
+[33:44] settings of FSDP. You can actually
+[33:46] operate it in loss of only gradient and
+[33:48] on I'll say only optimizer sharding and
+[33:50] so on. So you can basically implement
+[33:51] also zero stage one and stage two with
+[33:53] with FSDP.
+[33:56] And yeah it's a used heavily also with
+[33:58] activation checkpointing in a way to
+[33:59] train on on on uh larger models.
+[34:03] So I just introduced uh a quick about
+[34:05] DeepSpeed and then talk about FSDP and
+[34:07] at the end I said basically they're
+[34:09] providing the same features in a way. So
+[34:10] what's what's the difference? How do how
+[34:11] do they differ? Um but before answering
+[34:13] this question there's another thing is
+[34:15] called Megatron-LM
+[34:16] and it's Nvidia's uh
+[34:18] framework for sharding and and
+[34:20] paralyzing in a way large transformer
+[34:22] train pre-training or training runs.
+[34:24] Um yeah distributed training framework.
+[34:26] And the way or how these different
+[34:27] frameworks differ is the um
+[34:29] I think I think difference is like uh
+[34:31] who made it. In a way, for DeepSpeed
+[34:33] comes from Microsoft.
+[34:34] Um FSDP comes from Meta, and uh Megatron
+[34:37] comes from Nvidia anyway. So, it's like
+[34:39] uh
+[34:40] they all offer very similar feature
+[34:41] sets, but uh
+[34:42] uh
+[34:43] yeah, each company wants to do their own
+[34:45] stuff anyway.
+[34:47] Uh there's one company missing here.
+[34:48] It's Google.
+[34:50] It's because they are using JAX and not
+[34:51] PyTorch.
+[34:55] So, um yeah, they are very similar uh
+[34:57] conceptually. Um
+[35:00] They're slightly different aspect on
+[35:01] like focus and also the design
+[35:03] philosophy in these different mm um um
+[35:07] packages anyway. Like uh for DeepSpeed
+[35:08] zero and FSDP, it's mostly about memory,
+[35:10] but the the Megatron LM also like the
+[35:12] parallelization and the throughput
+[35:13] aspect is much more uh focused area as
+[35:15] well. So, for instance, like pipeline
+[35:17] parallel and tensor parallel, for
+[35:19] instance, they need to be added um
+[35:21] externally to FSDP and DeepSpeed, but in
+[35:23] Megatron, there's like layers already
+[35:24] implementing those things.
+[35:27] Um yeah, as I said, the philosophy is
+[35:28] slightly different. For for DeepSpeed,
+[35:30] um the idea is you don't want to don't
+[35:31] want to change the code. You just wrap
+[35:33] it in like one you define your model,
+[35:35] your optimizer, your data loader, and
+[35:36] then you just have one line change where
+[35:38] you wrap it into a DeepSpeed uh function
+[35:40] anyway. There for FSDP, it's PyTorch
+[35:42] native idea, so you define your own
+[35:43] nn.Module basically. And for in
+[35:45] Megatron, it's a bit more complex. You
+[35:46] have this model parallel unit that keeps
+[35:48] track of like the how what is exactly
+[35:50] sharded where and so on, like the
+[35:51] communication groups basically.
+[35:53] And like the ease of use basically like
+[35:55] for DeepSpeed, it's just you know, have
+[35:56] one line change in your code, but all of
+[35:58] the the way to shard and how what
+[35:59] sharding methods use is all defined in a
+[36:01] YAML and a config file anyway. So, it
+[36:02] separates anyway the code from the
+[36:04] configuration. In PyTorch and FSDP, it's
+[36:06] more like yeah, it the the the aspect is
+[36:08] really like hey, this is this feels like
+[36:09] PyTorch native anyway. And for Megatron,
+[36:11] much more custom code anyway.
+[36:13] But at the at the at the at the
+[36:15] advantage that it allows you more uh has
+[36:16] a bit more features.
+[36:21] So, putting it all together anyway, um
+[36:23] when you want to have a let's say a
+[36:24] cluster of 2,000 GPUs and want to
+[36:26] maximize anyway um
+[36:28] and want to train a big model. The first
+[36:30] point is really all like on memory. Like
+[36:32] we want to use heavily activation
+[36:33] checkpointing because as I mentioned
+[36:34] before, like memory is typically more
+[36:36] precious than compute in a way. So we do
+[36:38] heavily activation checkpointing.
+[36:40] Another point that I didn't mention
+[36:42] before, but mixed precision. So we
+[36:43] basically we don't need the same
+[36:44] precision levels for all of different
+[36:47] portions of network. So for instance,
+[36:48] like the activations are much more
+[36:50] sensitive, but the weights can be
+[36:52] quantized and can be expressed kind of
+[36:54] with very low precision level and things
+[36:55] like that.
+[36:57] I also mentioned like FSDP and zero
+[36:59] shotting in a way that kind of shots
+[37:01] parameters, gradients, and optimizers
+[37:03] and only kind of
+[37:05] exchange this when needed in a way.
+[37:07] There's also offloading that we
+[37:07] discussed.
+[37:09] And as I mentioned, it's more like about
+[37:10] niche applications.
+[37:13] There's also about the throughput. This
+[37:14] parallelization strategies and they're
+[37:16] often called 4D or more recent now 5D
+[37:19] parallelism because actually you can use
+[37:21] them at the same time in a way. So you
+[37:23] have different axes. You can think of it
+[37:24] like different dimensions in a way and
+[37:27] you just scale the different methods on
+[37:29] the different axes.
+[37:30] So we have like data parallel where
+[37:32] basically you have you have data
+[37:34] parallel, you have the tensor parallel
+[37:35] where we split the layer.
+[37:36] You can do pipeline parallelism.
+[37:39] Sequence context parallel, expert
+[37:41] parallelism, which is very similar to
+[37:42] tensor parallelism, but for mixture of
+[37:43] experts in a way.
+[37:45] And there's other optimizations like
+[37:47] fused kernels where you make sure that
+[37:49] the the overhead between sending
+[37:50] communication to between the CPU and the
+[37:53] GPU doesn't add up. Also like stuff like
+[37:56] flash attention is basically very cache
+[37:57] aware kind of algorithms in a way that
+[37:59] make the make use of the cache on the on
+[38:01] the device very efficiently.
+[38:04] And when we when I mentioned before like
+[38:05] this is 5D or these dimensions means
+[38:07] basically like imagine that 2000 GPUs in
+[38:09] a way. Like and then we have like these
+[38:11] different dimensions you add them
+[38:13] together. You don't run like one big
+[38:14] data parallel tensor parallel that's it
+[38:16] in a way, but you really add them
+[38:17] together in a way. So for instance, like
+[38:19] TP8, so tensor parallel 8, what does it
+[38:21] mean? It means that we kind of split the
+[38:22] entire cluster into eight partitions and
+[38:25] each of them in a way has their own
+[38:27] batch memory mini batch and they only
+[38:29] communicate these partitions of the
+[38:31] cluster and they only communicate to
+[38:32] kind of exchange the gradient
+[38:33] information at the end.
+[38:35] TP8 Uh so tensor parallel means for
+[38:38] instance like tensor parallel is usually
+[38:40] very communication intense operations.
+[38:41] So you want to basically put them on a
+[38:43] single node where we have these eight
+[38:44] GPUs. So let's say I want to run tensor
+[38:46] parallel on on the on one node in a way.
+[38:49] Um and then pipeline parallel some will
+[38:51] say hey I want to use and split the
+[38:53] layers the network in depth on four
+[38:55] different nodes.
+[38:57] So kind of you have like four nodes in a
+[38:59] way that
+[39:00] the depth of the network is sharded
+[39:01] across each each layer kind of tensor
+[39:04] parallel on the on the on the machine
+[39:06] with eight GPUs and then you have like
+[39:07] groups of eight for the tensor parallel
+[39:09] so where you where you basically
+[39:11] basically process different types of
+[39:13] different different part different
+[39:15] portions of the batch of the training
+[39:17] batch in a way. Then again also expert
+[39:18] parallel and so on and sequence
+[39:20] parallelism is another dimension in a
+[39:21] way that you can add there.
+[39:24] So in practice in a way you basically
+[39:26] stack them together. So to summarize a
+[39:27] bit the talk in a way
+[39:29] first mentioned of why we scale in a way
+[39:32] the scaling laws that bigger model means
+[39:33] a better fit to the data more data means
+[39:35] a better fit to the data. Also discuss
+[39:37] like why we train on GPUs they are much
+[39:39] the
+[39:40] training you know much more suited for
+[39:41] the training.
+[39:42] Um and we want to train models that
+[39:44] don't fit on a single GPU.
+[39:47] Um and also for training a model we need
+[39:50] actually much more memory than just the
+[39:51] model weights.
+[39:53] Uh we also discussed memory solutions
+[39:55] like activation checkpointing you know
+[39:56] offloading the sharding that I mentioned
+[39:58] also quickly touched on mixed precision.
+[40:01] And also parallelization strategy that
+[40:02] both benefit data
+[40:05] like memory reducing memory but also
+[40:06] increase throughput in a way. Data
+[40:08] parallel is the naive one that has a
+[40:10] limit on batch size tensor parallel
+[40:12] which splits in a way the weight
+[40:13] matrices pipeline parallel where you
+[40:15] split in depth and then also expert
+[40:17] parallel
+[40:18] that is specifically kind of a tensor
+[40:20] parallel for a movie in a way
+[40:22] and also context and sequence parallels
+[40:25] uh slightly. And the key key principle
+[40:27] again like it's really the network
+[40:29] topology of the cluster in a way like
+[40:32] what device is connected to which other
+[40:34] device with what kind of uh memory
+[40:36] bandwidth and latency and so on
+[40:39] in a way to to match in a way the the
+[40:40] the the communication hierarchy. So like
+[40:42] yeah, for kernel development, so if you
+[40:44] develop a new if you use kernel and so
+[40:45] on, you actually you don't even think
+[40:47] about HBM memory, but you think about
+[40:49] cache. You know, what's what you you you
+[40:51] that's that's your your abstraction
+[40:52] level that you work on with.
+[40:54] Then you have the HBM memory, then you
+[40:55] have this NVLink like kind of the local
+[40:57] group in a way um of GPUs that sit on
+[40:59] the same machine and then you have the
+[41:00] scale out network of InfiniBand and so
+[41:02] on.
+[41:04] And again like there's no sufficient uh
+[41:05] there's no single strategy that you say
+[41:06] like hey for this cluster I need X and
+[41:08] that's it in a way, but the idea is
+[41:09] really that in practice you combine
+[41:11] multiple of them. You have this 4D 5D
+[41:13] parallelism um uh and also what is
+[41:17] interesting is like depending on model
+[41:18] size you use slightly different way to
+[41:20] shard, you know? Like let's say like our
+[41:21] 8B model is trained very differently
+[41:23] than let's say the 1B model is trained
+[41:25] very differently than how we would train
+[41:26] it a 1 trillion model and so on.
+[41:28] Uh really depends, you know, on the
+[41:29] model size and on your cluster in a way.
+[41:33] Um that uh concludes uh my talk, yeah.
+[41:36] THANK YOU.
+[41:37] >> [applause]
+[41:43] >> AMAZING. OKAY, WE HAVE SOME TIME FOR
+[41:45] QUESTIONS.
+[41:48] I just have a tiny one. Uh back one
+[41:50] slide. In your final example, you're
+[41:53] like we'd do this here and this here and
+[41:54] this here.
+[41:55] >> [sighs and gasps]
+[41:55] >> What would be that final sort of memory
+[41:58] versus time trade-off
+[42:01] for your last example there?
+[42:05] This example here or what?
+[42:06] >> Yeah. Yeah, the 2048 GPU training run.
+[42:10] What do you mean?
+[42:10] >> Like what is your
+[42:12] versus cost?
+[42:13] Like
+[42:16] Like, how much memory did we save versus
+[42:21] how much extra compute did we have to
+[42:22] do? Yeah, it's a good question. Um the
+[42:25] this is just an illustrative example
+[42:27] because I mentioned in the next slide
+[42:28] that actually depends on the size of the
+[42:29] model. So, this was actually chosen very
+[42:32] simple to like I think a 70 billion
+[42:33] parameter uh Lama style model in a way.
+[42:36] Um and yeah, the the the idea is really
+[42:37] that you cannot fit this um on a on a uh
+[42:40] uh typically like what what happens in
+[42:42] practice if you let's say a train a 70
+[42:44] billion parameter model and so on. Like,
+[42:45] you can use uh FSDP and zero to kind of
+[42:48] train it on like uh First of all, it
+[42:49] doesn't fit on a single device, but you
+[42:51] need it maybe needs uh like four nodes,
+[42:53] then you can actually fit it with FSDP
+[42:55] or Steep Speed zero.
+[42:56] But, your throughput will be very slow.
+[42:58] So, um you would need um
+[43:01] like years to train it in a way, right?
+[43:03] But, there's so much competition and so
+[43:04] on. You need to train a model faster in
+[43:06] a way. So, that's why you need to add um
+[43:09] more GPUs in a way. Exactly. And that's
+[43:11] why you need to uh
+[43:12] think about like, "Hey, we need to add
+[43:14] this pipeline parallel and so on."
+[43:15] Ideally, we would just like to train
+[43:16] with data parallel because it's the
+[43:17] simplest one easily. But, like there's
+[43:19] like uh
+[43:20] there's the batch size becomes already
+[43:21] like very large. So, like for for
+[43:23] language models, typically like they use
+[43:25] like uh things like 8 billion tokens and
+[43:27] so on. And up there uh from that point
+[43:28] on,
+[43:29] people start to notice like degradation
+[43:31] in performance.
+[43:39] Uh thank you for the um excellent
+[43:40] lecture. Really really great chart. Um
+[43:43] question I have is how does how does
+[43:44] your architecture shift when you have to
+[43:47] um train around um sort of like a like
+[43:50] more like a decentralized training um
+[43:52] where you you don't have a co-located
+[43:54] servers, right? And you have a you know,
+[43:56] unreliable workers and nodes that can
+[43:58] drop and um and you know, which which
+[44:00] which of these dots um two parts like
+[44:03] which of these which of these boxes like
+[44:04] are you thinking, "Hey, you pick out."
+[44:06] And then building on the work that's
+[44:07] already been done, I'm thinking like a
+[44:09] trainer at home deep mind
+[44:12] you know what these people prime
+[44:13] intellect. How what what do you think
+[44:14] they're really missing that I think like
+[44:16] what do you think is the bottleneck that
+[44:18] really can unlock training large
+[44:20] language models in any decentralized way
+[44:22] that's really an area of research that
+[44:23] should be considered.
+[44:25] Thank you. [clears throat] Yeah, that's
+[44:26] a that's good question as well. Um
+[44:29] there's actually like some work already
+[44:30] going on in distributed training and
+[44:31] specifically the data parallel
+[44:34] portion is actually very well suited
+[44:37] for distributed training because like
+[44:39] there
+[44:40] you don't need it it's basically the
+[44:42] parallelization strategy that requires
+[44:43] the least communication. So there's only
+[44:45] like very little happening. So for
+[44:47] instance, I think Google for instance
+[44:48] does actually data parallel across
+[44:49] different data centers. Because the
+[44:51] communication is so little in a way that
+[44:52] you can actually move
+[44:54] do data parallel across multiple data
+[44:55] centers in a way that different
+[44:56] locations. And I've seen also like
+[45:00] distributed training runs in a way at
+[45:01] least smaller scales
+[45:03] that try to do data parallel.
+[45:04] It becomes there's also more research
+[45:07] going on in asynchronous because like
+[45:08] some of them maybe you you have
+[45:10] distributed very fast and some of them
+[45:12] are slow cheap use and so on. So there's
+[45:14] there's a thing called asynchronous
+[45:15] training.
+[45:16] Um
+[45:17] but it's I think it's it has been
+[45:18] heavily used I think in the past but
+[45:20] recently I've not seen so many bigger
+[45:22] runs in a way but it's it's an active
+[45:24] research area.
+[45:29] You mentioned earlier that um
+[45:32] like at a certain point if you increase
+[45:34] the batch size you
+[45:36] um you harm the generalization of the
+[45:38] models. So I'm just curious like if
+[45:40] you're trying to train a small size
+[45:42] model
+[45:43] uh and you want to improve the wall
+[45:44] clock at a certain point you can't just
+[45:47] improve the data parallelism. So what is
+[45:50] the strategy? Like do you train a larger
+[45:51] model, distill it or like what is the
+[45:53] how do you improve the wall clock of
+[45:55] like for example the 1 billion parameter
+[45:57] model that you guys are training?
+[45:59] Yeah, that's um to scale in a way yeah,
+[46:01] that's a big issue. Like once it's
+[46:03] basically scaling is easy as long as
+[46:04] you're in a data parallel stream
+[46:06] at the batch size
+[46:08] is fine in a way, but it becomes very
+[46:09] challenging. And like yeah, there's like
+[46:11] I think uh
+[46:12] um pipeline parallelism um I think
+[46:15] probably the first thing that people use
+[46:17] in a way to scale further.
+[46:18] Um the problem that small models have
+[46:21] specifically um on that is that
+[46:24] each kind of
+[46:25] it doesn't have many layers for
+[46:26] instance. So it has only like 32 layers
+[46:28] or 16 layers and so on. So there's
+[46:29] actually not much room to shard stuff
+[46:31] around. And also the tensor parallel and
+[46:33] so on because the matrices are actually
+[46:35] quite small already. So kind of them
+[46:37] splitting into multiple pieces in a way
+[46:39] like it's very tricky to scale up. So
+[46:41] there's a lot of algorithmically um
+[46:43] advancements that we do like for
+[46:44] instance um distillation you mentioned
+[46:46] in a way where you basically you um want
+[46:48] to accelerate the training in a way not
+[46:50] by running faster more tokens in a way,
+[46:52] but by adding more signal for more
+[46:54] having a richer training signal.
+[46:56] Specifically distillation where you say
+[46:57] hey, you don't just predict the next
+[46:58] token, but you need to predict the next
+[47:01] distribution of a teacher model anyway.
+[47:02] So this is for instance how we scaled in
+[47:04] a way LVM 2. So we used like a previous
+[47:06] generation LVM 1 7B model
+[47:09] um that gives us a distribution not just
+[47:11] of the next one logic token, but like um
+[47:14] 16 basically.
+[47:19] Thanks. Thanks for the excellent talk.
+[47:21] Uh I have a question on one of the early
+[47:23] slides. I was very impressed by the
+[47:25] 28 trillion token on a 1 billion model.
+[47:28] And my question is um
+[47:30] how much quality check are you able to
+[47:33] do on 28 trillion tokens? And
+[47:36] um
+[47:38] if quality really how much it matters.
+[47:41] And what is the current status of being
+[47:44] able to distill? Like I have a huge data
+[47:46] set, can I just distill the data that
+[47:48] really matters and train only on that?
+[47:50] Evidently not that good.
+[47:54] Yeah, like that's um
+[47:57] Yeah, very challenging. I think um if
+[47:59] you look at some of the open source data
+[48:01] sets on Hugging Face for instance, like
+[48:02] you can get um
+[48:05] the first kind of trillion tokens and so
+[48:07] on very high-quality data from archive
+[48:09] scientific papers from Wikipedia and so
+[48:11] on. But the further you scale actually
+[48:13] on the on the token axis actually it's
+[48:14] more and more difficult to find
+[48:16] high-quality data in a way, right?
+[48:17] Because you you source okay, PubMed
+[48:19] archive and so on is nice. We we can
+[48:21] then then you do filtering like on
+[48:22] Common Crawl. I think they only really
+[48:24] what what what we're doing for instance
+[48:25] like we we take Common Crawl and filter
+[48:27] it.
+[48:28] And then training like in a way smaller
+[48:30] filter models in a way that just detect
+[48:32] in a way which one could be useful for
+[48:33] the for the for the for the training of
+[48:35] the large models and so on. We do a lot
+[48:37] of ablation runs on data and so on.
+[48:39] There's also a lot of work going on in
+[48:41] in synthetic data.
+[48:42] Um that but this is also careful because
+[48:44] you you don't want to like model it
+[48:45] collapses the training. Because if you
+[48:47] train we also train some models in a way
+[48:49] where we we're fully synthetic, but this
+[48:51] in a way collapses a lot of the training
+[48:52] dynamics. So it has
+[48:53] people call it like the model has no
+[48:55] soul.
+[48:56] Because it's trained only on synthetic
+[48:57] data and so on. So it's it's it's it's a
+[48:58] really big issue in a way and like the I
+[49:00] think the the point really that they the
+[49:01] first
+[49:02] first the first tokens like highest
+[49:04] quality data, but like it is finding you
+[49:07] know the the last like 30 trillion plus
+[49:09] tokens of high-quality data is very
+[49:10] challenging, yeah.
+[49:12] Amazing. Okay, maybe two more questions.
+[49:15] Uh thank you. Uh it was really
+[49:17] impressive. Uh my question would be for
+[49:19] the Liquid AI.
+[49:21] As uh these are the smaller models
+[49:24] compared to the GPT so that these are
+[49:26] like we can use it on our phone. But as
+[49:30] we progress like Liquid AI progress on
+[49:32] to the future uh to basically compete
+[49:35] with the bigger models for their
+[49:36] accuracy and the quality of the uh
+[49:39] basically answers or anything.
+[49:42] Um
+[49:43] uh don't you think that the parameters
+[49:45] and the size of the model will increase
+[49:47] and it would not be able to fit on the
+[49:49] like phone phone's RAM or something? Uh
+[49:52] is it like do you have any like solution
+[49:54] for this problem or it will become like
+[49:56] normal models for like GPTs and we are
+[49:59] using on laptops and things?
+[50:02] Yeah, great question. Um
+[50:07] The answer is that we are still doing
+[50:08] active research, you know, we are all
+[50:10] scientists in a way. We are still doing
+[50:11] active research because we believe we
+[50:12] can still push much much more than
+[50:14] what's possible. Like even LFM 2 what I
+[50:16] showed before
+[50:17] it's it's it's boring in a sense in a
+[50:19] way. There's much more that we can do in
+[50:21] a way on algorithmically architecturally
+[50:23] the side in a way. There's challenges
+[50:25] like with with scaling, you know, like
+[50:26] the the parameters and so on because
+[50:27] like as you said like the the the the
+[50:29] chip shortage and this kind of memory
+[50:30] shortage at the moment and so on.
+[50:32] But one other in a way thing that I'm
+[50:34] that at least Liquid AI has like we have
+[50:35] very strong hardware partners with like
+[50:37] with AMD, with Qualcomm and so on where
+[50:39] we have like very good ties to.
+[50:40] And they're also improving the hardware.
+[50:42] So what we what what how we think the
+[50:44] future is going to happen is like we
+[50:45] co-evolve together with the hardware
+[50:47] providers because the hardware will also
+[50:49] at more than say you actually need a lot
+[50:50] of more flops with low precision. We can
+[50:52] we can offer that on the on the device.
+[50:54] You need maybe different tiers of memory
+[50:56] and so on for this mixture of experts
+[50:57] architecture and so on so like I think
+[51:00] on the phone today in a way there will
+[51:01] be limits but like we believe that in
+[51:03] the next 5 years and so on also the
+[51:04] hardware will be much more equipped with
+[51:06] better
+[51:07] design for for training for for running
+[51:09] generative AI.
+[51:11] Awesome. Last question.
+[51:14] Thank you.
+[51:15] So I have a question, you know, like you
+[51:18] told Megatron LM right from Nvidia one
+[51:21] of the framework.
+[51:22] So
+[51:24] what do you suggest like you know if
+[51:26] someone want to do a domain specific
+[51:29] not edge-based device but domain
+[51:33] specific model training like which
+[51:36] framework is good?
+[51:39] Thank you.
+[51:42] I would say like the
+[51:44] ease of use in a way probably the
+[51:45] easiest to use is the DeepSpeed
+[51:47] because as I mentioned before, like you
+[51:48] would just have one line change.
+[51:50] And you you get like a lot of the memory
+[51:52] benefits in a way from that. There's
+[51:53] also like DeepSpeed has also like this
+[51:55] offloading that I mentioned before
+[51:57] already also implemented. So imagine you
+[51:58] have only one GPU and therefore cannot
+[52:00] use FSDP, you can actually use
+[52:02] offloading with DeepSpeed. So like the
+[52:04] it's kind of the entry point in a way
+[52:05] probably for for for DeepSpeed. And then
+[52:08] the more you go you customize more. So
+[52:10] for instance, like we use some we use
+[52:12] DeepSpeed for kind of the early
+[52:14] experimentations on multi-modality
+[52:16] specifically. But then if you that our
+[52:18] bigger pre-training runs we go like with
+[52:20] FSDP plus a fork of Megatron. We have
+[52:22] actually a fork of Megatron um where we
+[52:25] use some of the sharding sharding
+[52:27] strategies from Megatron, but we also
+[52:28] incorporate it into a FSDP for memory
+[52:30] saving.
+[52:32] I think okay, one more bigger round of
+[52:34] applause for Matthias.
+[52:36] >> [applause]

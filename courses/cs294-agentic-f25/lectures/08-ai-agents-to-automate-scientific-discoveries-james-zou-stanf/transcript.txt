@@ -1,0 +1,2413 @@
+[00:00] Great.
+[00:00] Thank you so much, Dawn.
+[00:01] It's really a pleasure
+to participate
+[00:03] in this really exciting class.
+[00:05] So yes, I'm excited
+to share some
+[00:07] of the recent
+advances in AI agents,
+[00:11] and especially
+think about how we
+[00:13] can use these AI
+agents to help us
+[00:14] to automate, to
+accelerate different kinds
+[00:17] of scientific discoveries.
+[00:21] So the broader
+context of this is
+[00:24] that AI has been very
+successful as a tool
+[00:28] across many different
+domains of science.
+[00:30] And traditionally,
+the way that we use AI
+[00:32] is that you first start with a
+well-defined scientific problem.
+[00:36] You have a specific
+target, and then you
+[00:39] can use a specific, well
+curated AI tool to tackle
+[00:42] that well-defined problem.
+[00:44] So an example of this
+is that let's say
+[00:46] if you have a problem of
+trying to predict structures
+[00:49] of proteins, then you can
+use a tool like AlphaFold
+[00:51] to predict those structures.
+[00:54] But you need to have a
+well defined problem first.
+[00:57] And we're seeing this
+interesting conceptual shift
+[01:00] over the past year whereby
+instead of thinking of AI, it
+[01:03] really as a tool for solving
+like a narrowly defined problem,
+[01:06] people are starting to
+explore AI as a co-scientist,
+[01:09] try to tackle these broader
+range of research endeavors
+[01:12] all the way from helping
+us to generate hypotheses,
+[01:15] to designing experiments,
+analyzing data, and even writing
+[01:18] papers.
+[01:19] And a lot of that
+shift is driven
+[01:21] by these advances
+in the AI agents,
+[01:23] which we have been discussing
+in this class, which
+[01:25] are essentially systems
+that we can then
+[01:27] build on top of
+large language models
+[01:29] that then enables these
+models to be able to use
+[01:31] different tools like AlphaFold
+and other domain-specific tools
+[01:34] and also to access
+additional resources
+[01:36] like different
+databases and memories.
+[01:39] So this then enables these
+agents to become really
+[01:42] core scientists that
+can really help us
+[01:45] across very versatile kinds
+of research endeavors.
+[01:51] So what I want to do
+today in this class
+[01:53] is to discuss some of the recent
+advances in these AI scientist
+[01:57] agents.
+[01:58] And I want to share a few
+concrete examples of how
+[02:00] these AI agents can really
+help us to greatly accelerate
+[02:04] research and discovery.
+[02:06] So in the first
+example I'll share,
+[02:07] I'll talk about the
+virtual lab, which
+[02:09] is a work that we published
+a couple of months
+[02:12] ago where we have a team
+of different AI agents
+[02:15] that collaborate to discover
+new proteins and new drug
+[02:19] candidates.
+[02:21] And the second
+example, I'll talk
+[02:22] about Paper2Agent,
+which is a recent work,
+[02:25] but I'm very excited about this.
+[02:27] We're imagining turning
+every research paper
+[02:31] into its own interactive
+agent to facilitate
+[02:34] knowledge dissemination.
+[02:37] And then in the
+third part, I'll talk
+[02:38] about that's actually
+quite recent conference
+[02:40] that we just organized, which
+is finished a couple of weeks
+[02:44] ago called Agents4Science.
+[02:46] It's the first conference
+where both the authors and also
+[02:48] the reviewers are AI agents.
+[02:50] So I'll share some of
+the findings that we
+[02:51] have from this conference,
+some of the highlights,
+[02:53] and also some of the learnings.
+[02:56] And what I'll do
+is that I'll pass
+[02:59] at a few places during
+the presentation
+[03:03] so that we can take
+questions from the audience
+[03:06] and then have a more of
+an interactive discussion.
+[03:12] Awesome.
+[03:13] Great.
+[03:13] So I'll start by talking
+about the virtual lab.
+[03:16] So the virtual lab is
+an open source platform
+[03:19] that we built
+where we have teams
+[03:21] of different AI
+scientists, agents that
+[03:23] interact and work together.
+[03:25] So they collaborate to tackle
+these open-ended research
+[03:27] problems.
+[03:27] They can also work
+and collaborate
+[03:29] with human scientists.
+[03:31] So the virtual lab in many
+ways mirrors my real lab here
+[03:34] at Stanford.
+[03:35] So in the virtual lab,
+there's an AI professor agent.
+[03:38] I'm working with
+AI professor agent
+[03:40] or a bunch of different
+AI student agents
+[03:42] with different expertise.
+[03:43] Some have expertise in
+computational biology
+[03:47] or in machine learning
+or in immunology.
+[03:49] And these AI agents then have
+their own group meetings,
+[03:51] and they can work together to
+tackle these research problems.
+[03:55] We also built a
+school for the agents,
+[03:57] whereby the agents can
+actually go to the school
+[03:59] and then teach themselves how
+to become a better researcher.
+[04:02] So I'll explain both the virtual
+lab and also the agent school.
+[04:07] So first, I'll
+just explain a bit
+[04:09] of how we interact with
+the virtual lab agents.
+[04:12] It's like a human researcher
+can interact primarily
+[04:15] by talking to the PI agent
+or the professor agent.
+[04:18] So, for example, I can
+explain to the PI agent
+[04:20] some description of the
+project that I'm interested in.
+[04:22] If you want project,
+it could be I
+[04:24] want to find a
+new drug candidate
+[04:26] or design a new protein.
+[04:28] Another project could be I
+have this complex data set,
+[04:30] I want to analyze this
+data set, or I want
+[04:33] to design a clinical trial.
+[04:35] So it could be very
+different kinds of projects.
+[04:37] And then for each
+project, so the PI agent
+[04:40] will look at that project, and
+then try to decide by itself,
+[04:43] what are the different
+areas of expertise that
+[04:45] are needed to tackle that task?
+[04:47] So maybe for this
+particular task,
+[04:48] the PI agents says,
+OK, maybe it's
+[04:50] useful to have a
+machine learning agent.
+[04:52] And it's also useful to have
+some expertise in protein
+[04:55] engineering.
+[04:56] So then it's actually
+the job of the PI agent
+[04:58] then to train and to create
+the sub agents that have each
+[05:00] of those relevant expertise.
+[05:02] So for different
+projects the PI agent
+[05:04] has the flexibility then to
+create and train subagents
+[05:07] with different
+types of expertise.
+[05:10] So it's quite versatile.
+[05:12] I'll come back to and
+explain more detail
+[05:15] in two slides, of how
+that training and creation
+[05:18] process of agent happens.
+[05:20] For now, you can
+think of each agent
+[05:22] as basically being like a
+frontier language model,
+[05:24] like GPT 4, GPT 5
+model under the hood,
+[05:27] and then we do additional fine
+tuning to teach these models how
+[05:30] to use these specialized
+scientific tools like AlphaFold
+[05:33] and also have access to
+these more up to date
+[05:35] scientific knowledge.
+[05:38] So all the agents
+are automatically
+[05:40] created by the PI agent.
+[05:42] And after the
+agents are created,
+[05:43] then they can start to have
+their own group meetings where
+[05:45] all the agents will meet
+together and then come up
+[05:48] with the research plan.
+[05:50] They can also have one-on-one
+meetings where one of the agents
+[05:52] might meet with API agent
+to review a subtask,
+[05:55] or a subtask here could be like
+analyzing a piece of data set
+[05:58] or reviewing a piece of code.
+[06:00] So they can alternate
+between these group meetings
+[06:02] and one-on-one meetings.
+[06:03] So similar to our
+human research teams.
+[06:07] So I just want to show a
+concrete example of one
+[06:10] of these virtual lab
+group meetings just
+[06:12] to make it more concrete.
+[06:15] So this is actually the
+first research project
+[06:17] that we give to the
+virtual lab to tackle.
+[06:20] The project is to basically
+help us to design binders
+[06:23] to the recent COVID variants.
+[06:25] So basically last year when
+we started this project,
+[06:28] there were actually some of
+these new COVID SARS-CoV-2
+[06:30] variants.
+[06:31] And people didn't have
+very good binders to those.
+[06:33] So we thought this would
+be a very timely, but also
+[06:35] a very open-ended
+research challenge
+[06:37] to see if the virtual
+lab agents can help us
+[06:39] to design these good binders.
+[06:42] So in the beginning
+of this meeting,
+[06:44] you can see that the
+PI agent spoke up first
+[06:46] to explain then to
+the other agents what
+[06:48] is the objective here.
+[06:49] So the goal here is to
+design binders, try to target
+[06:52] the latest variants of COVID.
+[06:54] And then the other agents
+then can speak up one
+[06:56] after another to
+contribute their ideas.
+[06:59] So in this case, the
+immunologist agent
+[07:01] spoke up second and
+made a recommendation
+[07:04] of designing these binders
+in the form of nanobodies.
+[07:07] Now, this is already a fairly
+unorthodox recommendation
+[07:11] if you ask most
+human researchers.
+[07:14] So they might say that's
+design antibodies.
+[07:16] So you might have
+heard about antibodies.
+[07:18] So these are actually quite
+commonly used to as binders.
+[07:21] And there are many pharma
+and biotech companies
+[07:23] that invest billions of dollars
+in developing antibodies.
+[07:26] Nanobodies are basically
+small cousins of antibodies.
+[07:30] Whereas antibodies are
+found in many animals,
+[07:32] nanobodies are only found in
+a few animals like camels.
+[07:36] So it's a quite
+surprising recommendation
+[07:39] that the agents decided to
+design nanobodies rather
+[07:42] than more common antibodies.
+[07:44] But as we'll see, it turns
+out to be actually a very good
+[07:47] reason for this.
+[07:48] So the machine learning
+agent actually spoke up next,
+[07:51] and says, OK, actually I
+agree with the immunologist
+[07:54] to focus on nanobodies
+rather than antibodies,
+[07:57] because these
+nanobodies are smaller.
+[07:59] That actually makes our
+jobs as agents much easier
+[08:02] so we can computationally model
+and predict their structures
+[08:05] more reliably.
+[08:06] So you can see that they
+actually provide some rationales
+[08:09] for designing
+nanobodies because this
+[08:11] plays to the strength of
+these computational agents.
+[08:15] We also have a
+scientific critic agent
+[08:17] that participates in all
+of these discussions.
+[08:19] So you can think of this as like
+a skeptical reviewer whose job
+[08:22] is to try to provide
+these more somewhat more
+[08:25] conservative feedback to the
+ideas of these other agents.
+[08:28] So in this case,
+the critic agent
+[08:30] says that, well, if you're going
+to decide to design nanobodies,
+[08:33] there's not a lot of
+public data for nanobodies.
+[08:35] So then you need to be very
+careful about overfitting
+[08:37] your predictive deep
+learning models.
+[08:40] So at the actual meeting for the
+virtual lab goes on for longer.
+[08:43] Here I'm just showing you the
+first part of the meeting,
+[08:46] but you can already see how
+different agents can rapidly
+[08:49] build ideas off of each
+other and then converge
+[08:51] into a concrete research plan.
+[08:56] Now, one thing that I'm very
+envious of the virtual lab
+[08:59] of these AI scientists is that
+their meetings are much more
+[09:02] efficient than my meetings.
+[09:04] So one of the
+virtual lab meetings
+[09:06] might take a few seconds or
+a minute, so that in the time
+[09:09] that I had one of my meetings,
+so the agents already
+[09:12] had hundreds of
+research discussions.
+[09:14] Because they don't
+get tired, we actually
+[09:16] run multiple
+meetings in parallel.
+[09:18] So basically, for every
+scientific question
+[09:20] that agents wants
+to discuss, they
+[09:22] will discuss it five
+times in parallel.
+[09:24] So in these different
+parallel meetings,
+[09:26] there's some randomness behind
+the underlying language models
+[09:29] so that the different
+agents can actually
+[09:31] come up with different ideas
+in these parallel meetings.
+[09:34] And then we ask
+the PI agent then
+[09:35] to read the transcripts of
+all these parallel meetings
+[09:38] to reach a consensus
+of what to do next.
+[09:40] This is an effective way to
+explore a broader range of ideas
+[09:44] and then still have
+a concrete to use.
+[09:49] In case you're curious, I'm
+here showing this pie chart
+[09:52] basically how often the
+different participants
+[09:54] will speak in the
+virtual lab discussions.
+[09:56] So the human researchers, for
+example, myself, my students,
+[09:59] we don't talk very much.
+[10:01] Maybe we speak about
+1% of the time.
+[10:03] So our job is to mostly provide
+these high-level guidance
+[10:06] to the AI agents.
+[10:07] For example, we
+tell the agents we
+[10:08] want to design binders
+for SARS-CoV-2.
+[10:10] We also tell the agents some
+of the constraints we have,
+[10:12] how much money we have to
+do the wet lab experiments.
+[10:16] Otherwise, we mostly
+leave up to the agents
+[10:20] on how to come up with
+their own research plans
+[10:22] and implement and execute
+their research ideas.
+[10:24] We don't want to micromanage
+the AI scientists too much.
+[10:28] The other agents will
+have different roles.
+[10:30] For example, the
+computational biologist agent
+[10:32] does most of the talking
+here because here
+[10:34] the computational
+biologist agent
+[10:36] has to basically come up
+with the plan for designing
+[10:39] these nanobodies.
+[10:40] The role of the
+machine learning agent
+[10:42] here is to basically
+do all the coding
+[10:44] for all these other agents.
+[10:45] So, for example, another agent
+might tell the machine learning
+[10:47] agent to implement
+this algorithm
+[10:49] and then the machine
+learning agent
+[10:51] will then implement
+the algorithm
+[10:52] in Python or other languages.
+[11:01] Great.
+[11:02] So now that we see how
+the agents can interact,
+[11:05] I want to come back to and
+explain a little bit more
+[11:07] of how the agents
+can self-improve
+[11:09] through this virtual lab school.
+[11:11] As I mentioned,
+each of these agent
+[11:13] is a large language model, like
+a frontier model under the hood.
+[11:16] If we take these models
+like GPT 4 or GPT 5,
+[11:19] they're very good at
+broad general knowledge.
+[11:21] But if you go really deep into a
+specific technical or scientific
+[11:25] domain, then these
+models sometimes
+[11:26] do not have the most
+up-to-date information
+[11:29] or may not know how to
+use the latest tools
+[11:31] in that particular domain.
+[11:33] So filling that gap is why we
+built the school for the agents
+[11:37] to then go to the school and
+then become a better scientist.
+[11:41] So how the school works
+briefly is that we first of all
+[11:44] tell the agents
+some of the topics
+[11:45] that they should learn
+about in the school.
+[11:47] Like one topic could be learn
+to use the latest AlphaFold
+[11:50] or learn about the
+latest developments
+[11:52] in this clinical
+trials, or learn
+[11:55] about the latest developments
+in these COVID variants.
+[11:59] And then for each
+of those topics,
+[12:00] the agent would generate
+their own learning curriculum.
+[12:03] They would do this by coming
+up with a set of questions that
+[12:05] are relevant for that topic.
+[12:07] Then, based on each question,
+we enable the agents
+[12:09] to basically do different
+web searches to find
+[12:12] and to download
+reference materials.
+[12:14] So, for example,
+they can actually
+[12:15] go to PubMed and find different
+scientific papers that
+[12:18] are open access, and
+they can download
+[12:20] those papers that are relevant
+for each of their questions.
+[12:23] After the agents have
+downloaded these articles,
+[12:26] then we allow them to read
+these articles, these reference
+[12:29] materials.
+[12:30] As they're doing the
+reading, then we also
+[12:32] enable the agents to basically
+do supervised fine-tuning
+[12:35] to update their
+model parameters.
+[12:37] So essentially what happens
+is that under the hood of each
+[12:39] of these language models is
+a large transformer neural
+[12:42] network.
+[12:43] So as agent is reading each
+of these reference materials
+[12:46] that they download, so then they
+can do the next token prediction
+[12:50] to update the parameters,
+the weights of these
+[12:53] transformers to
+help it to ingest
+[12:55] that additional information.
+[12:57] After the agents have
+done their readings,
+[13:00] it's not going to be
+a very good school
+[13:02] if there's not going to be some
+sort of testing mechanisms.
+[13:05] So here we also have
+other teacher agents
+[13:08] who are given these
+reference materials,
+[13:10] and then these
+teacher agents then
+[13:11] will generate
+quizzes to test how
+[13:13] well did the students
+actually learn that topic.
+[13:16] Then the student agents would
+have to pass those quizzes.
+[13:18] If they don't do very well, then
+they have to go back to school,
+[13:21] do additional training,
+additional fine-tuning
+[13:23] before they can graduate.
+[13:25] So at the start of the
+school, each of these agents
+[13:28] might be a similar
+language model.
+[13:30] For example, they might all
+be GPT 4 as the base model.
+[13:34] But as they go
+through the school,
+[13:35] as they're doing these
+additional finetunings then
+[13:37] the model starts to diverge.
+[13:39] Like the computational
+biologist agents
+[13:41] will be reading one set
+of reference materials,
+[13:43] and then it starts to
+become going to one
+[13:45] direction in the weight space.
+[13:47] And let's say, the
+immunologist agent
+[13:49] would be reading other
+reference materials would
+[13:51] be optimized differently.
+[13:52] So then they start to diverge,
+becomes more specialized agents.
+[13:57] And we've done experiments
+to show that actually having
+[14:00] these more specialized agents
+that collaborate ends up
+[14:02] being very beneficial compared
+to if you try to finetune
+[14:06] or teach a single agent all of
+these different areas by itself.
+[14:11] I'll come back to
+this in a little bit.
+[14:14] So now that we see how
+the agents can interact
+[14:16] and also how they can
+self-improve through this agent
+[14:19] school, I'll also just mention
+that agent school is also
+[14:23] relatively efficient.
+[14:24] So usually within a
+day or so, the agents
+[14:25] have gone through the school
+and then taught themselves
+[14:28] how to become a
+better researcher.
+[14:30] And we designed this
+school to be quite scalable
+[14:32] because here it's
+actually mostly autonomous
+[14:34] or the only part where
+the human input is needed
+[14:36] is to specify what are the
+critical topics that agents
+[14:40] should learn about.
+[14:41] Otherwise, it's all sort of
+self-improvement mechanisms.
+[14:44] And we designed this to
+be mostly autonomous,
+[14:46] then that enables
+the agents then
+[14:47] to be able to learn about
+new topics beyond what I
+[14:50] could teach the agents.
+[14:51] For example, I don't know
+that very much about how
+[14:54] to design nanobodies, but agents
+are not limited by what I know.
+[14:57] They can actually
+teach themselves
+[14:58] how to become a better
+expert in nanobody designs.
+[15:04] So now I want to come back
+to this running example
+[15:09] just to illustrate the
+kinds of scientific research
+[15:11] that agents can do.
+[15:13] So recall that the first project
+we give to these virtual labs
+[15:16] to help us to design binders
+to the recent COVID variants.
+[15:20] And agents decided to
+design these binders
+[15:22] in the form of nanobodies,
+which are small proteins.
+[15:25] Now, to help them to
+design these nanobodies,
+[15:28] agents decided to create a
+new computational pipeline
+[15:31] to basically simulate
+and then to optimize
+[15:33] these nanobodies in silico.
+[15:36] So here's the pipelines
+created by the agents.
+[15:38] I think it's actually
+quite interesting.
+[15:40] So first the agents
+will actually
+[15:41] use ESM which is a
+protein language model.
+[15:44] So what ESM does is that it
+would take some amino acid
+[15:47] sequence as input
+and just computes
+[15:49] a score to say how likely is
+this to form a stable protein.
+[15:52] So the agents will then
+take those stable candidates
+[15:56] and pass that into AlphaFold
+together with the spike protein
+[15:59] of the target COVID variant.
+[16:02] So AlphaFold generates this
+three-dimensional structure
+[16:05] of how this nanobody
+could bind to the target.
+[16:08] The agent then we'll look at
+that three-dimensional structure
+[16:11] to extract some
+geometric information.
+[16:13] And then the agents will pass
+that three-dimensional structure
+[16:16] from AlphaFold into Rosetta,
+which is like a physics model
+[16:20] simulator to do physics style
+molecular dynamics to relax
+[16:24] that structure and then
+estimate the binding affinity.
+[16:27] The agent then would also
+extract that information
+[16:29] from Rosetta.
+[16:31] So what I think is
+quite interesting
+[16:32] is that each of
+these different tools
+[16:34] have been used in
+previous publications,
+[16:37] but the computational
+pipelines created by the agent
+[16:39] is actually different from
+what people have done before.
+[16:42] So the first is that
+the agents actually
+[16:43] have modified these tools.
+[16:45] For example, they actually
+modified the scoring function
+[16:47] for ESM, which made it more
+suitable for this particular
+[16:49] project, so it's
+different from what people
+[16:51] how people have used ESM before.
+[16:53] And also the way that
+it's combined together
+[16:55] into this combination
+of tools is also
+[16:59] we haven't seen that in
+any previous publications.
+[17:01] So there are some combinatorial
+creativity exhibited here
+[17:04] by the AI scientists agents.
+[17:07] And this computational pipeline
+is actually really useful
+[17:10] because the initial design
+space for nanobodies
+[17:12] is just exponentially large.
+[17:14] So there could be
+billions and billions
+[17:16] of potential nanobodies.
+[17:18] And by running this
+computational tool,
+[17:20] the agents are able to rapidly
+reduce that design space
+[17:24] right into a small
+set of 92 candidates.
+[17:28] The agent told us, OK, so here
+are these 92 nanobody candidates
+[17:31] that are the most
+promising binders,
+[17:33] and you just have to
+test these 92 candidates.
+[17:37] And here, the agents do not do
+their own lab experiments yet.
+[17:40] So this is where also
+human-AI collaboration
+[17:42] is really critical.
+[17:43] So they give us
+these candidates,
+[17:46] and then we would start our
+experimental collaborators,
+[17:48] then we can actually make
+these in the real world
+[17:50] and test them in our wet lab.
+[17:53] So we actually made each of
+these 92 antibodies designed
+[17:56] by the AI agents.
+[17:58] So here I'm showing you two
+of these nanobody designs.
+[18:01] So these are small proteins.
+[18:03] And we synthesized them and
+we test them in the wet lab
+[18:08] to see how well do they bind to
+the different COVID variants.
+[18:13] So I'll just explain what
+these curves mean one by one.
+[18:16] So this bottom red curve
+was the open circles.
+[18:19] This is where if we take
+previous human-designed
+[18:22] nanobodies and test that against
+this recent COVID variant called
+[18:27] JN.1 variant, which started
+to spread last year,
+[18:29] you can see that this
+human-designed antibody does not
+[18:32] bind to this JN.1 variant.
+[18:34] The second red curve
+was a solid circle.
+[18:37] This is the virtual lab
+design, the new nanobody.
+[18:40] So if you haven't
+seen this before,
+[18:41] and this new nanobody
+actually binds much better
+[18:44] to this new COVID variant.
+[18:47] The two blue curves
+are basically
+[18:49] if we test these nanobodies
+against a very different strain
+[18:51] of COVID.
+[18:52] So this top blue
+one is the nanobody
+[18:54] designed by the virtual lab.
+[18:56] It also shows stronger binding
+to this different COVID
+[18:59] variant compared to the
+human-designed antibodies.
+[19:03] What's not shown here is that we
+also did additional experiments
+[19:06] where we tested these
+proteins against other viruses
+[19:09] and also against
+humans own proteins.
+[19:13] And these nanobodies do not
+bind to these other proteins.
+[19:16] And that's actually very
+useful and very important
+[19:18] because that means that these
+nanobodies candidates are
+[19:21] less likely to have these
+side effects, cytotoxicity
+[19:25] and other side effects.
+[19:28] I think there's
+definitely a need
+[19:29] for additional experiments,
+room for additional experiments.
+[19:33] And what's quite nice here
+is that just from this--
+[19:39] with the help of the virtual
+lab, so within a few days,
+[19:42] the agents are able to design
+this computational pipeline
+[19:45] implemented and then design
+these proteins for us, that we
+[19:48] can then experimentally
+validate,
+[19:50] that really significantly reduce
+the time for tackling this very
+[19:55] challenging research problem.
+[20:04] Great.
+[20:05] So just to summarize
+this part here, right.
+[20:11] The first part.
+[20:12] So here we released as a
+part of our recent paper,
+[20:17] this open source pipeline
+for the virtual lab
+[20:20] so people can
+actually use this now
+[20:21] to tackle quite different
+kinds of scientific problems.
+[20:25] So now there are
+also other colleagues
+[20:26] who are using this
+virtual lab to look
+[20:28] for Alzheimer biomarkers,
+new materials physics.
+[20:32] There's a lot of applications.
+[20:34] So it's actually
+quite versatile.
+[20:36] It's not limited to
+designing proteins
+[20:37] because for different projects,
+the PI agent can actually
+[20:40] automatically create
+different subagents
+[20:42] with the relevant expertise.
+[20:45] In our paper, we show a lot
+more details and experiments
+[20:47] to show that when we have
+teams with multiple agents
+[20:50] with different expertise
+that collaborate,
+[20:52] that often leads to much
+better results and more
+[20:54] creative science than
+having a single agent
+[20:57] or to solve the
+problem by itself.
+[20:59] Basically, what often
+happens is that when
+[21:01] you have these teams
+of multiple agents,
+[21:04] they get into debates
+and disagreements,
+[21:06] and they have to
+resolve those debates.
+[21:08] And through those
+iterative discussions,
+[21:10] the agents actually
+often achieve
+[21:13] more creative and
+more robust reasoning
+[21:15] than if we have a
+single agent try
+[21:17] to tackle the problem
+all by itself from start.
+[21:21] We also found it quite
+useful to provide
+[21:22] these agents, these
+scientist agents,
+[21:24] with additional resources.
+[21:26] For example, each of the
+agent has a memory mechanism
+[21:29] like a digital notebook so
+they can remember their notes
+[21:32] from previous group meetings
+and one-on-one meetings.
+[21:35] They remember the transcripts
+from previous discussions.
+[21:39] The older agents also
+have a virtual sandbox
+[21:41] where they can actually
+locally modify and then develop
+[21:44] different tools.
+[21:45] For example, they can locally
+access tools like AlphaFold
+[21:48] and modify other tools.
+[21:49] That makes the agents both
+safer but also more effective.
+[21:53] Finally, I think something
+that's really interesting
+[21:55] is that the agents also have
+their own social dynamics.
+[21:59] So by that I mean like
+when humans collaborate,
+[22:01] so some people might
+talk more than others,
+[22:03] they have louder voices.
+[22:05] All of that changes
+the trajectory
+[22:07] of the research collaboration.
+[22:09] So similarly, when the
+agents collaborate,
+[22:12] they also have their
+own social dynamics.
+[22:14] So it depends on which agent
+speaks first or depends
+[22:17] on which agent speaks more.
+[22:18] That also changes which
+ideas gets implemented
+[22:22] and which ideas are
+the final outcomes.
+[22:25] But something that we
+can do with the AI agents
+[22:27] in the virtual lab, that we
+cannot do with the human teams,
+[22:30] is that we can do all sorts of
+interesting ablations because we
+[22:33] can run all these meetings,
+discussions in parallel.
+[22:36] In each of these
+parallel meetings,
+[22:37] we can actually specify
+maybe in this meeting
+[22:41] agent 1 speaks first.
+[22:43] In this other meeting,
+agent 2 speaks first.
+[22:45] And we can actually also
+assign different personalities
+[22:48] to different agents in
+different parallel meetings
+[22:51] and then see what
+configuration of agents
+[22:53] actually leads to the most
+creative and most effective
+[22:55] research.
+[22:57] So I view this as almost as a
+fascinating Petri dish where
+[23:00] we can do experiments,
+like signs
+[23:02] of science experiments on top of
+these different teams of agents,
+[23:05] to see what
+combination of agents
+[23:07] is the most effective
+at doing science.
+[23:08] And then we can
+take those insights
+[23:10] that we learned from
+these agent experiments,
+[23:13] maybe help us to inform how to
+better design our human research
+[23:16] teams.
+[23:18] AUDIENCE: Well, the same idea.
+[23:19] And then that idea gets
+represented more and selected
+[23:23] by the final agent.
+[23:25] Wouldn't it bias
+the result and how
+[23:27] to avoid it using more models?
+[23:31] JAMES ZOU: Yeah.
+[23:31] So thanks for that question.
+[23:33] Yeah, so since we run these
+different parallel meetings,
+[23:37] it does happen that multiple
+of the parallel meetings
+[23:39] actually converge onto
+the same research idea.
+[23:42] We actually view that as maybe
+a feature rather than a bug
+[23:45] because that consensus, that
+research idea is often show up
+[23:49] across multiple
+meetings, often tends
+[23:51] to be maybe more reliable and
+less prone to hallucinations.
+[24:05] Great.
+[24:06] Other questions?
+[24:09] AUDIENCE: And the
+other one is how
+[24:10] do you control for
+compounding topic drift
+[24:13] and/or content window
+utilization among agents
+[24:16] in multi-agent ecosystem?
+[24:19] JAMES ZOU: Yeah.
+[24:20] Thanks for that.
+[24:21] So here because
+these virtual lab
+[24:24] agents have to tackle this quite
+open-ended long horizon research
+[24:28] task.
+[24:29] And because it's open-ended so
+they don't know how much time
+[24:33] or how many rounds of
+discussions they need.
+[24:36] So here we found a few
+mechanisms to be quite useful.
+[24:41] So first is that we do have an
+external memory mechanism so
+[24:45] that agents can actually
+be able to store all
+[24:48] of their previous discussions.
+[24:50] And we also have
+the PI agent to help
+[24:52] to basically organize these
+memories for other agents.
+[24:55] So for example, PI
+agent would periodically
+[24:57] say that OK, so
+here's everything
+[24:59] that we've done so far.
+[25:00] And here's the status
+of the project.
+[25:01] Here's the next to-dos.
+[25:03] That provides a regular sink
+for all of these other agents.
+[25:10] In addition, we
+also found it to be
+[25:12] quite useful to have this
+critic agent as a way
+[25:14] to try to reduce these
+compounding errors.
+[25:17] So the job of the
+critic agent is
+[25:18] to participate in all
+of these discussions
+[25:20] in both the team discussions,
+also one-on-one meetings.
+[25:23] And then the critic
+agent often helps
+[25:26] to reduce these errors
+from accumulating.
+[25:30] But this is also where it's
+important to mention that this
+[25:33] is the virtual office is also
+designed to be like a human AI
+[25:37] collaboration.
+[25:37] So it's not just agents
+any time that we want.
+[25:41] So often what we do
+is that we actually
+[25:43] have the PI agents summarize
+their meetings and then
+[25:46] we can look over those
+meeting summaries.
+[25:48] And sometimes if
+we think it's OK,
+[25:50] then we don't need to
+provide a feedback.
+[25:52] But if we think the
+agents are maybe
+[25:55] going in a different
+direction, then we
+[25:56] can tell them, OK, have you
+thought about this topic
+[25:58] or have you considered
+this other option?
+[26:00] So we can then provide you
+feedback to the agents.
+[26:02] So by having this human
+in the loop process that
+[26:05] also helps to reduce these
+compounding errors or topic
+[26:09] drift.
+[26:11] So in the second part the
+second example I want to give
+[26:14] is this quite recent work
+that we call Paper2Agent.
+[26:19] It's our effort in
+some ways to reimagine
+[26:23] what knowledge looks like.
+[26:25] So for the past
+several 100 years,
+[26:28] the way that people
+represent knowledge
+[26:31] is really in the form of papers.
+[26:34] So you have scientists
+that would maybe
+[26:36] spend years doing
+difficult experiments
+[26:39] and then they
+would write a paper
+[26:41] to try to capture all of the
+insights and knowledge that's
+[26:44] learned through their research.
+[26:47] But if you think
+about it, each paper
+[26:50] is actually a very passive
+artifact of knowledge.
+[26:54] It often it's quite difficult
+for the readers of that paper
+[26:58] just by reading that
+PDF to figure out,
+[27:00] what are really the real
+insights and knowledge
+[27:03] from that many years of work?
+[27:06] Moreover, a lot of the papers
+now actually releases some code
+[27:09] or use some data.
+[27:11] It's often quite
+challenging for the users
+[27:13] to figure out how
+to adapt, or how
+[27:15] to use that code for their
+own research problems,
+[27:18] especially if those readers
+are less technically inclined.
+[27:23] So we thought, OK,
+so rather than having
+[27:27] these passive
+artifacts of papers,
+[27:31] what if we turn each paper
+into an interactive agent?
+[27:34] So that agent then becomes like
+the virtual corresponding author
+[27:40] that knows all the
+details of the paper
+[27:42] and also knows how to use
+the code and data associated
+[27:44] with that paper.
+[27:45] And then that paper
+agent, then it
+[27:47] will be responsible for helping
+any readers and any users
+[27:51] to apply the methods
+on the paper right
+[27:54] to their own problems,
+to new projects.
+[27:57] So in this case,
+rather than having
+[27:59] to read this big PDF myself
+and try to figure out
+[28:01] what's going on and then
+download the code and tweak it,
+[28:04] which would be a lot of
+work, I can just directly
+[28:06] talk to this paper agent.
+[28:07] I can ask the paper
+agent, can you
+[28:10] help me apply the tools from
+this paper to my new problem?
+[28:14] Then the paper agent
+then would automatically
+[28:17] apply tools to generate
+a reproducible workflow,
+[28:20] and then provides a final
+summary of the end results.
+[28:24] So in this case, I can directly
+interact with the paper agent
+[28:28] without having to
+download and set
+[28:31] up like the repo from
+the paper myself.
+[28:37] So the way that we
+do this is that we
+[28:39] convert each paper,
+a paper into an agent
+[28:44] through this automated
+workflow that we created
+[28:46] that we call Paper2Agent.
+[28:49] So briefly here's how
+the workflow looks like.
+[28:51] So we start with the paper
+and any code base associated
+[28:54] with that paper, and then we
+have a bunch of different worker
+[28:57] agents.
+[28:58] So we have one worker
+agent whose job
+[28:59] is to actually set up
+a virtual environment
+[29:02] to basically simulate
+the environment
+[29:04] from that original
+paper code base
+[29:06] and then also extract out
+any of the tools that are
+[29:09] important in that code base.
+[29:12] And then the third
+agent worker is
+[29:14] to basically test that
+virtual environment
+[29:15] to make sure that it's able
+to reproduce the results
+[29:19] from the original paper.
+[29:21] So all of that ends up being
+converted into a model context
+[29:24] protocol for the paper or MCP.
+[29:27] So at least MCPs have recently
+emerged as the industry standard
+[29:30] for communicating resources
+to large language models.
+[29:35] So here, essentially we convert
+each paper into a paper MCP.
+[29:39] The paper MCP then encapsulates
+all the tools, the insights,
+[29:43] and then the workflows
+associated with that paper.
+[29:46] And then we can automatically
+serve this paper MCP
+[29:49] on a remote server.
+[29:50] And then by connecting this
+MCP with a downstream chatbot.
+[29:55] This enables chatbot to become
+a knowledgeable paper agent that
+[29:59] knows about how to use the
+tools and methods and data
+[30:02] from the original paper.
+[30:07] So I want to give
+some concrete examples
+[30:10] of what this looks like.
+[30:12] All right, so here's one
+example where we can take--
+[30:15] so Scanpy is a very
+commonly used tool
+[30:18] for computational
+biology analysis.
+[30:22] So with Paper2Agent,
+then we automatically
+[30:24] convert Scanpy into
+a Scanpy agent.
+[30:26] So now the user, maybe a
+biologist can just say,
+[30:30] OK can you help me analyze
+by single cell data set?
+[30:35] Or I can give that
+request to Scanpy agent,
+[30:37] and Scanpy agent then
+will be able to correctly
+[30:39] then use all the
+tools from Scanpy
+[30:41] and then generate
+a nice analysis
+[30:44] and be able to do this
+work for their users.
+[30:48] So the way that we validate the
+Scanpy agent is that we give it
+[30:51] some complex data
+sets and tasks,
+[30:54] and then we have the agent
+generate these analysis
+[30:56] to generate all these different
+figures automatically.
+[30:59] And in parallel
+with human experts
+[31:01] also analyzing
+the same data set,
+[31:03] would also generate
+these figures.
+[31:05] And then we can compare
+all these results,
+[31:07] all these intermediate
+figures and final conclusions.
+[31:10] In this case, the results
+from the Scanpy agent
+[31:14] matches exactly the results from
+the human expert when they're
+[31:17] analyzing the same data set.
+[31:22] Another good use case
+of this Paper2Agent
+[31:25] is to help us to make new
+advances in AI more accessible.
+[31:31] So an example of this is that--
+[31:33] so Google DeepMind recently
+released this very powerful
+[31:36] model called AlphaGenome.
+[31:37] So it's basically a
+deep learning model
+[31:39] that can help to interpret the
+effects of different mutations
+[31:43] in the genome.
+[31:44] So with Paper2Agent
+then we'll automatically
+[31:46] convert AlphaGenome,
+integrate AlphaGenome agents.
+[31:50] So now the users can just
+ask this AlphaGenome agent
+[31:54] any questions about the paper.
+[31:56] But it can also ask the agent
+to apply the AlphaGenome
+[32:00] method to tackle new problems.
+[32:02] So here the user is
+asking the AlphaGenome
+[32:05] to help to basically look
+for some causal genes that
+[32:08] are associated with
+LDL cholesterol.
+[32:11] And the agent then
+will think through,
+[32:13] generate a research
+plan, and then
+[32:15] would actually use the
+AlphaGenome tools to then
+[32:18] generate all these
+intermediate analysis
+[32:20] and finally returns back to the
+scientists some candidate genes.
+[32:23] In this case actually
+identified the short one gene
+[32:26] as potentially a
+likely candidate
+[32:27] to be associated
+with LDL cholesterol.
+[32:33] So we've done
+systematic benchmarking
+[32:36] to evaluate the performance
+of this paper to agent.
+[32:39] So we generated quite complex,
+real world scientific tasks.
+[32:44] And then the Paper2Agent is
+able to solve all of these tasks
+[32:48] correctly.
+[32:50] So a natural baseline
+would be let's
+[32:51] say if you give Claude Code,
+if you give the paper to Claude
+[32:55] Code and also give
+Claude Code access
+[32:57] to the paper's
+repository to GitHub page
+[33:00] and ask Claude Code to
+directly run the repo
+[33:03] to tackle the same
+tasks, then the assay end
+[33:06] up making a lot more mistakes.
+[33:08] And the other
+wrapper methods also
+[33:09] ends up being much more fragile.
+[33:14] So on the right here,
+we show the runtime.
+[33:17] Here, Paper2Agent only
+requires less than one third
+[33:20] of the runtime of using
+Claude Code directly,
+[33:23] which also benefits--
+[33:24] it highlights the benefit of
+our approach of first generating
+[33:29] this robust paper MCP, and
+then using from this paper MCP,
+[33:34] then doing the
+additional analysis.
+[33:44] So something that I
+find really exciting
+[33:47] is that this
+Paper2Agent can enable
+[33:50] a new form of collaboration like
+agent to agent collaboration.
+[33:55] So imagine now, you
+have these thousands
+[33:57] of papers that get published.
+[33:59] So each paper now becomes
+turned into its own paper agent.
+[34:02] So let's say if somebody here at
+Berkeley develops a new method,
+[34:06] so that's then
+automatically turned
+[34:07] into a new method agent,
+somebody at Stanford
+[34:10] and maybe, let's say,
+publishes a new data set.
+[34:13] And then that paper also
+becomes like a new data agent.
+[34:16] With our approach, so those two
+agents can directly collaborate.
+[34:20] And then I say, OK.
+[34:22] It's your method
+applicable to my data.
+[34:24] If it is, then they
+can collaborate
+[34:25] and start to
+generate new insights
+[34:27] without human intervention.
+[34:29] In the past, so this would
+have required the human authors
+[34:33] to write emails back
+and forth to each other,
+[34:35] maybe set up a meeting.
+[34:37] And oftentimes,
+they don't really
+[34:38] have bandwidth to collaborate.
+[34:39] So then nothing really happens.
+[34:42] But here, the agents
+can just directly
+[34:44] collaborate without
+being bottlenecked
+[34:46] by the human
+communication limitations.
+[34:50] So here's an
+example of this kind
+[34:51] of agent to agent collaboration
+producing new research
+[34:54] insights and new science.
+[34:57] So here, this alpha genome
+agent that we created before,
+[35:02] recall that it learns.
+[35:04] It's an expert at using
+this alpha genome tool.
+[35:07] And then recently, a
+different research group
+[35:09] from a different
+university, they
+[35:10] published a biology paper like
+a large GWAS study for ADHD.
+[35:15] So it's basically a
+large study looking
+[35:18] at genetics of many humans,
+individual in large human
+[35:21] population, to see which
+mutation seems to be correlated
+[35:24] with ADHD risk.
+[35:27] So those two agents
+then got together
+[35:28] and decided that,
+OK, it's actually
+[35:30] could be interesting to apply
+the alpha genome method to help
+[35:34] to interpret these
+ADHD GWAS mutations.
+[35:38] So then the agent
+directly collaborated.
+[35:40] And then they actually
+identified a new splicing error
+[35:44] in the genome that's
+actually associated
+[35:46] with increases in ADHD risk.
+[35:50] And this is actually
+not something that's
+[35:53] shown in previous publications.
+[35:55] So this is an
+interesting example
+[35:56] of how these different paper
+agents then can directly
+[35:59] collaborate without
+being bottlenecked
+[36:02] by human interventions.
+[36:03] And then they can also
+generate a lot of new insights.
+[36:09] OK.
+[36:09] So just to summarize the second
+part here, so with Paper2Agent,
+[36:15] we see how we can
+actually convert
+[36:17] passive artifacts
+of papers right
+[36:19] into interactive dynamic agents.
+[36:22] And these dynamic
+agents then can really
+[36:23] help the readers to be able to
+use and to adapt the methods
+[36:26] and data from the
+paper to new problems.
+[36:30] And we think of this as
+sort of like a new paradigm
+[36:32] to disseminate knowledge rather
+than just sending PDFs around.
+[36:35] Right now, you actually
+share your agent.
+[36:37] Each of your researchers
+have an agent attached to it,
+[36:39] and the agent can then
+be in charge of helping
+[36:41] to disseminate your research.
+[36:44] And this also can enable
+new ways of collaboration.
+[36:47] So of this agent to
+agent collaborations.
+[36:50] And we see how, in this case
+with alpha genome like how
+[36:53] a new method agent can
+collaborate directly
+[36:55] with the new data
+agent to discover
+[36:57] new scientific insights.
+[37:02] SPEAKER: And how do you
+configure the agents to trigger
+[37:05] the autonomous conversations?
+[37:09] JAMES ZOU: Yeah.
+[37:09] So I think this is
+a good question.
+[37:12] And it's referring to how the
+agent collaboration looks like.
+[37:15] Yeah.
+[37:16] So essentially,
+what we do is that--
+[37:19] so each of these papers
+is converted into--
+[37:21] using our automated
+workflows, it's
+[37:22] converted into
+its own paper MCP.
+[37:25] So let's say if you have a set
+of papers and their own paper
+[37:28] MCPs, then we can just connect
+those MCP into a chatbot.
+[37:32] And then the chatbot then
+starts to actually look
+[37:34] at these different
+MCP and start to see,
+[37:36] OK, is there
+something-- is there
+[37:37] an interesting
+collaboration here.
+[37:39] If it is, then it
+actually starts
+[37:40] to leverage the resources
+from these different papers
+[37:43] to start to generate
+new insights.
+[37:47] SPEAKER: An additional
+question, also about context
+[37:51] or conceptual
+drift, like someone
+[37:53] asked the online
+LLM like Claude Code
+[37:56] still operates on
+pretrained knowledge
+[37:59] beyond the scope of any paper
+that the agency represents.
+[38:03] So how does paper to agent
+prevent conceptual drift?
+[38:08] JAMES ZOU: Yeah.
+[38:10] So here, this is
+where it's important
+[38:11] that the paper itself
+would have some, let's
+[38:17] say, if somebody publishes like
+a new paper on arXiv today.
+[38:21] And that paper actually has a
+nicely documented code base,
+[38:24] then we can basically use
+this Paper2Agent workflow
+[38:28] to convert that code
+base into a new MCP that
+[38:32] captures all of these new
+insights from the paper.
+[38:34] So then this enables, like
+Cloud Code or other agents
+[38:37] to be able to use the tools
+from that paper effectively.
+[38:43] Now, part of that
+conceptual drift
+[38:45] is that if the paper, not all
+the papers can actually be
+[38:49] converted into a reliable MCP.
+[38:52] So not all the papers
+can be identified.
+[38:54] So for example, if a paper has
+very poorly documented code base
+[38:59] or has a lot of mistakes, then
+that paper actually cannot be
+[39:02] turned into a reliable agent.
+[39:05] And we view this actually as
+its own, like a useful check.
+[39:10] So by running this
+paper to agent workflow,
+[39:13] if it returns errors.
+[39:14] It says, oh, this original
+paper cannot be identified,
+[39:17] or there are some gaps in
+the original documentations,
+[39:21] then that's actually a
+very useful, I think,
+[39:23] signal to the authors and also
+to the community that maybe
+[39:26] there's some gaps in that paper
+that requires additional work
+[39:28] before the paper
+can be reproducible.
+[39:31] SPEAKER: Limitations
+on which papers
+[39:33] can be identified,
+like papers that
+[39:36] require foundational model like
+alpha first can be transformed.
+[39:41] I'm actually not very sure
+about the second part,
+[39:43] but I think the first
+part is pretty clear.
+[39:45] Yeah.
+[39:46] JAMES ZOU: Yeah.
+[39:46] Yeah.
+[39:47] So first part,
+yes, So that's also
+[39:51] related to what I was mentioning
+is that not all the papers can
+[39:57] be identified.
+[39:58] In particular, if
+a paper is often--
+[40:02] issues the paper is that
+it's just not well written
+[40:05] or does not have
+enough information,
+[40:07] so then these Paper2Agent is
+not able to create a robust MCP
+[40:12] environment, or
+the testing agent
+[40:15] is not able to
+verify that we can
+[40:17] replicate some of the
+initial studies in the paper.
+[40:20] So in those cases, the
+Paper2Agent workflow
+[40:23] would actually return some
+feedback to the authors,
+[40:26] maybe like, oh, here's how you
+could try to improve the work
+[40:29] to make it more identifiable.
+[40:33] But in principle, if the
+work is well-documented
+[40:36] and it's also reproducible,
+and then we can identify that.
+[40:45] SPEAKER: OK.
+[40:46] Yeah.
+[40:47] And another person asked how
+much token overhead the MCP
+[40:52] is generally have.
+[40:55] JAMES ZOU: So it's
+actually relatively low.
+[40:58] So here, I'm showing runtime.
+[41:00] But we also have a comparable
+figure for basically
+[41:05] for tokens, which is
+essentially roughly
+[41:08] proportional to these runtimes.
+[41:11] So basically, if you
+do this Paper2Agent
+[41:17] it's usually like less
+than $1 to convert a paper
+[41:24] into this paper MCP paper agent.
+[41:27] And then every time
+we use it after that,
+[41:30] it's actually quite
+cheap quite fast.
+[41:32] So it's actually usually
+about less than one third
+[41:35] of the cost of, let's say, just
+giving that paper and report
+[41:38] directly to Claude Code.
+[41:46] SPEAKER: Yes, that's good.
+[41:47] Thanks.
+[41:49] People are also curious
+about other failure modes
+[41:52] for the identification of papers
+beside the documentation issues.
+[41:57] Are there any failure modes?
+[42:01] JAMES ZOU: Yeah.
+[42:01] So one-- I think there are
+some other failure modes
+[42:05] that we are also exploring.
+[42:06] One is that if the paper
+actually, let's say,
+[42:11] generates and releases
+a very large data set,
+[42:14] maybe it does like a big
+scientific experiment
+[42:18] and then generates a big data
+set as a part of that paper,
+[42:22] then I think one thing
+we're trying to do now
+[42:24] is to figure out what's the best
+way to essentially represent
+[42:29] that data set to the agents.
+[42:31] Because if you try to just
+directly use the entire data,
+[42:34] load that into the
+agent, that can often
+[42:35] become too expensive
+or too slow.
+[42:37] So then we want to figure out
+what's the most efficient way
+[42:40] to engineer these large data
+sets that the agent maybe
+[42:42] can just extract out
+the relevant information
+[42:45] or have some sample data to
+explore first before loading
+[42:50] the entire data set.
+[42:52] So I think there are a
+lot of still a lot of room
+[42:54] for in terms of
+efficiencies that we can
+[42:59] improve with the Paper2Agent.
+[43:05] SPEAKER: Yeah.
+[43:05] And how many tokens
+within the context window
+[43:09] does the MCP require,
+usually for such tasks?
+[43:15] JAMES ZOU: Yeah.
+[43:15] So we usually try to make
+the MCP quite efficient.
+[43:20] So there are a lot of
+additional information
+[43:23] that for example,
+these large data
+[43:25] sets, that we do not actually--
+[43:28] we can provide links to
+them, but we don't actually
+[43:30] try to load them directly
+into the agent itself.
+[43:33] So yeah, usually, it does
+not take too many tokens.
+[43:44] OK.
+[43:45] Great.
+[43:45] So maybe then I'll continue and
+then discuss the third part.
+[43:50] And then we can also
+then have time for--
+[43:54] more time for broader questions
+and discussions after that.
+[43:58] So I showed you this
+virtual lab and Paper2Agent.
+[44:02] So for the third part I want
+to put these different pieces
+[44:05] together.
+[44:06] And I'll tell you about this
+kind of experimental conference
+[44:11] that we recently organized
+that we call Agents4Science.
+[44:15] It's the first conference,
+where both the authors and also
+[44:18] the reviewers are AI agents.
+[44:22] So the motivation for
+this is that as we saw,
+[44:26] there's starting to
+be a lot of interest
+[44:29] of starting to use these
+AI scientists to help
+[44:32] to automate and to accelerate
+different scientific
+[44:35] discoveries.
+[44:36] And there are also
+a lot of questions
+[44:38] in the entire community.
+[44:39] So for example, one question
+that we're all curious about
+[44:42] is how truly creative are these
+different AI scientists agents?
+[44:46] And also, what's the best
+way for human researchers
+[44:48] to collaborate with these
+AI scientists agents?
+[44:52] People are now starting to
+use language models to agents
+[44:54] to review papers.
+[44:56] There are also questions
+around how good
+[44:57] are LLMs and agents at
+reviewing research papers,
+[45:01] and many others.
+[45:03] And I think it's
+really important
+[45:04] for the entire
+research community
+[45:06] to start to answer
+these questions.
+[45:08] However, we currently cannot
+do that because the existing
+[45:12] conferences and journals do not
+allow AI-written papers and also
+[45:17] do not allow AI's co-authors.
+[45:19] So that basically
+makes it-- incentivizes
+[45:22] human researchers to either hide
+or to minimize the usage of AI.
+[45:27] And that makes it
+hard to really collect
+[45:28] data to answer these questions.
+[45:31] So we thought to address
+that and to answer
+[45:33] these important questions, we
+organize this new conference,
+[45:38] Agents4Science.
+[45:39] So for our conference, we
+flip this around and say, OK.
+[45:43] So you have to be an AI agent.
+[45:44] To submit to this conference,
+humans can be co-authors,
+[45:47] but AI needs to be the first
+author and do most of the work.
+[45:51] And all the submissions also
+be reviewed by other AI agents.
+[45:55] So importantly, all the
+submissions and all the reviews
+[45:57] are publicly available so that
+this becomes a really important,
+[46:02] valuable resource for the
+entire scientific community
+[46:05] to start to answer
+these questions.
+[46:07] And we also require, for
+each paper, each submission,
+[46:12] a detailed documentation
+of how the human AI
+[46:14] collaboration looked like.
+[46:16] And finally, for the
+top scoring papers,
+[46:19] we also have human experts to do
+independent assessments of each
+[46:22] of these papers.
+[46:23] So then we can compare
+the human assessment
+[46:25] with the LLM feedback.
+[46:29] So the conference was conducted
+over the last few months.
+[46:33] So we actually just finished
+the conference on October 22.
+[46:36] You can go to Agents4Science.
+[46:39] Just Google Agents4Science.
+[46:40] You can find the
+conference link.
+[46:41] We also have the
+conference recordings
+[46:43] that we also post on YouTube.
+[46:45] So what I want to
+do today is just
+[46:46] to share some of the very
+initial findings and summaries
+[46:50] from things that we learned
+from organizing this first
+[46:54] of its kind conference.
+[46:58] So first, as the
+Agents4Science actually
+[47:00] receives over 300 submissions
+from many different countries.
+[47:05] And from these 300 submissions,
+we accepted 48 papers.
+[47:09] And these submissions actually
+covered quite broad domains,
+[47:12] including engineering, physics,
+medicine, health, and also
+[47:16] social science applications
+like economics and psychology.
+[47:19] So it's quite interesting.
+[47:22] So here's a summary of the
+more common agents and language
+[47:26] models that people used.
+[47:27] So a lot of people use
+Claude and GPT series models
+[47:30] and Gemini.
+[47:32] People also use some of these
+more specialized proprietary
+[47:35] agents.
+[47:36] And finally, we also had some
+of these open source models that
+[47:40] are used, but less frequently.
+[47:50] For every submission, we
+require that the submission
+[47:55] needs to have AI
+involvement checklist.
+[48:00] So basically, for each
+step of the research,
+[48:02] from hypothesis generation
+to experiments and writing,
+[48:06] we ask the authors
+to describe how
+[48:08] did they collaborate
+with AI, and also
+[48:10] to assign a score to say, how
+much did the human contribute
+[48:13] versus how much did I contribute
+for each of these categories.
+[48:19] So here are the summary of this
+human AI collaboration patterns.
+[48:23] So on the left here are
+basically all the submissions.
+[48:26] And on the right here are
+all the accepted papers.
+[48:29] And then I break it down into
+these four different categories
+[48:32] for hypothesis development,
+experimental design, data
+[48:35] analysis, and writing.
+[48:37] There are roughly different
+research stages from start
+[48:40] to finish.
+[48:42] So the red colors means that
+this work is almost entirely
+[48:45] done by AI.
+[48:46] That green means it's
+mostly done by humans.
+[48:49] Orange means that
+it's mostly AI,
+[48:51] but there's human involvement.
+[48:53] And then this blue means it's
+mostly human with some AI
+[48:56] involvement.
+[48:58] So you can see some several
+quite interesting trends.
+[49:01] So first, we compare
+these older submissions
+[49:03] versus accepted papers.
+[49:05] So you can see that
+overall, there's
+[49:09] more human involvement
+in these accepted
+[49:11] papers than in the
+general submission pool.
+[49:15] So you can see, for
+example, these red bars are
+[49:17] smaller among the
+selected papers compared
+[49:19] to general submissions.
+[49:22] So this shows that some
+amount of human feedback
+[49:25] and involvement is still
+quite important to ensuring
+[49:29] the research paper has
+sufficiently good quality.
+[49:35] And if we look at within,
+compared across these four
+[49:37] different bars, we can see that
+in earlier stages of research,
+[49:41] like hypothesis generation
+and experimental design,
+[49:43] this is where we
+actually see relatively
+[49:45] more human involvement.
+[49:47] But still, was quite
+a lot of AI input.
+[49:51] And then towards
+the later stages,
+[49:52] like data analysis
+and paper writing,
+[49:54] people actually tend to more
+often to give full autonomy
+[49:57] to the AI agents.
+[49:59] As you can see,
+these different red
+[50:01] bars increasing as you go
+down towards the later stages
+[50:03] of research.
+[50:10] As I mentioned,
+every submissions
+[50:12] are reviewed by three different
+LLM reviewer and agents.
+[50:17] So we actually used
+three different models
+[50:19] as reviewers, or GPT-5, Gemini
+2.5 Pro, and Claude Sonnet 4.
+[50:25] For the reviewers, we also
+basically tuned the viewers
+[50:29] using accepted and rejected
+papers from previous ICLRs
+[50:34] to help these reviewing
+agents to calibrate
+[50:37] their different thresholds.
+[50:38] And then each of
+the reviewing agents
+[50:40] would then independently
+assign a score from 1 to 6
+[50:43] to the submissions,
+1 being negative,
+[50:46] and then large score
+means more positive.
+[50:50] So here, we also see some
+quite interesting differences.
+[50:53] So the different reviewers
+are reviewing the same papers
+[50:55] and given the same instructions.
+[50:57] But there's often quite
+different heterogeneity
+[51:00] in the scores they provide.
+[51:01] So for example
+GPT-5, consistently,
+[51:04] is maybe the most
+conservative reviewer,
+[51:07] assigned the lowest scores.
+[51:11] Gemini is on the other extreme,
+the most positive reviewer.
+[51:15] So you can see that actually
+assigns quite positive scores.
+[51:18] And then for a subset of
+the paper, or many papers
+[51:20] actually assigned,
+very high scores.
+[51:24] Claude is the most, I would
+say, in between, maybe the most
+[51:27] balanced reviewer.
+[51:29] And also, based on assessment,
+comparison to humans,
+[51:33] Claude is also
+the one that tends
+[51:35] to assign scores that are
+closest to the human expert
+[51:38] scores of the same papers.
+[51:43] So here are some interesting
+examples of the LLM reviews.
+[51:46] And again, you can find all of
+these reviews on our website.
+[51:49] Agents4Science.
+[51:51] So I think we see some good
+examples where AI reviewers are
+[51:55] able to catch
+mistakes in the papers
+[51:57] and provide useful feedback.
+[51:59] So for example, in
+here, the AI reviewer
+[52:01] found that OK, there's
+some discrepancies mismatch
+[52:04] between some statistics
+reported in the text
+[52:07] versus in the paper tables.
+[52:10] This might have been actually
+hard for the human reviewers
+[52:13] to catch.
+[52:14] You have to be quite careful
+to catch these discrepancies.
+[52:19] On the other hand, we also
+noticed some limitations
+[52:21] of the AI reviewers.
+[52:22] For example, we found pretty
+consistent patterns, especially
+[52:25] among the Gemini model of--
+[52:27] Gemini reviewer of this
+sycophancy behavior.
+[52:31] For example, the
+Gemini reviewer would
+[52:34] say that, oh, this is a
+truly groundbreaking study,
+[52:37] whereas the human reviewers
+say, OK, this is an.
+[52:39] Interesting study,
+but there's still
+[52:41] some important limitations.
+[52:46] Now, one concern that
+scientists often have
+[52:49] is that when they're
+using different AI agents
+[52:51] is that, can the agents
+actually hallucinate
+[52:53] different references?
+[52:55] So we actually have
+built in different checks
+[52:57] to detect those
+hallucinate references.
+[53:00] Basically, for every
+submission, we would actually
+[53:02] extract the submission.
+[53:04] And then we have an
+automated pipeline,
+[53:06] where we actually take the
+title of that reference
+[53:11] of every reference
+in the submission,
+[53:13] and then do a web
+search to see if we
+[53:15] can find an exact match of
+like a paper or something that
+[53:18] matches that title.
+[53:21] And if we cannot do find--
+[53:24] validate those references,
+then we actually
+[53:27] post like on open review.
+[53:30] We post concern or
+warning, and say that, oh,
+[53:35] here are some of the
+references in the paper
+[53:37] that we could not be verified.
+[53:40] And you need to
+double check these.
+[53:43] So here in this plot
+here, a scatterplot,
+[53:45] basically shows what
+fraction of the papers
+[53:49] were for the submissions we
+can have verified references.
+[53:54] So each dot here
+is one submission.
+[53:57] The x-axis is the total number
+of references in the submission.
+[54:01] And the y-axis is basically
+the number of references
+[54:03] that we could actually verify
+with our automated pipeline.
+[54:07] So you can see about
+44% of the papers
+[54:09] are exactly on the diagonal.
+[54:11] That means that
+all the references
+[54:12] are correct and verified.
+[54:15] And then about 56%
+of the references
+[54:17] has one or more
+hallucinated references
+[54:20] that we could not verify.
+[54:22] Mostly it's not that
+many, one or two.
+[54:25] And then there's a
+couple papers in red here
+[54:27] that actually have the most
+of the references are actually
+[54:29] hallucinated.
+[54:30] So you can see
+that there's still
+[54:32] some concerns about
+these hallucinations
+[54:34] in these AI-driven research.
+[54:41] So finally, I want to
+show a few examples
+[54:45] of the kind of interesting.
+[54:48] AI research that's presented
+here at the conference.
+[54:52] So we organized this
+conference on October 22.
+[54:55] So it's actually an
+online conference.
+[54:57] And all the recordings of that
+conference is also available.
+[54:59] You can find it on YouTube
+and also on our website.
+[55:03] So here's one paper.
+[55:05] It's led by these two different
+AI and is led by AI agent
+[55:08] in collaborating with Upwork.
+[55:11] So here, they basically used
+agents to simulate job markets.
+[55:15] So where both the job
+applicants and the firms
+[55:18] that are trying to hire are
+both simulated by different AI
+[55:21] agents.
+[55:21] And then they did a lot
+of interesting experiments
+[55:24] to show, OK, what happens to
+the outcomes of this job market
+[55:27] if you do different
+kinds of interventions.
+[55:29] For example, if you make
+some kind of information
+[55:31] more or less available,
+how does that actually
+[55:34] affect the efficiency
+of the job market?
+[55:38] So this paper was actually
+additionally reviewed
+[55:41] by a human expert, a real
+expert, who is actually also
+[55:45] a Nobel Laureate in economics.
+[55:47] And here, the human
+expert reviewer
+[55:49] thought that this was actually
+a really interesting paper.
+[55:51] Here's the quote
+from the review.
+[55:53] And in particular, they thought
+that using both these agents
+[55:56] to model the both
+sides of the job market
+[55:58] is a really interesting and
+fascinating combination.
+[56:02] So this is the example, I
+think, of an AI-led work that
+[56:06] according to really the
+top, very top human expert,
+[56:09] is actually quite
+interesting and innovative.
+[56:14] Here's a second
+example of a paper
+[56:16] submission in the conference.
+[56:17] This is also pretty interesting.
+[56:20] So here, basically, you have
+a couple of these AI agents
+[56:23] that work together with was
+researchers to basically
+[56:26] simulate NASA missions.
+[56:29] So simulate
+different astronauts.
+[56:31] So NASA is very
+interested in, if you
+[56:32] have these astronauts
+that have to work together
+[56:35] in this very closely confined
+environments over time,
+[56:38] so what is the mental state
+of these different astronauts.
+[56:41] How does that change if
+there are some crisis events.
+[56:44] So that's really important
+when they're planning
+[56:46] these different missions.
+[56:48] So here in this paper, the
+team of agents and human
+[56:53] simulated these NASA
+astronauts using other agents.
+[56:57] And then they
+quantify the changes
+[56:59] in the stress level
+of the agents right
+[57:01] before and after
+certain crisis events.
+[57:03] And what's interesting
+here is that they actually
+[57:05] used the real data from
+NASA, like real mission data.
+[57:08] And they also be able
+to compare their results
+[57:10] with showing some concordance
+between their simulations
+[57:13] and the real results
+collected by NASA.
+[57:19] The third example is
+for drug discovery.
+[57:22] So this, here,
+where the team also
+[57:26] used a team of multiple agents.
+[57:28] So including a
+medicinal chemist agent,
+[57:31] like molecule evaluation agent.
+[57:34] And these agents
+also collaborated
+[57:36] to look for promising
+candidates or drug candidates.
+[57:40] So also tackling a
+very important problem.
+[57:47] Great.
+[57:48] So I've talked a lot about these
+different examples of agents.
+[57:52] But I think it's also
+important to talk about some
+[57:55] of the limitations of
+the current AI agents
+[57:58] in doing scientific research.
+[58:00] And here are some of
+these limitations that
+[58:02] are gathered both
+from our own research
+[58:03] and also from the submissions
+that we saw in our conference.
+[58:07] So one limitation is
+that the current agents,
+[58:10] I think they are better at
+using tools, the existing tools,
+[58:14] rather than creating
+entirely new scientific tools
+[58:17] from scratch.
+[58:18] For example, as we saw
+in the virtual lab,
+[58:20] the agents can actually learn to
+use AlphaFold and other existing
+[58:23] tools and maybe do some
+adaptations of those tools,
+[58:25] but they're not able to create
+a new version of AlphaFold,
+[58:28] which is much more challenging.
+[58:30] So this is, I think,
+also complements
+[58:32] some of the human expertise.
+[58:33] There's a lot of
+the human scientists
+[58:35] are experts in really developing
+these cutting edge new methods.
+[58:39] But often a big bottleneck
+for human researchers
+[58:41] is how do you then get
+those new methods into--
+[58:44] and teach the practitioners
+how to use those new methods.
+[58:47] So that's often a big barrier.
+[58:49] And then the
+agents, I think, can
+[58:51] be quite complementary in taking
+these new methods developed
+[58:53] by the human specialists,
+and then helping users
+[58:56] to apply those new methods
+to a broad range of problems.
+[58:59] This is also the motivation
+for our Paper2Agent work.
+[59:03] Similarly, the current agents, I
+think are better at more breadth
+[59:07] first search or
+depth first search.
+[59:10] So they know a lot about
+the different areas,
+[59:12] but they don't go
+super deep into each
+[59:14] of the particular
+scientific domains.
+[59:16] The human researchers, I
+think, also at the opposite,
+[59:19] we're often doing more
+depth first search.
+[59:21] We spend a lot of time
+in our scientific domain.
+[59:23] But maybe we don't
+have enough time
+[59:25] to read about adjacent areas.
+[59:27] This is also very complementary,
+where maybe the human researcher
+[59:30] can use the AI agents to help
+us to bridge some of that gap
+[59:34] into a nearby areas to do these
+more interdisciplinary research.
+[59:40] The agents make mistakes,
+and often, the source
+[59:43] of these mistakes is because
+they don't fully understand
+[59:46] the context of the problem.
+[59:48] So, for example, if
+I give the agents
+[59:50] like a data set to analyze,
+and I don't tell them
+[59:54] like how the data has
+been preprocessed,
+[59:57] then the agents will
+make invalid assumptions
+[01:00:00] about the data.
+[01:00:02] So especially in
+scientific projects,
+[01:00:04] it's really important
+to be able to capture
+[01:00:06] all of the metadata in a
+sort of agent-friendly form.
+[01:00:10] And also for the scientists,
+the human scientists
+[01:00:12] will continue to assess and
+to review the assumptions
+[01:00:15] and the key steps
+made by the agents.
+[01:00:19] And finally, the current
+agents, as I mentioned,
+[01:00:21] are still mostly limited to
+in silico computational work.
+[01:00:25] And a lot of the science
+requires really real world
+[01:00:27] experimental validations.
+[01:00:29] And so this is still
+an important area
+[01:00:31] where it's critical to have
+human-AI collaborations.
+[01:00:34] And we need to really have
+this close loop collaborations
+[01:00:36] from the experiments
+and real world data
+[01:00:39] to help further
+provide feedback,
+[01:00:41] to further improve and guide
+the agents in doing research.
+[01:00:49] OK.
+[01:00:50] So I'll pause here.
+[01:00:52] So we have time for
+some discussions.
+[01:00:54] But here are the references
+for the things I mentioned.
+[01:00:58] And I want to also
+highlight my students that
+[01:01:00] led each of these projects.
+[01:01:01] So Carl Swanson for the
+virtual lab, [INAUDIBLE]
+[01:01:03] Mao for Paper2Agent, and then
+a team of students, Owen,
+[01:01:09] Federico, Nitya,
+and Eric, who were

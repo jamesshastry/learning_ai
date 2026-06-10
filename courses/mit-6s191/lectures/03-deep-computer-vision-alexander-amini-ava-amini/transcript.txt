@@ -1,0 +1,1609 @@
+[00:11] Hi everybody. Welcome back to
+[00:12] Introduction to Deep Learning day two.
+[00:15] Uh today we're going to be talking about
+[00:16] a part of intelligence that I think most
+[00:18] of us probably take extremely for
+[00:20] granted and that's the sense of sight.
+[00:24] So sight and vision, these are one of
+[00:26] the most important human senses and most
+[00:30] of us rely on vision every single day,
+[00:32] right? It was real this is everything
+[00:35] from navigating the physical world,
+[00:37] locomoting, manipulating the physical
+[00:39] world uh to just even recognizing other
+[00:42] objects, other humans, other objects and
+[00:44] so on.
+[00:45] Now
+[00:46] what is what is vision, right? Vision is
+[00:49] to know what is where by looking, right?
+[00:53] But in reality, actually vision is so
+[00:55] much more than just
+[00:57] recognizing an image or recognizing
+[00:59] what's in an image.
+[01:00] It's actually
+[01:02] uh about understanding the dynamics of
+[01:05] your scene, of your environment as well.
+[01:07] So take this scene for example. We can
+[01:09] build computer vision systems that can
+[01:12] identify objects in the scene, of
+[01:14] course, right? So identify for example
+[01:16] that we have cars that we have people
+[01:18] but actually vision, true vision, is
+[01:20] more about just identifying these
+[01:22] objects. It's actually about
+[01:23] understanding that okay, the two cars on
+[01:25] the left are not actually the same,
+[01:27] right? The car that's on the road is
+[01:30] likely stopped and it's stopped for a
+[01:31] causal reason. It stopped because there
+[01:33] are pedestrians about to cross the road,
+[01:36] but it will probably move again in the
+[01:37] near future, whereas the car on the far
+[01:39] left is probably stationary, right? It's
+[01:41] probably parked on the side of the road.
+[01:42] Even though these are two cars, they
+[01:44] behave very differently and immediately
+[01:46] when you see this picture, all of this
+[01:48] information kind of floods in.
+[01:50] Now right, so
+[01:52] and it goes obviously even more
+[01:54] detailed. The The you look at this
+[01:55] picture, the more details I come, and
+[01:57] you can actually identify not just
+[01:59] what's in the image, but the causal
+[02:01] relationships between everything that
+[02:03] are actually guiding and driving all of
+[02:05] the behaviors that happen through this
+[02:07] scene.
+[02:09] So, deep learning is really bringing
+[02:10] forward this new wave of understanding
+[02:13] all of this deep rich information in a
+[02:17] very
+[02:18] rich environment, right? In a very rich
+[02:20] computer vision system. Right? These are
+[02:22] These are algorithms that you've
+[02:24] probably seen a lot in the press in the
+[02:27] media. This rises This This expands from
+[02:30] everything from robotics to mobile
+[02:32] computing, biology, health care,
+[02:34] medicine, autonomous driving,
+[02:36] you know, accessibility, and so on.
+[02:38] There's so many different applications
+[02:39] of visions because quite honestly, we as
+[02:41] humans rely on vision so much in our
+[02:43] daily lives as well.
+[02:45] Right? Deep learning has really taken
+[02:47] from the beginning a lot of really
+[02:50] recognition style approaches to computer
+[02:52] vision, right? Not focusing as much on
+[02:54] the behaviors, and focusing much more on
+[02:56] the classification, the recognition.
+[02:59] This really started primarily in a lot
+[03:01] of industrial applications with facial
+[03:02] detection systems. Facial detection
+[03:04] first, and then facial recognition
+[03:06] second. Detection is just detecting a
+[03:08] face, recognizing it goes one layer
+[03:10] beyond it to actually relate that face
+[03:13] to a particular person or identity.
+[03:16] Another common example that you've
+[03:17] probably seen a lot is self-driving
+[03:19] cars. Understanding what is around a
+[03:21] self-driving car to be able to navigate
+[03:24] its environment. Here's an example of a
+[03:26] self-driving car that we actually built
+[03:28] in this building. It actually lives
+[03:29] right downstairs, a couple floors below
+[03:32] where you're sitting. And this was built
+[03:34] as part of a MIT Toyota collaboration.
+[03:38] Uh and it's it's a radically different
+[03:40] type of self-driving car, but it
+[03:42] actually relates to today's lecture
+[03:44] because it is driven entirely using a
+[03:46] single end-to-end computer vision
+[03:48] system. There's no mapping in this car.
+[03:51] Uh so, in some sense, it actually
+[03:52] behaves much more like a human would
+[03:54] drive because humans also don't rely on
+[03:56] HD maps. We only drive based off of our
+[03:58] two eyes and also based off of a low
+[04:01] dimensional map, not a high dimensional
+[04:03] map. Low dimensional map being something
+[04:05] like Google Maps or
+[04:06] something like that on your phone.
+[04:09] And of course, all these other
+[04:10] applications that we'll see throughout
+[04:12] the lecture today, health care,
+[04:14] medicine,
+[04:15] diagnosing different types of diseases
+[04:16] directly from
+[04:18] uh x-ray scans or other medical imaging
+[04:20] scans.
+[04:22] Now, I started this lecture by actually
+[04:23] saying we take a lot of this for
+[04:24] granted, right? And I really think
+[04:26] that's true, right? And for a computer
+[04:28] vision system, we probably need to also
+[04:30] go back to the foundations to understand
+[04:33] how all of this is represented to a
+[04:36] computer, right? Because computers don't
+[04:37] have eyes,
+[04:38] right? And they actually don't see in
+[04:41] color space, they see in numbers, right?
+[04:43] So, what does an image look like to a
+[04:46] computer?
+[04:47] Well, to a computer, images are also
+[04:49] just numbers, right? And suppose we have
+[04:51] a picture of Abraham Lincoln, like you
+[04:53] see here. This picture is nothing more
+[04:55] than just a matrix, a 2D matrix of
+[04:58] numbers. We can represent this looking
+[05:01] across the rows and the columns, every
+[05:03] cell in this matrix is just a single
+[05:07] value. And that value could correspond
+[05:09] in this example to the brightness of
+[05:11] that cell, brightness ranging from zero
+[05:13] to one with one being the most bright.
+[05:15] Now, this is a very simplistic
+[05:17] representation, but it's actually
+[05:18] extremely powerful, right? It covers
+[05:20] already the full space of all grayscale
+[05:23] images. And if we wanted to cover the
+[05:25] space of colored images as well, we
+[05:28] would simply extend this to not be a
+[05:30] single two-dimensional matrix, but now a
+[05:34] two-dimensional matrix * 3 because we
+[05:36] have three primary colors, red, green,
+[05:38] blue.
+[05:39] And if we mix those together, each one
+[05:41] of which is a one-dimensional 2D matrix,
+[05:44] then we can have a colored image
+[05:46] represented to a computer. So, to a
+[05:48] computer, grayscale images are nothing
+[05:50] more than just 2D images or 2D matrices.
+[05:54] And RGB images are nothing more than
+[05:57] three-dimensional matrices, where the
+[05:58] third dimension is exactly size three.
+[06:03] Now, two common types of machine
+[06:05] learning algorithms for computer vision
+[06:07] tasks are, like we saw in yesterday's
+[06:10] class in both lectures,
+[06:12] regression and classification. Let's
+[06:14] start with the classification example to
+[06:17] start with computer vision because it's
+[06:19] much simpler, right? So, let's say on
+[06:21] the left-hand side we have this image,
+[06:23] and it's represented as a matrix that
+[06:25] you can see in the middle.
+[06:27] And our task is that we want to identify
+[06:30] or recognize who is in this image,
+[06:32] right? So, it's a classification task.
+[06:34] It's ultimately going from this input of
+[06:36] two-dimensional space into a
+[06:38] one-dimensional vector of fixed size,
+[06:41] and we define that fixed size based off
+[06:43] of known categories, known people that
+[06:46] we may want to recognize. So, we may
+[06:48] want to classify this person into one of
+[06:50] four categories in this example,
+[06:52] Lincoln, Washington, Jefferson, or
+[06:54] Obama.
+[06:55] And given these unstructured
+[06:58] uh pixel inputs in grayscale on the
+[07:00] left-hand side,
+[07:01] can a machine learning model identify
+[07:04] which of these four classes it belongs
+[07:05] to,
+[07:06] right? So, in order to identify these
+[07:08] images, obviously, our pipeline needs to
+[07:10] be able to tell what is unique and
+[07:13] differentiated about each one of these
+[07:15] four categories, right? So, let's let's
+[07:18] consider that in a bit more detail,
+[07:19] right? How does it actually do this? In
+[07:21] order to detect what's relevant in a
+[07:24] whole image, we first need to detect
+[07:25] what's relevant at these feature levels,
+[07:28] right? What are the patterns that make
+[07:30] up each of these different categories?
+[07:32] So, for each type of president, what are
+[07:33] the features on their face that make up
+[07:35] this person and differentiate it from
+[07:37] each other person in that category? So,
+[07:40] for example, this is a very common theme
+[07:42] that you'll see out through today is
+[07:44] that classification is simply done by
+[07:46] detecting these lower level features and
+[07:48] then composing them together in order to
+[07:51] detect and classify the higher level
+[07:53] groups. So, for example, if you want to
+[07:55] detect to detect faces, you as a human
+[07:58] might start by detecting eyes, noses,
+[08:01] ears. If you see those things in in an
+[08:04] image, you're probably looking at
+[08:05] something like a face.
+[08:07] Likewise, if you're looking for cars,
+[08:08] you may look for lower level features
+[08:10] like wheels,
+[08:11] license plates, headlights, etc. Same
+[08:14] thing for houses, doors, windows. Steps
+[08:16] are the building blocks of those things
+[08:18] and you can decompose those even
+[08:20] further, right? In order to detect a
+[08:22] door, you may be looking for a rectangle
+[08:24] with four corners, right?
+[08:26] Um
+[08:28] Now, one way to solve this problem is to
+[08:31] leverage the knowledge about a
+[08:32] particular field. So, like I just said,
+[08:34] if you want to detect houses, you as
+[08:36] humans, you know what a house looks
+[08:37] like, so you can decompose that
+[08:39] knowledge of what houses look like into
+[08:41] the underlying
+[08:42] lower level features, right? So, you
+[08:44] could use your own knowledge to say the
+[08:46] domain knowledge of what houses look
+[08:48] like, I'm going to define these lower
+[08:50] level features.
+[08:51] But, and then you could basically build
+[08:53] the classification pipeline to first
+[08:54] detect those lower level features
+[08:57] and then thereby detect the higher level
+[08:59] structures
+[09:01] across them. But, of course, there's a
+[09:02] big problem with this approach is that
+[09:04] humans are very
+[09:07] uh we take a lot of this for granted
+[09:09] again, like I said. So, even detecting
+[09:11] or knowing what to look for in let's say
+[09:13] a house is a really hard problem for us
+[09:15] to define. And in fact, there are so
+[09:18] many different variations amongst houses
+[09:21] that defining what makes up a house is
+[09:23] actually really hard, right? So, there
+[09:25] are viewpoint variations, there are
+[09:27] illumination variations that change the
+[09:28] color of the scene, size variations,
+[09:31] etc. So many both intra-class
+[09:34] variations, variations within the class,
+[09:36] as well as across different types of
+[09:38] classes as well that you want to make
+[09:39] sure that you covered the entire space.
+[09:42] So, ultimately, this problem really
+[09:43] turns into more of a problem of saying,
+[09:45] "How can you identify those lower-level
+[09:47] features that are truly
+[09:50] representative across the full space of
+[09:53] a particular class
+[09:55] whilst still being differentiated across
+[09:58] those features from other classes as
+[10:01] well?"
+[10:03] So, even though our pipeline could use
+[10:05] features that we as humans predefine or
+[10:08] manually define,
+[10:10] this is where this task really starts to
+[10:12] break down for human-level recognition
+[10:15] because we as humans are just not very
+[10:16] good at clearly defining what those
+[10:19] lower-level features should be. And this
+[10:21] is again due to the incredibly diverse
+[10:24] variability of different types of
+[10:26] images. So, the question really is, "How
+[10:29] can we do better than this?"
+[10:30] And the the answer is that we want a way
+[10:32] to both extract those features, but
+[10:35] simultaneously learn what the good
+[10:38] features even should be that we should
+[10:40] be looking for in an image.
+[10:42] Now, we can use a neural network-based
+[10:44] approach for this and learn directly
+[10:46] from data this hierarchy, right? And we
+[10:49] saw some of these examples yesterday in
+[10:51] the class already is that we want to
+[10:53] build this hierarchy of features where
+[10:56] the hierarchy is learned through the
+[10:57] depth of our layers in our neural
+[10:59] network with every layer kind of
+[11:01] identifying something key from the image
+[11:03] and basically doing sub classification
+[11:05] problems as we go deeper and deeper into
+[11:07] the model.
+[11:09] And neural networks allow us to do
+[11:11] exactly this. They allow us to learn
+[11:13] visual features and from visual data
+[11:16] what the underlying patterns of that
+[11:18] data are. So, if you observe a lot of
+[11:20] houses, for example, you show a neural
+[11:23] network a lot of houses, it should be
+[11:24] able to uncover what are the core
+[11:26] underlying very, very low-level features
+[11:28] that exist across all houses, And build
+[11:30] those up and compose them into higher
+[11:32] level features.
+[11:34] And again, this is nothing new. We saw
+[11:36] exactly the same paradigm in lecture one
+[11:39] using fully connected networks. And then
+[11:41] we saw the same paradigm again using
+[11:44] recurrent and sequence model networks in
+[11:46] lecture two.
+[11:48] Now, I want to pose this as a as a
+[11:50] problem now for lecture three because in
+[11:53] lecture one we did learn about the fully
+[11:55] connected paradigm and you can have
+[11:57] these multiple hidden layers going from
+[11:59] a one-dimensional input on the left-hand
+[12:01] side to a one-dimensional output on the
+[12:03] right-hand side. On the right-hand side,
+[12:05] the one-dimensional output could be a
+[12:06] classification output. But the problem
+[12:09] we should focus on is more the input,
+[12:10] right? The input here is a
+[12:12] one-dimensional input. And let's say we
+[12:14] wanted to use what we learned in lecture
+[12:16] one now for image classification as
+[12:19] well. Well, what that would mean is that
+[12:21] we have a two-dimensional image that we
+[12:24] need to feed into our one-dimensional
+[12:26] input
+[12:27] of our neural network. How would we do
+[12:29] this? Well, the way that people have
+[12:32] done this is that they flatten the
+[12:34] image, right? So, you take your
+[12:35] two-dimensional image, you squash it,
+[12:36] and you put it in one dimension.
+[12:38] And immediately you you kill all of the
+[12:40] spatial information amongst your image,
+[12:43] but it's okay. You have still a lot of
+[12:44] information still there and the hope is
+[12:46] that, you know, can your network still
+[12:48] learn it
+[12:49] uh just by observing a lot of those
+[12:50] flattened one uh two-dimensional images?
+[12:53] But hopefully you can appreciate that
+[12:55] just by doing this one operation, even
+[12:57] though in theory this could be learned
+[13:00] with a one-dimensional network, you've
+[13:02] really killed or you've lobotomized so
+[13:05] much of the learning capacity of this
+[13:07] model just by flattening this input,
+[13:10] right? Before you've even started
+[13:12] anything with your neural network,
+[13:13] you've really handicapped the model. And
+[13:16] furthermore, you also have a ton of
+[13:18] parameters in this network. So, think
+[13:19] for example just a 100 by 100
+[13:22] dimensional or excuse me, 100 by 100
+[13:24] pixel image. That's 10,000 dimensional
+[13:28] 1D vector that you'll get flattened to.
+[13:31] Right? That means your input dimension
+[13:33] is already 10,000 dimensions again
+[13:35] before you even start your neural
+[13:36] network. And these fully connected
+[13:39] layers are fully connected, which means
+[13:40] that you have 10,000 to your hidden
+[13:42] layer. So your first matrix multiply is
+[13:44] already 10,000 by
+[13:46] something, right? Some big number again.
+[13:49] Right? This will really again blow up
+[13:51] the number of parameters in your model.
+[13:52] It's not an efficient way at all and
+[13:55] it's not a it's not feasible in practice
+[13:57] to operate like this.
+[13:59] So instead, we ask ourselves, right?
+[14:02] What are the more
+[14:03] structured ways that we can learn
+[14:06] features that are also a bit more
+[14:07] closely aligned to how we as humans
+[14:10] operate in this two-dimensional spaces
+[14:12] as well. And really it comes down to we
+[14:14] want to be able to leverage spatial
+[14:15] information. We want to leverage the
+[14:17] spatial structure in images. We don't
+[14:19] want to throw it out before we even
+[14:21] start the learning process.
+[14:24] Now to do this, let's not flatten our
+[14:26] image into 1D. Let's keep it in a
+[14:29] two-dimensional spatial image array of
+[14:32] pixel values.
+[14:34] And then one way that we could use the
+[14:36] spatial structure inherent in the image
+[14:38] is simply to represent or to connect not
+[14:41] every pixel in our entire image to every
+[14:45] neuron in the hidden layer in the next
+[14:47] layer,
+[14:48] but to connect only a patch of pixels in
+[14:51] the image
+[14:52] to the next neuron in the hidden layer.
+[14:55] Right? So because we're only operating
+[14:56] at a small patch, we're encouraging now
+[14:58] spatial connectivity, spatial
+[15:00] relationships because we're only looking
+[15:02] at a small
+[15:04] receptive field in the in the image.
+[15:07] But at the same time, we're also
+[15:09] preserving a lot of efficiency because
+[15:10] now we're not forcing the network to
+[15:11] look at everything. We're only looking
+[15:13] at one small patch and being focused on
+[15:15] that local patch. So notice here how the
+[15:17] region of interest on the input layer
+[15:20] influences this one neuron in the hidden
+[15:23] layer here. Right? This neuron has no
+[15:25] influence from anything else in the rest
+[15:28] of the image.
+[15:30] Now, of course, to define connections
+[15:32] across the rest of the image, because we
+[15:33] don't want to look only at that one
+[15:34] point at that one point in the image, we
+[15:37] want to look at the entire image, we can
+[15:39] extend this by just
+[15:41] doing this patch-based approach, not
+[15:43] just for one patch in the image, but for
+[15:45] all patches in the image. So, we
+[15:46] basically slide this patch across the
+[15:48] image, and now we can see how the hidden
+[15:51] layer and every neuron in the hidden
+[15:53] layer relates to a single patch in the
+[15:55] input layer,
+[15:57] but
+[15:58] each one is kind of locally
+[16:01] uh
+[16:02] receiving information from a patch on
+[16:05] the input side.
+[16:07] Right? In this way, we have solved this
+[16:09] problem of taking to account spatial
+[16:11] information, right? Because now we do
+[16:13] look and we preserve the spatial
+[16:14] information within each patch, but we
+[16:17] also uh can enforce or and maintain some
+[16:21] efficiency in the model as well, because
+[16:22] now we're not learning a bunch of fully
+[16:24] connected layers. We're really focusing
+[16:26] at each patch level independently.
+[16:29] And
+[16:30] we can we can basically now also say we
+[16:33] want to learn a feature, like what is a
+[16:36] feature from each patch, we can now say
+[16:39] we can try to define what that would
+[16:41] look like with this paradigm as well.
+[16:43] So, let's let's look at this
+[16:45] in a bit more detail on how we could
+[16:47] look at this from a feature learning
+[16:48] perspective, like we saw earlier.
+[16:50] So, in practice, this operation that I
+[16:52] just described to you, this patch-based
+[16:54] operation, where we look at every patch
+[16:57] as opposed to the entire image, this is
+[17:00] called a convolution, basically sliding
+[17:01] these patches across the image.
+[17:04] We'll think of this first at a high
+[17:05] level, right? Suppose we have this 4x4
+[17:07] filter that you see here, right? In red.
+[17:10] This is a filter, I'll call it, because
+[17:12] it is going to operate on the input
+[17:14] side,
+[17:16] and it just means that it is
+[17:17] represented. This filter is defined, not
+[17:19] just represents, it is defined by 14
+[17:22] numbers, right? It's defined by 14
+[17:25] numbers on the input image, the pixels.
+[17:27] It's also defined by 14 more numbers,
+[17:29] which are the weights of the filter.
+[17:31] Right? So, we actually have, just like
+[17:33] we saw in the previous lectures, we have
+[17:36] the inputs to a neuron. We also have,
+[17:37] for every input, we have a weight.
+[17:40] So, we have here a 4 by 4 inputs,
+[17:43] and also 4 by 4 weights that define that
+[17:46] filter.
+[17:48] Those 4 by 4 weights will undergo the
+[17:50] same operation that we saw in lectures
+[17:53] yesterday. They will be element-wise
+[17:55] multiplied by the inputs,
+[17:57] adding a bias, applying a non-linearity.
+[18:00] The only difference is that now we just
+[18:01] do this repeatedly across the entire
+[18:04] input. And that's exactly how to think
+[18:06] of convolutions at a high level. Instead
+[18:08] of learning these filters across the
+[18:10] entire flattened one-dimensional image,
+[18:13] we're going to the focus on smaller
+[18:15] filters,
+[18:16] uh apply the same
+[18:18] equation that we saw yesterday, matrix
+[18:21] multiply, add a bias, and apply a
+[18:22] non-linearity, but just slide it across
+[18:25] every time.
+[18:27] And you're probably wondering now,
+[18:29] you know, the connection between these
+[18:31] 16 numbers and the features, the
+[18:34] high-level features that we were talking
+[18:35] about before, right? So, we were talking
+[18:37] about we want to detect features in
+[18:39] these images, right? Think of things
+[18:41] like doors for detecting houses.
+[18:43] But how do these features, you know,
+[18:45] relate to the 16 numbers that these
+[18:48] kernels or these filters are learning?
+[18:50] Let's make this a bit more concrete in
+[18:51] this example.
+[18:53] So, suppose we want to classify
+[18:55] an X. If this was an image, we want to
+[18:57] classify if this is an image of an X,
+[18:59] the letter X.
+[19:01] Right? And for simplicity, let's only
+[19:03] consider images that are either black or
+[19:05] white. I'll define a black pixel with
+[19:07] -1, white pixel with +1. And to
+[19:10] classify, we can already see that, okay,
+[19:12] this is clearly not possible by simply
+[19:14] just doing an equality between the left
+[19:16] and the right images because both of
+[19:18] these are images of X's,
+[19:20] but they're clearly very different if
+[19:22] you just look at their equality, right?
+[19:24] So, we need to be able to do this in a
+[19:25] more feature-based approach.
+[19:27] Okay. So, instead of looking at the
+[19:30] entire image, let's take what we just
+[19:31] learned. Let's look at this patch by
+[19:33] patch and every patch, let's look for
+[19:35] different features. So, for example,
+[19:38] we'll look for one patch that is this
+[19:40] diagonal in this orientation, right?
+[19:42] This 45° diagonal in this orientation.
+[19:44] This is the green patch. We'll see if we
+[19:46] can match this green patch on both
+[19:49] sides. And yes, we can see this patch on
+[19:50] both sides.
+[19:52] We also look for a crossing feature,
+[19:54] right? And this we can also see on both
+[19:56] sides, the orange patch.
+[19:58] And again, finally, we look for this
+[20:00] other orientation diagonal feature,
+[20:02] which again, we can see on both sides.
+[20:05] Right? So, you can see here that even
+[20:06] though the model isn't or even though
+[20:08] these images are quite different in
+[20:11] pixel space,
+[20:12] at the feature space, they're actually
+[20:14] very, very aligned, right? And that's
+[20:16] the key point to take away from today's
+[20:19] lecture.
+[20:20] And every
+[20:22] feature, every filter, is actually
+[20:24] nothing more than just a miniature
+[20:25] image, right? It's again just a small
+[20:28] two-dimensional array of values and we
+[20:31] can use filters to pick up on common
+[20:33] features within our X's or our pictures
+[20:35] of X's. So, in the case of X's, like we
+[20:38] saw
+[20:38] in the previous slide, we're basically
+[20:40] looking for three different filters or
+[20:42] three different features. We're looking
+[20:43] for uh this diagonal, this cross, and
+[20:46] this other diagonal. If you can identify
+[20:49] these three things, then probably it's a
+[20:51] good likelihood that you're looking at
+[20:52] an X in this image compared to other
+[20:54] letters.
+[20:56] Now, notice that these smaller matrices
+[20:58] that you see on the top here of weights,
+[21:01] these are the ones that we'll be using
+[21:03] to actually detect uh the final features
+[21:06] in our image. So, all that's really left
+[21:08] now is just to define the operation that
+[21:12] plugs all this together, right? It plugs
+[21:14] in the ability to
+[21:16] relate the features that we want to find
+[21:18] with the image that we're searching them
+[21:20] in from
+[21:21] and then passing those on that
+[21:23] information on to the next layer. So,
+[21:25] let's look at that operation.
+[21:26] That operation is exactly called a
+[21:29] convolution, right? Convolution
+[21:31] preserves the spatial relationships
+[21:34] between pixels by learning these image
+[21:36] features,
+[21:38] uh, in small patches instead of the
+[21:40] entire image, right? So, to do this,
+[21:42] what we're going to do
+[21:43] is perform these element-wise
+[21:45] multiplications with every input with
+[21:48] every weight of the patch. Every input
+[21:50] of the patch with every weight of the
+[21:52] patch. We add a bias and apply a
+[21:54] non-linearity. So, let's ignore the the
+[21:57] bias and the non-linearity for a second.
+[21:59] Let's do this just, uh, example uh,
+[22:02] piece by piece for this image here.
+[22:05] Right? So, here's the patch that we
+[22:07] Here's the filter, let me say, uh,
+[22:09] formally, right? Here's the filter that
+[22:10] we're searching for and these are the
+[22:12] weights of the filter, right? These are
+[22:14] learned weights or in this case I just
+[22:16] wrote them down, right? Because I can
+[22:18] look at the image and I wrote down the
+[22:19] weights.
+[22:20] But, this is the image that we're
+[22:21] searching that filter with.
+[22:25] So, we can say element-wise multiply
+[22:27] every thing in this 3 by 3 matrix with
+[22:29] everything in this green matrix.
+[22:32] Element-wise multiply it and we'll get
+[22:34] positive ones everywhere, right? Because
+[22:36] there's perfect matches. The negative
+[22:38] ones times negative ones will turn to
+[22:40] positive ones, the positive ones times
+[22:41] positive ones will turn also to positive
+[22:43] ones. So, everything turns to a positive
+[22:46] one. We add up those results and this
+[22:49] turns to a very positive number meaning
+[22:51] that there was a very strong match
+[22:52] between this patch in our image and this
+[22:54] patch in our filter. Very positive means
+[22:57] strong match, very negative will mean,
+[22:59] uh, inverse inverted match.
+[23:02] Now, let's consider one more example and
+[23:04] then we can pause for questions if
+[23:06] there's any.
+[23:07] Suppose we wanted this convolution to
+[23:09] convolve this 5 by 5 image with this 3
+[23:12] by 3 filter. Again, just defining the
+[23:15] weights of the filter here
+[23:17] uh in the slide. To do this, we need to
+[23:20] cover the image entirely by sliding this
+[23:23] filter across it, right? So, what does
+[23:25] this look like? First, we start off in
+[23:27] the top left corner.
+[23:28] Element-wise multiply the 3 by 3 patch
+[23:31] elements with the 5 by 5 patch elements
+[23:33] in that location.
+[23:35] And the result is our first entry in our
+[23:39] hidden feature map, right? It's the next
+[23:41] layer's feature map. So, this is
+[23:42] basically the image in the next layer.
+[23:45] You're creating the image in the next
+[23:46] layer, okay? So, you have an input image
+[23:48] on the left, you have a filter, which
+[23:50] are your weights, and you have an output
+[23:52] image on the right.
+[23:54] And you repeat this. You move the filter
+[23:56] over one slot.
+[23:57] You repeat the same operation. You
+[23:59] element-wise multiply and add up all the
+[24:01] results, and now you have a three in the
+[24:03] next slot. And you keep repeating this
+[24:05] point by point until you generate or you
+[24:09] you compute your entire next uh your
+[24:12] entire full
+[24:13] hidden image. Right? And this hidden
+[24:16] image, this is called a feature map.
+[24:18] This tells you exactly where are the
+[24:20] feature that where is the feature that
+[24:22] you're looking for in your filter? Where
+[24:24] are they spiking? Where are they most
+[24:26] prevalent in your image on the left-hand
+[24:29] side, right? So, very positive values in
+[24:31] your feature map will correlate to very
+[24:33] strong matches of the patch with the
+[24:35] filter. Very negative will say that
+[24:37] there's no match there.
+[24:40] Okay, any questions on this part?
+[24:44] Yes.
+[24:49] Great question. Yes, so this is So, the
+[24:51] weights of the filter are decided like
+[24:53] the weights of any part of a neural
+[24:54] network. They're learned. We haven't
+[24:55] gotten to that part yet. Right now,
+[24:57] we're just seeing if you manually define
+[24:59] the weights, this is how the operation
+[25:01] would look in the forward pass, and then
+[25:03] we'll see how we learn them in the next
+[25:04] part.
+[25:08] Yes.
+[25:09] When you slide the filter, do you
+[25:10] overlap it from the previous one a
+[25:12] little bit? Why is that?
+[25:14] Good question. So, when we slide the
+[25:15] filter, why do we overlap it with the
+[25:17] previous filter? This is First of all, a
+[25:20] design choice, so you don't have to do
+[25:21] this. It's It's up to the the
+[25:24] practitioner, the creator of the neural
+[25:25] network. Some neural networks don't
+[25:27] overlap.
+[25:28] Often times, it's beneficial to overlap
+[25:30] though, because you want shared
+[25:31] information in case something is cut off
+[25:33] in the middle of a filter, right? You
+[25:35] want the the model to be able to reason
+[25:37] across those cutoffs, and there's no
+[25:40] reason why we should assume that things
+[25:42] are perfectly obeying exactly where the
+[25:44] filters lay. So, sometimes some overlap
+[25:46] is actually helpful to the model.
+[25:48] Yes. I have a question about scale.
+[25:52] Mhm.
+[25:58] Great question. We'll get to this in in
+[26:00] the next part, but the short answer is
+[26:01] that this is why you have depth in your
+[26:04] in your network, because as you go
+[26:05] deeper and deeper into the model, you
+[26:07] cover different scales, right? At the
+[26:09] first layer, you can have very tiny
+[26:11] filters, but which of course are
+[26:12] meaningless at that scale. They will
+[26:14] detect very small features, but then as
+[26:16] you go deeper and deeper, you notice
+[26:18] that the feature map is smaller than the
+[26:20] input image. So, your images are
+[26:22] actually getting smaller as you go
+[26:23] deeper, which means that the relative
+[26:25] size
+[26:26] is getting bigger.
+[26:27] Right?
+[26:29] Awesome. Okay, let's let's push through,
+[26:31] and I think some of the questions will
+[26:32] get answered as we
+[26:33] as we continue.
+[26:35] So, keeping with the theme of manually
+[26:37] writing the filter weights for a second,
+[26:40] let's actually see and get some
+[26:42] intuition about how different filters
+[26:45] can create different feature maps. So,
+[26:47] here's an image on the left-hand side,
+[26:50] and I'm going to show you the result of
+[26:52] convolving that image with three
+[26:54] different filters that I define. So,
+[26:56] here's one filter that is a sharpening
+[26:59] filter, right? It has a positive number
+[27:01] in the middle, negative numbers on the
+[27:04] edges, and zeros on the corners,
+[27:06] right? Let's not worry about like the
+[27:08] details of how these filters are
+[27:10] created, but the result is that this
+[27:12] filter, when you convolve it, it will
+[27:14] actually sharpen the image, right?
+[27:16] Another example is this edge detection
+[27:18] filter. It kind of has the opposite type
+[27:20] of trend. It has a very negative number
+[27:21] in the in the middle
+[27:23] and positive ones on the edges. You can
+[27:25] actually see that when you convolve it,
+[27:26] the filter map is identifying edges,
+[27:30] right? And again, strong edge detectors
+[27:32] are also possible as well, right?
+[27:34] Now, all of this to say is that don't
+[27:36] worry about how the numbers in these
+[27:38] filters are created yet. The point is
+[27:40] that actually before
+[27:43] convolutional neural networks existed,
+[27:45] humans would actually manually write the
+[27:47] weights of these filters out to create
+[27:49] certain effects and to detect certain
+[27:50] features. So, if they wanted to detect
+[27:52] edges, they would for example, they
+[27:54] created these filters for edge
+[27:55] detection. And there are papers, right,
+[27:58] that are literally just defining
+[28:00] singular filters for edge detection or,
+[28:03] you know, different types of a feature
+[28:05] detection for different types of
+[28:07] operations. Now, we learn this, right?
+[28:09] Now, to answer the previous question, we
+[28:11] don't manually write out these uh
+[28:13] filters anymore. We learn what the
+[28:15] weights of these filters are, but this
+[28:17] is hopefully giving some intuition of
+[28:19] the importance and the impact of what
+[28:22] these filters actually represent.
+[28:25] So, there are three points maybe just to
+[28:27] summarize this section before we start
+[28:29] to lay on and see the convolutional
+[28:31] neural network type taking shape across
+[28:33] the entire model. So, the three points
+[28:36] here are that we are able to now apply a
+[28:39] set of weights not just to the entire
+[28:42] image, but to individual patches within
+[28:44] an image. This will allow us to extract
+[28:46] local features.
+[28:47] We repeat this process over the entire
+[28:49] image or we can also have multiple
+[28:52] filters to detect different types of
+[28:54] features. Right, so far we've only seen
+[28:56] examples where we apply one filter to
+[28:58] one image.
+[29:00] Of course, there's no reason to do that.
+[29:01] You could learn 100 different filters on
+[29:04] that one image because you may say you
+[29:07] want to detect in the X example in the X
+[29:09] example
+[29:11] three different filters on that image.
+[29:12] There's no reason to detect only one.
+[29:14] There is the two diagonal lines in
+[29:16] different orientations and the cross as
+[29:18] well.
+[29:21] Now that we've gotten convolutions, I
+[29:23] think under the belt, I think we can now
+[29:25] start to think of how we can utilize
+[29:27] this operation and build it into a full
+[29:29] neural network operator now or a CNN. A
+[29:33] CNN is literally just a convolutional
+[29:35] neural network. So, let's look at the
+[29:38] CNN architecture
+[29:40] for an image classification task.
+[29:42] Okay. So, let's start by putting all of
+[29:45] what we learned so far together into one
+[29:48] piece. So, the goal here, again just to
+[29:51] reiterate, is that we want to learn
+[29:53] features directly from our input image.
+[29:56] And we want to use those learned
+[29:57] features to map onto a classification
+[30:01] task for those images, right?
+[30:04] So, there are three main operations in a
+[30:06] CNN, right? First is convolutions, which
+[30:09] we already saw.
+[30:10] Second is that we have to apply
+[30:11] nonlinearities. This is something we
+[30:13] learned about yesterday and the reason
+[30:14] is the exact same as yesterday. The real
+[30:16] world is nonlinear, so we want to be
+[30:18] able to handle this. Right, so
+[30:20] convolutions are first. This is the main
+[30:22] workhorse. This is actually very similar
+[30:24] to fully connected layers except now we
+[30:26] just do it at patch level instead of
+[30:28] across everything.
+[30:30] Apply nonlinearity. Now, the one new
+[30:32] part of this is that we have pooling.
+[30:35] Now, what is pooling? Pooling is simply
+[30:36] just downsampling after every layer that
+[30:39] we do of convolution, we also want to
+[30:41] downsample.
+[30:43] Now, why would we want to do this? It's
+[30:45] simply because of the point that I was
+[30:47] mentioned earlier, that the scale
+[30:49] between our images and our features or
+[30:52] filters
+[30:54] in the beginning of the model is very
+[30:55] big gap, right? It's a very big gap. So,
+[30:58] we're identifying very small
+[31:01] uh scale features.
+[31:02] If we downscale our image as we
+[31:04] progressively go deeper into the neural
+[31:06] network, we're actually lowering the
+[31:08] ratio between the size of the image and
+[31:11] the size of the filter, which means that
+[31:12] we're detecting higher-level features.
+[31:16] Okay.
+[31:18] So, what we'll do here
+[31:19] is to detect or to train, first of all,
+[31:22] train our model on a set of images.
+[31:24] What that means is that we're simply
+[31:26] training those features, those numbers
+[31:28] in each of these filters across every
+[31:31] one of these convolutional layers.
+[31:33] So, let's just go through one more time
+[31:35] those three operations that make up a
+[31:37] CNN. So, just as before, we have each
+[31:39] neuron in a hidden layer will compute a
+[31:42] weighted sum
+[31:44] of its inputs. We apply this bias and
+[31:47] activate with a non-linearity. Now,
+[31:49] what's special here is the local
+[31:51] connectivity, right? Like we saw before,
+[31:53] we have only things in this red box are
+[31:56] influencing this one neuron here.
+[31:59] And the next neuron next to it actually
+[32:00] is influenced by a
+[32:02] slid over red box.
+[32:05] Right? And remember we talked about this
+[32:07] element-wise multiplication and addition
+[32:10] is the convolution operation, right? So,
+[32:12] this defines exactly how convolutional
+[32:14] layers are connected by simply sliding
+[32:17] these patches of weights and basically
+[32:19] doing a weighted element-wise
+[32:20] multiplication across the the features
+[32:23] in the input image.
+[32:26] Now, within a single convolutional
+[32:27] layer, we can have multiple filters like
+[32:29] I mentioned earlier. Now, these are very
+[32:32] important to learning because at one
+[32:35] layer, of course, you may want to detect
+[32:38] multiple different types of features in
+[32:41] that image.
+[32:42] Now, the output layer, what what does
+[32:44] that mean? If you're detecting multiple
+[32:45] filters, it means that you're starting
+[32:47] from an image, but you're going into a
+[32:49] volume.
+[32:51] Right? Where every slice of that volume
+[32:55] is a single output feature map that we
+[32:57] saw before. Right? Before we were going
+[32:59] just from image to filter to image.
+[33:02] But now, if we have many filters, that
+[33:03] means we'll have a volume of images on
+[33:05] the output side. And we can think of the
+[33:07] connections of neurons in these
+[33:09] convolutional layers in terms of their
+[33:12] receptive field. Right? That's the
+[33:14] really the way to think of it. Where
+[33:15] every point within our uh depth of our
+[33:20] output volume is being influenced by
+[33:23] just a small patch of input pixels on
+[33:26] our input image.
+[33:29] Okay. So, I think we're well on our way
+[33:31] now to understanding the CNN. The next
+[33:33] step is to apply a non- linearity after
+[33:36] we have this volume of feature maps.
+[33:39] And as we introduced in the first
+[33:40] lecture, we do this because data is
+[33:42] highly non-linear. In CNNs, it's pretty
+[33:45] common practice to apply non-linearities
+[33:47] after every convolutional operation.
+[33:50] Right? So, after each time you convolve,
+[33:52] you typically will apply your
+[33:53] non-linearity there. And a common
+[33:56] activation function is the rectified
+[33:58] linear unit or ReLU.
+[34:01] Uh this is nothing more than just a
+[34:02] pixel-by-pixel operation that takes
+[34:04] anything that is negative, and it
+[34:06] squashes it to zero, and takes anything
+[34:08] that's positive, and it keeps it as the
+[34:10] identity function.
+[34:13] So, you can actually also think of this
+[34:15] Another way to think about this is a
+[34:16] thresholding. If you're greater than
+[34:18] zero, you pass the threshold. If you're
+[34:20] less than zero, you get thresholded to
+[34:22] zero, exactly. So, negative values
+[34:25] actually just indicate negative
+[34:27] directions basically after convolution,
+[34:29] but you squash them to zero uh by the
+[34:31] time that you have your your activated
+[34:34] uh output on the other side.
+[34:37] Okay, final operation is pooling.
+[34:40] Pooling is this operation that just
+[34:42] reduces the dimensionality of your
+[34:44] feature maps. Why is that important?
+[34:46] Because you want to preserve the spatial
+[34:48] invariance across your input images, but
+[34:50] you also want to cover different scales
+[34:54] of feature detection on the the
+[34:56] convolution side as well. So, by scaling
+[34:59] down the images, you're scaling up the
+[35:01] relative size of what you search for
+[35:04] across your feature maps.
+[35:06] Now, one way to do this, a very common
+[35:07] way, is by max pooling. What that means
+[35:09] is that if you have an input image over
+[35:12] here or an input feature map after you
+[35:14] convolve,
+[35:16] max pooling simply says that you take a
+[35:18] again a patch
+[35:19] and you take the maximum value within
+[35:21] that patch. So, you look at this 4 by 2
+[35:23] by 2 patch of four elements, take the
+[35:25] maximum value, it's a six, it becomes
+[35:27] the the top value there. So, you go from
+[35:29] a 4 by 4 image or a feature map and you
+[35:33] create a 2 by 2
+[35:35] feature map on the other side with this
+[35:36] example.
+[35:38] Uh this is just one example of how to
+[35:40] pool down information from larger scale
+[35:43] to smaller scale.
+[35:44] Uh it's a very simple way, right? So,
+[35:46] it's very fast to implement, but I
+[35:48] encourage you actually to think about
+[35:49] other ways that you could perform this
+[35:50] down sampling because it's very flexible
+[35:53] and there is a lot of tuning that you
+[35:54] could do there.
+[35:56] Uh you had a question. Yes. Um
+[35:58] isn't the aren't the patches kind of
+[36:00] implicitly already down sampling the
+[36:02] image to a degree and you could also
+[36:03] just make the patch bigger
+[36:05] to increase down sampling? Yes, the
+[36:07] question is there's a there's a
+[36:08] trade-off, obviously, right? Because the
+[36:10] patches are inherently kind of down
+[36:12] sampling the image already because you
+[36:13] have to stop at the edges,
+[36:15] right? So, you always have this kind of
+[36:17] like slightly smaller image on the
+[36:19] feature map than you had on the image
+[36:21] side.
+[36:21] There's a trade-off, right? The point is
+[36:23] you can't increase the patch size too
+[36:25] much because as you increase the patch
+[36:26] size, you're kind of killing the whole
+[36:28] point of looking at local invariance.
+[36:31] You actually like the local invariance,
+[36:32] right? That's why you want smaller
+[36:34] patches. But you also want to
+[36:36] uh you know, have efficiency in that you
+[36:38] have these different scales. Right? So,
+[36:40] that's the reason to kind of combine the
+[36:42] best of both worlds, right? You start
+[36:43] with actually relatively very small
+[36:45] patches because you want to capture the
+[36:47] very detailed information. Small patches
+[36:49] are actually very good, right? Because
+[36:50] it means you can like focus on the very
+[36:53] minute details.
+[36:54] Uh but then eventually you do want to
+[36:56] combine the results of each feature map
+[36:58] into higher level compositions as well.
+[37:02] So, max pooling is just essentially
+[37:04] lowering the resolution.
+[37:06] Exactly. Yeah, max pooling is nothing
+[37:08] more than lowering the resolution but
+[37:09] doing so in a very structured way,
+[37:11] right? So, it's keeping the Another way
+[37:13] to think of this conceptually is that
+[37:15] you want to keep the features that were
+[37:18] maximally identified and preserve them
+[37:21] onto the next feature map, right? So,
+[37:22] the This point was maximally pulled was
+[37:25] maximally identified, you want to
+[37:27] preserve that over here on your input on
+[37:30] your next input as well.
+[37:32] Okay. So, these are the key operations
+[37:35] of convolutional neural networks and now
+[37:37] we're basically ready to put them all
+[37:39] three of them together to form a CNN.
+[37:42] Now,
+[37:43] again, just to keep reiterating this
+[37:45] point, the whole point of what we're
+[37:46] doing here is to learn this hierarchy,
+[37:49] right? We start from very small patches
+[37:50] because we want to learn these types of
+[37:52] low-level features on the left-hand
+[37:54] side. And because the patches are small,
+[37:56] that's what enables these low-level
+[37:57] features to emerge. Every time we pull,
+[38:00] we scale up the size, the relative size,
+[38:02] and the compositionality of what those
+[38:04] features represent so that we can
+[38:06] combine features from previous layers
+[38:08] like lines and edges into corners and
+[38:11] curves into shapes and objects as you go
+[38:14] deeper and deeper into the model.
+[38:18] Now, a CNN built for image detection or
+[38:21] image classification can be broken down
+[38:23] now into these two parts, right? The
+[38:25] first part is a feature learning part
+[38:27] and it's composed of exactly what we
+[38:29] just saw in the lecture so far, right?
+[38:31] It's composed of convolutions,
+[38:32] nonlinearities, pooling in succession,
+[38:35] in sequence.
+[38:36] Um the second part is a classification
+[38:39] part and this is where you basically
+[38:41] take the result of your convolution and
+[38:43] pooling layers. Those have now outputted
+[38:46] these high-level features
+[38:48] and finally now you do flatten them and
+[38:50] you put them into a fully connected
+[38:52] layer that can do your final
+[38:53] classification because eventually you do
+[38:55] need to go to that one-dimensional
+[38:56] classification head. And you of course,
+[38:59] just like we saw yesterday uh you train
+[39:02] with a classification loss. You use a
+[39:04] softmax output. All of the same things
+[39:06] that we saw yesterday because we want to
+[39:08] output our categorical distributions in
+[39:11] one-dimensional vector space. Yes.
+[39:14] Um different architectures
+[39:17] are meant for different
+[39:19] I think our our mind is from yesterday
+[39:23] our event our event you can imagine
+[39:26] here
+[39:27] you can use it for classification.
+[39:29] Can you use CNN for language also or is
+[39:31] it like
+[39:32] Great question.
+[39:34] So, the question is about are different
+[39:36] architectures meant for different
+[39:37] purposes at a high level. So, the the
+[39:39] short answer is yes, absolutely. I would
+[39:41] say that different architectures are
+[39:43] meant for different data modalities
+[39:45] first of all, right? So, what we're
+[39:47] seeing here is primarily focused on
+[39:48] two-dimensional images or
+[39:50] two-dimensional inputs is even a more
+[39:52] accurate way to say that. It doesn't
+[39:53] necessarily need to be images, but if
+[39:55] your input is two-dimensional and
+[39:56] spatial preserve spatial preserving,
+[39:58] then you'd want to use a convolution.
+[40:00] If your input is sequential, you would
+[40:03] want to use an RNN or or a sequence
+[40:05] model.
+[40:06] Now, there are some exceptions, right?
+[40:08] You could also imagine doing
+[40:10] creating a sequence model with
+[40:11] convolutions as well, right? So, instead
+[40:14] of operating on two-dimensional images,
+[40:16] you could operate on one-dimensional
+[40:18] vectors, right? But have convolutions of
+[40:21] patches across that one dimension, and
+[40:23] that's also a valid sequence model. So,
+[40:25] in short, the the short answer is that
+[40:27] there are many variations of what we're
+[40:29] seeing here. And actually, there's
+[40:31] even though we're focusing on this
+[40:33] lecture in image space, in
+[40:35] two-dimensional space, a lot of the same
+[40:36] ideas would extend to 1D, which is
+[40:38] basically a sequence model, again, like
+[40:40] we saw with the RNN lecture, or 3D,
+[40:43] which extends even to other modalities
+[40:45] as well, like
+[40:46] like volumetric scans and so on.
+[40:52] Awesome. Okay, so let's put this all
+[40:53] together into our first end-to-end
+[40:56] convolutional neural network. So, what
+[40:57] does this look like in code? We start by
+[41:00] defining our feature extraction head.
+[41:03] Remember, there are these two parts.
+[41:04] There's a feature extractor and there's
+[41:05] a classifier. The first part is the
+[41:07] feature extractor. We start by defining
+[41:08] those heads. Let's just walk through the
+[41:10] numbers here. So,
+[41:12] we start with the convolution first. 32
+[41:15] represents the number of filters that we
+[41:18] want to learn with that convolution.
+[41:20] That means that we're looking for 32
+[41:21] different filters in that first layer.
+[41:24] Each filter is going to be of size
+[41:26] three. That means 3 by 3 patches are the
+[41:29] filter size.
+[41:30] And we have an activation as well, here
+[41:32] at the ReLU activation.
+[41:34] And then finally, after that
+[41:36] convolution, we apply a pooling. Just
+[41:37] like we saw before, this is a max
+[41:39] pooling layer.
+[41:41] We can do this again. As we go deeper
+[41:43] into the model, we start to take the
+[41:45] inputs of the previously detected
+[41:47] features,
+[41:49] instead of using the original image. So,
+[41:50] now we're using the detected features as
+[41:52] our new inputs. And now we're looking
+[41:54] for not 32, but now 64 features in the
+[41:58] deeper part of the model. So, we're
+[42:00] basically building up this library of
+[42:02] different features that we're detecting
+[42:05] across the image.
+[42:06] And again, same idea, the filter size is
+[42:08] 3 by 3, but of Of because we scaled down
+[42:11] the image by a factor of two,
+[42:13] it's it's not 3 by 3 in the original
+[42:15] space, right?
+[42:17] Um and then we max pool. And finally, we
+[42:20] feed all of these into our
+[42:22] classification head, which is the dense
+[42:24] part of the network. As we saw
+[42:26] yesterday, this is responsible for
+[42:27] actually performing the classification
+[42:29] of our final answer
+[42:31] and predicting the result. Again, very
+[42:34] similarly in PyTorch, I'll go a bit
+[42:36] quicker this time. We can start with
+[42:39] convolutional layers. Looks very
+[42:40] similar, as you'll see. Inputs are
+[42:42] three-dimensional. Why three? Because
+[42:44] you have an RGB image. Three dimensions.
+[42:47] Or three axes, uh I should say.
+[42:50] Uh
+[42:51] three output channels. This corre-
+[42:52] Excuse me, 32 output channels. This
+[42:54] corresponds to the 32 features that you
+[42:56] want to learn on that layer, followed by
+[42:58] max pooling.
+[42:59] And again, same for the second part. And
+[43:02] again, same for the third part. You now
+[43:04] have your dense classifier model as
+[43:07] well.
+[43:09] Okay. So, so far we've
+[43:11] gotten Oh, yes, go ahead.
+[43:13] You said that in the max pooling layer,
+[43:15] we are taking the max value from each
+[43:17] block.
+[43:18] So, considering image in length, height,
+[43:20] and in depth format, so what are we
+[43:22] exactly reducing in the image?
+[43:24] Just the image Yeah, so it's a great
+[43:26] question. Uh max pooling is reducing
+[43:29] only across the spatial dimensions,
+[43:31] height and width. It does not reduce
+[43:32] across the depth dimension. So, if you
+[43:34] start with 32 features in the feature
+[43:36] map, you maintain 32 after max pooling,
+[43:39] but you reduce only on the spatial axis,
+[43:41] height and width.
+[43:43] Okay, excellent. Now,
+[43:45] also tying back to the previous uh
+[43:47] question that we had,
+[43:49] we've really focused this lecture so far
+[43:51] on image classification, right? And in
+[43:53] reality, convolutions are applicable to
+[43:55] so many different types of tasks beyond
+[43:58] image classification. This is an
+[43:59] architecture for so many applications,
+[44:02] even sequence modeling, as we saw
+[44:03] earlier. But we'll see some some
+[44:05] examples now of how we can extend this
+[44:07] into other applications. The amazing
+[44:09] thing about CNNs is that this
+[44:12] abstraction that I made earlier of
+[44:14] basically having a feature detector part
+[44:16] and a classifier part is actually a
+[44:19] really nice abstraction because you can
+[44:20] take the feature detection part and keep
+[44:23] it very consistent for so many different
+[44:25] applications. So for example, uh what
+[44:28] makes a convolutional neural network so
+[44:30] special is that it's able to do very
+[44:33] general purpose feature learning across
+[44:35] an image, right? So the outputs of all
+[44:37] these convolutional layers are very
+[44:39] general purpose
+[44:41] features that can be re-reused for,
+[44:43] let's say, classification, prediction,
+[44:45] forecasting, etc.
+[44:47] For example, that portion will now look
+[44:50] different. Uh excuse me, this portion,
+[44:52] the classification portion, will look
+[44:55] different depending on an image
+[44:57] classification domain versus other
+[44:59] domains, right? So for example,
+[45:01] uh we could have classification, object
+[45:03] detection, semantic segmentation,
+[45:06] control, forecasting, etc.
+[45:09] Let's consider a few different cases,
+[45:11] right?
+[45:12] We already saw the classification
+[45:13] example, right? There's significant
+[45:16] impact for classification across so many
+[45:18] different areas. I'll focus on one here
+[45:20] with healthcare,
+[45:21] where deep learning models you can take
+[45:23] as input a scan of a patient and you can
+[45:26] analyze
+[45:28] a whole host of different types of
+[45:31] uh classifications or tasks across that.
+[45:34] And this paper was basically
+[45:35] demonstrating how CNNs can outperform
+[45:38] expert radiologists at detecting breast
+[45:40] cancer. This was actually paper from
+[45:41] some time ago. Uh we've gone much
+[45:43] farther than this.
+[45:46] Classification also tells us just a
+[45:48] binary prediction
+[45:49] for a particular
+[45:51] uh
+[45:52] container or for a particular class. But
+[45:54] we can go much deeper into that problem
+[45:56] and we can actually identify not just to
+[45:58] classify, but but to localize, right?
+[46:02] This is a problem of uh drawing bounding
+[46:05] boxes over our image of where the
+[46:08] different objects are. So, for example,
+[46:10] object detection is simply going from an
+[46:11] image of a taxi to a class label, taxi.
+[46:16] Object detection is saying take that
+[46:18] same image and output a bounding box
+[46:21] for every object that you see in the
+[46:23] image, not just one class label, but now
+[46:25] also output the coordinates, the XY
+[46:27] coordinates of a bounding box along with
+[46:30] the height and width of that bounding
+[46:31] box, and then a classification for that
+[46:33] bounding box as well.
+[46:35] Right? The classification also following
+[46:38] the same trend as what we saw before,
+[46:40] but the bounding box being very new.
+[46:43] So, our network in this paradigm,
+[46:45] it's still using the convolutional front
+[46:47] part of the model, but now obviously the
+[46:49] back part needs to be changed, right? It
+[46:52] needs to be dynamic to infer not just
+[46:55] one object in the scene, but also
+[46:57] potentially many objects, right? If we
+[46:59] have many boxes in the scene, the model
+[47:02] on the output side needs to be flexible
+[47:04] to be able to output any arbitrary
+[47:06] number of boxes and predictions for
+[47:10] those boxes, right? And that's something
+[47:11] that we actually haven't seen in the
+[47:12] class so far of having variable-sized
+[47:15] outputs.
+[47:17] Now, this is very complicated because
+[47:19] boxes can be actually anywhere in the
+[47:21] image and they can also be of different
+[47:23] sizes. So, let's look at a first very
+[47:25] naive solution to this problem, right?
+[47:27] What's the simplest way that we could
+[47:29] solve this problem? We could, if we want
+[47:31] to detect a box, what we could literally
+[47:33] do is
+[47:35] take a random box in the image
+[47:38] and pass it through our original
+[47:40] detection model, right? And we see, does
+[47:42] this thing have a class?
+[47:44] Right? We just picked a random box here,
+[47:46] right? Uh
+[47:47] and we would repeat that. We would keep
+[47:49] picking random boxes. Now, of course,
+[47:51] this is really expensive because there's
+[47:53] so many random boxes to do. So, okay,
+[47:55] this is a very naive solution, for sure.
+[47:58] Um
+[47:59] there's way too many inputs here, way
+[48:01] too many scales, right? Even if you fix
+[48:03] the size of a box, there's a lot of
+[48:05] inputs. Now, imagine you have also have
+[48:06] to have different sizes, scales, aspect
+[48:08] ratios, and so on.
+[48:10] Um how can we do better, right? So,
+[48:13] instead of picking random boxes, the
+[48:15] first intelligent thing that we might do
+[48:16] is to use a heuristic
+[48:18] of where
+[48:20] from from another model, identify where
+[48:23] are some blobs of information, you know,
+[48:26] roughly in this image, right? There are
+[48:28] good metrics, good good heuristic-based,
+[48:31] not machine learning-based methods for
+[48:33] just identifying where stuff is
+[48:35] happening in images, right? Where
+[48:36] there's blobs in images, and basically
+[48:38] draw boxes around those things, and then
+[48:40] just feed those into our CNN, right? So,
+[48:43] you have a good heuristic of just where
+[48:44] to look, first of all,
+[48:46] and then take boxes in those areas, so
+[48:48] you cut away a lot of the space.
+[48:50] Now, this is
+[48:52] this is much better, obviously, than the
+[48:53] previous option that we had, but it's
+[48:55] also having two key problems. Still,
+[48:58] it's very slow, because you're relying
+[49:00] on this first model, typically not a
+[49:02] machine learning model, to extract
+[49:04] possible boxes. You're still having to
+[49:06] go over a lot of boxes, many of which
+[49:08] are not relevant to the task. And it's
+[49:11] also very brittle, right? Because you're
+[49:13] operating off of these manually defined
+[49:15] boxes. You're not actually learning
+[49:16] where the boxes are, which kind of
+[49:18] defeats the whole purpose of of deep
+[49:21] learning as a field.
+[49:23] Now, how can we do better, again, right?
+[49:26] Many variants have been proposed to
+[49:27] tackle this issue. It's such a big
+[49:29] problem, actually, like this task of
+[49:31] object detection, as you can imagine, is
+[49:33] very foundational, right? It's a
+[49:34] backbone for self-driving, it's a
+[49:36] backbone for many
+[49:38] uh type of real-world locomotive tasks,
+[49:40] as well.
+[49:41] Um I'll touch on one solution that is
+[49:44] very widely used in practice, right? The
+[49:47] The goal here is that, again, we want to
+[49:48] take our image. We'll use our
+[49:50] convolutional
+[49:51] feature extractor, exactly like we saw
+[49:53] before. Nothing new here. And we're
+[49:56] going to feed that into our
+[49:57] convolutional layers. Why do we do this?
+[49:59] This is great because now it's very
+[50:00] fast. Like we saw before, we feed in the
+[50:03] entire image all at once. What's the
+[50:04] output? It's going to just be a feature
+[50:07] map, right? There's so far there's no
+[50:09] boxes here. It's just features again.
+[50:12] But we can now use those features to
+[50:15] propose. This is called a proposal step,
+[50:17] to propose boxes and where candidate
+[50:20] boxes may be. Because the features are
+[50:22] detecting already some stuff happening
+[50:25] in the image.
+[50:26] And those are blobs now that we can
+[50:28] identify we can grab boxes just around
+[50:30] those blobs. And again, we can use
+[50:32] heuristic based approaches for this.
+[50:34] It's very easy to basically threshold
+[50:35] the image and you know, identify where
+[50:37] the blobs are.
+[50:39] And then for each of those, perform
+[50:41] feature extraction and classification
+[50:43] off of the the features in each of those
+[50:46] boxes one by one. But now the key point
+[50:49] is that we can actually back propagate
+[50:51] through this entire model from the
+[50:54] answer from the classifier all the way
+[50:55] back to the input image.
+[50:58] Right? So, if our boxes were bad boxes,
+[51:00] now we have a way of telling the model
+[51:03] that these were bad boxes and it should
+[51:04] propose better boxes the next time.
+[51:07] Right? The difference being from the
+[51:08] previous model, now this is fully
+[51:10] end-to-end differentiable. Right? We can
+[51:12] actually learn from the end all the way
+[51:14] back to the image side.
+[51:18] So, in classification, this is where we
+[51:20] want to detect boxes. But of course,
+[51:22] there are also other forms of even more
+[51:24] flexible. Right? Maybe you don't want a
+[51:25] box, but you actually want pixel level
+[51:28] segmentation of what's happening in your
+[51:30] image. That's even taking this one step
+[51:32] further. Right? One example of this is
+[51:34] where we input the full RGB image and we
+[51:37] want to output another image. So, this
+[51:39] is an image-to-image task now, not image
+[51:42] to boxes or image to classification.
+[51:44] It's image to image. And we want to
+[51:46] output for every pixel
+[51:48] what class does this pixel belong to?
+[51:52] So here for example, you can see an
+[51:54] a case where input is a
+[51:57] picture of a cow or two cows.
+[52:00] And we want to output pixel by pixel
+[52:02] classifications of cows, trees, sky,
+[52:05] grass, etc.
+[52:07] Now
+[52:08] the output here is it created simply by
+[52:12] again keeping the same input as we saw
+[52:14] before. This is convolutional layers
+[52:16] followed by pooling layers and
+[52:17] nonlinearities.
+[52:18] But the output side is the only thing
+[52:20] that changes, right? The core theme that
+[52:22] I'm trying to get at here is that the
+[52:24] input feature extraction is very stable
+[52:26] for many of these applications. You're
+[52:28] always only really changing the output
+[52:30] side. And here the output is actually
+[52:32] needing to produce a new image. So you
+[52:34] actually want to go from these down
+[52:36] sampling operations that we saw on the
+[52:37] input side now to up sampling operations
+[52:40] to now produce and generate a new image.
+[52:43] And that image is going to be pixel by
+[52:44] pixel classifications. You train it as a
+[52:46] classifier at the end. So in some sense
+[52:49] this is actually an image classification
+[52:51] task as well, but now where your
+[52:53] classification is not a one-dimensional
+[52:55] vector, it's also an image.
+[53:00] Amazing. Okay, one more example, one
+[53:02] final example of self-driving. Uh let's
+[53:05] say we want to learn a neural network
+[53:07] for autonomous control and specifically
+[53:09] we want a model that can go from raw
+[53:11] perception, so raw camera inputs from a
+[53:14] image directly using those together with
+[53:17] a noisy street view map. So here this is
+[53:20] a top-down topological map that you
+[53:22] might see from something like Google
+[53:23] Maps even
+[53:25] more sparse than what you would see in
+[53:27] something like Google Maps. But again,
+[53:28] this is actually an image.
+[53:30] We can feed both of or all of these
+[53:32] inputs through different convolutional
+[53:34] layers and try to predict possible
+[53:37] control commands, right?
+[53:39] Um the entire model here can be trained
+[53:42] as a large CNN. There's nothing really
+[53:44] more to it than that because you have
+[53:47] different camera inputs that the car
+[53:49] sees. Each of these will get passed
+[53:50] through convolutional layers. You also
+[53:52] have a map
+[53:54] also gets passed through convolutional
+[53:55] layers because this is nothing more than
+[53:56] an image.
+[53:58] You concatenate all of those features
+[53:59] together and then you can learn
+[54:01] different control commands that come
+[54:03] out.
+[54:04] Of course, the interesting part here is
+[54:06] that control is often not one number,
+[54:09] right? It's you have many possible
+[54:11] commands that you can take at any moment
+[54:13] in time. So, this is actually more than
+[54:14] just a forecasting problem. It's a
+[54:16] probability learning It's a
+[54:18] distributional learning problem because
+[54:20] you have a distribution of possible
+[54:21] actions that this car could take at any
+[54:23] moment in time, potentially multi-modal
+[54:27] uh actions as well, meaning that you
+[54:29] could turn left or right. It's not just
+[54:31] one modality that you could perform at
+[54:33] any moment in time.
+[54:34] So, there are ways to also learn this
+[54:36] using distributional learning, which
+[54:37] we'll talk about later in the class as
+[54:39] well.
+[54:41] Now, but just to summarize, right? This
+[54:43] is nothing more than again the same
+[54:44] feature extractors that we saw before
+[54:46] using convolutions, pooling, and then
+[54:49] finally learning on the other side.
+[54:52] Amazing.
+[54:54] Okay. So, the impact of CNNs has been
+[54:57] wide reaching beyond these examples that
+[54:59] I've shared today. And CNNs really are
+[55:01] this incredibly general-purpose
+[55:04] uh operation that works off of not just
+[55:06] 2D images, but like we saw before,
+[55:08] one-dimensional sequences as a as a
+[55:11] whole as well.
+[55:12] Uh these are some of the examples that
+[55:14] we talked about today, but it definitely
+[55:16] does not uh end there, right? I'll
+[55:18] conclude by just talking uh summarizing,
+[55:21] right, very briefly what we considered
+[55:22] today. We saw everything from manually
+[55:25] defining these features by hand uh and
+[55:28] understanding their intuitions and their
+[55:30] origins
+[55:31] uh all the way to, you know, learning
+[55:33] them with convolutional neural networks
+[55:36] and then some of the applications and
+[55:37] extensions of these models where you
+[55:39] change the later part of the model, keep
+[55:41] the feature extraction part, but change
+[55:43] the later part, and actually understand
+[55:45] what's going on under the hood with
+[55:47] these different applications.
+[55:49] Now, I'll also highlight that in today's
+[55:51] lab, later today, you will get hands-on
+[55:54] exposure to these types of models
+[55:57] first-hand. You'll build your own
+[55:59] feature classifier and your own image
+[56:01] detector
+[56:03] for facial detection systems. You'll
+[56:04] also understand how to debias these
+[56:07] systems because one big problem is that
+[56:09] you want to make sure that your features
+[56:10] that you're learning cover a full
+[56:11] spectrum of the of the distribution of
+[56:14] your data. So, we'll cover that in
+[56:16] today's lab, as well.
+[56:18] Amazing. And after this, we'll have
+[56:20] Albus' lecture coming up. We'll just do
+[56:22] it 2 minutes just to to to transition
+[56:25] over. That will cover generative
+[56:26] modeling.
+[56:28] And this will also be a really exciting
+[56:30] lecture because it it's about not just
+[56:31] predicting things, which is everything
+[56:33] that we've seen in this lecture so far
+[56:34] is just prediction, but now you actually
+[56:36] want to generate new things, as well.
+[56:38] And that's what the next lecture will
+[56:39] cover.
+[56:40] Awesome. Thank you.

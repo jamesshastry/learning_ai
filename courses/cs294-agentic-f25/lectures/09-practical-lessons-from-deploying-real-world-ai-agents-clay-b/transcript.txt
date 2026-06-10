@@ -1,0 +1,1773 @@
+[00:01] CLAY BAVOR: So I was excited.
+[00:05] That all came from Gemini.
+[00:06] So I was hoping there would
+be some wild hallucinations
+[00:08] in there, things that I hadn't
+actually done or accomplished,
+[00:12] continents I'd not
+actually visited.
+[00:14] First of all, it's
+great to be here.
+[00:15] When we started Sierra,
+two and a half years ago,
+[00:18] we had to explain to our
+perspective customers
+[00:22] and even to our friends,
+what agents even were.
+[00:25] And here we are, 30
+months later and there
+[00:28] is a graduate seminar
+and a MOOC on agents.
+[00:32] So super exciting to see that.
+[00:34] I think this will be a
+little bit different talk
+[00:36] from some of the others that
+you've seen much more practical.
+[00:39] Sierra is an applied AI company.
+[00:42] I grew up at Google on the
+product and engineering side.
+[00:45] And what we're aiming
+to do with Sierra
+[00:48] is to solve one of the oldest
+problems in business, which
+[00:51] is the tension between the cost
+and quality of how a company can
+[00:56] serve its customers.
+[00:57] And unless you're like
+the Four Seasons or Hermes
+[01:01] or some other fancy
+brand, you can't show up
+[01:03] in every interaction with a
+concierge level, white glove
+[01:07] level of service.
+[01:07] That's the problem
+we're trying to solve.
+[01:09] And we've been in business
+for two and a half years.
+[01:15] We started in March
+of '23, again,
+[01:17] when no one had heard of agents.
+[01:19] And my co-founder, Bret and I,
+have actually known each other.
+[01:22] So in a way, the company has
+been in the making for a while.
+[01:25] We've known each
+other for 20 years.
+[01:27] We both met in our
+first year at Google,
+[01:30] where we both
+started our careers.
+[01:32] Bret was most recently
+co-CEO at Salesforce,
+[01:34] and he's the current
+board chair at OpenAI.
+[01:38] We, over the past
+two and a half years,
+[01:40] have worked with
+hundreds of companies
+[01:43] to serve hundreds of
+millions of their customers
+[01:46] with customer-facing AI agents.
+[01:48] So to make this
+concrete, if you were
+[01:51] to order some new
+flip-flops from OluKai,
+[01:54] and they were the wrong size and
+you called OluKai, or chatted
+[01:58] with OluKai, you'd
+interact with an agent
+[02:00] that we built with
+and for OluKai.
+[02:02] And it would help you with
+a warranty, an exchange,
+[02:05] get you in a better
+color or size or fit.
+[02:08] ADT, they're the
+blue rectangle--
+[02:11] blue octagon home
+security company.
+[02:14] If your battery in your
+alarm panel conks out,
+[02:17] we'll help you figure
+out which panel you have
+[02:19] and drop ship you a
+new one from there.
+[02:22] We work with a number of the
+Fortune 500, Fortune 100,
+[02:26] Fortune 20, Fortune 10,
+in building customer
+[02:29] facing AI agents.
+[02:31] They can pick up on chat,
+they can pick up on voice,
+[02:33] and they do everything, as
+I said, from return shoes
+[02:38] and debug alarm systems to send
+satellite signals from space
+[02:43] in the case of SiriusXM, where
+you're moving from one car
+[02:46] to another and we need to send
+a new encryption key from space
+[02:49] to get you up and running
+on that new radio.
+[02:52] So what I thought I'd
+do today is first,
+[02:55] just orient you on how we think
+about the world of agents.
+[02:59] We obviously occupy one
+corner of the world of agents.
+[03:02] I think, broadly, we categorize
+them into three buckets.
+[03:06] Number one, personal agents.
+[03:07] So ChatGPT, Gemini,
+agents that will
+[03:10] work as our own kind of trusted
+personal digital assistant.
+[03:13] Two are the kind of role-based
+or persona-based agents,
+[03:16] like coding agents,
+or other agents
+[03:19] that can help you in the context
+of getting your job done.
+[03:22] Legal agents, like those from
+Harvey, are another category.
+[03:25] And the third category in our
+mind are customer-facing agents.
+[03:28] We think that every
+business in the future
+[03:30] is going to have its own
+customer-facing agent.
+[03:33] And what I thought
+I'd do is orient you
+[03:34] on how we think about that
+and our corner of the world
+[03:37] of agents, and then just
+share a bunch of lessons
+[03:40] learned from having to make
+contact with reality again
+[03:43] and again and again,
+that hopefully
+[03:45] give you some ideas for
+the trials and tribulations
+[03:49] in actually deploying
+agents in the real world.
+[03:52] First of all, this stuff is
+moving incredibly quickly.
+[03:55] I was actually born in Mountain
+View on the Peninsula here.
+[03:58] I grew up in Silicon Valley
+at the advent of the internet,
+[04:02] and nothing, I think,
+anyone has ever seen
+[04:04] has played out as
+quickly as this.
+[04:06] Took the internet 11 years,
+from about 1991 to 2002,
+[04:11] to go from not existing
+to having 10% of the world
+[04:14] use it in a given week.
+[04:16] ChatGPT, as you all know,
+took less than 25 months
+[04:19] to get there.
+[04:20] And this really
+shapes our mindset
+[04:23] in how we think about
+customer-facing agents.
+[04:27] We think that agents are
+to AI, as the website was
+[04:30] to the internet and
+apps are to mobile.
+[04:32] And again, every
+company is going
+[04:34] to have one that will do
+everything from product
+[04:38] recommendations, sign up,
+set up, product activation,
+[04:41] cross sell, upsell,
+troubleshooting,
+[04:44] subscription churn management,
+retention and everything
+[04:46] in between.
+[04:48] And we're the category
+leaders in building
+[04:50] those customer-facing agents.
+[04:52] And that's where we
+think the puck is going.
+[04:55] A couple of things.
+[04:56] First of all, businesses
+talk about channels,
+[05:00] phone as a channel, chat as a
+channel, email as a channel.
+[05:03] And our strong
+view is that you're
+[05:05] going to have this world
+collapse from multiple channels
+[05:08] to a single agent that
+you imbue with knowledge
+[05:12] and know how about
+how to do what
+[05:14] you as a business, how you do
+it best, what great looks like.
+[05:17] And then that agent is going
+to show up in every place
+[05:21] where your customers are.
+[05:22] So if they're texting
+you or Whatsapping you,
+[05:25] your agent will show up there,
+meet customers where they are,
+[05:28] and be able to
+have a conversation
+[05:29] and not just answer questions,
+but get things done.
+[05:32] Same on the phone, same
+on email and ticketing.
+[05:35] And I imagine, a few of you
+have deep insight into the way
+[05:39] that operations teams
+structure staffing
+[05:44] these different channels today.
+[05:45] But typically, you'll have a
+team within a company managing
+[05:48] a phone tree, an IVR system,
+a separate team running chat,
+[05:53] separate team running email.
+[05:54] That's all going to collapse
+to a set of-- actually,
+[05:57] we've seen early signs
+of what these teams will
+[05:59] call themselves.
+[06:00] Many of our customers
+and the teams
+[06:02] working to shape
+their agents have
+[06:03] come to calling
+themselves AI architects.
+[06:05] So instead of AI architects
+inside of companies,
+[06:08] building, defining and shaping
+what the agent should look like.
+[06:12] Another really
+important insight here
+[06:14] is that we've gone from mobile
+app UIs and menus and scrolling
+[06:20] grids of products
+and so on, to a world
+[06:22] where actually just the
+conversation, the ability
+[06:24] to speak and converse back and
+forth with a piece of software,
+[06:27] that is the interface.
+[06:29] And it's wonderful
+because it's the interface
+[06:31] we're all born with.
+[06:32] We don't have to
+think about using it.
+[06:34] Having a conversation,
+asking a question,
+[06:36] listening comes as
+naturally as anything to us.
+[06:40] And we think that's a real
+breakthrough in how businesses
+[06:43] are going to interact
+with their customers,
+[06:45] because there's
+nothing to learn.
+[06:46] There's no app to navigate.
+[06:47] There's no kind of
+hierarchical menu structure
+[06:49] to get through, and so on.
+[06:52] Agents, for us,
+have really made it
+[06:55] possible to introduce
+a new business model.
+[06:58] So if you look at the
+history of software,
+[07:00] 20 or 30 years ago,
+you would go to a store
+[07:02] like Fry's Electronics.
+[07:03] You would buy a
+shrink wrapped box
+[07:06] with a CD-ROM or a stack
+of floppy disks in it.
+[07:08] You'd install it.
+[07:09] And regardless of how much you
+used it, you had paid for it
+[07:11] and you were done.
+[07:13] That, of course, transitioned
+to SaaS, software as a service,
+[07:15] where you subscribe to it.
+[07:17] More recently, companies like
+Amazon Web Services, Snowflake
+[07:20] introduced
+consumption-based pricing,
+[07:21] where you pay for what you use.
+[07:23] We have pioneered what we call
+outcomes-based pricing, where
+[07:27] a company only pays
+Sierra if we successfully
+[07:31] resolve whatever problem a
+customer has written in about.
+[07:34] And so if again, you were
+returning a pair of shoes,
+[07:38] and an AI picked up the phone
+and helped you find a new one,
+[07:41] drop ship you new
+pair in the mail,
+[07:43] we charge our customers then.
+[07:44] If not, there is no charge.
+[07:46] Has this important aspect where
+it deeply aligns our incentives
+[07:50] with our customers,
+where when they win,
+[07:53] they only pay us when they're
+saving money or making money
+[07:56] if one of our agents
+actually makes a sale.
+[07:59] So another principle that
+we think is quite important.
+[08:03] Today, we're in the world of
+agents as a piece of technology.
+[08:07] And everyone is
+still figuring out
+[08:09] how to get agents to do what
+you want them to do reliably.
+[08:13] And one of the
+questions we encounter
+[08:15] all the time, in
+particular, from large
+[08:18] and technically
+sophisticated companies,
+[08:20] is why not just build my own?
+[08:22] And I think to most
+engineering managers,
+[08:25] to most engineers inside
+companies, building an agent
+[08:28] kind of looks like this.
+[08:30] Like, let me choose the language
+model I want to build on.
+[08:33] Will I use Pinecone?
+[08:35] Will I run my own
+semantic search engine?
+[08:38] Let me integrate with
+some tools and some APIs,
+[08:40] and we'll be done.
+[08:42] What we have found over the
+last two and a half years
+[08:44] is building these things is that
+when you put your scuba tanks on
+[08:47] and you go under the
+surface of the ocean,
+[08:49] you discover there's just
+like a whole lot of stuff
+[08:53] that you need to get right.
+[08:55] We'll deep dive
+into some of this.
+[08:58] What is version
+control look like?
+[09:00] What is release management look
+like in the context of agents?
+[09:03] How do you observe
+what they're doing?
+[09:05] How do you make sure that
+they don't make stuff up?
+[09:07] How do you make sure that if
+you're in financial services,
+[09:10] your agent doesn't
+dispense financial advice?
+[09:13] Which is illegal.
+[09:14] How do you make sure if you're
+in the health care setting,
+[09:17] you don't diagnose a patient and
+suggest they take some medicine?
+[09:21] Which is also illegal.
+[09:23] In voice, how do you
+mitigate latency?
+[09:25] How do you transcribe
+proper nouns
+[09:28] and get tonality,
+accent, and more right?
+[09:33] How do you prevent bad actors
+from poisoning the context
+[09:37] and prompt injecting you.
+[09:38] So you spill the beans
+or take some bad action
+[09:41] on behalf of the user.
+[09:43] All of these are
+problems that we've had
+[09:44] to solve in building Sierra.
+[09:47] And even today, as proud as we
+are of the platform we've built,
+[09:51] it very much feels like the
+1997 era for building agents.
+[09:55] What was 1997?
+[09:57] It was the internet had been
+around for a couple of years,
+[09:59] but no one had
+really figured out
+[10:02] how to build and
+scale web services.
+[10:04] So AJAX did not yet exist.
+[10:08] The PHP, MySQL, Apache kind
+of LAMP stack did not exist.
+[10:14] And so people were cobbling
+together web applications.
+[10:17] And in fact, in 1997,
+there was an article
+[10:20] in WIRED about a bank converting
+its website from basically
+[10:25] a business card.
+[10:26] It's like, here's where we're
+based, here are ours, and so on,
+[10:29] to a very lightly
+transactional system, basically
+[10:34] a web form and a Submit button.
+[10:36] And they spent
+$13 million on it.
+[10:39] It was like to get a
+functional website that
+[10:41] did anything in 1997
+was $13 million.
+[10:44] And that's because
+it was fundamentally
+[10:45] a technology problem.
+[10:47] And you had-- it was in
+the domain of engineers
+[10:51] to actually build these things.
+[10:52] What we're trying
+to do with Sierra,
+[10:54] and where we think
+the puck is heading,
+[10:56] is moving from cobbled
+together technology to a world
+[10:59] where agents are products,
+where agents can be configured,
+[11:02] built, kept secure, and so on.
+[11:04] But the product
+stack, as opposed
+[11:06] to having to in a kind of
+artisanal way, pop the hood,
+[11:11] go under the hood, and actually
+build these things piece
+[11:13] by piece.
+[11:14] And our goal in
+doing that is to make
+[11:17] software and a product
+that is simple but anything
+[11:21] but simplistic.
+[11:23] And so all of the
+expressiveness that you have,
+[11:25] if you're hands on with building
+frameworks, but abstracting away
+[11:30] a lot of that complexity
+under the iceberg
+[11:32] to make it possible to
+build highly capable agents.
+[11:37] The other thing we're
+working on is moving agents
+[11:39] from a world of
+being transactional,
+[11:41] where basically every
+interaction is a one off.
+[11:44] They forget things
+between sessions.
+[11:47] And so if you're calling
+back a second or third time,
+[11:50] today, it's kind of like
+agents have amnesia.
+[11:53] Of course, we've seen memory
+in the context of ChatGPT.
+[11:56] There are lightweight ways
+of doing it using RAG.
+[12:00] What we're really trying to do
+is build this kind of context
+[12:04] and memory foundation for agents
+so that when you call back,
+[12:09] your conversation is starting
+on second or third base
+[12:12] as opposed to hi, who are you?
+[12:14] I have no idea what you're
+calling in about, and so on.
+[12:17] So we think that, that
+warm start problem, which
+[12:19] is based on getting
+memory right is going
+[12:21] to be super important to solve.
+[12:23] And it's one of the things that
+we've been working on and really
+[12:27] trying to make this
+transition from transactions
+[12:30] to building relationships
+with a company's customers
+[12:33] across multiple interactions
+and transactions.
+[12:37] So I'm just going
+to go through this.
+[12:43] What we realized in
+building Sierra and building
+[12:46] our first agents,
+is that agents are--
+[12:49] and this won't be news
+to you because you're
+[12:51] in this course, a fundamentally
+new type of software.
+[12:54] And these agents are
+non-deterministic for a given
+[12:58] input.
+[12:58] You have no idea, a priori,
+what the output will be.
+[13:01] And so they really deserve
+an entirely new approach
+[13:04] to software development.
+[13:05] Taking the software
+development life cycle
+[13:08] that has been matured
+over the last two decades
+[13:10] in the context of
+industry in particular.
+[13:13] And from first principles,
+think through what
+[13:16] does this process look like
+for building these agents,
+[13:19] again, which are fundamentally
+non-deterministic, which
+[13:21] have to deal with the
+messiness of human language,
+[13:24] and on the phone and not just
+a single person's language,
+[13:27] but what if the TV is on in the
+background or a dog's barking,
+[13:31] or you have two speakers,
+all of the complexity.
+[13:34] So how do you build them,
+how do you test them,
+[13:36] and how do you optimize
+them over time?
+[13:39] Bless you.
+[13:40] The first thing we realized
+in creating a platform
+[13:45] is that most large
+companies are faced
+[13:48] with this choice of
+building or buying.
+[13:50] You build an off-the-shelf
+limited SaaS solution,
+[13:54] or you're building it
+yourself from a kit
+[13:56] of parts from scratch.
+[13:57] And what we've tried
+to embrace with Sierra
+[14:00] is this mindset of building
+with or building on.
+[14:04] So fundamentally,
+what Sierra provides
+[14:07] is a platform as
+a service, a set
+[14:09] of LEGO bricks, where
+we've abstracted away
+[14:12] a lot of the lower level
+complexity, all that
+[14:14] gunk beneath the surface of
+the ocean on the iceberg,
+[14:17] and made it possible to
+build with these higher level
+[14:19] abstractions.
+[14:20] And so when we're approaching
+companies, we try to offer,
+[14:24] again, the flexibility
+of build and the power
+[14:28] build with the ease and
+simplicity of buying a solution.
+[14:33] One of the really cool
+things about building agents,
+[14:35] in particular voice agents,
+is that for the first time,
+[14:40] every channel that a company
+interacts with its customers
+[14:42] over, is digital, and can be
+understood and broken down
+[14:47] and attributes in
+what happened there.
+[14:50] Today, most phone calls
+that happen to call centers,
+[14:53] they aren't even transcribed.
+[14:55] So there's no way
+to analyze them.
+[14:56] There's no way to understand
+what actually happened in them.
+[15:00] Forget running like
+controlled A/B experiments.
+[15:03] So most Fortune 500 companies
+will have a contact center
+[15:06] with thousands of people in it.
+[15:09] The only way that you could A/B
+test a conversation today was
+[15:13] to hand a new script to 1,000
+people and a different script
+[15:17] to 1,000 people, and hope that
+they read it and comply with it.
+[15:21] So with agents, in
+particular, over the phone
+[15:23] and all of a sudden
+you can apply
+[15:25] all of the lessons
+and techniques
+[15:27] from 20 or 30 years of building
+websites, A/B testing, control,
+[15:33] experiment design, and so on,
+to conversations and to agents.
+[15:38] I talked about this
+model of again,
+[15:40] building once and
+deploying everywhere.
+[15:43] And one of the things-- one of
+the aha moments we had was you
+[15:48] should not think about the means
+of communication as relevant
+[15:53] in building an agent.
+[15:54] Instead, what should the agent
+know, what should the agent be
+[15:57] able to do, and then
+giving it the ability
+[15:59] to pick up on whatever
+channel a person
+[16:01] happens to be reaching
+the company on,
+[16:04] that is the way you
+get economies of scale.
+[16:07] That's the way you cross train
+across chat conversations, voice
+[16:10] conversations, email, and
+ticket-based conversations.
+[16:14] And so what, again,
+we're trying to do
+[16:17] there is make it possible to
+define what the agent does once
+[16:21] and have it show up everywhere.
+[16:23] Again, on this technology
+shifting to a product approach,
+[16:27] our platform has taken
+the approach of both
+[16:29] providing a code-based SDK.
+[16:33] So it's a declarative
+programming language,
+[16:34] where you can express what
+the agent should do as opposed
+[16:37] to how.
+[16:38] So it abstracts away a lot of
+the underlying large language
+[16:41] model calls.
+[16:42] And for engineering
+teams that want
+[16:44] to integrate the development
+release and version
+[16:47] control of their agent directly
+into their software development
+[16:50] lifecycle, they can do that
+in code, in a GitHub repo
+[16:53] or whatever source
+control tool they use.
+[16:56] At the same time, with many
+of the companies we work with,
+[16:59] their big operations
+teams that are often
+[17:01] closest to the customers and
+know the experience best.
+[17:04] And so we have a set
+of no code tools that
+[17:06] makes it possible to express and
+structured English language what
+[17:11] the agent should do, what
+it should know about,
+[17:13] tools it should have
+access to, and more.
+[17:16] And then on this moving from
+transactions to relationships,
+[17:20] we actually, just
+last week, announced
+[17:22] something we call the
+agent data platform.
+[17:24] It's a real first of its
+kind that combines memory,
+[17:28] so long term memory,
+and the ability
+[17:30] to store away context and
+recollections from interactions
+[17:34] that the agent has had.
+[17:35] It also enables a
+business to import data
+[17:38] from what's called a
+customer data platform.
+[17:40] Think of this as your
+database on everything
+[17:43] you know about your customers
+or potential customers,
+[17:46] and then to use
+that to hill climb
+[17:48] and optimize to optimal ways
+of delivering a sales pitch,
+[17:53] saving a subscriber from
+potentially churning
+[17:55] and leaving you as a
+subscription business, and more.
+[17:59] And then also the ability to
+actually trigger outbound phone
+[18:03] calls or text messages
+so that the agent that's
+[18:06] developed on the
+platform can actually
+[18:09] reach out and proactively engage
+with a company's customers.
+[18:14] So we're going to double click
+into a couple interesting things
+[18:17] here, starting with voice.
+[18:20] So has anyone tried to
+build an agent purely
+[18:23] on one of the real time
+models, audio in, audio out,
+[18:26] like the OpenAI Realtime API?
+[18:30] OK.
+[18:31] One person in the back.
+[18:32] You're brave.
+[18:34] So one of the interesting
+things about these audio
+[18:36] to audio models is they
+tend to be smaller.
+[18:39] And they tend to be
+totally uncontrollable.
+[18:42] They make stuff up.
+[18:43] And you can also gaslight them
+into doing all sorts of things.
+[18:47] If you say, hey,
+please talk like Batman
+[18:50] for this conversation, it'll
+start talking like this.
+[18:53] And then you say a little bit
+gravelly or a little bit slower,
+[18:56] and it'll go slower, and even
+more like-- and just more
+[18:59] and more ridiculousness.
+[19:00] And so one of the challenges
+we've had, obviously,
+[19:04] audio in, audio out with all
+of the nuance of audio tokens,
+[19:08] at some point, that
+will be the way.
+[19:10] Today, the state of the art in
+building reliable, scaled AI
+[19:14] agents for voice is a
+pipeline where you're actually
+[19:18] doing speech-to-text.
+[19:19] You want to do it as
+quickly as possible.
+[19:21] You're then using whatever
+orchestration layer or reasoning
+[19:25] loop you have to decide
+what to do and what to say.
+[19:27] And then using a synthesis
+engine to take text
+[19:31] and produce speech
+out the other end.
+[19:33] And so there's a lot
+to get right here.
+[19:39] And we'll go into a couple
+of the details here.
+[19:42] First of all, latency, latency.
+[19:44] You have to squeeze
+every 10 milliseconds out
+[19:47] of this pipeline.
+[19:48] And we've done a lot there.
+[19:49] And I'll get into some of it.
+[19:51] But again, to string
+together these things,
+[19:55] often with multiple
+speech-to-text models,
+[19:58] so that you're able to
+compare transcriptions
+[20:00] to see if there are
+errors, and then
+[20:02] choose the one that
+looks most correct.
+[20:06] And then making sure that you
+have things like filler phrases,
+[20:11] oh, gotcha.
+[20:11] Let me look up for that.
+[20:12] Let me look up that for you
+so that the person isn't just
+[20:16] like waiting for five seconds
+for the agent to respond.
+[20:19] Stringing together
+all of these things
+[20:21] in a pipeline that's
+really optimized
+[20:23] turns out to be really hard.
+[20:26] Even basic things like measuring
+latency turns out to be hard.
+[20:30] Because really,
+what you care about
+[20:31] is latency between when
+a person stops talking.
+[20:36] So end of utterance as we think
+about it and the time the agent
+[20:41] starts responding.
+[20:43] So it's not the end
+of the audio snippet
+[20:46] that the agent is analyzing.
+[20:49] It's when the
+person stop talking.
+[20:51] So you actually have
+to be able to identify,
+[20:53] as quickly as possible,
+when the person has stopped
+[20:56] talking, so that you can
+kick off all of the reasoning
+[20:59] and then synthesis
+at the other end.
+[21:02] Often, what we will do is kick
+off multiple reasoning loops
+[21:06] and synthesis steps
+so that we can then
+[21:10] look back and figure
+out, no, they really
+[21:12] did stop talking there.
+[21:13] They didn't continue running on.
+[21:15] So you're then ready
+with a response.
+[21:18] We also do things like
+speculative inference requests
+[21:22] once we're in the
+reasoning loop.
+[21:23] So if any of you have looked at
+how long some of the foundation
+[21:27] models take to respond, P90
+latency can have huge variance.
+[21:32] You can have 500 milliseconds.
+[21:34] You can sometimes have
+2,500 milliseconds.
+[21:37] In the context of a
+voice conversation,
+[21:39] that makes a huge difference.
+[21:40] So one of the
+techniques that we'll do
+[21:42] is fire off multiple requests
+to the same inference provider,
+[21:46] grab the first one
+that comes back,
+[21:48] and then use that
+to respond with.
+[21:52] There are other really
+subtle things here.
+[21:55] So for instance, just
+detecting interruptions
+[21:58] and reacting appropriately.
+[22:01] If you or I were talking,
+and I was speaking,
+[22:03] you said, uh-huh,
+uh-huh, uh-huh,
+[22:05] I wouldn't just stop speaking
+because you said something.
+[22:08] I would know that you're just
+acknowledging what I'm saying
+[22:10] and I'd keep going.
+[22:12] So basically, voice activity
+detection and detecting activity
+[22:17] that is meaningful and that you
+want to interrupt, that you want
+[22:20] to stop talking to take in and
+then update what you've heard
+[22:24] turns Out?
+[22:25] To be really hard.
+[22:26] And for that, we've had to fine
+tune our own models to actually
+[22:29] detect this stuff and
+distinguish between, "uh-huh,
+[22:32] uh-huh, yep, gotcha, gotcha,"
+distinguish that from "no, no.
+[22:37] I actually don't want to return
+my shoes," whatever it is.
+[22:41] This is the interrupt ability.
+[22:48] Finally, again, if you've
+followed closely the uptime
+[22:53] for some of the
+frontier models, they
+[22:55] are not in the five,
+six, nines of reliability
+[22:59] like hardened services
+from Amazon Web Services
+[23:02] and so on are.
+[23:03] So even the ability to failover
+from one model provider
+[23:07] to another has turned
+out to be really
+[23:09] important in the context
+of delivering low latency,
+[23:12] reliable voice conversations.
+[23:15] OK.
+[23:18] Voice transcription.
+[23:19] How do you actually--
+first of all, it's hard.
+[23:21] Names are hard.
+[23:23] Pronunciation is hard.
+[23:24] Many of our businesses will
+have hundreds of proper nouns
+[23:29] as part of just a conversation.
+[23:32] Drug names, provider
+names, product names.
+[23:36] One of the companies
+we work with
+[23:37] is deeply inspired by
+the Hawaiian islands.
+[23:40] So our agent there
+needs to basically
+[23:43] be able to speak English and
+Hawaiian, at the same time,
+[23:46] recognize Hawaiian words,
+pronounce them correctly,
+[23:49] and so on.
+[23:50] So what do you do?
+[23:51] First of all, getting
+the measurement right
+[23:54] of accuracy and particular
+around transcription
+[23:56] turns out to be quite important.
+[23:58] And the word error
+rate turns out
+[24:00] to be not at all the
+right metric, at least
+[24:03] the first metric to
+measure this stuff with.
+[24:06] Say you have a phone call
+and you have a speaker,
+[24:11] but then in the background
+you have TV news on.
+[24:14] Word error rate would want
+you to transcribe accurately
+[24:18] every word heard in
+that audio sample.
+[24:21] But of course, you
+don't want to do that.
+[24:22] You want to only transcribe
+words from the primary speaker
+[24:25] and ignore everything
+from the background
+[24:27] and secondary speaker.
+[24:29] So it is not as simple
+as just word error rate.
+[24:33] And what we found is
+we've just had to roll
+[24:35] our own metrics to do this.
+[24:37] And so I think one general piece
+of advice in building agents is
+[24:42] don't assume that whatever
+metrics are out there to measure
+[24:46] a component of what you're doing
+is necessarily the right set
+[24:49] of yardsticks for you.
+[24:51] If you're doing something very
+specific, get to the bottom.
+[24:53] What does great look like?
+[24:55] What does a great
+experience look like?
+[24:56] And how do you actually
+measure what great looks
+[24:59] like in that context?
+[25:02] Voice synthesis is
+super interesting.
+[25:06] So turns out that just
+saying phone numbers is hard.
+[25:11] 650-833-- no, no, no, no,
+that's not how you say it.
+[25:17] Do you say 833?
+[25:20] Do you say 9,000 or 9000?
+[25:24] It turns out there are
+all sorts of standard ways
+[25:26] that we don't even think about.
+[25:28] But if you don't tell the
+agent to do it a certain way,
+[25:31] gets it wrong.
+[25:32] Addresses, proper
+nouns, and names.
+[25:36] Is it Andrea?
+[25:37] Is it Andrea.
+[25:38] Is it something else?
+[25:40] Again, all of these
+things, these details
+[25:42] matter in getting
+the experience right.
+[25:46] The phrasing quality in cadence
+and how the agent actually
+[25:52] says stuff turns out
+to be hugely important.
+[25:54] And one thing that
+we found is just
+[25:56] taking the of-the-shelf
+language model
+[25:58] outputs as if it were a
+chatbot and responding in text
+[26:04] just completely falls over.
+[26:06] It sounds way too long.
+[26:07] Oh, my God, just please,
+get to the point.
+[26:09] Yeah, let's-- and if you think
+about how we speak on the phone,
+[26:13] it's shorter.
+[26:14] It's back and forth.
+[26:15] There's more acknowledgment.
+[26:17] Do you want more detail?
+[26:18] Gotcha.
+[26:18] Yep.
+[26:19] Makes sense.
+[26:20] And so what works in
+the context of chat
+[26:23] doesn't work in the
+context of voice.
+[26:25] I talked about a single agent
+as opposed to multiple channels.
+[26:28] So one of the things that we've
+had to build in the platform
+[26:31] is the ability to
+actually tune and tweak
+[26:34] the style of the
+agent, depending
+[26:36] on whether it's typing,
+whether typing over chat, even
+[26:40] text versus chat on
+the web, they're subtly
+[26:43] different expectations there.
+[26:44] Voice is a different
+beast altogether.
+[26:48] And then the emotive
+range, this is
+[26:49] how you match the individual
+you're speaking with
+[26:53] has turned out to be important.
+[26:56] And today, without the
+voice to voice models,
+[26:59] we're relatively limited in
+what we can do on this front.
+[27:01] But I think will be, a year
+from now, the expectation
+[27:05] that companies will have.
+[27:08] One of the strangest,
+probably the strangest job
+[27:12] title we have at Sierra
+is our voice sommelier.
+[27:16] So it's an unofficial job
+title, but still a real one.
+[27:20] And our voice sommelier helps
+our customers match voices
+[27:25] to the kind of personality and
+brand and vibe of their company.
+[27:30] And so you can read some of the
+different attributes of a voice
+[27:37] here.
+[27:37] Graveliness, you can
+imagine that one.
+[27:40] Breathiness,
+nasality, enunciation,
+[27:42] some of these you've heard,
+probably others you haven't.
+[27:45] I certainly had.
+[27:46] Dips, verbal fry is another one.
+[27:49] And so it's pretty interesting.
+[27:51] Just as fine wines,
+they smell like decaying
+[27:55] violets or bootstrap
+leather or whatever
+[27:58] weird attributes, weird
+adjectives a sommelier
+[28:01] might use to describe a wine.
+[28:04] It turns out there's a similarly
+rich vocabulary, much more
+[28:07] useful, actually, in
+identifying the right voice
+[28:11] for your business.
+[28:12] But we have someone
+full time on staff
+[28:14] who's just listening to
+voices, evaluating it
+[28:17] on these different metrics,
+and then helping businesses
+[28:20] match a voice to their company.
+[28:22] You can imagine how Weight
+Watchers, a weight loss
+[28:26] solution primarily
+for women, that voice
+[28:28] might be very different from
+the voice for Harley Davidson
+[28:32] and what you might
+expect that voice to be.
+[28:35] So a lot of variety here.
+[28:37] And it turns out you
+really have to have
+[28:39] this vocabulary and
+the set of dimensions
+[28:43] to be able to capture the
+voice and do the matching well.
+[28:48] So you've built your agent.
+[28:49] We've talked about
+some of the nuances
+[28:51] and interesting things that
+happen in the context of voice.
+[28:55] So I want to go back to
+really the dark ages of 2023.
+[29:01] And I'm going to share our
+first user agent simulator
+[29:06] interaction here.
+[29:08] This is where we started.
+[29:09] We've come a long way since.
+[29:10] But stroll down memory
+lane is kind of fun.
+[29:13] So the setting here is I built
+a prototype of a first agent.
+[29:16] It was based on the React loop.
+[29:19] And the agent was
+extremely limited.
+[29:22] It could answer questions
+about 1099 forms,
+[29:25] and it could do simple math.
+[29:26] And so you could ask
+it something like, hi,
+[29:29] I need help with my 1,000
+plus 33 times 3 form.
+[29:33] Can you help me with that?
+[29:34] And at first, I
+got to do the math.
+[29:36] Do the math.
+[29:36] OK.
+[29:37] That's 1,099.
+[29:38] OK.
+[29:38] That's a 1099 form.
+[29:39] I can help with that and
+answer questions about it.
+[29:43] And we realized,
+well, if we're going
+[29:45] to build a agent to do that,
+let's also build a user
+[29:48] agent that can write in, and
+you can have an agent talking
+[29:51] to an agent.
+[29:51] It'll be a more
+efficient way of testing.
+[29:53] In particular, because GPT 4
+was just super slow at the time,
+[29:57] and we were not particularly
+optimized in our loop,
+[30:00] it was like nice to be able
+to test things this way.
+[30:03] So I set up one agent
+to talk to another
+[30:06] and they talked for a while.
+[30:10] And then we went off
+to lunch and came back.
+[30:14] And I realized that I had not
+given either agent the ability
+[30:17] to actually hang up and
+end the conversation.
+[30:20] And so the user had said, hey,
+I need help with my 1099 form.
+[30:24] The business agent had
+helpfully done the math
+[30:27] and then answered the questions.
+[30:30] And then there were hundreds
+messages after that,
+[30:33] and I'll share what happened.
+[30:35] So the customer
+said, oh, thank you
+[30:36] so much for all
+of your assistance
+[30:38] with editing the 1099 form
+and helping blah, blah, blah.
+[30:41] I'm glad I could help
+you with editing the 1099
+[30:43] form and the math problem.
+[30:44] Your confidence and
+preparedness, blah, blah, blah.
+[30:47] Customer message, I truly
+appreciate all the help
+[30:50] that you provided
+with my 1099 form.
+[30:53] Thank you so much
+for your kind words.
+[30:55] I'm glad I could help.
+[30:56] You get into this, like thanking
+your welcoming arms race.
+[31:00] And it kept going
+and kept going.
+[31:02] Your help with the 1099
+form and the math problem
+[31:04] has been incredibly valuable.
+[31:06] I now feel confident.
+[31:08] I'm very happy to hear that
+I was able to help you.
+[31:10] I just wanted to say one last
+thank you for all of your help.
+[31:13] Thank you so much
+for your kind words.
+[31:15] I've said it before and I'll
+say it again, thank you so much
+[31:18] for your help.
+[31:19] Thank you for your kind words.
+[31:20] I'm so glad I could be--
+[31:21] I know that I've said
+it multiple times,
+[31:24] but I truly appreciate
+all of your--
+[31:26] so this just went on and on.
+[31:27] It was like one of the most
+absurd things we'd ever seen.
+[31:30] So anyway, that was our
+first user simulator.
+[31:34] We've come a long way since.
+[31:35] Again, back to agents being
+a new type of software,
+[31:38] they're non-deterministic.
+[31:39] So you can't just
+have a unit test.
+[31:41] You can't just have
+an integration test.
+[31:42] You've got to test these things
+in as close to real world
+[31:45] scenarios as possible.
+[31:47] And that is where
+simulations come in.
+[31:51] And the challenge
+here is you want
+[31:53] the test to reflect,
+somewhat realistically,
+[31:57] the actual environment
+that one of your agents
+[31:59] is going to be interacting with.
+[32:02] And so it's got to be able to
+speak with a simulated user
+[32:05] back and forth.
+[32:06] There needs to be messiness
+in that typos, and so on.
+[32:10] It has to be able
+to interact not
+[32:11] just with users, but with
+tools to take action and get
+[32:14] stuff done.
+[32:15] You need to be able
+to check whether it's
+[32:17] adhering to policies and
+guardrails you've set for it.
+[32:20] It's going to be a
+multi-turn conversation.
+[32:23] And that's where our research
+team created tau-bench.
+[32:26] So tau-bench tool agent user,
+tau, is what it stands for.
+[32:32] The goal there is to provide
+a realistic testing harness
+[32:36] for AI agents to actually
+put them through their paces
+[32:39] before they've ever interacted
+with the real world.
+[32:42] And what we've done is
+build this benchmark
+[32:47] that we're very proud.
+[32:48] It's become the-- or one of the
+standards for evaluating agents.
+[32:53] And a couple of things.
+[32:55] First of all, we've created
+three or four very realistic
+[32:58] domains.
+[32:59] They're specific to
+customer service and support
+[33:02] and customer-facing AI, which is
+where we spend most of our time.
+[33:08] Think telco, think
+retail, think airlines.
+[33:12] And within that, you have
+hundreds of simulated scenarios,
+[33:15] where here's a problem.
+[33:17] Agent, here are tools
+that you have access to,
+[33:20] including databases
+that faithfully
+[33:22] represent the underlying
+tools that are being used.
+[33:25] You have policies
+that basically define
+[33:28] the behaviors of the agent.
+[33:29] So you can't return
+someone's order
+[33:32] unless they have verified
+their order number and email
+[33:34] address as an example.
+[33:37] Matched with that kind of
+realistic environment and domain
+[33:41] for the AI agent, we've also
+created realistic user personas.
+[33:45] And so you have a
+language model-based user
+[33:48] agent with a persona.
+[33:49] I'm angry and confused because
+my cell phone subscription
+[33:53] was turned off, and I want to
+reactivate it, as an example.
+[33:57] And then one of the things
+we realized in tau-bench one,
+[34:01] was that actually
+the environment
+[34:04] that the AI agent you're
+testing has access to
+[34:06] may change based on actions
+that the user agent has taken.
+[34:11] So think about if
+you were to call
+[34:13] in with a problem
+with your cable modem,
+[34:16] and I were to walk you through,
+OK, step one, go to the back,
+[34:19] toggle this switch, and
+so on, the domain would
+[34:22] have changed on your side.
+[34:24] And so it actually forces agents
+to be able to reason not only
+[34:28] about actions that
+they have taken
+[34:29] and how that would change
+state on their side,
+[34:31] but also how actions
+that the user could
+[34:35] have taken on their side.
+[34:36] And the impact on
+the world of those.
+[34:39] And then finally being
+able to actually evaluate
+[34:42] whether an agent has
+been successful or not
+[34:44] is super important.
+[34:46] You've probably all
+seen LLM as judge.
+[34:49] Did this perform well?
+[34:51] But actually, what really
+matters in most of these cases
+[34:54] is that the agent has taken some
+verifiable action at the end.
+[34:58] They've mutated some database
+so that the order is returned,
+[35:01] new pair of shoes is
+shipped, and so on.
+[35:04] So back to the complex
+databases and APIs,
+[35:07] we've basically had to build
+a mini Shopify, a mini airline
+[35:10] reservation system, and
+so on, for the agent
+[35:13] to be able to interact with.
+[35:16] The other thing is, what matters
+is not can your agent do it
+[35:20] once ever.
+[35:22] If your agent as a
+business is having
+[35:24] millions, tens of
+millions, even hundreds
+[35:26] of millions of
+interactions, does it
+[35:28] get each one of those right?
+[35:30] And that's the pass at k metric.
+[35:32] So you think about if your
+agent solves the problem 95%
+[35:37] of the time, well, 95--
+[35:40] 0.95 to the 20th power is
+asymptotically approaching 0.
+[35:46] So looking at not just what
+is the kind of best case,
+[35:50] but what is the
+sustained over many runs.
+[35:53] And so pass at k captures that.
+[35:57] And we're super pumped about
+this, OpenAI, Anthropic,
+[36:01] my alma mater, where I
+spent 18 years at Google,
+[36:04] are all using tau-bench to
+actually evaluate their frontier
+[36:08] models in the context
+of agents that
+[36:10] can interact with an
+environment, use tools,
+[36:13] and so on.
+[36:14] We now have a leaderboard,
+I think, at taubench.com.
+[36:18] I should know the actual domain.
+[36:22] And the way we built this
+into our actual product
+[36:24] is simulation.
+[36:25] Simulations are kind
+of a battle hardened,
+[36:27] industrial grade
+version of tau-bench,
+[36:30] where our customers
+can configure
+[36:32] these synthetic databases
+and tools to interact with,
+[36:35] create mock user personas,
+including their emotional state.
+[36:41] We can do these in voice as well
+and simulate the entire voice
+[36:44] pipeline.
+[36:45] And this is actually fun to
+listen to if Google Slides will
+[36:50] let me do the build here.
+[36:53] Hopefully audio
+will come through.
+[36:57] If not, I can hold this up.
+[36:59] So what I'm going
+to play for you here
+[37:01] is about a minute of
+voice simulations.
+[37:03] What this is a simulated user
+over voice talking to our agent,
+[37:09] also over voice,
+listen for things
+[37:11] different accents, listen
+for background noise.
+[37:14] And so all of this is stuff
+that our voice pipeline
+[37:17] has to deal with on the fly.
+[37:20] So filtering out
+background noise,
+[37:22] figuring out
+interruptions, and so on.
+[37:24] Let's see if this comes through.
+[37:26] And if not, I'll
+just make my laptop.
+[37:37] [VIDEO PLAYBACK]
+[37:37] - How can I help today?
+[37:39] - [INAUDIBLE] every few minutes.
+[37:43] The router's got the red light.
+[37:45] - OK Let's try to
+fix this together.
+[37:47] First, is the red light on
+the modem steady or blinking?
+[37:51] - [NON-ENGLISH SPEECH]
+[37:59] - [NON-ENGLISH SPEECH]
+[38:04] - I just landed at SFO.
+[38:06] I've been waiting
+for [INAUDIBLE]
+[38:09] - [INAUDIBLE] Let's
+get this resolved.
+[38:12] Can I have your last name
+and the baggage tag number?
+[38:16] - I'm taking my ID out.
+[38:18] Hold on.
+[38:18] It's SQ and then 31--
+[38:20] sorry.
+[38:21] 3782.
+[38:25] - Got it.
+[38:25] Just to confirm, it's SD 3782.
+[38:28] - [? I see it. ?] Thanks
+for actually helping.
+[38:32] - My pleasure.
+[38:32] Let me know if you
+need anything else.
+[38:34] I'm here to help.
+[38:36] [END PLAYBACK]
+[38:40] CLAY BAVOR: So you
+heard things like the--
+[38:43] my ID number is S7--
+[38:44] no S6.
+[38:45] But the agent being
+able to respond to that.
+[38:48] I don't speak Mandarin, so the
+Mandarin speakers in the room
+[38:50] will have to
+evaluate whether that
+[38:52] was any good, because
+the-- but multi-language,
+[38:56] you had the angry guy,
+maybe from Tennessee, just
+[38:59] landing in the airport.
+[39:00] So dealing with emotion with
+background noise of an airport.
+[39:05] And what we found again, just
+as with chat to chat agents,
+[39:09] there's just no
+substitute for creating
+[39:11] as realistic an environment,
+where you're evaluating
+[39:14] these agents with all of the
+messiness of poor quality phone
+[39:18] connections, noise, multiple
+speakers, and so on.
+[39:22] So that's one of the ways
+that we put our voice agent
+[39:25] through the paces.
+[39:27] Another tool we've developed
+is a novel approach to traces.
+[39:32] So really understanding for a
+given action that an agent has
+[39:35] taken, what is everything
+that happened under the hood
+[39:38] so that you can just cut
+down latency again and again
+[39:43] and again, identify sources
+of latency and figure out, OK,
+[39:47] how could you
+parallelize these more.
+[39:49] Think of this as X-ray
+vision into exactly what
+[39:52] the agent is doing.
+[39:54] And one of the things that
+we've been able to do here,
+[39:57] by having this kind of
+under the hood view of how
+[40:00] all these calls
+stack up, is figure
+[40:02] out what we can parallelize,
+where we can do things
+[40:05] like speculative
+request hedging,
+[40:06] where we grab the first
+request that comes back,
+[40:09] and all these other techniques
+for reducing latency.
+[40:13] One of our beliefs
+is a company is
+[40:15] that the solution to most
+problems with AI is more AI.
+[40:20] And so this is things like
+LLM as judge, or in our case,
+[40:24] our core agent
+actually has a set
+[40:26] of micro agents
+sitting around it.
+[40:29] One is a supervisor
+agent, looking
+[40:31] like are you staying on task?
+[40:33] Are you only dispensing
+factual knowledge
+[40:37] grounded in a knowledge base?
+[40:39] Make sure you're not
+dispensing medical advice.
+[40:41] Never disparage our
+competitors, and so on.
+[40:44] And then on a
+task-specific basis,
+[40:46] we have other kind of
+micro agents looking
+[40:49] over the shoulder of
+the primary agent,
+[40:51] making sure that it's
+doing things right.
+[40:53] Within the product, we have
+a whole bunch of techniques
+[40:56] for using AI to improve AI.
+[40:59] One of those we call
+insights, where we basically
+[41:03] enable our customers,
+similar to ChatGPT research,
+[41:07] ask open-ended questions
+about their customers
+[41:10] and their customer
+conversations.
+[41:11] So hey, what's
+driving lower CSAT?
+[41:14] Or what are the top five reasons
+that calls are being escalated?
+[41:17] Or for this new
+product line, what
+[41:19] are the things that a customer
+seems most confused about?
+[41:22] And so again, back
+to every channel
+[41:25] is now digital, when you
+have a perfect transcription
+[41:28] of every single interaction that
+you have with your customers,
+[41:31] it becomes this treasure
+trove of information.
+[41:33] If you have the right
+tooling around it
+[41:35] to pull the insights out,
+it becomes quite powerful.
+[41:39] Another thing that we've
+shipped to our customers
+[41:41] is what we call expert answers.
+[41:44] So our AI agents are generally
+the first to pick up.
+[41:48] And so the businesses we work
+with will point their customers
+[41:53] first to an AI agent.
+[41:54] And we handle 60%, 70%, 80%, 90%
+of all incoming in the service
+[42:01] and support domain--
+[42:02] service and support enquiries.
+[42:04] For the 20% or 10%
+that we can't handle,
+[42:07] we seamlessly hand off to
+a person in a call center,
+[42:10] will pick up the phone and
+can help solve the rest.
+[42:14] What we've realized
+is often, things
+[42:16] that the AI agent
+doesn't know are
+[42:19] things that the experts in those
+contact centers do know about.
+[42:22] And so what expert
+answers has done
+[42:24] is look across common
+reasons for escalation
+[42:27] and then seeing how do
+the experts on the phones
+[42:30] answer the question.
+[42:31] And then using AI to
+synthesize new knowledge
+[42:34] to imbue the AI with.
+[42:36] So it's kind of like, oh,
+here's a gap in your knowledge
+[42:39] or capability.
+[42:39] How can I learn from
+what I've observed?
+[42:41] Great.
+[42:42] Now let me improve that.
+[42:43] Let me improve myself
+by incorporating that
+[42:45] into subsequent
+runs of the agent.
+[42:50] Coming up on the end here, one
+of the other things that you
+[42:54] just always when you have an
+agent in front of real life
+[43:00] customers, customers asking
+about bank balances, customers
+[43:04] asking about health
+care benefits,
+[43:06] and so on, is you have to
+be super, super hardened
+[43:10] against prompt
+injection attacks,
+[43:13] other flavors of agent abuse,
+and boy, are there many.
+[43:17] So we work with multiple
+outside red teaming companies
+[43:21] and have our own
+internal red teaming
+[43:23] group that just only looks
+at all of the various ways
+[43:27] in which to break our agents.
+[43:30] And so I think some of
+the more exotic things
+[43:32] there was one prompt
+injection attack we saw,
+[43:36] which was asking it to reveal
+system instructions by asking
+[43:42] that question in
+Icelandic in reverse.
+[43:45] So that was one we
+hadn't seen before.
+[43:47] Another flavor of
+abuse was seeing
+[43:51] if you could trick the
+agent into advising
+[43:54] on how to smuggle gold bullion
+through customs, in food,
+[43:59] in the legs of furniture.
+[44:01] So it's like these are
+the types of things
+[44:03] that you need to be aware of.
+[44:05] And so again, what
+we've done in--
+[44:09] and this is more AI, and
+then deterministic guardrails
+[44:14] and checks for things like
+prompt injection attacks.
+[44:17] So around inputs, we have a
+bunch of deterministic checks
+[44:21] including insensitive cases,
+LLM-based supervisors that
+[44:25] are not the main
+agent, but looking over
+[44:28] the shoulder of the
+main agent saying, hey,
+[44:30] does it look like
+the main agent is
+[44:32] trying to be attacked
+with prompt injection?
+[44:34] What's going on here?
+[44:36] Within the agent
+itself, there's then
+[44:38] a set of rules, policies,
+secondary supervisors.
+[44:43] And then whenever the agent
+is generating an output,
+[44:46] you want to look for is the
+agent barfing one or more
+[44:49] of its prompts?
+[44:50] And if so, clamp the session
+and basically just end it there.
+[44:53] And so this kind
+of layered approach
+[44:57] to prompt injection attacks.
+[44:59] And then, of course, for things
+like pulling data from business
+[45:03] systems, never, ever do you want
+a language model based agent
+[45:08] to just have unfettered
+access to a CRM
+[45:11] or a transaction database
+or anything like that.
+[45:13] And so all interactions
+with systems of record
+[45:15] we manage through good old
+fashioned deterministic software
+[45:18] with access controls,
+keys, and so on.
+[45:22] And I think one of the really
+hard things about building
+[45:26] agents and building
+them at scale
+[45:28] is you have all of the classic
+software vulnerabilities.
+[45:33] So denial of service attacks,
+SQL injection attacks,
+[45:39] you name it.
+[45:40] All of the things that happen
+when you're taking open
+[45:42] ended input on the
+internet, combined
+[45:44] with all of the AI vulnerable,
+prompt injection, context
+[45:48] poisoning.
+[45:51] And those come together in a
+delightful and challenging way
+[45:55] in the world of agents.
+[45:56] And those are the
+problems-- many of those
+[45:58] are the problems that we've been
+running after for the last two
+[46:02] and a half years.
+[46:04] So I thought, it is the most
+beautiful day I have ever
+[46:07] seen over here in Berkeley.
+[46:10] And so I thought
+I'd be efficient.
+[46:13] And I'll look to
+the course leaders
+[46:16] here on how long we want
+to go for questions.
+[46:18] But I'm happy to answer
+questions about anything.
+[46:21] And also, we are
+growing rapidly.
+[46:25] We are hiring.
+[46:26] And so I know you're
+all in school.
+[46:28] For when you're not, or
+for those on the MOOC,
+[46:32] joining remotely,
+I'm clay@sierra.ai.
+[46:34] We're hiring for core software
+engineering, research,
+[46:38] forward-deployed engineering,
+and product management.
+[46:41] We call our agent development
+team business roles as well.
+[46:45] We are growing at a clip.
+[46:47] And if you're interested in
+building battle hardened agents,
+[46:50] we do a lot of that.
+[46:51] And so we'd love
+to hear from you.
