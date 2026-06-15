@@ -1063,11 +1063,28 @@ function generateGraphPage(graphJson: string, nav: string): string {
         .data(data.nodes).join('g')
         .call(d3.drag().on('start', dragStart).on('drag', dragging).on('end', dragEnd));
 
-      node.append('circle')
-        .attr('r', d => 4 + (d.sourceCount || 1) * 2)
-        .attr('fill', nodeColor)
-        .attr('stroke', nodeColor).attr('stroke-width', 2).attr('stroke-opacity', 0.3)
-        .style('cursor', 'pointer');
+      // Papers: diamond; Concepts: circle
+      node.each(function(d) {
+        const el = d3.select(this);
+        const size = 4 + (d.sourceCount || 1) * 2;
+        const color = nodeColor(d);
+        if (d.nodeType === 'paper') {
+          el.append('rect')
+            .attr('width', size*1.5).attr('height', size*1.5)
+            .attr('x', -size*0.75).attr('y', -size*0.75)
+            .attr('rx', 2)
+            .attr('transform', 'rotate(45)')
+            .attr('fill', color)
+            .attr('stroke', color).attr('stroke-width', 2).attr('stroke-opacity', 0.3)
+            .style('cursor', 'pointer');
+        } else {
+          el.append('circle')
+            .attr('r', size)
+            .attr('fill', color)
+            .attr('stroke', color).attr('stroke-width', 2).attr('stroke-opacity', 0.3)
+            .style('cursor', 'pointer');
+        }
+      });
 
       node.append('text')
         .text(d => d.name)

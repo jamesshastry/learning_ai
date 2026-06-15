@@ -1,6 +1,7 @@
 ---
 aliases: []
 tags: [architecture, safety, infrastructure]
+type: concept
 first_seen: cs153/01
 sources:
   - course: cs153

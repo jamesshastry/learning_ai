@@ -1,6 +1,7 @@
 ---
 aliases: ["Community asset", "Ethical deployment", "Guardrails and safety"]
 tags: [safety, application, infrastructure]
+type: concept
 first_seen: cs153/02
 sources:
   - course: cs153

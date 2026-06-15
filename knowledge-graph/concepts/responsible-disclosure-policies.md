@@ -1,6 +1,7 @@
 ---
 aliases: ["Vulnerability Disclosure Policies"]
 tags: [safety, application, data, infrastructure]
+type: concept
 first_seen: cs153/01
 sources:
   - course: cs153

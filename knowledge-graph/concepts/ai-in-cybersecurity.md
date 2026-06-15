@@ -1,6 +1,7 @@
 ---
 aliases: ["Artificial Intelligence and Cybersecurity", "LLMs in Cybersecurity"]
 tags: [architecture, application, safety, optimization, data, infrastructure]
+type: concept
 first_seen: cs153/01
 sources:
   - course: cs153

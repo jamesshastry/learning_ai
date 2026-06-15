@@ -1,4 +1,4 @@
-import { readdirSync, existsSync } from 'fs';
+import { readdirSync, existsSync, readFileSync, statSync } from 'fs';
 import { resolve } from 'path';
 import { readYaml } from '../utils/files.js';
 import { debug, info, warn } from '../utils/logger.js';
@@ -12,7 +12,8 @@ export interface MergedConcept {
   aliases: string[];
   definition: string;
   tags: string[];
-  first_seen: string;  // "courseName/lecture-id"
+  nodeType: 'concept' | 'paper';  // distinguish in the graph visualization
+  first_seen: string;  // "courseName/lecture-id" or "papers/category"
   sources: Array<{
     course: string;
     lecture: string;
@@ -49,6 +50,10 @@ export function mergeAllConcepts(projectRoot: string): MergeResult {
   const allConcepts = loadAllConcepts(projectRoot);
   info(`Loaded ${allConcepts.length} concept entries from all courses`);
 
+  // Load all papers
+  const allPapers = loadAllPapers(projectRoot);
+  info(`Loaded ${allPapers.length} paper entries from papers/`);
+
   // Pass 1: Exact matching
   const merged = new Map<string, MergedConcept>();  // normalized name → merged concept
   const aliasIndex = new Map<string, string>();      // normalized alias → normalized concept name
@@ -77,6 +82,7 @@ export function mergeAllConcepts(projectRoot: string): MergeResult {
         aliases: [...(entry.concept.aliases ?? [])],
         definition: entry.concept.definition,
         tags: [...entry.concept.tags],
+        nodeType: 'concept',
         first_seen: `${entry.course}/${entry.lectureId}`,
         sources: [{
           course: entry.course,
@@ -95,12 +101,26 @@ export function mergeAllConcepts(projectRoot: string): MergeResult {
     }
   }
 
+  // Add paper nodes (papers don't merge with concepts — they are distinct node types)
+  for (const paper of allPapers) {
+    const normalizedName = normalize(paper.name);
+
+    // Don't merge with existing concepts — papers are separate nodes
+    if (!merged.has(normalizedName)) {
+      merged.set(normalizedName, paper);
+      aliasIndex.set(normalizedName, normalizedName);
+    }
+  }
+
+  // Post-merge: create edges between papers and concepts that share tags
+  linkPapersToConcepts(merged);
+
   const mergedConcepts = Array.from(merged.values());
 
   // Pass 2: Ambiguity detection
   const ambiguities = detectAmbiguities(mergedConcepts);
 
-  info(`Merged into ${mergedConcepts.length} unique concepts`);
+  info(`Merged into ${mergedConcepts.length} unique nodes (${mergedConcepts.filter(c => c.nodeType === 'concept').length} concepts + ${mergedConcepts.filter(c => c.nodeType === 'paper').length} papers)`);
   if (ambiguities.length > 0) {
     warn(`Found ${ambiguities.length} ambiguities — see merge-log.yaml`);
   }
@@ -247,6 +267,179 @@ function loadAllConcepts(projectRoot: string): Array<{
   }
 
   return entries;
+}
+
+/**
+ * Load all papers from the papers/ directory.
+ * Parses YAML frontmatter for metadata and markdown links for relationships.
+ */
+function loadAllPapers(projectRoot: string): MergedConcept[] {
+  const papersDir = resolve(projectRoot, 'papers');
+  if (!existsSync(papersDir)) return [];
+
+  const papers: MergedConcept[] = [];
+  const categories = readdirSync(papersDir).filter(d => {
+    const full = resolve(papersDir, d);
+    return d !== 'index.md' && !d.startsWith('.') && existsSync(full) && statSync(full).isDirectory();
+  });
+
+  for (const category of categories) {
+    const catDir = resolve(papersDir, category);
+    const files = readdirSync(catDir).filter(f => f.endsWith('.md'));
+
+    for (const file of files) {
+      const content = readFileSync(resolve(catDir, file), 'utf-8');
+      const parsed = parsePaperFile(content, category, file);
+      if (parsed) papers.push(parsed);
+    }
+  }
+
+  return papers;
+}
+
+/**
+ * Parse a paper markdown file into a MergedConcept node.
+ * Extracts frontmatter fields and markdown links as relations.
+ */
+function parsePaperFile(content: string, category: string, filename: string): MergedConcept | null {
+  // Parse YAML frontmatter
+  const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/m);
+  if (!fmMatch) return null;
+
+  const yamlStr = fmMatch[1];
+  const body = fmMatch[2];
+
+  // Extract key fields from YAML
+  const titleMatch = yamlStr.match(/^title:\s*"?(.+?)"?\s*$/m);
+  const yearMatch = yamlStr.match(/^year:\s*(\d+)/m);
+  const venueMatch = yamlStr.match(/^venue:\s*(.+)/m);
+  const resourceMatch = yamlStr.match(/^resource:\s*(.+)/m);
+
+  const title = titleMatch?.[1] ?? filename.replace('.md', '');
+  const year = yearMatch?.[1] ?? '';
+  const venue = venueMatch?.[1]?.trim() ?? '';
+
+  // Extract tags from YAML (inline array or multi-line)
+  const tags: string[] = [];
+  const inlineTagsMatch = yamlStr.match(/^tags:\s*\[(.+)\]/m);
+  if (inlineTagsMatch) {
+    tags.push(...inlineTagsMatch[1].split(',').map(t => t.trim().replace(/^["']|["']$/g, '')));
+  } else {
+    const tagLines = yamlStr.match(/^tags:\s*\n((?:\s+-\s+.+\n?)*)/m);
+    if (tagLines) {
+      const items = tagLines[1].match(/^\s+-\s+(.+)$/gm);
+      if (items) tags.push(...items.map(l => l.replace(/^\s+-\s+/, '').trim()));
+    }
+  }
+
+  // Extract authors
+  const authors: string[] = [];
+  const inlineAuthorsMatch = yamlStr.match(/^authors:\s*\[(.+)\]/m);
+  if (inlineAuthorsMatch) {
+    authors.push(...inlineAuthorsMatch[1].split(',').map(a => a.trim().replace(/^["']|["']$/g, '')));
+  }
+
+  // Extract markdown links to other papers as relations
+  const relations: ConceptRelation[] = [];
+  const linkRegex = /\[([^\]]+)\]\((?:\.\.\/)?(?:[\w-]+\/)?[\w-]+\.md\)/g;
+  let match;
+  while ((match = linkRegex.exec(body)) !== null) {
+    const linkText = match[1];
+    // Don't create self-links
+    if (normalize(linkText) !== normalize(title)) {
+      relations.push({
+        target: linkText,
+        type: 'related_to',
+        note: 'referenced in paper',
+      });
+    }
+  }
+
+  // Deduplicate relations by target
+  const seenTargets = new Set<string>();
+  const uniqueRelations = relations.filter(r => {
+    const key = normalize(r.target);
+    if (seenTargets.has(key)) return false;
+    seenTargets.add(key);
+    return true;
+  });
+
+  const definition = year && venue
+    ? `${title} (${year}, ${venue}). Seminal paper in ${category.replace(/-/g, ' ')}.`
+    : `${title}. Seminal paper in ${category.replace(/-/g, ' ')}.`;
+
+  // Add 'paper' tag so we can style paper nodes differently
+  if (!tags.includes('paper')) tags.unshift('paper');
+
+  return {
+    name: title,
+    aliases: [],
+    definition,
+    tags,
+    nodeType: 'paper',
+    first_seen: `papers/${category}`,
+    sources: [{
+      course: 'papers',
+      lecture: category,
+      timestamps: [],
+    }],
+    relations: uniqueRelations,
+  };
+}
+
+/**
+ * Create edges between papers and concepts that share tags or have name overlaps.
+ * This links the paper nodes to the course concept nodes in the graph.
+ */
+function linkPapersToConcepts(merged: Map<string, MergedConcept>): void {
+  const papers = Array.from(merged.values()).filter(c => c.nodeType === 'paper');
+  const concepts = Array.from(merged.values()).filter(c => c.nodeType === 'concept');
+
+  // Tags that are too generic to create meaningful paper↔concept edges
+  const genericTags = new Set([
+    'theory', 'application', 'architecture', 'optimization', 'training',
+    'data', 'infrastructure', 'hardware', 'safety',
+  ]);
+
+  // Words too common/short to match on
+  const stopWords = new Set([
+    'the', 'and', 'for', 'with', 'from', 'that', 'this', 'chain', 'deep',
+    'learning', 'model', 'models', 'neural', 'network', 'networks',
+  ]);
+
+  for (const paper of papers) {
+    const paperTags = new Set(paper.tags.filter(t => t !== 'paper' && !genericTags.has(t)));
+    const paperNameWords = new Set(
+      normalize(paper.name).split(' ')
+        .filter(w => w.length > 4 && !stopWords.has(w))
+    );
+
+    for (const concept of concepts) {
+      const conceptTags = new Set(concept.tags.filter(t => !genericTags.has(t)));
+      const conceptNameWords = normalize(concept.name).split(' ')
+        .filter(w => w.length > 4 && !stopWords.has(w));
+      const tagOverlap = [...paperTags].filter(t => conceptTags.has(t));
+
+      // Name overlap: concept word must match a paper word (5+ chars, not stop word)
+      const nameOverlap = conceptNameWords.some(w => paperNameWords.has(w));
+
+      if (tagOverlap.length >= 1 || nameOverlap) {
+        const alreadyLinked = paper.relations.some(
+          r => normalize(r.target) === normalize(concept.name)
+        );
+        if (!alreadyLinked) {
+          const reason = tagOverlap.length > 0
+            ? `shared tags: ${tagOverlap.join(', ')}`
+            : 'name overlap';
+          paper.relations.push({
+            target: concept.name,
+            type: 'related_to',
+            note: reason,
+          });
+        }
+      }
+    }
+  }
 }
 
 /**

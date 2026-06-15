@@ -1,6 +1,7 @@
 ---
 aliases: ["CFAA", "18 USC 1030"]
 tags: [theory, safety, legal]
+type: concept
 first_seen: cs153/01
 sources:
   - course: cs153

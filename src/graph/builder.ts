@@ -16,6 +16,7 @@ interface GraphNode {
   name: string;
   definition: string;
   tags: string[];
+  nodeType: 'concept' | 'paper';
   sourceCount: number;
   sources: Array<{ course: string; lecture: string }>;
 }
@@ -83,6 +84,7 @@ function generateConceptMarkdown(concept: MergedConcept): string {
     '---',
     `aliases: [${concept.aliases.map(a => `"${a}"`).join(', ')}]`,
     `tags: [${concept.tags.join(', ')}]`,
+    `type: ${concept.nodeType}`,
     `first_seen: ${concept.first_seen}`,
     'sources:',
     ...concept.sources.map(s =>
@@ -133,6 +135,7 @@ function buildGraphData(concepts: MergedConcept[]): GraphData {
     name: c.name,
     definition: c.definition,
     tags: c.tags,
+    nodeType: c.nodeType,
     sourceCount: c.sources.length,
     sources: c.sources.map(s => ({ course: s.course, lecture: s.lecture })),
   }));
@@ -254,10 +257,30 @@ function generateVisualizationHTML(graphData: GraphData): string {
       .attr('class', 'node')
       .call(d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended));
 
-    node.append('circle')
-      .attr('r', d => Math.sqrt(d.sourceCount) * 5 + 6)
-      .attr('fill', d => getTagColor(d.tags))
-      .attr('stroke', d => d3.color(getTagColor(d.tags)).darker(0.5));
+    // Concepts: circles; Papers: diamonds (rotated squares)
+    node.each(function(d) {
+      const el = d3.select(this);
+      const size = Math.sqrt(d.sourceCount) * 5 + 6;
+      const color = getTagColor(d.tags);
+      if (d.nodeType === 'paper') {
+        el.append('rect')
+          .attr('width', size * 1.6).attr('height', size * 1.6)
+          .attr('x', -size * 0.8).attr('y', -size * 0.8)
+          .attr('rx', 3)
+          .attr('transform', 'rotate(45)')
+          .attr('fill', color)
+          .attr('stroke', d3.color(color).darker(0.5))
+          .attr('stroke-width', 2)
+          .style('cursor', 'pointer');
+      } else {
+        el.append('circle')
+          .attr('r', size)
+          .attr('fill', color)
+          .attr('stroke', d3.color(color).darker(0.5))
+          .attr('stroke-width', 2)
+          .style('cursor', 'pointer');
+      }
+    });
 
     node.append('text').text(d => d.name)
       .attr('dx', d => Math.sqrt(d.sourceCount) * 5 + 10).attr('dy', 4);

@@ -1,6 +1,7 @@
 ---
 aliases: ["Tech-Government Relationship", "Regulation"]
 tags: [application, theory, safety, infrastructure]
+type: concept
 first_seen: cs153/01
 sources:
   - course: cs153

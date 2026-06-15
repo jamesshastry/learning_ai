@@ -1,6 +1,7 @@
 ---
 aliases: ["Value delivered per dollar", "Daily active users per gigawatt", "Capability per gigawatt"]
 tags: [application, optimization, infrastructure]
+type: concept
 first_seen: cs153/02
 sources:
   - course: cs153

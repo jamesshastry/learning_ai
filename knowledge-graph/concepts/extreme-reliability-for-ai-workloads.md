@@ -1,6 +1,7 @@
 ---
 aliases: ["Robust fault detection and recovery", "High availability"]
 tags: [architecture, optimization, infrastructure, training, hardware]
+type: concept
 first_seen: cs153/02
 sources:
   - course: cs153

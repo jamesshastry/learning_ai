@@ -1,6 +1,7 @@
 ---
 aliases: ["Transparent Communication"]
 tags: [application, safety, infrastructure, data]
+type: concept
 first_seen: cs153/01
 sources:
   - course: cs153

@@ -1,6 +1,7 @@
 ---
 aliases: []
 tags: [architecture, hardware, infrastructure, optimization]
+type: concept
 first_seen: cs153/02
 sources:
   - course: cs153
