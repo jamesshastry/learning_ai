@@ -593,6 +593,8 @@ function generateHomePage(
   courses: CourseWithReadings[],
   papers: PaperFile[],
   totalConcepts: number,
+  totalEdges: number,
+  graphExists: boolean,
   nav: string
 ): string {
   const totalLectures = courses.reduce((sum, c) => sum + c.lectures.length, 0);
@@ -644,7 +646,33 @@ function generateHomePage(
           <h3 style="margin:0;font-size:14px;line-height:1.4">${escapeHtml(p.frontmatter.title)}</h3>
           <p style="font-size:12px;color:var(--muted);margin:6px 0 0">${(p.frontmatter.authors ?? []).slice(0, 3).join(', ')}${(p.frontmatter.authors ?? []).length > 3 ? ' et al.' : ''}</p>
         </div></a>`).join('\n')}
-    </div>` : ''}`;
+    </div>` : ''}
+
+    <h2>Explore</h2>
+    <div class="card-grid">
+      ${graphExists ? `<a href="graph.html" style="text-decoration:none;color:inherit">
+        <div class="card" style="border-color:rgba(99,102,241,.3);background:linear-gradient(135deg,var(--surface) 0%,rgba(99,102,241,.06) 100%)">
+          <div style="font-size:28px;margin-bottom:8px">🔗</div>
+          <h3 style="margin:0;font-size:16px">Knowledge Graph</h3>
+          <p style="font-size:13px;color:var(--muted);margin:6px 0 0">Interactive D3.js visualization — ${totalConcepts} nodes, ${totalEdges} edges. Click, drag, search.</p>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <span class="badge badge-accent">${totalConcepts - papers.length} concepts</span>
+            <span class="badge badge-accent">${papers.length} papers</span>
+          </div>
+        </div></a>` : ''}
+      <a href="resources.html" style="text-decoration:none;color:inherit">
+        <div class="card">
+          <div style="font-size:28px;margin-bottom:8px">📋</div>
+          <h3 style="margin:0;font-size:16px">Resource Library</h3>
+          <p style="font-size:13px;color:var(--muted);margin:6px 0 0">All papers, readings, and resources in one place — organized by type.</p>
+        </div></a>
+      <a href="progress.html" style="text-decoration:none;color:inherit">
+        <div class="card">
+          <div style="font-size:28px;margin-bottom:8px">📊</div>
+          <h3 style="margin:0;font-size:16px">Progress Dashboard</h3>
+          <p style="font-size:13px;color:var(--muted);margin:6px 0 0">Track watched lectures, confidence levels, and revisit flags across courses.</p>
+        </div></a>
+    </div>`;
 
   return page('Home', content, nav, '<a href="index.html">Home</a>', 'home');
 }
@@ -1162,11 +1190,13 @@ export function siteCommand(program: Command): void {
           ? readFileSync(graphPath, 'utf-8')
           : '{"nodes":[],"edges":[]}';
 
-        // Count concepts
+        // Count concepts and edges
         let totalConcepts = 0;
+        let totalEdges = 0;
         try {
           const graph = JSON.parse(graphJson) as GraphData;
           totalConcepts = graph.nodes?.length ?? 0;
+          totalEdges = graph.edges?.length ?? 0;
         } catch { /* ignore */ }
 
         // ── Build navigation ──
@@ -1175,7 +1205,7 @@ export function siteCommand(program: Command): void {
         // ── Generate home page ──
         pages.push({
           path: resolve(outputDir, 'index.html'),
-          content: generateHomePage(courses, papers, totalConcepts,
+          content: generateHomePage(courses, papers, totalConcepts, totalEdges, graphExists,
             buildNav(courses, papers, graphExists, 'home')),
         });
 
