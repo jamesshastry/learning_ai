@@ -144,7 +144,8 @@ export function processCommand(program: Command): void {
           analysis = await runAnalysis(
             provider, result.segments, lecture.title,
             courseConfig.name, courseConfig.title,
-            config.projectRoot, { ...config, model: effectiveModel }
+            config.projectRoot, { ...config, model: effectiveModel },
+            videoId
           );
         } else {
           info('Transcribe-only mode — skipping note generation');
@@ -226,13 +227,14 @@ async function runAnalysis(
   courseName: string,
   courseTitle: string,
   projectRoot: string,
-  config: { anthropicApiKey: string; geminiApiKey: string; model: string }
+  config: { anthropicApiKey: string; geminiApiKey: string; model: string },
+  videoId?: string
 ): Promise<AnalysisResult> {
   switch (provider) {
     case 'claude':
-      return analyzeLecture(segments, lectureTitle, courseName, courseTitle, projectRoot, config);
+      return analyzeLecture(segments, lectureTitle, courseName, courseTitle, projectRoot, config, videoId);
     case 'gemini':
-      return analyzeLectureGemini(segments, lectureTitle, courseName, courseTitle, projectRoot, config);
+      return analyzeLectureGemini(segments, lectureTitle, courseName, courseTitle, projectRoot, config, videoId);
     default:
       throw new Error(`Unknown LLM provider: ${provider}`);
   }

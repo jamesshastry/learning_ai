@@ -1,7 +1,18 @@
+---
+type: Lecture Notes
+title: "The Discipline of Delivering Value per Gigawatt"
+course: CS153 Frontier Systems
+university: Stanford
+lecture_id: "02"
+video: https://youtube.com/watch?v=VeTqsCpcDgg
+tags: [infrastructure, reliability, scaling, energy, ai-workloads]
+timestamp: 2026-06-09T00:00:00Z
+---
+
 # Stanford CS153 Frontier Systems | The Discipline of Delivering Value per Gigawatt
 
 **Course:** Frontier Systems
-**Video:** [YouTube](https://youtube.com/watch?v=VIDEO_ID)
+**Video:** [YouTube](https://youtube.com/watch?v=VeTqsCpcDgg)
 
 ## TL;DR
 Amin Vahdat emphasizes that the true measure of infrastructure success isn't raw compute capacity (gigawatts) but the value delivered per dollar, which hinges on extreme reliability and system balance across all components (compute, memory, network, storage). He highlights how modern AI workloads have fundamentally changed reliability requirements, shifting focus from traditional five-nines uptime to maximizing throughput, even if it means accepting some downtime. The most significant long-term bottleneck for scaling AI is energy abundance and affordability.

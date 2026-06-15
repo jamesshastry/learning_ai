@@ -311,12 +311,12 @@ async function processLecture(
     if (provider === 'gemini') {
       analysis = await analyzeLectureGemini(
         segments, lecture.title, courseConfig.name, courseConfig.title,
-        config.projectRoot, config
+        config.projectRoot, config, lecture.video_id
       );
     } else {
       analysis = await analyzeLecture(
         segments, lecture.title, courseConfig.name, courseConfig.title,
-        config.projectRoot, config
+        config.projectRoot, config, lecture.video_id
       );
     }
   } else if (hasNotes) {

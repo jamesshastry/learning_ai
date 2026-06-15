@@ -1,7 +1,18 @@
+---
+type: Lecture Notes
+title: "The Road Ahead: Resilience Required"
+course: CS153 Frontier Systems
+university: Stanford
+lecture_id: "01"
+video: https://youtube.com/watch?v=g50FHC-PzK8
+tags: [cybersecurity, resilience, crisis-management, leadership]
+timestamp: 2026-06-09T00:00:00Z
+---
+
 # Stanford CS153 Frontier Systems | The Road Ahead: Resilience Required
 
 **Course:** Frontier Systems
-**Video:** [YouTube](https://youtube.com/watch?v=VIDEO_ID)
+**Video:** [YouTube](https://youtube.com/watch?v=g50FHC-PzK8)
 
 ## TL;DR
 The speaker, a veteran cybersecurity leader, shares his journey through pivotal roles at tech giants and his personal ordeal involving a high-profile data breach at Uber, subsequent legal charges, and eventual acquittal. He emphasizes the critical importance of resilience, transparency, and proactive crisis management for leaders in the rapidly evolving cybersecurity landscape, which now faces challenges from ransomware and emerging AI technologies. The lecture advocates for embracing stressful opportunities to gain invaluable experience and wisdom.

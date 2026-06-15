@@ -220,9 +220,11 @@ learn quiz <course> <id>                            # Quiz from one lecture
 learn quiz <course>                                 # Quiz across entire course
 learn quiz --topic "attention"                      # Topic-scoped quiz
 
-# Static site for mobile review
-learn site                                          # Generate responsive HTML site
+# Static site (full-featured knowledge base)
+learn site                                          # Generate multi-page site with sidebar nav
 learn site --output ./public                        # Custom output directory
+# Generates: home, course pages, lecture pages with Q&A,
+#   papers library, resource library, knowledge graph, progress dashboard
 
 # Obsidian integration
 learn obsidian                                      # Configure as Obsidian vault
@@ -292,7 +294,7 @@ courses/
     lectures/
       01-jensen-huang/
         transcript.txt           # Timestamped plain text
-        notes.md                 # AI-generated structured notes
+        notes.md                 # AI-generated structured notes (YAML frontmatter + markdown)
         concepts.yaml            # Extracted concepts + relations
         annotations.md           # Personal notes (never overwritten)
   mse435/
@@ -302,6 +304,14 @@ courses/
   synthesis/
     transformers.md              # Cross-course synthesis documents
 
+papers/                          # Seminal AI papers in OKF-inspired format
+  index.md                       # Hub page — chronological paper listing
+  foundations/                   # Architecture breakthroughs (AlexNet, ResNet, Transformer, GAN)
+  scaling/                       # Scaling philosophy & laws (Bitter Lesson, Kaplan et al.)
+  language-models/               # LLM lineage (BERT → GPT-3 → InstructGPT → Constitutional AI)
+  agents/                        # Agentic AI (CoT, ReAct, RAG)
+  reinforcement-learning/        # RL foundations (DQN)
+
 knowledge-graph/
   concepts/                      # Obsidian-compatible concept files
   graph.json                     # Machine-readable graph data
@@ -310,6 +320,10 @@ knowledge-graph/
 
 site/                            # Generated static HTML site (gitignored)
 ```
+
+### Paper Format (OKF-inspired)
+
+Papers use [Open Knowledge Format](https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing)-inspired markdown: **YAML frontmatter** (type, title, authors, year, venue, tags) + **markdown body** (summary, key contributions, connections). Papers cross-link to each other and to course lectures via standard markdown links, forming an implicit knowledge graph alongside the explicit concept graph.
 
 ## Configuration
 

@@ -1,7 +1,18 @@
+---
+type: Lecture Notes
+title: "The AI Native Company: How One Founder Becomes a 1000x Engineer"
+course: CS153 Frontier Systems
+university: Stanford
+lecture_id: "03"
+video: https://youtube.com/watch?v=Lri2LNYtERM
+tags: [ai-native, productivity, agents, startups, founder]
+timestamp: 2026-06-09T00:00:00Z
+---
+
 # CS153 Frontier Systems | The AI Native Company: How One Founder Becomes a 1000x Engineer
 
 **Course:** Frontier Systems
-**Video:** [YouTube](https://youtube.com/watch?v=VIDEO_ID)
+**Video:** [YouTube](https://youtube.com/watch?v=Lri2LNYtERM)
 
 ## TL;DR
 AI is transforming company building, enabling individual founders to achieve 100x to 1000x productivity gains by leveraging "AI-native" principles. This involves creating closed-loop, agentic systems that combine code and markdown "skills" with robust memory and evaluation mechanisms to automate complex workflows and rapidly iterate on product development. This new paradigm empowers small teams to achieve unprecedented growth and opens vast opportunities in previously overlooked domains.

@@ -1,7 +1,18 @@
+---
+type: Lecture Notes
+title: "Scott Nolan from General Matter on Energy Bottlenecks"
+course: CS153 Frontier Systems
+university: Stanford
+lecture_id: "05"
+video: https://youtube.com/watch?v=wisccQYTRQc
+tags: [energy, nuclear, infrastructure, scaling, uranium-enrichment]
+timestamp: 2026-06-09T00:00:00Z
+---
+
 # Stanford CS153 Frontier Systems | Scott Nolan from General Matter on Energy Bottlenecks
 
 **Course:** Frontier Systems
-**Video:** [YouTube](https://youtube.com/watch?v=VIDEO_ID)
+**Video:** [YouTube](https://youtube.com/watch?v=wisccQYTRQc)
 
 ## TL;DR
 The rapid scaling of AI capabilities is creating an unprecedented demand for energy, making it a critical bottleneck even upstream of compute. Scott Nolan from General Matter highlights that traditional and even initial "stranded energy" solutions are insufficient, necessitating massive net new power generation. Nuclear energy emerges as the long-term, scalable, clean, and safe solution, but its adoption is currently bottlenecked by the lack of domestic uranium enrichment capacity in the US, a problem General Matter is rapidly working to solve with significant government support.

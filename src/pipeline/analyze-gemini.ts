@@ -62,7 +62,8 @@ export async function analyzeLectureGemini(
   courseName: string,
   courseTitle: string,
   projectRoot: string,
-  config: { geminiApiKey: string; model: string }
+  config: { geminiApiKey: string; model: string },
+  videoId?: string
 ): Promise<AnalysisResult> {
   const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
   const transcript = formatTranscript(segments);
@@ -87,7 +88,7 @@ Produce markdown notes following this EXACT structure:
 # ${lectureTitle}
 
 **Course:** ${courseTitle}
-**Video:** [YouTube](https://youtube.com/watch?v=VIDEO_ID)
+**Video:** [YouTube](https://youtube.com/watch?v=${videoId ?? 'VIDEO_ID'})
 
 ## TL;DR
 (2-3 sentence summary of the entire lecture)

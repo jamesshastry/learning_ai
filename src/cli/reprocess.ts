@@ -93,11 +93,13 @@ export function reprocessCommand(program: Command): void {
         const analysis = provider === 'gemini'
           ? await analyzeLectureGemini(
               segments, title, courseConfig?.name ?? courseName,
-              courseConfig?.title ?? courseName, config.projectRoot, analyzeConfig
+              courseConfig?.title ?? courseName, config.projectRoot, analyzeConfig,
+              lecture?.video_id
             )
           : await analyzeLecture(
               segments, title, courseConfig?.name ?? courseName,
-              courseConfig?.title ?? courseName, config.projectRoot, analyzeConfig
+              courseConfig?.title ?? courseName, config.projectRoot, analyzeConfig,
+              lecture?.video_id
             );
 
         if (!analysis.notes) {

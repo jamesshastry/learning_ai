@@ -117,7 +117,8 @@ export async function analyzeLecture(
   courseName: string,
   courseTitle: string,
   projectRoot: string,
-  config: { anthropicApiKey: string; model: string }
+  config: { anthropicApiKey: string; model: string },
+  videoId?: string
 ): Promise<AnalysisResult> {
   const client = new Anthropic({ apiKey: config.anthropicApiKey });
   const transcript = formatTranscript(segments);
@@ -151,7 +152,7 @@ Produce markdown notes following this EXACT structure:
 # ${lectureTitle}
 
 **Course:** ${courseTitle}
-**Video:** [YouTube](https://youtube.com/watch?v=VIDEO_ID)
+**Video:** [YouTube](https://youtube.com/watch?v=${videoId ?? 'VIDEO_ID'})
 
 ## TL;DR
 (2-3 sentence summary of the entire lecture)
