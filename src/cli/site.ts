@@ -786,7 +786,7 @@ function generateLecturePage(
   return page(title, content, nav, breadcrumb, `course-${courseConfig.name}`);
 }
 
-function generatePapersIndexPage(papers: PaperFile[], nav: string): string {
+function generatePapersIndexPage(papers: PaperFile[], courses: CourseWithReadings[], nav: string): string {
   const categories = [...new Set(papers.map(p => p.category))];
 
   const categoryCards = categories.map(cat => {
@@ -811,16 +811,48 @@ function generatePapersIndexPage(papers: PaperFile[], nav: string): string {
     </div>`;
   }).join('\n');
 
+  // Course reading lists
+  const coursesWithReadings = courses.filter(c => (c.readings ?? []).length > 0);
+  const totalCourseReadings = coursesWithReadings.reduce((sum, c) => sum + (c.readings ?? []).length, 0);
+
+  const courseReadingCards = coursesWithReadings.map(c => {
+    const readings = (c.readings ?? []).filter(r => r.type === 'paper');
+    if (readings.length === 0) return '';
+
+    return `<div>
+      <h3 style="margin-bottom:12px">${escapeHtml(c.title)} <span style="font-size:13px;color:var(--faint);font-weight:400">${c.university ?? ''} · ${readings.length} papers</span></h3>
+      ${readings.map(r => {
+        const lectureLabel = r.lecture_id
+          ? c.lectures.find(l => l.id === r.lecture_id)?.title ?? `Lecture ${r.lecture_id}`
+          : '';
+        return `<div class="card" style="display:flex;gap:12px;align-items:start">
+          <span class="type-badge type-paper">📄</span>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600">${r.url ? `<a href="${r.url}">${escapeHtml(r.title)}</a>` : escapeHtml(r.title)}</div>
+            ${lectureLabel ? `<div style="font-size:12px;color:var(--faint);margin-top:4px">${escapeHtml(lectureLabel)}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('\n')}
+    </div>`;
+  }).filter(s => s).join('\n');
+
   const content = `
     <div class="hero">
-      <h1>📄 Seminal AI Papers</h1>
-      <p>Foundational research papers — curated summaries with cross-links to course lectures and related papers.</p>
+      <h1>📄 AI Papers</h1>
+      <p>Seminal papers with curated summaries, plus reading lists from ${coursesWithReadings.length} courses.</p>
       <div class="hero-stats">
-        <div><div class="stat-num">${papers.length}</div><div class="stat-label">Papers</div></div>
+        <div><div class="stat-num">${papers.length}</div><div class="stat-label">Seminal Papers</div></div>
+        <div><div class="stat-num">${totalCourseReadings}</div><div class="stat-label">Course Readings</div></div>
         <div><div class="stat-num">${categories.length}</div><div class="stat-label">Categories</div></div>
       </div>
     </div>
-    ${categoryCards}`;
+
+    <h2>Seminal Papers</h2>
+    ${categoryCards}
+
+    ${courseReadingCards ? `<h2 style="margin-top:40px">Course Reading Lists</h2>
+    <p style="color:var(--muted);margin-bottom:16px">Papers assigned as readings across your courses — click to open the original.</p>
+    ${courseReadingCards}` : ''}`;
 
   return page('Papers', content, nav, '<a href="../index.html">Home</a> › Papers', 'papers');
 }
@@ -1255,7 +1287,7 @@ export function siteCommand(program: Command): void {
           // Papers index
           pages.push({
             path: resolve(papersOutputDir, 'index.html'),
-            content: generatePapersIndexPage(papers,
+            content: generatePapersIndexPage(papers, courses,
               buildNav(courses, papers, graphExists, 'papers')),
           });
 
