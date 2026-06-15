@@ -1,0 +1,2331 @@
+[00:21] We'll continue our journey with
+[00:23] natural language processing.
+[00:25] We looked at the bag of words model,
+[00:26] one-hot embeddings, and so on and so
+[00:28] forth. And today we will talk about
+[00:30] embeddings, or to be more precise,
+[00:32] stand-alone embeddings, and then that
+[00:34] will tee us up for something called
+[00:36] contextual embeddings, which is where
+[00:38] the transformer really sort of comes
+[00:40] into play.
+[00:41] All right, so let's get going. So so far
+[00:43] we have encoded input text
+[00:47] one-hot vector. So to just to refresh
+[00:50] your memories from Monday,
+[00:52] if you know, if this is the phrase
+[00:53] that's coming into the system, we run it
+[00:55] through the STIE process. And when we do
+[00:58] that, what happens is that first of all,
+[01:01] we you know, we standardize, then we
+[01:03] split on white space to get individual
+[01:05] words, then we assign words to integers,
+[01:08] and then we take you know, each integer
+[01:10] and essentially create a one-hot version
+[01:12] of that integer. And when we do that,
+[01:15] basically we have a vocabulary.
+[01:18] Right? And in this example, we just have
+[01:20] 100 words, and you will note that this
+[01:23] vocabulary, which are which you arrive
+[01:25] at once you standardize and tokenize,
+[01:28] you know, has words like the because we
+[01:30] decided not to remove stop words like A,
+[01:32] and the,
+[01:33] and so on. So just to be clear,
+[01:36] standardization
+[01:38] here, standardization, while it has
+[01:40] historically been all about stripping
+[01:42] punctuation, lowercasing everything,
+[01:45] removing stop words, and stemming,
+[01:47] while that has been true historically,
+[01:49] if you look at modern practice, people
+[01:51] essentially strip punctuation maybe, and
+[01:54] then lowercase and and they often don't
+[01:57] even bother to do stemming and things
+[01:58] like that, or to remove stop words.
+[02:00] Okay?
+[02:01] And that's why in Keras, the default
+[02:03] standardization is only lowercasing and
+[02:05] punctuation stripping.
+[02:09] This detail may actually be handy for
+[02:11] homework two, perhaps. That's why I'm
+[02:12] pointing it out.
+[02:14] Okay. So that's what we have. And so for
+[02:17] each word that's coming in, we have a
+[02:18] one-hot vector.
+[02:20] Right? But the one-hot vector is just
+[02:22] like on to the vocabulary. And then, you
+[02:25] know, and we can either
+[02:27] quote unquote add them up and get a
+[02:29] multi-hot encoding, or
+[02:32] sorry, get a count encoding, or we can
+[02:34] just do or, right? Look for just any
+[02:36] ones in a column and get multi-hot
+[02:38] encoding.
+[02:39] So that's what we saw last class. But
+[02:42] this scheme, while it's quite effective
+[02:44] for simple kind of problems,
+[02:47] is it has some very serious
+[02:49] shortcomings. And so we will sort of
+[02:50] delve into those shortcomings, and then
+[02:52] sort of step back and say, all right, is
+[02:54] there a solution to fix these things?
+[02:58] Problem with one-hot vectors.
+[03:00] There are lots of problems. Any
+[03:01] volunteers?
+[03:07] Similar words are understood
+[03:09] differently.
+[03:21] Absolutely. So that what he's pointing
+[03:24] out is that if you have two words which
+[03:26] are synonyms, let's say, great and
+[03:28] awesome,
+[03:29] hope that the way we represent them
+[03:31] using these vectors would have some
+[03:33] connection to what the words actually
+[03:35] mean. In particular, we would hope that
+[03:37] if they mean similar things, that they
+[03:38] are sort of close by. If they mean very
+[03:40] different things, we would hope that
+[03:41] they are very far away. Right? Things
+[03:43] like that. Sort of common sensical
+[03:44] expectations of what you want the
+[03:46] vectors to have. So it clearly it won't
+[03:49] have that, and we'll look into it in a
+[03:50] detail in a bit. But before we do that,
+[03:53] there is also a computational issue,
+[03:54] which we covered last class, which is
+[03:56] that if the vocabulary is really long,
+[03:59] then each token, each word that's coming
+[04:01] in here, will have a one-hot vector
+[04:03] that's as long as the size of
+[04:04] vocabulary. Right? If you have 500,000
+[04:06] words in your vocabulary, every little
+[04:08] word that comes in has a vector which is
+[04:09] 500,000 long. Which feels like a gross
+[04:12] sort of waste of it stuff.
+[04:16] Now you can mitigate it somewhat by
+[04:18] choosing only the most frequent words,
+[04:20] but it does increase the number of ways
+[04:21] the model has to learn, and increase the
+[04:23] need for compute and data, and so on and
+[04:25] so forth. Okay?
+[04:26] Now
+[04:27] let's say that we have created a
+[04:28] vocabulary from a training corpus. Okay?
+[04:31] We have a bunch of
+[04:32] strings, text that's coming in. We have
+[04:34] done it We have done the ST the
+[04:36] standardization and organization. We
+[04:37] have created a vocabulary from it. And
+[04:39] let's say we get the words movie and
+[04:41] film.
+[04:42] So the question is, and and I always
+[04:44] observation gets to this immediately, if
+[04:47] you look at the words movie and film,
+[04:48] are these two vectors close to each
+[04:50] other or not? Okay? So if you have two
+[04:52] vectors, how would we measure closeness?
+[04:56] What's the simplest way to think about
+[04:58] closeness?
+[05:02] It's not a trick question.
+[05:05] Distance. Yeah, exactly. So if they are
+[05:06] really close distance-wise, we would
+[05:08] hope, right? The words similar words
+[05:10] should do should should be close by. So
+[05:13] here, if you let's just imagine that the
+[05:16] vector for movie,
+[05:20] let's say your vocabulary is, I don't
+[05:21] know,
+[05:22] um
+[05:25] 100,000 long.
+[05:27] So your vector is 100,000 long,
+[05:30] and the word for movie
+[05:33] is the position, so this this has a one,
+[05:35] everything else is zero. Right?
+[05:42] Sorry, this is the vector for film, and
+[05:44] maybe this is the position for film.
+[05:47] So that has a one, everything else here
+[05:51] zero. Okay? What's the distance between
+[05:53] these two vectors?
+[05:55] You just use the Euclidean distance. So
+[05:58] the Euclidean distance, you will recall,
+[06:00] you literally just take the difference
+[06:01] of
+[06:02] these values,
+[06:04] square them, add them up, take square
+[06:06] root.
+[06:07] So which means that all the zeros will
+[06:09] obviously give you zero. This one is
+[06:12] going to give you a one.
+[06:14] This comparison is going to give you
+[06:15] another one. 1 + 1 = 2. Root 2. That's
+[06:18] the answer.
+[06:20] So the distance between these two
+[06:21] vectors is root 2.
+[06:25] Now,
+[06:27] so the distance between them is root 2.
+[06:30] What about the one-hot encoded vectors
+[06:32] for good and bad? Clearly good and bad
+[06:34] mean opposite things.
+[06:36] What is the distance between the good
+[06:37] and bad 01 vectors?
+[06:42] Still root 2.
+[06:45] Because the zeros don't mean anything,
+[06:47] the ones are not in the same place.
+[06:49] So when you subtract the one and the
+[06:51] zero, you'll get ones and ones, add them
+[06:52] up, two, root 2.
+[06:54] In fact, you take any two words in your
+[06:56] vocabulary, what's the distance between
+[06:57] the two one-hot vectors for those words?
+[06:59] It's root 2.
+[07:01] So if any two words have the same
+[07:03] distance, does this even have a notion
+[07:06] of distance?
+[07:08] It doesn't.
+[07:10] There's no notion of distance from
+[07:12] one-hot vectors.
+[07:13] It has no connection to the actual
+[07:15] meanings of these words.
+[07:17] It's just a way of representing them.
+[07:21] Okay?
+[07:22] So that is the big problem with one-hot
+[07:24] vectors.
+[07:26] So
+[07:27] the distance between them is the same
+[07:28] regardless of the words. It's got
+[07:29] nothing to do with the meaning of the
+[07:30] words.
+[07:32] And this is a huge problem, which we'll
+[07:33] have to solve.
+[07:35] So to summarize where we are, if the
+[07:37] vocabulary is very long, each token will
+[07:39] have a one-hot vector that's long as
+[07:40] vocabulary. That's that's sort of a
+[07:42] computational and sort of training
+[07:44] problem. And then this is a deeper
+[07:46] problem, where there's no connection
+[07:48] between the meaning of a word and its
+[07:49] vector.
+[07:51] So wouldn't it be nice if
+[07:55] vectors that represent synonyms,
+[07:57] movie and film, apple, banana,
+[07:59] hopefully they're close to each other.
+[08:01] It would be nice if the vectors for
+[08:03] things that mean very different things
+[08:04] are far from each other.
+[08:06] So let's take a look at a particular
+[08:08] example. Okay? Let's assume that we have
+[08:10] been magically given
+[08:13] these vectors, so that they actually
+[08:15] have some notion of meaning.
+[08:17] And for convenience, let's say that we
+[08:18] take the just the first uh
+[08:21] two dimensions of these vectors, the
+[08:23] first two dimensions, so that we can do
+[08:25] a scatter plot on them.
+[08:28] So we plot the first dimension of the of
+[08:30] these vectors, the second dimension, and
+[08:31] what we have in this little cartoon is
+[08:34] we have plotted the the word for
+[08:37] factory, uh for home, for building, and
+[08:41] they all happen to be clustered here.
+[08:44] Clearly this representation is capturing
+[08:45] some notion of what the thing is.
+[08:48] Right? Some sort of building.
+[08:50] Uh and here we have, you know, bicycle,
+[08:53] truck, and car. Clearly some This is
+[08:55] like the automobile cluster, right?
+[08:57] Transportation cluster. And here we have
+[09:00] like a fruit cluster, and here we have
+[09:02] some, you know, sports balls cluster.
+[09:04] Okay?
+[09:05] We Because it's a cartoon, things are
+[09:07] all nice and cleanly separated. Okay? So
+[09:10] now if you take the word apple, where do
+[09:12] you think it's going to go?
+[09:14] It's going to go in into A, C, D, or B?
+[09:19] C, right? It makes eminent sense it's
+[09:20] going to go to C.
+[09:23] Good. Now,
+[09:25] wouldn't it be nice if
+[09:27] in more generally, if the geometric
+[09:29] relationship between word vectors
+[09:32] represent the semantic relationship
+[09:35] between the underlying objects that the
+[09:37] words represent?
+[09:38] Okay?
+[09:39] And it's And I say relationship and not
+[09:41] distance, because it's not just
+[09:42] distance. It's actually more than that.
+[09:45] Okay?
+[09:46] So let's take another one.
+[09:48] Here we have
+[09:49] uh this is the the vector plotted for
+[09:52] puppy and dog,
+[09:54] and this is calf.
+[09:56] Uh right? We have plotted the word for
+[09:58] calf. And let's say that we need to
+[09:59] figure out where would the embedding,
+[10:01] the word vector for cow appear?
+[10:04] It is the most logical. Should it be A?
+[10:07] Should it be C? Should it be B? Where
+[10:09] should it be?
+[10:11] This is
+[10:14] C? Okay, what's the logic?
+[10:16] Any volunteers? Just put your hand up.
+[10:19] Uh, yes.
+[10:21] Uh
+[10:23] A calf is a baby bull, whereas the cow
+[10:26] is an adult.
+[10:27] So, it should be closer to the dog,
+[10:28] which is the adult version of a dog.
+[10:31] Got it. So, you're basically saying go
+[10:32] from the puppy version to the grown-up
+[10:34] version. Right? That's sort of what
+[10:36] you're getting at, right? And that's a
+[10:37] totally valid way to think about it.
+[10:39] But there are a couple of ways to think
+[10:40] about this, which is this is one of the
+[10:42] those two ways. So, what you can do is
+[10:44] you can actually look at it and say,
+[10:45] well,
+[10:46] Okay, if this is big bringing you, you
+[10:48] know, bad memories of GMAT and GRE and
+[10:50] stuff like that, I apologize.
+[10:52] But
+[10:55] So, a puppy is to a dog like a calf is
+[10:57] to a cow, right? Which means that that's
+[10:59] exactly what Jay is pointing out. You
+[11:01] can go from like the baby version to the
+[11:02] full-grown version if you go in the
+[11:04] horizontal direction. Okay? But maybe if
+[11:08] you go in the vertical direction, you're
+[11:10] essentially going up and down the young
+[11:13] entities of animals.
+[11:15] Okay?
+[11:16] So, here you are growing with, you know,
+[11:18] you're still across the same dimension
+[11:20] of animals. You're just going from, you
+[11:22] know, the the same age level, right?
+[11:24] That is the band here.
+[11:25] So, this is the grown-up version of a
+[11:27] whole bunch of animals, the puppy
+[11:28] version of a whole bunch of animals. So,
+[11:30] the vertical dimension measures some
+[11:31] sort of variation across animal species
+[11:34] of the same roughly sort of maturity
+[11:36] stage.
+[11:37] Okay? So, these directions also matter.
+[11:41] It's not just the distance.
+[11:43] Okay. That's what I mean when I say
+[11:45] semantic relationship and geometric
+[11:47] relationship.
+[11:48] Relationship is distance and direction,
+[11:51] right? Both have to be involved.
+[11:53] So, so
+[11:55] Uh, now word embeddings, as we will dis-
+[11:57] learn soon, are word vectors designed to
+[12:00] achieve exactly these requirements.
+[12:03] Okay? They will achieve these
+[12:04] requirements.
+[12:06] Uh, and they will fix both these
+[12:07] problems very elegantly.
+[12:11] Okay?
+[12:13] So, let's say that we have word
+[12:14] embeddings that achieve both these
+[12:15] problems. Are we basically done?
+[12:17] Can we declare victory?
+[12:19] Or are there any- is there anything that
+[12:22] even words which actually capture the
+[12:24] meaning of the underlying thing
+[12:28] don't fully address? Is there any
+[12:30] remaining problem we have to worry
+[12:31] about? Yes?
+[12:33] Context. Context? Yes.
+[12:36] Context, right? What about The fact is a
+[12:39] word's meaning Sure, every word has a
+[12:42] meaning, but we know that some words
+[12:44] have multiple meanings.
+[12:46] And that meaning is really sort of
+[12:49] inferencable, or you can make sense of
+[12:51] it only if you know the surrounding
+[12:52] context, right? If I give you if if you
+[12:55] see the word bank, b a n k, bank,
+[12:59] sure, it could be a financial
+[13:00] institution. It could be the side of a
+[13:02] river. It could be the act of a plane
+[13:04] turning in one direction.
+[13:07] It could be someone hoping for
+[13:09] something, banking on something. The
+[13:11] list of possible meanings of the word
+[13:13] bank is basically enormous.
+[13:16] And you cannot figure out what it means
+[13:18] unless you know what else is going on
+[13:19] around that word. So, context is super
+[13:22] super important. And these embeddings,
+[13:24] word embeddings, just tell you what the
+[13:26] meaning of the word is. And basically
+[13:28] what's going to happen when you have a
+[13:29] word which could mean many different
+[13:31] things, it's going to give you some
+[13:33] average version of that meaning.
+[13:36] And that average version is not going to
+[13:37] be very good.
+[13:39] Now, there are some words which only
+[13:40] mean one thing, and you'll be okay
+[13:41] there.
+[13:42] But for the rest of it, right? It's
+[13:44] going to be tough.
+[13:47] So, what we need is some way
+[13:53] We need to find a way to make word
+[13:54] embeddings contextual.
+[13:56] Meaning we need to somehow consider the
+[13:58] other words in the sentence.
+[14:00] Okay? So, if we can do that, then we
+[14:02] will be in great shape.
+[14:05] Solve all sorts of NLP problems.
+[14:08] Now, as it turns out, contextual word
+[14:11] embeddings, or word vectors, or word
+[14:13] embeddings that achieve both these
+[14:15] requirements.
+[14:16] They capture the semantic geometric
+[14:19] relationship thing I talked about, and
+[14:21] they are contextual.
+[14:22] Okay?
+[14:23] They're really fantastic. Uh, and the
+[14:27] key to calculating contextual word
+[14:29] embeddings is the transformer.
+[14:33] That is why transformers are justifiably
+[14:35] famous.
+[14:39] So, what's sort of the the lay of the
+[14:40] land here? So, today we are going to
+[14:42] look at how to calculate
+[14:44] stand-alone or uncontextual word
+[14:46] embeddings.
+[14:48] And then starting Monday, we will take
+[14:50] these, you know, un- stand-alone
+[14:52] embeddings and make them contextual
+[14:53] using transformers. Okay? That is the
+[14:56] plan.
+[14:57] Any questions so far?
+[14:58] So, now let's think about how we can
+[15:00] learn these stand-alone embeddings from
+[15:02] data, right? Now, the naive way to think
+[15:05] about it would be, hey, let's Why don't
+[15:07] we manually collect a whole bunch of
+[15:08] synonyms, antonyms, related words, etc.,
+[15:11] and try to assign embedding vectors to
+[15:13] them that satisfy
+[15:15] our requirements. Okay? Now, as you can
+[15:18] imagine, this is going to be a long,
+[15:19] painful, and never quite complete
+[15:21] exercise.
+[15:22] Okay?
+[15:23] Uh,
+[15:24] so and uh you mean and given that we are
+[15:26] machine learning people,
+[15:29] the question is, can we do in a better
+[15:30] way? Can we just learn it from the data
+[15:32] without doing any of this manual stuff?
+[15:34] Okay? And
+[15:36] the key insight that makes it all happen
+[15:39] is this humble-looking line on the
+[15:42] screen by John Firth, who was a
+[15:44] linguist.
+[15:45] You shall know a word
+[15:47] by the company it keeps. I wish I could
+[15:49] deliver this in a British accent.
+[15:53] Know a word by the company it keeps.
+[15:55] Okay? It's a very profound statement.
+[15:57] Okay? And here is the sort of the key
+[15:59] intuition behind this.
+[16:02] It says,
+[16:03] let's say that you have a sentence like
+[16:05] the acting in the dash was superb.
+[16:08] Okay?
+[16:09] What are some words that you folks think
+[16:11] are likely to appear in the sentence?
+[16:15] Shout it out. Play. Play.
+[16:18] Movie.
+[16:19] Show.
+[16:20] Musical. Right? Those are all some great
+[16:24] candidates, right? The acting in the
+[16:25] movie, the film, musical, and so on and
+[16:26] so forth. Okay? Now, let's say that I
+[16:28] ask you, what are some words that are
+[16:29] unlikely to appear in the sentence? And
+[16:31] I think we could all be here for like
+[16:32] days, you know, listing them out. Uh, I
+[16:35] just listed these out. Um, I love the
+[16:38] word tensor, so I have to find a way to
+[16:39] use it somewhere.
+[16:41] So, all right. So, the acting in the
+[16:43] banana was superb. Clearly nonsensical,
+[16:45] right? So, what this actually What What
+[16:48] we are seeing here is that if certain
+[16:51] words are sort of interchangeable in a
+[16:53] sentence,
+[16:55] meaning you you change them, they still
+[16:57] the sentence still makes sense, right?
+[16:59] If they appear in the same context very
+[17:02] often, i.e., if they're interchangeable,
+[17:04] they are probably related.
+[17:07] Sort of like we don't even have to know
+[17:09] what the word is.
+[17:10] All we have to know is that this word
+[17:12] and this word, you can drop them into a
+[17:14] particular sentence, you can fill in the
+[17:15] blank of that sentence with that word,
+[17:17] and it actually makes sense, then we're
+[17:18] like, oh, wow, okay, these words are
+[17:20] related then.
+[17:21] Right? You're sort of inferring their
+[17:23] relatedness not by looking at them
+[17:25] directly, but by seeing where they live.
+[17:30] Right? It's a very very clever idea. And
+[17:32] it'll slowly sink into you. Okay? Um, so
+[17:36] that's the first observation. If they
+[17:37] appear in the same context very often,
+[17:39] they are likely to be related.
+[17:41] More generally, related words appear in
+[17:44] related contexts.
+[17:47] So, all we have to do
+[17:49] is to figure out a way to calculate
+[17:52] context.
+[17:54] And then use that to understand, you
+[17:57] know, what the words are that happen to
+[17:58] be living in this context.
+[18:00] And there are some beautiful ways to do
+[18:02] these things, and we'll you and we'll
+[18:03] really dive deep into one such way to do
+[18:05] it.
+[18:06] So, so the So, what we're going to do in
+[18:08] this approach
+[18:10] is that
+[18:11] since
+[18:12] words that appear in
+[18:14] related contexts mean related same
+[18:16] similar things,
+[18:18] first of all, you have to define what do
+[18:19] you mean by context?
+[18:21] And there are many ways to define
+[18:22] context. We're going to go with a very
+[18:23] simple explanation, simple definition,
+[18:24] which is that if words happen to appear
+[18:26] in the same sentence a lot,
+[18:29] then we think that, okay,
+[18:31] they are in the same context. So,
+[18:32] context here means sentence.
+[18:34] Okay?
+[18:35] So, what we can do is we can actually
+[18:38] take a whole bunch of text, maybe all of
+[18:40] Wikipedia,
+[18:41] and then break it up into sentences.
+[18:43] We'll have billions of sentences, right?
+[18:46] And then for all these billion
+[18:47] sentences, we can literally go and count
+[18:48] for every pair of words, how many times
+[18:51] are both these words showing up in the
+[18:52] same sentence?
+[18:55] Okay? And we call this co-occurrence,
+[18:57] right? The words are co-occurring in the
+[18:59] sentence.
+[19:00] And it doesn't have to be next to each
+[19:02] other,
+[19:02] right? We know that in complicated
+[19:04] words, a word at the very end of the
+[19:07] sentence could actually alter the mean-
+[19:09] could be its meaning could be altered by
+[19:10] a word that happened in the very
+[19:11] beginning of the sentence, and it could
+[19:12] be a really long sentence.
+[19:14] So, we take the whole sentence and say,
+[19:16] are are two words co-occurring in the
+[19:18] sentence, yes or no? And we just count
+[19:19] them up.
+[19:20] And when we do that,
+[19:24] right? When we do that, we will get
+[19:26] something like this.
+[19:27] So, I'm just
+[19:29] This just captures what I've been
+[19:30] talking about. Identify all the words
+[19:32] that occur, let's say, in Wikipedia. And
+[19:34] then for every sentence, you look at
+[19:35] every word pair and count the number of
+[19:37] times they appear in the same sentence
+[19:38] across all those sentences. Okay?
+[19:41] This is a word-word co-occurrence
+[19:43] matrix. So, for example,
+[19:46] let's assume that you took all of
+[19:47] Wikipedia, looked at all the words,
+[19:48] distinct words, and you found there are
+[19:49] 500,000 words.
+[19:51] Okay? So, there are 500,000 words
+[19:54] here in the columns
+[19:56] 500,000 words on the rows.
+[20:00] The columns and rows. And then you go
+[20:02] and each cell of this table is basically
+[20:05] has a number that you calculate which is
+[20:08] the number of times the word in the row
+[20:10] and the word in the column happen to
+[20:12] show up in the same sentence. That's it.
+[20:14] So, for instance
+[20:15] if you look at deep and learning, right?
+[20:18] The word deep and the word learning
+[20:20] maybe that
+[20:22] the those two words occurred in the same
+[20:24] sentence maybe 3,025 times.
+[20:28] 3,025 sentences across all of Wikipedia.
+[20:31] You put 3,025 right in that cell.
+[20:35] Okay?
+[20:36] Many words are unlikely to appear in the
+[20:37] same sentence.
+[20:38] So, much of this matrix is going to be
+[20:40] zero.
+[20:44] But, we
+[20:45] fundamentally form this co-occurrence
+[20:47] matrix.
+[20:49] This matrix essentially embodies all the
+[20:54] context information that we can work
+[20:55] with in a very compact, beautiful you
+[20:58] know, sort of
+[20:59] elegant
+[21:03] And using this, we're going to try to
+[21:04] figure out
+[21:06] what the word embeddings actually are
+[21:07] going to be.
+[21:08] Okay?
+[21:09] And so
+[21:11] So, by the way, the approach I'm
+[21:13] describing here to calculate standalone
+[21:15] embeddings is called Glove.
+[21:20] Uh it's called Glove and
+[21:23] standalone embeddings first sort of came
+[21:24] onto the NLP deep learning scene. Uh
+[21:27] there were two sort of ways of doing it.
+[21:29] One was called word to vec, word to vec.
+[21:32] Uh the other one is Glove.
+[21:34] And they're both comparable, right? They
+[21:35] use slightly different mechanisms of
+[21:36] doing this.
+[21:38] We went with word for for this lecture
+[21:40] because I think it's actually a little
+[21:42] easier to understand and equally
+[21:44] effective.
+[21:45] Okay?
+[21:47] So, this is what we have. And so, what
+[21:49] we want to do is
+[21:50] we want to learn these embedding vectors
+[21:52] that can be used to essentially
+[21:54] approximate this matrix.
+[21:56] Right? If you can find vectors that can
+[21:59] actually approximate this matrix, then
+[22:01] hopefully those vectors do in fact
+[22:03] capture some notion of what the words
+[22:04] actually mean. Okay? So, let me put it
+[22:06] differently.
+[22:07] You come to me with this matrix. Okay?
+[22:10] And you say uh okay, Rama, do you have
+[22:12] embeddings for me?
+[22:14] And I'm like, yeah, I reach into my bag
+[22:15] and I'm like, okay, every one of those
+[22:17] 500,000 words, I have an embedding.
+[22:19] Right?
+[22:20] Let's ignore for a moment how I actually
+[22:21] calculated embeddings. I have the
+[22:23] embeddings.
+[22:24] How will you know if my embeddings are
+[22:25] any good?
+[22:28] How will you know?
+[22:30] How can you actually assess if those
+[22:31] embeddings are any good?
+[22:34] Well, you can certainly say, okay, give
+[22:35] me the embeddings for movie and film and
+[22:37] you can see if they're really close by.
+[22:39] If you can look at the you look at the
+[22:40] embedding for movie and tensor and
+[22:42] hopefully they're far away.
+[22:43] But, you'll never get done.
+[22:46] Right?
+[22:47] How can you systematically evaluate
+[22:49] this?
+[22:51] Well, what if you could actually what
+[22:53] what if I come to you and say, not only
+[22:55] am I going to give you an embedding,
+[22:57] here is a procedure
+[22:59] which you can use with these embeddings
+[23:00] to validate how good they are and here
+[23:02] is the procedure. What you can do is you
+[23:04] can use the embedding to recreate the
+[23:07] co-occurrence matrix.
+[23:09] And if the recreated co-occurrence
+[23:11] matrix actually matches the real matrix
+[23:14] well, these embeddings probably are
+[23:15] pretty good.
+[23:17] Remember, the whole point of the
+[23:18] co-occurrence is to handle this context
+[23:20] information. So, if my embeddings can
+[23:21] actually recreate them, reconstruct them
+[23:23] pretty close, right? It'll never be
+[23:25] perfect. But, it comes pretty close,
+[23:27] then we're like, wow, okay, these
+[23:28] embeddings do mean something.
+[23:29] So, if it turns out for instance that
+[23:31] the matrix has, you know, 3,000 possible
+[23:33] va- value of 3,000 for deep and learning
+[23:36] and values of uh
+[23:40] say
+[23:40] 50 for extreme learning
+[23:43] and our embedding comes in and says
+[23:45] 3,002 for the first one and 48 for the
+[23:48] second one, we'll be like we'll be
+[23:49] pretty impressed.
+[23:51] Whoa, it didn't need to be that close.
+[23:53] Unless it was actually capturing
+[23:54] something.
+[23:55] Okay? So, that's what we're going to do.
+[23:57] And so, we're going to take this logic
+[23:59] of saying
+[24:00] find embeddings that can approximate the
+[24:03] what we actually see in Wikipedia.
+[24:05] Right? And we're going to use that idea
+[24:07] to actually build the model and learn
+[24:09] the
+[24:10] using nothing more than basically linear
+[24:12] regression.
+[24:16] And here you are thinking that linear
+[24:17] regression is useless now that you've
+[24:18] graduated machine learning, right?
+[24:22] So
+[24:23] So, we can think of the embedding
+[24:24] vectors that we want to figure out as
+[24:26] just the weights in a model.
+[24:28] In a linear regression.
+[24:31] We can think of the co-occurrence matrix
+[24:33] as just the data we're going to use in
+[24:35] this model to estimate these weights.
+[24:37] And the model we're going to use
+[24:39] is something like this.
+[24:42] So, first I have to inflict some
+[24:43] notation on you.
+[24:45] We would denote the co-occurrence matrix
+[24:46] of say words I and J as Xij.
+[24:50] Xij is just data.
+[24:51] It's just data. Okay? It's not a
+[24:53] variable, it's data.
+[24:55] Uh
+[24:55] and then we will denote an embedding
+[24:57] vector for each word. Remember, we need
+[24:59] to have a vector for each word. So, we
+[25:01] call it Wi, right? Wi is the embedding
+[25:03] vector for each word.
+[25:06] And we will also assume that
+[25:09] some words are just inherently very
+[25:10] popular. They're going to show up all
+[25:11] the time like the word the.
+[25:13] Okay? So, we'll assume that every word
+[25:15] has some natural frequency of occurring
+[25:18] like movie versus flick.
+[25:20] The versus tensor. So, we want the
+[25:22] vectors to capture the co-occurrence
+[25:24] patterns independent of how naturally
+[25:27] frequent the words are.
+[25:28] Okay?
+[25:29] And so, to capture this natural
+[25:30] frequency, we will assign a bias or Bi
+[25:33] to each word that we're going to
+[25:34] calculate. And all this will become
+[25:36] clear in just a moment. Okay? So
+[25:39] with this setup, basically what we're
+[25:41] saying is something very simple. We're
+[25:42] saying, look, this co-occurrence matrix
+[25:44] that we have
+[25:45] that we're able to compute, it came
+[25:48] about because in in truth, in reality,
+[25:51] in nature, there are these embedding
+[25:53] vectors for every word.
+[25:55] There are these biases Bi for every word
+[25:58] and every co-occurrence number that you
+[26:00] see just came about because, you know,
+[26:03] under the hood, mother nature grabbed
+[26:05] the bias number for the word I, the bias
+[26:07] number for the word J took the two
+[26:09] embedding vectors, which only mother
+[26:11] nature knows at this point did the dot
+[26:13] product of them, add them, and that's
+[26:15] how we get this number.
+[26:16] So, it basically says the number you see
+[26:19] is the sum of the inherent popularity of
+[26:21] the first word plus the inherent
+[26:23] popularity of the second word plus the
+[26:25] way in which these two words connect to
+[26:26] each other.
+[26:29] That's it.
+[26:29] And
+[26:30] you will agree with me
+[26:32] that literally can't get simpler than
+[26:33] this.
+[26:34] If I tell you, hey, here are two things.
+[26:36] I want you to tell me how connected they
+[26:38] are, you'll be like, well, let's take
+[26:39] the first one, figure out how inherently
+[26:42] popular it is, inherent popularity, and
+[26:44] then of course you got to worry about
+[26:45] the connection. So, we do a dot dot
+[26:46] product.
+[26:47] That's it. Those three things.
+[26:49] Right?
+[26:50] So, this is what we have. Now, you may
+[26:52] have seen
+[26:53] uh
+[26:54] from your, you know, good old linear
+[26:56] regression that whenever uh your
+[27:00] dependent variable happens to be
+[27:02] positive, guaranteed to be positive
+[27:05] and it ends up having a big range
+[27:08] we always advise you folks
+[27:10] to take the logarithmic transformation
+[27:12] to squash it into a narrow range because
+[27:14] that will make these models much more
+[27:16] well-behaved.
+[27:18] Regression if the Y value is like a huge
+[27:20] range. Like the canonical example is
+[27:22] that, you know, if you are trying to
+[27:23] model, you know, the net worth of
+[27:24] people, right? It's going to have a long
+[27:27] right tail with people like Elon and
+[27:29] Jeff and so on on the right side, right?
+[27:30] And the rest of us on the left. So and
+[27:33] so, to model this big long tail
+[27:34] distribution, you just take the
+[27:35] logarithm, just squash everything to a
+[27:37] very narrow range. And that will make
+[27:39] regression much better behaved. Okay?
+[27:41] Here
+[27:42] most of the counts are going to be zero.
+[27:45] But, some of the counts could be very
+[27:47] high.
+[27:48] Right?
+[27:49] And therefore we wanted to If you take
+[27:51] the logarithm, it makes it much better
+[27:52] behaved, so we take the logarithm here.
+[27:54] So, this is actually our model. That's
+[27:56] it.
+[27:57] And I know that many of the numbers are
+[27:58] zero and log of zero is not defined. So,
+[28:00] we can just add the one a number one to
+[28:02] all the numbers
+[28:03] to avoid that kind of, you know,
+[28:06] technical arithmetic problems.
+[28:08] But, this conceptually is what's going
+[28:09] on. This is the model we want to
+[28:10] calculate.
+[28:11] So, given that we have essentially
+[28:14] postulated this model
+[28:16] and we have this data, this
+[28:17] co-occurrence matrix, how can we
+[28:19] actually find the weights? How can we
+[28:21] actually find the Bs and the Ws? What
+[28:24] would we What should we do?
+[28:25] Go back to the fundamentals of
+[28:26] regression. Think about it conceptually.
+[28:29] You have some model which has some
+[28:30] weights.
+[28:31] There's some data you can use to train
+[28:33] the model.
+[28:35] Right? And you need to find the best set
+[28:36] of weights. What does the best mean
+[28:38] here?
+[28:40] The lowest
+[28:42] The lowest error. Exactly. There are
+[28:43] many ways to measure error, right? What
+[28:46] would be What is the simplest thing we
+[28:47] could use? So, what you do is you would
+[28:48] actually do mean squared error. Right?
+[28:50] Which is what you're getting at.
+[28:52] You could take the actual thing, you
+[28:53] could take the predicted thing, take the
+[28:54] difference, square it, and minimize the
+[28:55] sum of it.
+[28:57] Okay? If your model exactly nails every
+[28:59] number in the co-occurrence matrix, the
+[29:00] error is going to be zero.
+[29:02] Okay? So
+[29:04] what we do is we literally just do that.
+[29:07] This is the data.
+[29:09] This is the actual predicted value.
+[29:11] Predicted value, actual value,
+[29:13] difference squared, add them all up,
+[29:14] minimize.
+[29:17] Okay?
+[29:19] Uh yes.
+[29:21] And in the loss function, how is this
+[29:23] capturing the context? Because unless my
+[29:25] input data is having that context
+[29:28] how will this actually differentiate
+[29:31] based on where the particular word is
+[29:33] used?
+[29:34] The word The way the word is
+[29:36] the
+[29:37] So, let's take two words like deep and
+[29:38] learning. Now, let's take this word and
+[29:41] change it according to the context.
+[29:42] Okay.
+[29:44] Sorry, go ahead. Yeah, so basically,
+[29:46] let's say I'm talking about the word
+[29:47] banana. So it's a fruit in some context
+[29:49] and I could be saying he's going
+[29:50] bananas. That's a
+[29:53] whatever, right? So now these are two
+[29:55] different contexts in my understanding
+[29:57] and my same model needs to be able to
+[29:59] tell me that banana is the right word in
+[30:01] this context but wrong word in this
+[30:02] context or
+[30:04] correct in both contexts. Yeah, very
+[30:06] good question. So let's actually spend a
+[30:08] minute on that. Good question. I'm going
+[30:10] to swap to my iPad.
+[30:13] So let's let's assume that this is our
+[30:15] co-occurrence matrix.
+[30:18] Right? And then we have words going from
+[30:20] A all the way to let's say zebra, right?
+[30:23] This is the all the words in our
+[30:24] vocabulary
+[30:25] and we have A through zebra here.
+[30:29] And now what we have is
+[30:32] we have uh
+[30:34] apple
+[30:36] and banana.
+[30:39] Right?
+[30:40] So basically what's going on at this
+[30:42] point is that
+[30:44] here every number here measures
+[30:48] for every word here, how many times that
+[30:50] word and apple show up in the same
+[30:51] sentence, okay?
+[30:53] It is not measuring, to your point,
+[30:56] how many times apple and banana are
+[30:57] showing up. It's measuring how much how
+[30:59] many times apple is showing up in each
+[31:01] sentence, right? Now, if apple and
+[31:03] banana are sort of interchangeable,
+[31:06] what do we expect these numbers these
+[31:09] two rows of numbers to look like? Let's
+[31:11] assume that apple and banana are perfect
+[31:13] synonyms.
+[31:14] Just for argument, okay? Let's say it's
+[31:15] a perfect synonyms.
+[31:17] What do we expect these two
+[31:19] numbers
+[31:21] to look like?
+[31:23] Very similar.
+[31:25] So if two words are related, their
+[31:27] entries their entry row vectors in the
+[31:30] co-occurrence matrix are going to be
+[31:31] very very similar.
+[31:32] So that is how the context comes into
+[31:34] the co-occurrence matrix.
+[31:36] So what we want to do is we want to find
+[31:37] if if embeddings can recreate the same
+[31:40] pattern of numbers in these two
+[31:42] uh in these two rows, it's actually
+[31:45] capturing the underlying context.
+[31:47] So words which are similar will sort of
+[31:49] zig and zag together the same way
+[31:51] through the co-occurrence matrix.
+[31:53] And that's where it comes in.
+[31:57] Yeah.
+[31:58] What's up with the diagonal of the
+[32:00] co-occurrence matrix where you have
+[32:01] apple showing up twice? Oh oh, I see. So
+[32:05] yeah, here the you can just ignore the
+[32:07] diagonal typically
+[32:08] uh because all the action is off the the
+[32:10] off-diagonal entries.
+[32:15] So so that's basically the idea and uh
+[32:18] if words which are very similar will
+[32:20] have a very similar pattern of numbers
+[32:22] and then any
+[32:24] embeddings that can actually recreate
+[32:25] the same pattern of numbers is capturing
+[32:27] the underlying reality of what's going
+[32:28] on.
+[32:29] If words are kind of unrelated, those
+[32:32] two those two vectors, let's say that
+[32:34] the word you have is uh
+[32:40] Let's assume the word is uh of course
+[32:42] you know what I'm going to say, tensor.
+[32:45] Right? These two vectors
+[32:48] will sort of won't have any connection
+[32:49] to each other.
+[32:50] Which means if you look at something
+[32:51] like the correlation of those two
+[32:53] vectors, it's it's going to be around
+[32:54] zero.
+[32:55] Right?
+[32:56] Words which are
+[32:57] you know, interchangeable will have a
+[32:59] very high correlation.
+[33:01] Words which are antonyms and never show
+[33:03] up in the same place together may have a
+[33:05] highly negative correlation, close to
+[33:07] minus one for instance. So that's sort
+[33:09] of the intuition behind what's going on
+[33:10] in these two row vectors on these row
+[33:11] vectors.
+[33:12] And so the point is given this
+[33:14] co-occurrence matrix is capturing all
+[33:16] these word word correlational structure,
+[33:19] any embedding that can recreate it must
+[33:22] have captured the structure as well.
+[33:25] Because you can't recreate something
+[33:26] like this with great fidelity unless you
+[33:28] have some notion of what's going on
+[33:30] under the hood.
+[33:31] That's the basic idea.
+[33:33] Yeah.
+[33:34] So just connecting to Sophie's question.
+[33:36] So in that example then
+[33:39] banana is a fruit and apple is a fruit
+[33:40] as well. Banana and apple are synonyms
+[33:42] and you're going mad, you're going
+[33:44] bananas. How that comes together is that
+[33:47] Oh, I see. You're going mad, you're
+[33:48] going bananas, yeah. So uh so those will
+[33:50] also have some correlational structure
+[33:52] to it which the embeddings will
+[33:53] hopefully catch, but words like banana
+[33:57] which are very they they
+[33:59] the thing is it's called polysemy where
+[34:01] the word looks one way, it looks the
+[34:03] same way. It's like the word bank,
+[34:04] right? It can mean very different things
+[34:06] in very different context. So the
+[34:07] embedding is going to be some average
+[34:09] representation of it, right? But we are
+[34:11] not happy with that average and we'll
+[34:13] get around that average
+[34:15] next week when we do contextual stuff.
+[34:18] All right.
+[34:19] Um
+[34:20] So that's what we have here. So to go
+[34:22] back to this thing,
+[34:26] so what we can do is yeah.
+[34:29] I didn't understand how do we get the
+[34:31] mean squared error in this because we
+[34:34] didn't
+[34:35] do any reading from the data set we got.
+[34:37] We haven't calculated the embeddings.
+[34:39] We are trying to calculate them. Those
+[34:41] are just it's sort of like, you know, in
+[34:42] regression you have, you know, beta beta
+[34:45] one times X1 plus beta two times X2 kind
+[34:47] of thing. The betas are what the
+[34:49] regression produces for us, right? The
+[34:51] the embeddings are exactly that. They're
+[34:52] just coefficients that we're trying to
+[34:53] figure out.
+[34:55] The data is only the X's, the Xij.
+[34:59] And so this is what we're trying to
+[35:00] calculate,
+[35:01] right? And so what you can do is you can
+[35:03] actually start with some random values
+[35:06] for these things
+[35:08] and then
+[35:09] keep on trying to improve to minimize
+[35:11] the error
+[35:13] starting from these random values.
+[35:15] Do you folks are you aware of any
+[35:17] algorithm that which allows us to take
+[35:19] random value starting point and then
+[35:20] minimize some notion of error?
+[35:32] Well, how do you know it's actually
+[35:33] random? Oh.
+[35:35] So that's actually a very deep question.
+[35:37] Um
+[35:39] and
+[35:39] so
+[35:41] it's actually a tough question, right?
+[35:42] Because ultimately the random number is
+[35:44] coming from a computer
+[35:46] and we know how the computer runs. It's
+[35:47] deterministic at the end of the day.
+[35:50] So we actually use something called
+[35:51] pseudo random numbers,
+[35:53] right? Um and there's like a whole
+[35:54] specialized field of math
+[35:56] which essentially says, "Look, how can I
+[35:59] get random numbers that are sufficiently
+[36:02] random even though they come from a
+[36:03] non-random computer deterministic
+[36:05] process?" So we can talk offline about
+[36:07] it,
+[36:08] um but fundamentally all these systems
+[36:10] have some random number generators built
+[36:11] in. We just cross our fingers and hope
+[36:14] for the best and just use them.
+[36:17] So come back to this,
+[36:19] right? We can start with random values
+[36:20] for these weights
+[36:22] um and then we can try to minimize the
+[36:23] squared error. Are are you folks aware
+[36:25] of any algorithm that can help us do
+[36:26] that?
+[36:28] Yes.
+[36:30] Gradient descent. Yes, gradient descent.
+[36:33] Again, comes to the rescue. Uh and since
+[36:35] we are cool, we'll do stochastic
+[36:36] gradient descent.
+[36:38] Okay? So that's it. So gradient descent
+[36:41] actually doesn't care what the function
+[36:42] is as long as it you can calculate a
+[36:44] derivative from it. As long as you
+[36:45] calculate a gradient, you're good.
+[36:47] Right? So we can just run gradient
+[36:48] descent on this thing, right?
+[36:50] Uh one key point here is that gradient
+[36:53] descent, stochastic gradient descent
+[36:54] work for any
+[36:55] any models as long as you can calculate
+[36:58] good gradients from them.
+[37:00] It doesn't have to be a neural network.
+[37:03] Any mathematical function as long as
+[37:05] it's differentiable and gives you a good
+[37:07] gradient.
+[37:08] Okay? So here this is not a neural
+[37:10] network per se, but we can still use
+[37:12] gradient descent for it.
+[37:14] So we do that.
+[37:17] Um and when we are done, we would have
+[37:20] calculated some nice embeddings. We
+[37:22] would have all calculated or we can also
+[37:23] calculate all these biases, but we don't
+[37:25] need the biases anymore. We can just
+[37:26] throw out the biases because we only
+[37:28] care about the embeddings and how they
+[37:29] connect to each other.
+[37:30] Okay? Yeah.
+[37:33] So when when you're doing that
+[37:34] regression, are you predicting the
+[37:36] co-occurrence matrix? Mhm. Okay.
+[37:39] Exactly.
+[37:42] So
+[37:43] um actually let me just show a very
+[37:45] quick example
+[37:46] numerical example here.
+[37:48] So let's say for example that um
+[37:53] you know what?
+[37:57] So this is say W1 and this is W2.
+[38:00] Okay? And this is the vector and let's
+[38:02] assume for a moment that we it has two
+[38:04] dimensions, okay?
+[38:06] Two dimensions.
+[38:07] And we also need to calculate B1 and B2
+[38:09] which is just a number, okay?
+[38:14] So and let's say the number for deep
+[38:16] learning in the co-occurrence matrix it
+[38:18] happens let's say it has occurred 104
+[38:20] times.
+[38:21] So all we are doing is to say log of
+[38:24] 104.
+[38:27] That is the actual value
+[38:28] minus
+[38:30] B1 which we don't know plus B2 which we
+[38:33] don't know
+[38:34] and then this thing here, let's just
+[38:36] call it,
+[38:38] you know, W11,
+[38:40] W12,
+[38:42] W21,
+[38:43] W22.
+[38:45] Okay? And then we're just doing the dot
+[38:46] product which is
+[38:49] times W12
+[38:51] plus W21
+[38:53] W22.
+[38:55] Okay? So this is our prediction.
+[38:58] Where is that cool laser pointer? Yeah.
+[39:00] So this is our prediction.
+[39:03] This is the actual.
+[39:05] So all we do is to say, "Okay,
+[39:07] this thing, the difference, we're going
+[39:09] to square it."
+[39:11] And then we're going to do the same
+[39:12] exact thing for every other word pair.
+[39:16] Okay? And when we are done with all of
+[39:17] that thing, we just take this whole
+[39:19] thing
+[39:20] and say gradient descent minimize.
+[39:23] So then it has to find the B's and the
+[39:26] W's and everything for every every pair
+[39:28] every word.
+[39:29] So that's actually what's going on.
+[39:31] Make sense?
+[39:37] All right. So by the way uh here
+[39:41] I said
+[39:43] I said, you know, let's assume that the
+[39:45] embeddings are just vectors which are
+[39:47] two dimension dimension two.
+[39:51] Well,
+[39:52] that's an arbitrary decision that I made
+[39:54] just to show you how it works because I
+[39:55] was doing it by hand. But more
+[39:58] generally, we get to choose how long
+[39:59] these vectors are.
+[40:01] Right?
+[40:02] And the longer the vector, the more
+[40:04] interesting ways it can actually
+[40:05] reproduce the co-occurrence matrix. It
+[40:07] has more flexibility. But the longer the
+[40:09] vector, what is the risk that you run?
+[40:13] Overfitting.
+[40:14] Because these are all parameters at the
+[40:16] end of the day. More parameters you
+[40:17] have, the more risk of overfitting.
+[40:19] Okay? So, you get to choose how big
+[40:21] these things can be. Uh yes.
+[40:24] Um don't you find it surprising that
+[40:26] we're able to fit the model where we
+[40:29] have a lot more parameters than we have
+[40:30] data because usually with most machine
+[40:32] learning with our experts, you would
+[40:33] like to not have a lot of parameters,
+[40:35] but here we're going to have
+[40:37] as you said, the number of dimensions
+[40:40] times more parameters than we have
+[40:42] data points. Well, here in this
+[40:44] particular case, as it turns out, um
+[40:46] let's assume that you only have 10
+[40:48] words, right?
+[40:49] And for each word, let's assume that you
+[40:51] have let's just just keep the math
+[40:53] simple. You have a two-dimensional
+[40:55] vector.
+[40:56] So, 10 words * 2, that's 20.
+[40:58] Plus you have 10 biases for the words,
+[41:00] right? So, that's another 10, that's 30.
+[41:02] But 10 * 10, the matrix has 100 entries.
+[41:06] So, because of the matrix being a order
+[41:08] n squared matrix, you'll have a lot more
+[41:10] numbers than parameters.
+[41:13] In this particular case, you have more
+[41:14] data than parameters.
+[41:17] So, that particular problem doesn't
+[41:18] apply in this case.
+[41:20] But that does show up in other cases and
+[41:22] there is some
+[41:23] very interesting research in neural
+[41:24] networks which suggests that often times
+[41:26] the traditional assumptions of data and
+[41:29] overfitting and all
+[41:30] can all be called into question under
+[41:32] some situations.
+[41:33] Um happy to tell you more offline, but
+[41:35] if you're curious, just Google something
+[41:37] called double descent.
+[41:39] You know what I mean.
+[41:42] But in this case, it's not a problem.
+[41:46] Okay.
+[41:47] So, so what that means is that we can
+[41:49] choose how big these things are. So, if
+[41:51] you look at one-hot word vector, one-hot
+[41:53] vectors, right? Where
+[41:55] there's a one and everything else is
+[41:57] zero depending on the position of the
+[41:58] word, these are long vectors as long as
+[42:00] a vocabulary, right? As we saw earlier.
+[42:03] Word embeddings on the other hand,
+[42:05] right? They can be very dense, right?
+[42:07] The numbers
+[42:08] that make up these embeddings, we're
+[42:10] actually going to figure out from the
+[42:11] data what they are. So, it can be
+[42:13] anything. It can So, the first dimension
+[42:15] may stand for some combination of, you
+[42:17] know, um
+[42:19] brightness plus speed plus animalness or
+[42:22] something. We have no idea what it
+[42:23] means.
+[42:24] All we know is that it's able to
+[42:26] reproduce the co-occurrence matrix
+[42:27] really well, so it's probably has
+[42:29] figured something out.
+[42:30] Okay? And so, we can keep it really
+[42:32] short. So, the word embeddings tend to
+[42:33] be very
+[42:35] dense,
+[42:36] meaning not zeros and ones, but some
+[42:38] arbitrary numbers. It's very lower
+[42:39] dimensional and it's of course learned
+[42:40] from data.
+[42:41] Right? So,
+[42:43] so once you do this, once you actually
+[42:45] run Glove on this data and do gradient
+[42:47] descent and so on and so forth, uh you
+[42:49] will actually come up with embeddings
+[42:51] and then you can actually plot the
+[42:52] embeddings. You can take like this they
+[42:54] say the you know, you can take these
+[42:55] embeddings and just plot them. Here um
+[42:58] they're not literally plotting the first
+[42:59] two dimensions. They're using a
+[43:01] particular technique called t-SNE, which
+[43:03] is a way to take long vectors and
+[43:05] project them to 2D space for
+[43:07] visualization purposes.
+[43:09] And you can see here
+[43:11] some very interesting things are showing
+[43:12] up. So, they basically they plotted the
+[43:15] embedding for brother,
+[43:17] nephew, uncle, sister, niece,
+[43:19] aunt, and so on and so forth. It's all
+[43:20] showing up here.
+[43:22] This the embedding for man, embedding
+[43:24] for woman,
+[43:25] sir, madam,
+[43:28] empress, heir,
+[43:29] duke, emperor, king. You get the idea.
+[43:32] Right? So, clearly there are patterns
+[43:34] here where
+[43:35] things which are sort of similar in
+[43:37] their nature are all hanging out
+[43:38] together in the same part of the space.
+[43:41] Which is comforting, which is good to
+[43:42] know.
+[43:44] Right?
+[43:44] Now, but as I mentioned earlier, it's
+[43:46] not just about the fact that similar
+[43:48] things happen to be near each other.
+[43:50] The direction also actually matters. And
+[43:53] beautiful things happen when you look at
+[43:54] directions. So, for instance,
+[43:57] you know, let's say that
+[44:00] man and you want to go from man to
+[44:01] brother.
+[44:03] Okay? So, to go from man to brother, you
+[44:05] have to start with man and then travel
+[44:07] along this arrow, right? To get to
+[44:09] brother.
+[44:11] So, this arrow has some notion of a
+[44:14] person becoming a sibling.
+[44:18] Right?
+[44:19] So, you would hope that if you take that
+[44:20] same arrow
+[44:22] and then
+[44:23] start here with that arrow, hopefully
+[44:26] the woman will become a sister.
+[44:29] Sure enough, this.
+[44:32] So, this is called word vector algebra.
+[44:35] Right? Embedding algebra. And these
+[44:37] relationships are actually showing up in
+[44:39] the data. We didn't tell it any of these
+[44:41] things.
+[44:42] We just literally gave it the
+[44:43] co-occurrence matrix
+[44:44] and said and and asked it to reproduce
+[44:46] it.
+[44:47] So, I find it pretty shocking that these
+[44:49] things are actually true.
+[44:52] And it gives us evidence and comfort
+[44:55] that whatever has been learned does have
+[44:57] some deep connection to describing the
+[44:59] underlying nature of what's going on.
+[45:01] It's not some statistically fluky
+[45:03] artifact.
+[45:05] Um yeah.
+[45:07] So,
+[45:07] I said
+[45:08] by context or by adjacency to other
+[45:11] words and not by
+[45:12] the place in the same word, right?
+[45:15] Cuz you can't click they won't appear in
+[45:16] the same sentence.
+[45:17] They have
+[45:19] keywords. Right.
+[45:20] They won't appear in the same sentence,
+[45:22] but the pattern of co-occurrence will be
+[45:23] the same for them.
+[45:25] Which is what we've been able to
+[45:26] reproduce with these embeddings. So,
+[45:28] that's the key idea.
+[45:34] Um
+[45:34] so, my question is along like how are we
+[45:37] able to capture all these directions in
+[45:40] 2D
+[45:41] matrix versus a multi-dimensional matrix
+[45:44] because I feel like okay, so this
+[45:46] relationship is kind of
+[45:47] uh
+[45:48] confirmed that you're moving to
+[45:50] kind of like
+[45:51] family or like blood relationship or
+[45:53] something of the sort, but like how does
+[45:54] it not mess up the other sides of that
+[45:56] matrix? Like
+[45:58] No, this is just a visualization thing.
+[46:00] So, we're basically taking this uh you
+[46:02] know, as you will see, Glove embeddings
+[46:04] come in lots of different sizes. And
+[46:06] this I think uses the 100 dimension
+[46:08] embedding and just projects it to 2D
+[46:10] space using a particular technique and
+[46:12] then looks to see what's going on.
+[46:15] Um yeah.
+[46:17] Uh if the input data being co-occurrence
+[46:20] matrix is biased, aren't we amplifying
+[46:22] that bias? Yes, we are. Yes. No, it's a
+[46:24] great observation. Uh any sort of data
+[46:26] you scrape from the internet and use for
+[46:28] this sort of modeling exercise will be
+[46:30] subject to all the biases that produced
+[46:32] the data in the place first place. And
+[46:34] the model will faithfully learn those
+[46:36] biases. And if you're not careful, it'll
+[46:38] perpetuate them.
+[46:40] So, and that's a whole very important
+[46:41] topic that unfortunately won't cover in
+[46:43] this course because of time constraints,
+[46:45] but it's something you always have to
+[46:46] worry about when you're building these
+[46:47] models.
+[46:50] How do you think about the
+[46:51] dimensionality of the embeddings not the
+[46:53] 2D representation of the actual data?
+[46:55] The one that we choose, that's that's in
+[46:57] our hands. So, you should think of them
+[46:59] as a hyperparameter.
+[47:00] So, much like the number of hidden units
+[47:03] to use in a particular hidden layer,
+[47:05] um it's a hyperparameter. Uh so, you
+[47:06] know, I would again start small and if
+[47:09] it solves the problem that you're trying
+[47:11] to solve with these embeddings, great.
+[47:13] If not, keep increasing them. And at
+[47:15] some point there might be like a a
+[47:16] flattening out and a overfitting sort of
+[47:19] dynamic and then you stop. So, just
+[47:20] think of it as a hyperparameter.
+[47:22] Yeah.
+[47:24] Do you see any benefit practicing using
+[47:26] like penalized regression to do this
+[47:28] instead of having the embeddings more
+[47:31] sparse or just like
+[47:33] lowering the magnitude of them? Yeah.
+[47:36] Yes. So, there are lots of techniques to
+[47:39] uh
+[47:40] to apply regularization in the
+[47:42] estimation itself of all these numbers.
+[47:44] Um happy to give you pointers. It's I'm
+[47:46] just going with like the simplest
+[47:47] version possible.
+[47:49] Yeah.
+[47:50] Am I understanding why overfitting is a
+[47:53] problem in this case cuz we're not doing
+[47:55] any like out of sample
+[47:58] prediction. So, like wouldn't you want
+[48:00] like the embeddings to be
+[48:02] like high dimensional so you can capture
+[48:03] like
+[48:04] your relationships? Uh interesting
+[48:06] question. So, the question is given that
+[48:08] there's no notion of a test set, out of
+[48:11] sample test set that we got we're going
+[48:12] to evaluate these things on, why do we
+[48:14] really care about overfitting? Don't
+[48:16] should we do the best we can to capture
+[48:18] everything in the data, right?
+[48:20] Well,
+[48:21] the thing is
+[48:22] even when you're not trying to use it
+[48:24] for out of sample prediction, you do
+[48:26] want to make sure that your model only
+[48:29] captures the true patterns and not the
+[48:31] noise.
+[48:32] In every data set, there's always noise.
+[48:35] Right? And you want it to capture a
+[48:36] signal but not the noise.
+[48:38] And regardless of what you use it for.
+[48:40] Because if it captures the noise, then
+[48:42] the insights you draw from the word
+[48:44] embeddings may be flawed.
+[48:45] That's the reason.
+[48:48] Okay.
+[48:49] Um all right, so let's keep going. So,
+[48:51] here the algebra is brother minus man
+[48:53] plus woman is sister.
+[48:55] That's it. Human biology reduced to a
+[48:57] single sentence.
+[48:58] All right. So, now the pros and cons of
+[49:00] these things are you should use
+[49:02] something like a Glove embedding if you
+[49:04] don't have enough data to do to to sort
+[49:07] of
+[49:07] to learn a task-specific embedding for
+[49:10] your own vocabulary. As we As I'll show
+[49:11] you in the Colab, you can actually learn
+[49:13] these things just for your own data set
+[49:14] if you want. You don't have to use these
+[49:16] Glove embeddings. But the reason to use
+[49:18] these pretrained embeddings is that if
+[49:20] you're working with natural language,
+[49:22] you know, the word is the word, right?
+[49:24] It means something.
+[49:25] And so, there's no reason for you to
+[49:28] have for your model, for your little use
+[49:30] case, for you to actually somehow learn
+[49:32] all the fundamentals of English.
+[49:35] The fundamentals of English are the
+[49:36] fundamentals of English. May as well
+[49:37] learn it once and then piggyback on it.
+[49:40] So, that's the whole idea of using
+[49:42] pre-trained embeddings.
+[49:43] Because it These things are all common
+[49:45] aspects of language. May as well learn
+[49:47] them using all the data you can throw at
+[49:48] it and then you can sort of fine-tune
+[49:50] and tweak and adapt to your particular
+[49:52] use case.
+[49:53] Right? So, if you and this particular
+[49:55] useful when you don't have a lot of data
+[49:57] in your particular use case.
+[49:58] Uh right? That's one big advantage. Now,
+[50:01] it does have the drawback that this
+[50:03] embedding will not be customized to your
+[50:04] data.
+[50:05] Right? For example, if you're trying to
+[50:06] build an application for a medical or
+[50:08] legal use, it's going to have a lot of
+[50:10] jargon.
+[50:11] Right? And this pre-trained embedding
+[50:13] trained on all of Wikipedia may not
+[50:14] capture enough of the jargon and know
+[50:16] its meaning really accurately. So, what
+[50:18] you want to do is you want to take this
+[50:19] thing. You may still want to take this
+[50:21] thing and then you can adapt and
+[50:22] fine-tune it using your jargon-packed,
+[50:25] heavy, domain-specific data set.
+[50:28] Okay, those are some of the things to
+[50:29] keep in mind.
+[50:32] And of course, we can also learn it from
+[50:33] scratch if you want and the collab I
+[50:35] demonstrate all these options.
+[50:38] So, when you're working with embeddings
+[50:39] in Keras uh Keras, so what we do is
+[50:41] remember STI
+[50:43] where we after we standardize and
+[50:45] tokenize and index, right? At this
+[50:48] point, we go from integers to vectors
+[50:50] and so far we have been using integers
+[50:51] to one-hot vectors. Here, we're going to
+[50:54] use embedding vectors that we're going
+[50:55] to learn or that we're going to pre-use
+[50:57] from glove. And so, what we do is we
+[51:00] tell Kera we tell Keras's text
+[51:02] vectorization layer to do only STI.
+[51:06] And then we will use a new layer called
+[51:08] the embedding layer to do the encoding.
+[51:10] Yeah, that's how we're going to do it
+[51:11] divide divide it up.
+[51:14] So, we'll take a look at this first uh
+[51:17] before we switch to the collab. So,
+[51:18] before
+[51:20] we told Keras in this layer output mode
+[51:23] should be multi-hot or whatever, right?
+[51:26] Here, we don't want it to actually
+[51:27] encode anything in multi-hot. We just
+[51:29] wanted to give it integers back. So, we
+[51:30] tell it give me int.
+[51:32] Okay? That's the first change. We only
+[51:35] We tell it give me give us int. If you
+[51:36] say give us int, it'll stop with STI.
+[51:39] I'll just give you the integers.
+[51:41] Uh and then what you do is that
+[51:43] all the incoming sentences are going to
+[51:45] have different lengths. So, what we want
+[51:47] to do is we want to actually take all
+[51:48] these sentences and sort of normalize
+[51:50] them so they are of the same length.
+[51:52] Okay?
+[51:53] And the way we do that
+[51:55] And the way we do that very quickly is
+[51:57] that we either trunk we choose a maximum
+[51:59] length for every sen- for for the
+[52:01] sentences and then if something is
+[52:04] uh exactly fits that length, perfect.
+[52:05] Let's say in this case we want a max
+[52:07] length of five. Cats sat on the mat is
+[52:08] exactly five. Boom, fits perfectly. But
+[52:11] if something is smaller, I love you is
+[52:12] only three of these things, we actually
+[52:14] pad it with something called the pad
+[52:16] token.
+[52:17] Much like the unk token, pad token is a
+[52:19] special token which we use for padding.
+[52:22] And then it'll you know, and so and
+[52:23] Keras you will see will use zeros for
+[52:25] these paddings. So so that it fills it
+[52:27] up and gets all the way to the end. And
+[52:29] if you have something which is much
+[52:31] longer than five, you just truncate
+[52:33] everything else and just use the first
+[52:34] five.
+[52:36] So, this is what we do to get all the
+[52:38] sentences to be of the same length.
+[52:42] Okay?
+[52:43] And once we do that we then go to the
+[52:45] embedding layer.
+[52:47] And the embedding layer is actually very
+[52:49] simple.
+[52:50] What is What is an embedding? It's just
+[52:51] a vector and we need a vector for every
+[52:53] token.
+[52:54] Of course, we're going to learn these
+[52:55] vectors. We need one for every token.
+[52:57] So, in this case for example, uh let's
+[52:59] say that these are all the tokens we
+[53:01] have
+[53:02] in our vocabulary after the STI process.
+[53:05] Maybe in this case we have 5,000 tokens.
+[53:08] Each token we have this embedding
+[53:09] vector, right? And we choose what the
+[53:11] dimension of that embedding vector is,
+[53:12] right? And so, we can set it up by
+[53:15] saying Keras layers.embedding and we
+[53:17] tell it max tokens which means what how
+[53:19] many rows do we have here.
+[53:21] You know, how many What is the
+[53:21] vocabulary size that we're working with?
+[53:23] And then we tell it, okay, this is how
+[53:25] long I want each embedding vector to be.
+[53:28] So, rows, the size of the columns, and
+[53:31] that's the embedding layer. And we'll
+[53:33] use it in a second. I just want to show
+[53:34] it to you here so that's because it's
+[53:35] slightly clearer.
+[53:37] So, when an input sentence arrives, the
+[53:38] text vectorization layer will learn STI
+[53:40] on it. It'll truncate and pad it to max
+[53:42] length as needed. So, let's say this
+[53:44] phrase comes in, STI will give you the
+[53:46] same tokens plus pad pad because let's
+[53:48] say the max length is five and then
+[53:50] these are the corresponding integers.
+[53:52] And then
+[53:53] the embedding layer will just look up
+[53:55] the corresponding vector. So, for
+[53:56] example here, uh the vectors are we need
+[53:59] to look up the vectors for 23, 9, 5, 0,
+[54:01] and 0. So, we just go here and look up
+[54:04] 23, 5, 9, and 0. And then once we have
+[54:07] that, boom.
+[54:08] This is the resulting output. So,
+[54:10] whatever input sentence comes in, we
+[54:12] have now
+[54:13] five embedding vectors that have been
+[54:14] looked up from the embedding layer.
+[54:17] And once we do that
+[54:20] this is a table. So, I love you comes
+[54:22] in, it becomes this table. As we have
+[54:24] seen before
+[54:25] neural networks can only accommodate
+[54:27] vectors as inputs. We need to you know,
+[54:30] make this into a vector. And as we have
+[54:32] done before, you know, we can either
+[54:33] take all these things and concatenate
+[54:35] them, make a one long vector, or we can
+[54:37] find a way to average them or sum them
+[54:39] and things like that, right? As we have
+[54:40] seen before. And we will use the same uh
+[54:42] we'll the simplest thing is probably
+[54:44] just to average them. So,
+[54:46] uh these are some options and we but
+[54:48] we'll average them here. So, and this is
+[54:51] called the global average pooling layer
+[54:53] 1D. And it's all it does is whatever you
+[54:55] give it a table you give it, it just
+[54:57] takes each dimension and averages it.
+[54:59] The first dimension average, second
+[55:01] dimension average, and so on and so
+[55:02] forth. And once that's done
+[55:04] that's the whole
+[55:05] So,
+[55:07] the phrase comes in, STI gives you these
+[55:09] things, padding as needed or truncating
+[55:11] as needed. We look up the embeddings
+[55:14] from the embedding layer and then we get
+[55:16] all this thing. We do global global
+[55:18] pooling on it and it's done.
+[55:20] The resulting thing is a vector that can
+[55:22] then be passed into hidden layers just
+[55:24] like we normally do.
+[55:27] I'm going over this a little fast, but
+[55:29] make sure you look at it afterwards and
+[55:31] understand every step and the collab
+[55:33] will mirror this
+[55:34] you know, perfectly.
+[55:36] All right, so let's switch to the
+[55:37] collab.
+[55:39] Okay. All right.
+[55:41] Can folks see this okay?
+[55:43] All right, so we'll do the usual.
+[55:46] Um
+[55:47] import all the stuff we need and then
+[55:49] because I want to plot some of these uh
+[55:51] loss and accuracy curves to
+[55:53] you know, just to see what's going on,
+[55:55] I'll just bring in the functions from
+[55:56] the previous collabs.
+[55:58] Here.
+[55:59] And then um and I think I already have
+[56:01] downloaded this. Let me just make sure I
+[56:03] have it.
+[56:08] Uh it's not there. Okay.
+[56:11] Do it again.
+[56:13] This is same songs data set that we
+[56:14] looked at on Monday.
+[56:17] Okay.
+[56:19] So, roughly 49,000 examples as we saw
+[56:21] before. We'll one-hot encode them.
+[56:25] All right, so there's a bunch of stuff
+[56:27] that we already covered in class. So,
+[56:28] this is the thing
+[56:30] uh this URL has all the glove vectors
+[56:33] available for download. I downloaded it
+[56:35] uh before class because it takes a few
+[56:37] minutes. Uh and I've also unz- Did I
+[56:39] unzip it?
+[56:41] Uh yes, I did. And so, let's just look
+[56:43] at the first few.
+[56:46] All right, so these are all the first
+[56:47] few. We'll create a sort of an easier to
+[56:49] view version of these glove vectors.
+[56:54] So, I'm going to use the vectors which
+[56:56] are 100 long, but it comes in many
+[56:58] different shapes.
+[56:59] So, we have 400,000 vectors, 400,000
+[57:03] word vectors. Each is 100 dimension.
+[57:05] Uh and these all have been calculated
+[57:07] from Wikipedia using
+[57:09] the model we described using gradient
+[57:11] descent. Okay?
+[57:12] Uh all right, so this is the
+[57:15] vector for the word for movie.
+[57:18] Yeah, I don't know what these dimensions
+[57:19] mean, but it is there's something going
+[57:21] on. It has figured stuff out.
+[57:23] Uh but the proof is in the pudding,
+[57:24] right? So, all right, now we'll first
+[57:26] set up the text vectorization and
+[57:28] embedding layers like we saw before.
+[57:30] Um and so, I'm going to use uh a max
+[57:33] length of 300 for the songs.
+[57:36] Um right? Because all the sentences have
+[57:38] to be the same length. And you might be
+[57:40] wondering, okay, why did you pick 300
+[57:42] and not say 400 or 200? So, typically
+[57:44] what you do is you actually look at the
+[57:46] the length distribution of the songs you
+[57:48] have and you will find you're looking
+[57:51] for like an 80/20 or a you know, one of
+[57:52] those things. And in this case it turns
+[57:54] out 90% of the songs have less than or
+[57:56] equal to 300 words in our data set. So,
+[57:59] I'm just going to go with 300. Okay?
+[58:00] It's pretty good. Uh the problem is if
+[58:03] you actually say if you look at the song
+[58:04] which has the maximum length
+[58:06] that might have be like 3,000 words and
+[58:09] there would be any hardly any songs of
+[58:10] 3,000 long. You're just wasting a lot of
+[58:12] capacity by doing that. So, you're just
+[58:13] being a little pragmatic here.
+[58:16] So, okay. So, and then we as before for
+[58:18] the vocabulary itself, we tell Keras use
+[58:20] the most frequent 5,000 words, right?
+[58:22] When you're doing the STI
+[58:24] um STI. So, we do that and we tell it
+[58:27] the output mode is int like we saw
+[58:29] before.
+[58:32] We have there.
+[58:35] Okay, perfect.
+[58:36] Okay, this is a very dangerous thing
+[58:39] where somebody is remotely changing it
+[58:41] in another tab somewhere.
+[58:44] Fingers crossed. Okay.
+[58:50] Okay. So, we have this um and this is
+[58:52] what we did with all this stuff uh as
+[58:54] I've covered. So, now we will adapt this
+[58:57] layer as we have seen before using all
+[58:59] the lyrics we have.
+[59:04] And once we that, we'll take a look at
+[59:06] the first few.
+[59:08] And so, here's a very important thing.
+[59:10] Before, when we asked it to do multi-hot
+[59:12] encoding and so on in on Monday,
+[59:14] uh the zero, the first position was unk.
+[59:17] Right? Unk had zero. But here, unk
+[59:19] actually has one.
+[59:21] And the reason is that
+[59:23] the zeroth position is going to be uh
+[59:25] used for essentially the You can think
+[59:28] of this as the empty string. That's how
+[59:30] Keras will print out pad.
+[59:32] So, the zero position is the padding,
+[59:35] the pad token. The first position is the
+[59:37] unk token. Okay?
+[59:39] So, it's an important thing here.
+[59:41] So, let's say that we do
+[59:44] "HODL you're the best."
+[59:46] We take a vectorize it. Um
+[59:49] Do you think HODL
+[59:51] is going to be part of those 400,000
+[59:52] word vectors?
+[59:54] Wikipedia. Not yet. So,
+[59:57] Um all right. So, let's try that.
+[01:00:03] Okay, and as you can tell,
+[01:00:05] um
+[01:00:05] HODL is an unknown word, right? That's
+[01:00:08] why uh it's showing up here.
+[01:00:12] Right. So, one is unknown, right? The
+[01:00:14] index value one is unknown. Zero is pad.
+[01:00:18] But then,
+[01:00:19] this is unknown HODL, I
+[01:00:21] Sorry, you are the best, and then
+[01:00:25] everything else from that point on is a
+[01:00:26] zero because we are padding all the way
+[01:00:28] to 300.
+[01:00:30] Okay? So, that's why you see all these
+[01:00:31] zeros here.
+[01:00:32] All right. Uh now, let's just, you know,
+[01:00:34] run everything through
+[01:00:37] the vectorization layer, and then we'll
+[01:00:38] get to the embedding layer.
+[01:00:44] Okay. Now, we will we'll we'll first
+[01:00:48] There's just a bit of Python uh
+[01:00:50] housekeeping
+[01:00:51] um to create a nice, easy to look at
+[01:00:54] matrix. So, what we're going to do is
+[01:00:56] we're actually going to create a nice
+[01:00:58] matrix which shows us all the the word
+[01:01:00] the GloVe embeddings.
+[01:01:02] Um
+[01:01:04] And so, here, this is the embedding
+[01:01:05] matrix.
+[01:01:07] And this matrix has only 5,000 words,
+[01:01:09] and each is a 100 long.
+[01:01:11] Why is this embedding matrix only 5,000
+[01:01:13] even though we downloaded 400,000
+[01:01:15] vectors?
+[01:01:21] Right. So, clearly the 5,000 we used
+[01:01:23] there has some bearing to this, but what
+[01:01:24] is that 5,000?
+[01:01:30] We told Keras to take the most frequent
+[01:01:32] 5,000 words in our corpus.
+[01:01:34] So, we'll only have 5,000 in vocabulary.
+[01:01:36] That's why there's 5,000. So, we grab
+[01:01:38] just the word the GloVe vectors for
+[01:01:40] those 500 5,000 that Keras has chosen to
+[01:01:42] be in the vocabulary. Okay? And that's
+[01:01:44] our embedding matrix.
+[01:01:45] And then, if you look at the first few
+[01:01:47] rows, the first two rows should be all
+[01:01:50] zeros because it's pad and unk,
+[01:01:52] which clearly GloVe doesn't know about.
+[01:01:54] It's all going to be all zeros. And um
+[01:01:57] so, you can see all these zeros here,
+[01:01:59] and then from third on, words, you start
+[01:02:00] getting some numbers. Okay?
+[01:02:02] All right. Next, we'll set up the
+[01:02:04] embedding layer.
+[01:02:05] Uh
+[01:02:06] so, basically, what's going on here is
+[01:02:07] when you we tell the embedding layer how
+[01:02:09] many rows, which is just the vocab size,
+[01:02:11] max tokens, what is the embedding
+[01:02:13] dimension? Well, that's going to be 100
+[01:02:15] because the GloVe vectors are 100. And
+[01:02:17] then, here's the thing. You can tell it
+[01:02:19] um in this embedding layer, just use
+[01:02:22] this matrix I'm giving you as the
+[01:02:23] embedding layer. Because we already know
+[01:02:25] what the embeddings are. We downloaded
+[01:02:26] from whatever GloVe, right? So, we will
+[01:02:28] tell it to use GloVe as as the as the
+[01:02:30] weights for here, as the embeddings
+[01:02:32] here. So, we initialize it using that
+[01:02:34] embedding matrix, right? And then, we
+[01:02:36] tell it
+[01:02:38] don't train. When we do back propagation
+[01:02:40] later on, don't change any of these
+[01:02:41] weights because somebody spent a lot of
+[01:02:43] money create these weights for us.
+[01:02:45] Stanford. So, we don't want to like
+[01:02:47] further change them. Just freeze them
+[01:02:49] and use them as they are. Okay?
+[01:02:51] And this mask zero business I'll come
+[01:02:52] back later. Don't worry about it for the
+[01:02:53] moment.
+[01:02:55] All right. So, once we do that, we all
+[01:02:58] we are ready to set up our model. So,
+[01:03:00] this model is pretty simple. Uh Keras
+[01:03:02] input, the length, of course, is the
+[01:03:04] length of the sentence, right? Which is
+[01:03:05] uh 300 long, and then it runs the input
+[01:03:08] runs through an embedding layer right
+[01:03:09] there, right? And out comes a 300 by 100
+[01:03:12] table, and then we global average pool
+[01:03:14] it,
+[01:03:15] right? And that becomes a 100 element
+[01:03:17] vector, and then we are back in familiar
+[01:03:19] ground, and we run it through a dense
+[01:03:20] layer with eight ReLU neurons, uh right?
+[01:03:23] Eight ReLU neurons, and then we run it
+[01:03:25] through the final output layer, which is
+[01:03:27] a three-way softmax as before, hip hop
+[01:03:29] rock pop. And then, we tell Keras that's
+[01:03:31] our model, and then we summarize it.
+[01:03:34] Okay. So, this what we have. And you can
+[01:03:36] see here,
+[01:03:38] the total parameters are 500,835,
+[01:03:41] but the trainable parameters are only
+[01:03:42] 835.
+[01:03:44] It's because the total parameters are
+[01:03:46] all the GloVe embeddings plus the the
+[01:03:49] things we added to the GloVe embeddings
+[01:03:50] like the hidden layer and so on.
+[01:03:52] But the GloVe embeddings are us we have
+[01:03:54] told Keras, freeze it. Do not train it.
+[01:03:57] Right? Which means only the rest of it
+[01:03:58] is going to be trainable. That's That's
+[01:04:00] the 835. Yeah.
+[01:04:03] So, when we do the global average
+[01:04:05] pooling, don't we don't we lose any
+[01:04:06] sense of meaning that we gain from the
+[01:04:09] embedding as we average very different
+[01:04:12] embeddings together?
+[01:04:14] Sorry, say that again. I I missed the
+[01:04:15] first
+[01:04:16] &gt;&gt; if we average the the embedding of apple
+[01:04:18] and learning, for instance, they are
+[01:04:20] very different words that are used in
+[01:04:22] different meanings, so we have different
+[01:04:23] embeddings, but we average it, so can't
+[01:04:26] lose it.
+[01:04:27] We will lose a bunch of stuff. Yeah,
+[01:04:28] yeah, yeah. So, you're barely Anytime
+[01:04:30] you average anything, you're going to
+[01:04:31] lose some new nuance and so on. So, the
+[01:04:33] real question is, is it Despite that
+[01:04:36] averaging, is it good enough for you?
+[01:04:37] And sometimes it's good enough.
+[01:04:39] Very often it's good enough, as it turns
+[01:04:41] out. But as you will see when you go to
+[01:04:42] contextual embeddings, there's just a
+[01:04:44] better way to do it, right? When you
+[01:04:45] have contextual embeddings, uh but it
+[01:04:47] requires bigger models, more powerful
+[01:04:49] stuff, and so on and so forth. And
+[01:04:50] that's where you're going from the
+[01:04:51] foundations to the advanced stuff.
+[01:04:53] Yeah.
+[01:04:56] When we're doing optimization, like
+[01:04:58] let's say we are word problem, it's
+[01:05:00] often best to optimize everything
+[01:05:02] together than to optimize one part of
+[01:05:04] the system and then optimize the other
+[01:05:06] part of the system.
+[01:05:07] So, in that case, why wouldn't we want
+[01:05:09] to also change the embeddings?
+[01:05:12] We would like I understand why we would
+[01:05:13] like to stop with
+[01:05:15] with those weights that
+[01:05:17] some people have spent a lot of money
+[01:05:19] trying to find, but will
+[01:05:20] we be able to find more specific uh
+[01:05:23] embeddings related to our problem if we
+[01:05:25] optimize if we let everything be
+[01:05:26] trainable? Yeah. Absolutely. Absolutely.
+[01:05:29] And in fact, you will see in the collab
+[01:05:30] uh that we will do that next. I just
+[01:05:33] want to show people you don't have to do
+[01:05:35] it. You start with not training it
+[01:05:37] because it's going to be much faster.
+[01:05:38] And then, you train everything and see
+[01:05:39] if it gets better. And sometimes it'll
+[01:05:41] get better, in which case it's great.
+[01:05:42] Sometimes it won't get better. And I
+[01:05:44] will also show you, and I probably will
+[01:05:45] run out of time, which I'll So, I'll do
+[01:05:46] it on Monday. I will also show you, hey,
+[01:05:48] what if you want to do your own
+[01:05:50] embeddings from scratch without using
+[01:05:51] GloVe?
+[01:05:52] So, all possibilities will be covered.
+[01:05:55] Um yeah. So, to come back to this, this
+[01:05:57] is the model we have. Um and then, all
+[01:06:00] right.
+[01:06:01] So, we'll If we take a look at the first
+[01:06:03] few embedding vectors, by the way, this
+[01:06:05] model.layers
+[01:06:06] uh will give you every layer as a list,
+[01:06:09] a list of all the layers, and then you
+[01:06:10] can just grab any layer you want and
+[01:06:11] look at its weights. Okay? It's very
+[01:06:13] handy.
+[01:06:14] So, we're looking at the weights, and
+[01:06:15] you can see here
+[01:06:16] the first two vectors are all zeros
+[01:06:19] because that stands for unk and pad, and
+[01:06:21] then we have everything else. So,
+[01:06:22] everything looks fine so far. And now,
+[01:06:24] we just, you know, compile and fit it.
+[01:06:26] So, as usual, Adam, cross entropy,
+[01:06:28] accuracy.
+[01:06:30] Um and then, we'll just fit the model.
+[01:06:33] All right.
+[01:06:34] It's going to take
+[01:06:36] a few minutes.
+[01:06:39] And while it's running, so what what you
+[01:06:41] will see in this collab is that
+[01:06:43] uh in this particular case, the
+[01:06:44] embeddings actually don't help a whole
+[01:06:46] lot.
+[01:06:47] Why do you think that is?
+[01:06:51] What if it could be because we're
+[01:06:52] averaging a lot of stuff? Maybe that's
+[01:06:54] hurting us.
+[01:06:57] Yeah.
+[01:06:58] Um I mean, I think that the embeddings
+[01:06:59] were pre-trained on some corpus, right?
+[01:07:01] Like Wikipedia or something like that
+[01:07:03] that is different from the a little bit
+[01:07:05] different from the language we tend to
+[01:07:06] use in song lyrics. So, so maybe it's
+[01:07:08] not
+[01:07:09] its ability to sort of extract the
+[01:07:11] meaning of
+[01:07:12] um
+[01:07:13] candy from like a song lyric um
+[01:07:16] maybe is limited because Yeah. it's
+[01:07:18] thinking of all the other ways Right.
+[01:07:19] like that could be our presentation.
+[01:07:20] Yeah, so there could be a mismatch
+[01:07:22] between the corpus on which the
+[01:07:23] pre-trained stuff was trained on versus
+[01:07:26] the the corpus that you're working with
+[01:07:27] right now. That's one big reason. The
+[01:07:29] other reason is that we actually may
+[01:07:31] have We have 50,000 examples, basically.
+[01:07:34] It's a lot of data.
+[01:07:36] So, when you have a lot of data, you may
+[01:07:37] not need any of these things.
+[01:07:39] These things tend to do really well when
+[01:07:41] you don't have a lot of data, and which
+[01:07:43] means you you you get to piggyback on
+[01:07:46] what these embeddings have learned from
+[01:07:47] all of Wikipedia.
+[01:07:49] So, so when you have a smallish data
+[01:07:52] set, basically, the the rule of thumb
+[01:07:54] here is that when your data is really
+[01:07:55] small, try to use a pre-trained model.
+[01:07:58] Right? And that's what you saw with the
+[01:07:59] handbags and shoes classifier, right? We
+[01:08:01] had 100 examples of handbags and shoes,
+[01:08:03] and we used ResNet to got basically get
+[01:08:04] to 100% accuracy.
+[01:08:06] The same sort of logic applies here.
+[01:08:08] All right. So,
+[01:08:09] here, let's see what's happening. Uh
+[01:08:11] okay, it's done.
+[01:08:12] So, we'll plot.
+[01:08:16] Right.
+[01:08:16] Uh okay, this look at a very
+[01:08:18] well-behaved uh loss function curve.
+[01:08:21] Uh
+[01:08:25] Okay.
+[01:08:26] So,
+[01:08:27] uh there doesn't seem to be any massive
+[01:08:28] overfitting going on. They are moving
+[01:08:30] really nicely in lockstep. Let's see
+[01:08:32] what the thing is.
+[01:08:36] Okay, 63%, which is not great. Um right?
+[01:08:39] Uh it's not as good as what we saw
+[01:08:40] before when we used all 50,000 examples
+[01:08:43] and just trained something from scratch,
+[01:08:44] and that's just because in this case, we
+[01:08:45] have lots of examples, these pre-trained
+[01:08:47] embeddings aren't, you know, as helpful
+[01:08:49] as they could be.
+[01:08:50] But if you have a small data set, they
+[01:08:52] could be very helpful. And now, we go to
+[01:08:54] what um
+[01:08:56] he pointed out. Like, why can't we just,
+[01:08:58] you know, optimize these embeddings,
+[01:08:59] too? Why don't Why do we have to take
+[01:09:00] trade them as sacred? We'll just Let
+[01:09:02] Let's just use Let's
+[01:09:03] inflict Let's just apply unleash back
+[01:09:06] prop on it and see what happens.
+[01:09:07] So, we'll do that. Um
+[01:09:11] So, here, what we do is we retrain it,
+[01:09:13] but here, we set trainable equals true
+[01:09:15] for the embedding layer. Okay? This is
+[01:09:17] the key step. Trainable equals true.
+[01:09:19] Otherwise, it's unchanged.
+[01:09:20] Uh and then,
+[01:09:23] let's skip that.
+[01:09:27] We'll run it and see what happens. So
+[01:09:28] before it was whatever 63% accuracy or
+[01:09:31] something, we'll see if it gets better
+[01:09:33] if you train the whole thing.
+[01:09:35] And the thing is you can never be sure.
+[01:09:38] Right? Because it may start to overfit.
+[01:09:40] Uh which is why you just have to
+[01:09:41] empirically see what's going on. There
+[01:09:42] are no guarantees.
+[01:09:47] Um all right, any questions while it's
+[01:09:48] training?
+[01:09:50] Yeah.
+[01:09:51] In that first graph of when um you have
+[01:09:54] the training accuracy still increasing,
+[01:09:56] that might suggest that you could use
+[01:09:58] even more upstream. Correct. Exactly.
+[01:10:00] Exactly. So in the in the in that curve,
+[01:10:02] we saw that the training was continuing
+[01:10:03] to increase. Typically what's going to
+[01:10:05] happen is the training will continue to
+[01:10:06] get better the more you train it. The
+[01:10:08] key thing is is the validation also
+[01:10:10] improving. If the validation continues
+[01:10:12] to improve, there is a little bit more
+[01:10:13] gas left in the tank. You can keep
+[01:10:15] increasing more. If it starts to flatten
+[01:10:17] and even worse if it starts to go down,
+[01:10:19] then you want to pull back.
+[01:10:21] Yeah.
+[01:10:23] Um so you had used the maximum against
+[01:10:25] the limit like the vocabulary
+[01:10:27] of the most common 5,000. And then the
+[01:10:29] width of that was 100. What is the 100?
+[01:10:31] The 100 is just the length of the glove
+[01:10:33] vector.
+[01:10:34] Does that mean that it can only capture
+[01:10:37] how that word is related to 100 other
+[01:10:39] words? No, no. It it basically we are
+[01:10:41] saying that every word its intrinsic
+[01:10:43] meaning can be captured using a vector
+[01:10:45] of 100 dimensions.
+[01:10:48] Those dimensions mean something. We
+[01:10:49] don't know what it is. The first
+[01:10:51] dimension could mean color. Second could
+[01:10:53] mean some sort of location. The third
+[01:10:55] could mean some sort of see time of the
+[01:10:57] year. We just have no idea.
+[01:11:01] Okay, and then the pre-trained model is
+[01:11:02] we're not We're not going to learn the
+[01:11:04] pre-trained model like has those
+[01:11:05] already. We don't know what they are,
+[01:11:07] but it has some cat The people who
+[01:11:08] created it don't know what they are
+[01:11:10] either.
+[01:11:10] All they know is that for each word they
+[01:11:13] learned a 100 long vector.
+[01:11:15] And that 100 long vector was able to re-
+[01:11:18] kind of recreate the co-occurrence
+[01:11:20] matrix.
+[01:11:21] And then they probed it using that
+[01:11:23] visualization of man woman sister
+[01:11:25] brother all that stuff and it seems to
+[01:11:26] sort of fit with what you would expect.
+[01:11:29] Can you think of it as analogous to uh
+[01:11:31] when we did the convolutional ones, you
+[01:11:33] have the number of kernels, right? So in
+[01:11:35] in this case, so if you have 32 kernels,
+[01:11:37] it's sort of like 32 things it can
+[01:11:39] learn.
+[01:11:40] I think that's actually a great analogy.
+[01:11:42] I love it. That's that's a great way to
+[01:11:43] think about it. Yes. Uh much like we got
+[01:11:46] to choose decide how many filters to
+[01:11:48] have, here we get to decide how long the
+[01:11:50] embedding dimension needs to be and our
+[01:11:51] hope is that the more things we are able
+[01:11:53] to accommodate, the more complicated
+[01:11:55] things it will pick up. Right? Uh at the
+[01:11:57] same time, you don't want to have too
+[01:11:58] many of these things because it's going
+[01:11:59] to start picking up noise.
+[01:12:01] And that's not a good That's never a
+[01:12:03] good thing.
+[01:12:05] Okay.
+[01:12:06] Um
+[01:12:07] Another question on this side?
+[01:12:09] Yeah.
+[01:12:10] Go ahead. My
+[01:12:12] question is
+[01:12:13] why did we use Why do we use embeddings
+[01:12:15] and not the actual uh
+[01:12:17] correlation matrix called rows to
+[01:12:20] represent words, right? Like why do we
+[01:12:23] need to abstract Yeah, yeah, yeah.
+[01:12:25] That's actually a good That's a That's a
+[01:12:26] good That's a good question. Um one
+[01:12:28] immediate reason is that that row is
+[01:12:30] 500,000 vectors long. 500,000 long.
+[01:12:33] Right? So you want a compact dense
+[01:12:35] representation of a word.
+[01:12:37] The second thing is that thing is
+[01:12:39] subject to all the counts of the
+[01:12:40] Wikipedia corpus. It's not normalized.
+[01:12:43] So you need to normalize it so that if
+[01:12:45] you take any two rows and do dot
+[01:12:47] product, you will get some number which
+[01:12:49] is sort of in a narrow range. Otherwise
+[01:12:50] things don't become comparable.
+[01:12:53] No, both these objections can be
+[01:12:55] handled. You can normalize, you can
+[01:12:57] reduce the size of the corpus and so on
+[01:12:59] and so forth. And in fact that used to
+[01:13:00] be a very common way people used to do
+[01:13:01] it before.
+[01:13:03] But what they have discovered is that
+[01:13:04] these the way we learn embeddings now
+[01:13:06] tends to be much more effective in
+[01:13:07] practice.
+[01:13:10] So So what what we thought is
+[01:13:13] what what what this process does is it
+[01:13:16] creates this like n-dimensional
+[01:13:18] incomprehensible matrix that captures
+[01:13:21] in essence a summarized version of these
+[01:13:23] relationships.
+[01:13:25] Correct. A compact representation of
+[01:13:28] relationships which is not subject to
+[01:13:30] the size of your vocabulary.
+[01:13:33] So you know, you have 500,000 words
+[01:13:34] today, tomorrow somebody comes up with
+[01:13:36] the word called selfie which didn't
+[01:13:37] exist 5 years ago.
+[01:13:39] And now your corpus has gotten a little
+[01:13:40] bit more, right? So here it's very
+[01:13:42] compact and it tends to have a much
+[01:13:43] longer shelf life.
+[01:13:48] Yeah.
+[01:13:49] Uh all right, so let's see where we are.
+[01:13:54] Uh okay. So evaluate.
+[01:13:59] 68 69% almost. It was 63 went to 69. So
+[01:14:02] clearly here training the whole thing
+[01:14:04] including glove actually helps. Uh and
+[01:14:06] so that sort of begs the question, well,
+[01:14:08] if it um every if training glove helps,
+[01:14:11] maybe we should actually train the whole
+[01:14:13] thing from scratch.
+[01:14:15] Like why the hell not, right? Why the
+[01:14:16] heck not? I apologize.
+[01:14:19] So uh what we'll do is we'll actually
+[01:14:21] create our own embeddings and just train
+[01:14:22] them. And here we don't have to worry
+[01:14:24] about co-occurrence matrices and so on
+[01:14:26] and so forth because we have a very
+[01:14:27] specific objective. We want to be very
+[01:14:29] accurate in predicting genre for these
+[01:14:30] songs.
+[01:14:32] The people who had who had worked on
+[01:14:34] glove,
+[01:14:35] they didn't have any objective. They
+[01:14:36] just wanted to create embeddings that
+[01:14:37] were generally useful.
+[01:14:39] Okay? Here we want to be specifically
+[01:14:41] useful for genre prediction.
+[01:14:43] And so what we can do is we can actually
+[01:14:45] train the whole thing ourselves, right?
+[01:14:48] We can actually give it
+[01:14:50] uh we can actually put an embedding
+[01:14:51] layer here. I you know, we just
+[01:14:53] arbitrarily decided to choose 64 as the
+[01:14:55] uh the dimension as opposed to 100. It
+[01:14:57] will run faster. Uh and then it's the
+[01:14:59] same thing. Global average pooling,
+[01:15:01] activation, blah blah blah blah blah. Um
+[01:15:03] and then you run it.
+[01:15:08] We'll see if it finishes in the next
+[01:15:09] minute.
+[01:15:12] And we'll see if it actually does better
+[01:15:14] than the pre-trained embeddings or the
+[01:15:16] pre-trained embeddings that have been
+[01:15:17] further fine-tuned. And I don't remember
+[01:15:19] what I saw when I ran it yesterday.
+[01:15:21] Uh and while it's running, other
+[01:15:23] questions?
+[01:15:24] Yeah.
+[01:15:25] So my question is regarding embeddings.
+[01:15:28] When we call embedding for a particular
+[01:15:30] word, we indicate that we have certain
+[01:15:32] number of parameters. Let's say in this
+[01:15:33] case we have defined
+[01:15:35] We defined 100. So there will be 100
+[01:15:36] parameters and there will be
+[01:15:37] coefficients weights for each of them.
+[01:15:40] So when we take a pre-trained model,
+[01:15:42] right?
+[01:15:43] The one we took glove. So for each word
+[01:15:45] there would already be those number of
+[01:15:47] parameters in that different Yeah. So
+[01:15:49] but then how do we redefine them? Is
+[01:15:51] that we want only 100 or we want only 10
+[01:15:53] parameters
+[01:15:54] You know, the the glove thing actually
+[01:15:56] gives you packaged It's pre-packaged to
+[01:15:59] be 100 long. I think they have 200 and
+[01:16:01] 300 as well if I recall. We just
+[01:16:03] happened to use the one the one with
+[01:16:04] 100. The one is
+[01:16:05] The one is available in Google
+[01:16:07] Yeah, yeah. And there are many
+[01:16:09] available. We just get to pick and
+[01:16:10] choose and I happen to pick 100.
+[01:16:12] Uh
+[01:16:13] Oh, it's okay. So it's a bit slow, but
+[01:16:15] it's actually looking promising.
+[01:16:17] Um
+[01:16:18] 9:55, yeah.
+[01:16:21] So during the CNN models training during
+[01:16:23] our assignments,
+[01:16:24] changing the filters gave us more depth
+[01:16:27] than improvement in performance.
+[01:16:29] So here would I be right in concluding
+[01:16:32] that it's actually training the
+[01:16:33] embeddings which is giving us more
+[01:16:34] assuming that epoch and batch changes
+[01:16:36] are not
+[01:16:37] changed as much. So if I really want a
+[01:16:39] genuine change in performance, we go
+[01:16:42] to the level of retraining the
+[01:16:43] embeddings.
+[01:16:44] What Yeah, so what we saw was that using
+[01:16:46] glove as is was okay. Using glove and
+[01:16:48] then training them helped a lot. And now
+[01:16:50] we are basically saying, well, what if
+[01:16:51] we just abandon glove and train our own
+[01:16:53] embeddings for our particular problem.
+[01:16:55] See, glove is a general purpose tool.
+[01:16:57] So a general purpose tool is really good
+[01:16:59] if you don't have a lot of data
+[01:17:00] as a good starting point. But when you
+[01:17:01] have a lot of data, you should always
+[01:17:03] try to do your own thing and see if it's
+[01:17:04] any better.
+[01:17:05] And in this case, I
+[01:17:07] well, whoa. Okay, I think it's
+[01:17:09] uh
+[01:17:10] Come on, it's 9:55.
+[01:17:14] The button is going to enter any moment
+[01:17:15] now.
+[01:17:21] Right, let's just look at the thing.
+[01:17:25] Okay, folks. So 74% 72%.
+[01:17:29] So you can actually return your own
+[01:17:30] thing because of 50,000 examples and you
+[01:17:31] can see an even better thing. Thanks a
+[01:17:33] lot. Have a good rest of the week.

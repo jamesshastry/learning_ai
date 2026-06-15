@@ -1,0 +1,2262 @@
+[00:16] Right folks, good morning.
+[00:19] Welcome back. I hope you all had a nice
+[00:21] weekend.
+[00:22] Uh, and I hope you had a chance to watch
+[00:24] the the video walk-through I posted
+[00:26] yesterday. Um, it's going to save us
+[00:28] some time today. So, let's get right in.
+[00:31] Today is going to be super packed. Um,
+[00:33] you're going to go from not knowing
+[00:35] anything about convolutions perhaps for
+[00:36] some of you to actually knowing how
+[00:38] convolution networks work and actually
+[00:39] to build one and demo it in class, okay?
+[00:42] And uh, this demo has actually worked
+[00:44] pretty well for the last few years that
+[00:45] I've taught the class, but you never
+[00:47] know because it's a live demo, it may
+[00:48] not work. We'll see.
+[00:50] Um,
+[00:51] Valentine's Day gods, maybe they maybe
+[00:53] be with us.
+[00:54] Okay, so let's get going. So, Fashion
+[00:56] MNIST we saw previously, um, i.e. as in,
+[01:00] you know, in the in the walk-through,
+[01:01] the video walk-through, that a neural
+[01:03] network with a single single hidden
+[01:05] layer can get us to some an accuracy in
+[01:08] the the high 80s, okay? Uh, and that
+[01:11] thing that network actually didn't know
+[01:14] what was coming in was an image, right?
+[01:16] It literally took this table of numbers
+[01:18] and just took each row and then
+[01:19] concatenated all the rows into one giant
+[01:21] long vector and then sent it in. So, the
+[01:23] neural network did exploit the fact that
+[01:25] the input data was sort of known to be
+[01:27] of a certain type, okay? Which is the
+[01:30] clue for how can we do better?
+[01:32] Right? So, let's just spend a few
+[01:35] minutes on why what is it about images
+[01:38] that we have to really pay attention to,
+[01:40] okay? As opposed to any arbitrary vector
+[01:42] of numbers that's coming in.
+[01:44] Okay? So, when we flatten the image into
+[01:47] a long vector and feed it into a dense
+[01:49] layer,
+[01:50] several undesirable things can actually
+[01:52] happen.
+[01:55] What are some of them? Any any guesses?
+[02:00] Uh, yeah.
+[02:02] I think you lose the proximity of one
+[02:04] pixel to other ones that would be around
+[02:06] it.
+[02:07] Right. So, if you take a particular
+[02:08] pixel, then let's say that the picture
+[02:11] shows a t-shirt, um, if there's a little
+[02:13] pixel at in the center of the t-shirt,
+[02:15] knowing that the surrounding pixels are
+[02:17] related to the pixel in a way because
+[02:19] they are all part of this concept called
+[02:21] a t-shirt, would certainly be helpful,
+[02:23] right? So, so to put it more
+[02:25] technically, spatial adjacency
+[02:28] information is very important. And we
+[02:30] need to somehow take that into account.
+[02:32] Okay? Um, all right. What else? What
+[02:34] else might be going on here?
+[02:38] Uh,
+[02:40] Yeah,
+[02:41] you have some metadata about it like the
+[02:43] relative match into the resolution
+[02:46] Oh, I see. So, if you actually had
+[02:47] structured data about the image such as,
+[02:50] you know, various characters about that
+[02:51] might be helpful. True. Now, but let's
+[02:54] just focus on the case where you only
+[02:55] have the raw image and nothing else.
+[02:57] And under that constraint, what else
+[03:00] might go wrong?
+[03:02] Or what else might be suboptimal?
+[03:08] Okay. Well, the first thing that might
+[03:10] happen is that
+[03:12] we have we may have too many parameters.
+[03:15] So, let's take So, this is, you know,
+[03:17] this these numbers are from my, you
+[03:18] know, older iPhone. Uh, I noticed that
+[03:21] when I take a color picture with my
+[03:22] phone, it's a 3,000 * 3,000 roughly uh,
+[03:27] grid, right? So, the picture is actually
+[03:30] 3,024 pixels on this axis, 3,024 on that
+[03:34] axis, okay? So, that gets us to roughly
+[03:37] 9 million pixels, but remember there's a
+[03:40] color picture, which means there are
+[03:41] three channels,
+[03:43] which means there are 27 million
+[03:45] numbers,
+[03:46] each of which is between 0 and 255 from
+[03:49] that little picture, okay? And now let's
+[03:51] say we connect it to a single
+[03:54] 100 neuron dense layer.
+[03:57] A single 100 neuron dense layer. How
+[03:59] many parameters are we going to have?
+[04:00] Just in that one little part of the
+[04:01] network.
+[04:07] Could the mumbling be louder?
+[04:10] Yes, roughly 2.7 billion because 27
+[04:13] million parameters times 100,
+[04:15] right? Roughly, of course. Forget about
+[04:17] the biases for a moment, right? It's 2.7
+[04:19] billion.
+[04:21] 2.7 billion parameters,
+[04:23] right? Do you think we can actually get
+[04:25] 2.7 billion images to train any of these
+[04:27] things?
+[04:29] So, then you're going to overfit.
+[04:32] Right? Too many parameters. We have to
+[04:33] do We have to be smarter about this.
+[04:35] It's not going to work.
+[04:36] Right? That's the first problem.
+[04:39] The So, this clearly is computationally
+[04:41] demanding, very data hungry, and
+[04:43] increase the risk of overfitting.
+[04:45] Okay?
+[04:46] Next,
+[04:49] we lose spatial adjacency.
+[04:51] Right? We literally are ignoring what's
+[04:52] nearby.
+[04:55] So, that's a huge huge factor. There's a
+[04:57] third factor,
+[04:58] right? That we have to worry about,
+[05:01] which is that
+[05:02] let's say that, you know, the picture
+[05:04] has a vertical line
+[05:06] on the on the top left side and it has
+[05:08] some other vertical line on the bottom
+[05:09] right side.
+[05:12] What this sort of dumb approach is going
+[05:14] to do
+[05:15] is going to it's going to learn to
+[05:16] detect that vertical line on the top
+[05:18] left and it's going to independent of
+[05:20] that, it's going to learn to detect the
+[05:21] vertical line on the bottom right.
+[05:24] Okay? Which doesn't make any sense. What
+[05:26] do you A vertical line is a vertical
+[05:27] line. So, you want to be able to detect
+[05:29] it wherever it happens.
+[05:31] Detect once, reuse everywhere.
+[05:33] That's what you need to do.
+[05:35] So, this, by the way, is called
+[05:36] translation invariance.
+[05:38] Translation is math speak for move stuff
+[05:40] around.
+[05:41] Right? You take a line and it moves
+[05:42] around,
+[05:43] it doesn't matter, it's still a line.
+[05:45] Let's Let's Let's figure it out.
+[05:47] So, these are the the three things we
+[05:48] need to worry about. So, we want to
+[05:50] learn once and use all over the place.
+[05:53] We want to take spatial adjacency into
+[05:55] account, number two. And number three,
+[05:56] let's just find a way to make sure that
+[05:58] we don't have billions of parameters for
+[05:59] simple toy problems.
+[06:02] Any questions?
+[06:05] Yep.
+[06:07] Um, is this a problem
+[06:09] just because we are compressing the
+[06:11] image or would it have happened anyway?
+[06:14] It would have happened So, the question
+[06:15] was is it a problem because we are
+[06:16] compressing the image uh, or would it
+[06:18] would it have happened anyway? The
+[06:19] answer is it would have happened anyway.
+[06:20] You can take any picture, this is going
+[06:22] to happen, right? Because I'm not making
+[06:24] any assumptions about how the image is
+[06:26] coming in to me,
+[06:27] whether it's compressed or not and so on
+[06:28] and so forth.
+[06:31] Okay. All right.
+[06:33] So, convolutional layers
+[06:36] were developed to precisely address
+[06:38] these shortcomings and they're amazing
+[06:40] solution, as you will see. Very elegant.
+[06:45] All right.
+[06:45] So, the next, I don't know, half an hour
+[06:49] is going to be me defining a whole bunch
+[06:51] of stuff
+[06:52] before we actually get to the fun
+[06:53] collabs and so on and so forth.
+[06:55] Um, so just to put in perspective, I I
+[06:57] have a PowerPoint,
+[06:59] two collabs,
+[07:01] and an Excel spreadsheet, and maybe even
+[07:03] a notability file to cover today.
+[07:06] Okay? So, but hang on for the next 30
+[07:08] minutes because it's going to be a
+[07:09] little concept heavy
+[07:10] before we get to the fun stuff. So, stop
+[07:12] me, ask me questions because we do have
+[07:14] time.
+[07:15] All right. A convolutional layer is made
+[07:17] up of something called a convolutional
+[07:18] filter.
+[07:20] Okay? That's the atomic building block.
+[07:22] A convolutional filter is a nothing but
+[07:24] a small matrix of numbers like this.
+[07:28] It's just a small square matrix of
+[07:29] numbers. That's a convolutional filter,
+[07:31] okay? Now,
+[07:33] a layer is just composed of one or more
+[07:35] of these filters.
+[07:38] All right?
+[07:39] Filters and layers.
+[07:41] Now,
+[07:42] the thing about the convolutional filter
+[07:44] that makes it really magical
+[07:46] is that if you choose the numbers in a
+[07:48] filter carefully
+[07:50] and then you apply the filter to an
+[07:52] image, and I'll get to what I mean by
+[07:53] applying the filter,
+[07:56] if you choose the numbers carefully and
+[07:57] you apply to that image,
+[07:59] this little humble thing has the ability
+[08:02] to detect features in your image.
+[08:04] It can detect lines, curves, gradations
+[08:07] in color, circles, things like that,
+[08:09] okay? It's pretty cool.
+[08:11] And so,
+[08:12] I'm going to claim and I'm going to
+[08:14] prove shortly that this little humble
+[08:15] filter with the ones and zeros, it can
+[08:17] detect horizontal lines in any picture
+[08:19] you give it.
+[08:21] Okay?
+[08:22] This thing here is going to has the
+[08:23] ability to detect vertical lines.
+[08:27] All right? So, I will demonstrate how
+[08:28] this thing actually detects all these
+[08:30] things and then we will ask the big
+[08:33] question that's probably in your minds
+[08:34] already, where are we going to get these
+[08:35] numbers from?
+[08:37] That all sounds great, Rama. Where are
+[08:39] we going to get the numbers from? Okay?
+[08:41] And we have a beautiful answer to that
+[08:42] question.
+[08:43] All right. So, let's go. Um, now I'm
+[08:46] going to first explain to you what I
+[08:47] mean by applying a filter to an image
+[08:50] and then I'm going to give you examples
+[08:52] of how the filter works for detecting
+[08:54] vertical and horizontal lines. So, all
+[08:56] right. So, let's say that this is the
+[08:58] image we have.
+[09:00] Okay? Again, an image. Assume it's a
+[09:02] grayscale image. So, you just have a
+[09:04] bunch of numbers between 0 and 255,
+[09:06] okay? So, that's that This is the image
+[09:07] we have. It's a little tiny image.
+[09:09] And this is the filter that's been
+[09:10] magically given to us by somebody.
+[09:13] And what we are trying to do now is to
+[09:14] apply it, okay? So, what we do is that
+[09:17] we literally take this filter,
+[09:19] the little one, and then we superimpose
+[09:22] it on the top left part of the image.
+[09:24] So, you have the image here, you take
+[09:26] this little filter, and then you move it
+[09:28] to the top left so that they are sort of
+[09:30] right on top of each other.
+[09:32] Okay?
+[09:33] Once you have it right on top of each
+[09:34] other,
+[09:35] you have these matching numbers. You
+[09:37] have three numbers in the image, there
+[09:39] are three numbers in the filter, and
+[09:41] they're all matching each other right on
+[09:42] top of each other, right? So, you have
+[09:44] nine pairs of numbers.
+[09:46] And then what we do, once we overlay it,
+[09:48] we literally just multiply all the
+[09:50] matching numbers and add them up.
+[09:53] Okay? You just multiply all the numbers
+[09:55] and match them up, and you can confirm
+[09:57] later on that you know the the
+[09:58] arithmetic I'm doing is actually
+[09:59] accurate. Okay?
+[10:01] And once you do that you'll go get some
+[10:03] number.
+[10:04] Right?
+[10:05] Um
+[10:06] once you get that number
+[10:09] what we do is we go to our good old
+[10:11] friend the relu
+[10:12] and then we just run it through a relu.
+[10:15] Now, in this case all that effort comes
+[10:16] to nothing because it's zero. It's okay.
+[10:19] Okay? So, zero and this number becomes
+[10:22] the top left cell of your output.
+[10:26] So, this is called the convolution
+[10:28] operation.
+[10:29] Okay?
+[10:30] And we won't get into why it's called
+[10:31] that and so on and so forth. There's a
+[10:32] long and rich and storied history of
+[10:34] these things.
+[10:35] But this is the convolution operation.
+[10:38] And once we do that you sort of can now
+[10:40] predict what's going to happen, right?
+[10:42] We take the same exact operation and we
+[10:44] just move it to the right.
+[10:46] We move this little 3 by 3 thing to the
+[10:48] right and repeat the exact same process.
+[10:51] Matching numbers
+[10:53] uh to you know multiply all of the all
+[10:54] the matching numbers together, add them
+[10:55] up, run them through a relu.
+[10:58] Okay?
+[10:59] And then boom, you get the you get the
+[11:01] second number here.
+[11:03] And you keep doing that till you reach
+[11:05] the very end. You fill up all these
+[11:07] numbers then when you then you come to
+[11:08] the top of the second row.
+[11:11] Okay?
+[11:12] And you keep on doing that till you
+[11:14] reach the very bottom.
+[11:16] So, this is what I mean when I say apply
+[11:18] a filter to an image.
+[11:21] Okay?
+[11:22] Any questions?
+[11:25] Okay.
+[11:29] Microphone, please.
+[11:31] Microphone.
+[11:35] What happens when
+[11:36] the heart of the
+[11:38] and you stop
+[11:39] the remaining
+[11:42] but the filter doesn't perfectly match
+[11:44] Yeah, so you start from the left and
+[11:46] then you keep on going. At some point
+[11:47] the right edge of the filter is going to
+[11:49] match the right edge of the image and
+[11:51] then you stop.
+[11:52] Yeah. Now, there are some nuances here.
+[11:55] So, for example, you can actually pad
+[11:58] the whole image
+[11:59] on its borders so that you can actually
+[12:01] go outside the image and it'll still
+[12:03] work.
+[12:04] Okay? Number one. Number two, nuance.
+[12:08] Instead of just moving one step to the
+[12:10] right every time you finish, you can
+[12:11] move two steps to the right.
+[12:13] Right? And that's something called a
+[12:15] stride. Okay? So, there are a bunch of
+[12:17] pesky details here. But I'm just
+[12:20] ignoring them because this basic default
+[12:22] approach works well amazingly well
+[12:24] almost all the time.
+[12:27] Okay? All right. So, that's that's
+[12:29] that's the mechanics of how this
+[12:31] operation works. Um all right. Now, I'm
+[12:33] going to switch to a spreadsheet which
+[12:35] shows this really beautifully
+[12:37] courtesy of the fast.ai people.
+[12:41] All right. So, what I'm going to do here
+[12:43] because the big spreadsheet I'll upload
+[12:44] the spreadsheet after class so you can
+[12:45] see it. So, all I have done here, rather
+[12:48] all they have done here
+[12:50] thanks to them, is that they have
+[12:51] essentially created a table of numbers
+[12:53] in Excel as you can tell.
+[12:55] And they have just put some numbers.
+[12:57] Most of the numbers are zero. But these
+[12:59] some of these numbers are all more than
+[13:01] zero. They're like 0.8, 0.9 and so on.
+[13:03] Basically, all they have done is instead
+[13:04] of working with numbers between zero and
+[13:06] 255, they're just dividing all the
+[13:08] numbers by 255 so you get fractions and
+[13:10] they just put the fractions in the
+[13:11] table. Okay? And then then they have
+[13:13] used Excel's very cool conditional
+[13:15] formatting
+[13:16] to essentially mark in red all the
+[13:19] values that are high. Right? If the
+[13:21] number is closer to one, the more
+[13:23] reddish it gets.
+[13:24] Okay? And when you do that the three
+[13:26] obviously pops out.
+[13:28] So, there is a three in the image. Yes?
+[13:31] Okay, good. So, now
+[13:33] what we're going to do is we're going to
+[13:35] move to our little filter here.
+[13:37] You can see the filter.
+[13:39] Right? And I'm claiming this detects
+[13:41] horizontal lines. And so and this table
+[13:44] here
+[13:47] Sorry.
+[13:51] This table here is the result of
+[13:53] applying that filter to the three.
+[13:56] Okay? And you can see here I'm looking
+[13:58] at the top left cell here.
+[14:01] Um
+[14:03] This is
+[14:03] Look at this top left cell. The formula
+[14:05] is nothing more than
+[14:07] you know, multiply all those things and
+[14:08] add them up. And then once you add it
+[14:10] up, run it through a max of zero comma
+[14:12] that which is just the relu.
+[14:15] Okay? Basic arithmetic.
+[14:18] So, we do that.
+[14:19] And this is the output and the output is
+[14:21] also conditionally formatted to show you
+[14:24] where things are lighting up.
+[14:26] And you can see only the horizontal
+[14:30] lines of the three are lighting up.
+[14:34] Everyone see that?
+[14:35] Right?
+[14:36] So, you So, now you you understand the
+[14:38] filter in fact is living up to the claim
+[14:41] I made for it.
+[14:42] Right? Similarly,
+[14:44] if you look at what's going on here,
+[14:46] this is a vertical filter, the same
+[14:47] thing, you apply it, only the vertical
+[14:50] line is lighting up.
+[14:53] Right? Now, what you can do is
+[14:56] uh I would encourage you to do this, you
+[14:57] know, um after class, is you can look at
+[15:00] all these numbers here, for example, and
+[15:02] then ask yourself, "Okay, why is that
+[15:04] lighting up?"
+[15:06] Right? And you will discover that what's
+[15:08] actually going on is that it's looking
+[15:11] for edges.
+[15:12] It's looking for you know, s- you're
+[15:14] looking for rows in the table where
+[15:16] there is some nonzero thing in the first
+[15:18] row and zeros in the second row.
+[15:21] And by choosing the numbers carefully,
+[15:23] you multiply the ones with positive
+[15:25] numbers and you multiply the zeros with
+[15:27] zeros and then you'll come up with a
+[15:29] positive number and thereby you detect
+[15:31] an edge.
+[15:32] Right? So, what I would encourage you to
+[15:34] do is use the this Excel thing here.
+[15:39] All right. So, here is here is a cell we
+[15:41] have. So, let's uh trace its
+[15:48] coincidence.
+[15:49] Okay.
+[15:51] So, you can see here
+[15:53] these numbers
+[15:56] Right? Th- This is what it's processing.
+[15:59] Right? That is this grid is being
+[16:00] processed to come up with that big
+[16:01] number. And you can see here in this
+[16:04] grid these are all these numbers are
+[16:06] here and then these numbers are a lot
+[16:08] lower than these these numbers because
+[16:11] there is an edge.
+[16:13] Right? The numbers are a lot lower.
+[16:14] That's why you can see the horizontal
+[16:16] part of the three.
+[16:17] And so, what this filter is doing, it's
+[16:19] basically saying, "Well, the stuff
+[16:22] the row that I'm catching here has the
+[16:24] ones, the middle has zeros, the rest are
+[16:26] all minus ones."
+[16:27] Right? So, the small values are going to
+[16:29] get very small.
+[16:31] The big values are going to get very big
+[16:33] and the overall thing is going to be
+[16:34] emphasized.
+[16:35] So, that's the basic idea of edge
+[16:37] detection.
+[16:38] Spend some time with it with the Excel
+[16:39] and it'll you'll become clear to you
+[16:41] what I'm talking about here.
+[16:43] All right, cool. So, that's that.
+[16:46] All right. Uh by the way, I also have uh
+[16:48] th- there is a little very cool site
+[16:49] here
+[16:50] in which you can actually go in and
+[16:52] punch in your own numbers and see what
+[16:53] it detects.
+[16:55] Right? Lot of edges and curves and this
+[16:56] and that. It's very cool. So, I
+[16:58] encourage you to try it out.
+[17:00] So, the key thing here I want to say is
+[17:06] by choosing the numbers in a filter
+[17:08] carefully and applying this operation
+[17:10] different different features can be
+[17:12] detected. All right.
+[17:13] Now,
+[17:14] I mentioned earlier that a convolution
+[17:16] layer is composed of one or more of
+[17:18] these filters. So, one or more of these
+[17:20] filters. And so, you can think of each
+[17:23] filter as a sort of a specialist for a
+[17:25] particular feature.
+[17:27] Okay? So, it's a specialist. Maybe it it
+[17:30] specializes in detecting vertical lines,
+[17:32] horizontal lines, you know, uh
+[17:34] semicircles, quarter circles, you don't
+[17:35] know. Right? You can imagine either them
+[17:38] as being specialists.
+[17:39] And given that modern images could be
+[17:42] very complicated, they may have lots of
+[17:43] interesting features going on, you
+[17:45] probably want to have lots of these
+[17:46] filters.
+[17:48] Okay? But the key the key is that you
+[17:52] don't have to decide up front, "Hey, you
+[17:54] filter, you better specialize in
+[17:56] detecting vertical lines and you on the
+[17:57] other hand do not stay in your lane. Do
+[18:00] vertical lines." Right? You're not going
+[18:01] to do that.
+[18:02] You will let the system figure out what
+[18:04] it wants to figure out.
+[18:06] Okay? So, there is no human bottleneck
+[18:08] in doing this.
+[18:10] And I mentioned this because there used
+[18:11] to be a human bottleneck, you know,
+[18:13] before deep learning happened.
+[18:15] And so,
+[18:17] Now, let's just um make sure we
+[18:19] understand the mechanics of what happens
+[18:20] when you have two of these filters, not
+[18:22] one. So, this is the input image as
+[18:24] before. This is the filter we saw
+[18:26] earlier and this is another filter we
+[18:28] have.
+[18:29] The thing is we just run them in
+[18:30] parallel. We take each filter, do the
+[18:32] operation, come up with an output. Take
+[18:33] the other filter, do the operation, come
+[18:34] up with its output. And then when you do
+[18:36] that, the first one gives you that, the
+[18:38] second one gives you that. And this
+[18:40] output is a table of some it's it's a
+[18:42] it's a it's actually not a table. What
+[18:44] is it?
+[18:49] Louder, please.
+[18:51] It's a tensor. Thank you. It's a tensor.
+[18:54] And so, these two 5 by 5 matrices can be
+[18:56] represented as a tensor of what shape?
+[19:02] And there are two right answers.
+[19:04] 5 by 5
+[19:06] into two, correct. So, it can you can
+[19:08] either think of it as 5 by 5 * 2 or 2 *
+[19:11] 5 by 5. They're both fine.
+[19:14] Which one you go with is actually ends
+[19:15] up being a matter of convention.
+[19:18] Okay? So, now you begin to see why we
+[19:20] care about tensors.
+[19:22] Imagine if instead of having two
+[19:24] filters, we have 103 filters.
+[19:27] The resulting tensor is going to be 5 by
+[19:29] 5 by 103.
+[19:33] Okay.
+[19:34] Good.
+[19:35] Um all right. Now,
+[19:37] let's now look at the slightly more
+[19:39] complex situation where you have not a
+[19:42] black and white image, a grayscale image
+[19:44] with just a little table, but an actual
+[19:46] color image.
+[19:48] Okay? So, So, we know how to apply a
+[19:51] filter to a 2D tensor like this and to
+[19:54] get that. But let's say we have
+[19:56] something like this where it has
+[19:58] three, right? It's got three channels,
+[20:00] red, blue, green, RGB. It's got three
+[20:02] tables of numbers.
+[20:03] So, this is a a tensor of shape 6 * 6 *
+[20:06] 3, let's say, and you want to apply this
+[20:08] 3 by 3 filter just like before to this
+[20:11] thing. You want to apply the convolution
+[20:12] operation. How's that going to work?
+[20:18] Do we just like apply this to each
+[20:21] We first apply it to the red, then we
+[20:23] apply it to the to the green, then we
+[20:25] apply to the blue. Should we do that?
+[20:30] Or is there a
+[20:31] a problem with that approach?
+[20:36] Yeah.
+[20:39] Could you use the microphone, please?
+[20:42] Uh the problem with the approach, I
+[20:43] think, would be the same as what you
+[20:45] said earlier, that it would learn the
+[20:47] lines probably the same each channel,
+[20:49] right?
+[20:50] Like the location of the lines are
+[20:51] probably the same each channel.
+[20:54] Yes, the location of the line is going
+[20:55] to be the same thing because that line,
+[20:57] if you will, is sort of the the
+[20:59] aggregation of information from the
+[21:00] three different channels. Right. But the
+[21:03] problem here
+[21:05] is sort of slightly different,
+[21:07] which is that
+[21:09] If you do them independently,
+[21:12] the network has not been informed that
+[21:15] these things are all part of the same
+[21:17] underlying concept.
+[21:19] As far as it's concerned, it's just like
+[21:21] three things. It's just going to process
+[21:22] them independently. So, we need to
+[21:23] somehow change the filter so that it
+[21:25] understands like what is at this pixel
+[21:27] location, the three numbers under it,
+[21:29] RGB, they're actually the same part of
+[21:31] the same thing, underlying thing.
+[21:35] So, what we do is actually very simple.
+[21:37] We just take this filter and make it 3D.
+[21:42] So, we take this filter, instead of
+[21:44] having just one of them, we just make it
+[21:45] a cube like that. Three times.
+[21:49] And once we do that, you can imagine
+[21:51] taking this thing here and essentially
+[21:53] doing that.
+[21:56] Okay. Now, instead of having, you know,
+[21:58] nine numbers in the image and nine
+[22:00] numbers in the filter,
+[22:01] you have 27 numbers in the image, 27
+[22:04] numbers in the filter.
+[22:05] But you still match them up, multiply
+[22:07] them, add them up, run them through a
+[22:09] ReLU.
+[22:14] By the way, I tried to get ChatGPT to
+[22:16] give me a picture like that.
+[22:19] It just completely bombed.
+[22:21] I like three, four, five different
+[22:22] variations. It just gave up. And then I
+[22:24] found this nice picture at in the
+[22:25] deeplearning.ai and I used it.
+[22:28] So, then if you put different numbers in
+[22:30] each of the layers, is that like color
+[22:32] processing? Like it could be doing a
+[22:33] different thing to green and blue. I'm
+[22:36] sorry, say that again. If you put
+[22:37] different numbers in each of the layers
+[22:39] of your knowledge, in each of the
+[22:42] different like depth dimensions of your
+[22:43] convolution filter, would that be like
+[22:45] color processing?
+[22:47] Uh yeah, you you will in
+[22:49] Yeah, you will put different numbers. In
+[22:50] fact, you you have 27 numbers now,
+[22:53] but we haven't gotten to the question of
+[22:54] where these numbers are coming from. So,
+[22:55] just hold the thought till we get there.
+[22:58] Okay. Um so, any questions on this?
+[23:02] Okay. You literally take the 2D thing
+[23:04] and make it 3D.
+[23:05] You basically give it depth and the
+[23:08] depth just matches the depth of the
+[23:10] input.
+[23:11] So, if the input is like, you know, 10
+[23:13] deep, your filter is going to get 10
+[23:15] deep.
+[23:18] Okay?
+[23:20] Yes.
+[23:22] Rather than
+[23:24] increasing the rank order of the tensor
+[23:26] by one, is there any instance where you
+[23:27] would create a subtraction layer where
+[23:29] you would run an operation across the
+[23:30] different layers to come up with a
+[23:33] intermediary layer that you would run a
+[23:35] lower rank tensor of a filter over?
+[23:38] Yeah, so there is a lot of stuff in the
+[23:40] research literature which tries to do
+[23:42] things like that. Uh I'm just describing
+[23:45] like the the the most basic approach to
+[23:48] doing this. And as it turns out, this
+[23:50] basic approach is actually extremely
+[23:51] powerful, right? And of course, uh
+[23:54] researchers try to, you know, go from
+[23:56] the 95th percent thing to the 95.1%.
+[23:59] So, they invent like all sorts of crazy
+[24:01] complicated stuff, which is all good for
+[24:02] us, humanity, but for practical use,
+[24:04] this is good enough.
+[24:08] How do you convert the 3 by 3 layer into
+[24:10] a single 4 by 4 layer? 4 by 4 is
+[24:12] understood, but what about the 3 layers?
+[24:14] How do they work?
+[24:15] Yeah. Um so, we are coming to that. I
+[24:17] think we have a slide here. Actually, we
+[24:19] don't. Never mind. We'll answer that. Um
+[24:20] so, so here you have one filter, right?
+[24:23] You have one 3 by 3 by 3 filter, which
+[24:26] plugs into this thing here, and then it
+[24:28] gives you the 4 by 4 at the end.
+[24:30] Right? So, for one filter, we know that
+[24:33] by doing this operation, we get
+[24:37] we get this 4 by 4.
+[24:38] Let's say that you have another filter,
+[24:40] which is also 3D.
+[24:41] You do that thing, you'll get another 4
+[24:43] by 4.
+[24:45] And if you have 10 filters, you'll get
+[24:46] 10 of these 4 by 4s, which then gets
+[24:48] packaged up into a 4 by 4 by 10 tensor.
+[24:54] Remember, whether it's 2D, 3D, 10D,
+[24:57] what is coming out is always 2D.
+[25:02] Because ultimately, when you apply all
+[25:03] this operation, at each position, you
+[25:05] just have one number.
+[25:06] And then ultimately, you just do all
+[25:07] those things, you just come up with a
+[25:08] table of numbers always. So, the what's
+[25:10] coming out is always a 2D number table
+[25:13] like that.
+[25:14] But when you have lots of filters, you
+[25:16] have lots of these 2D tables one after
+[25:18] the other, and there therefore, they get
+[25:20] packaged up into a tensor.
+[25:25] All right.
+[25:26] Um so,
+[25:28] textbook chapter 8.1 has a lot of detail
+[25:30] and intuition, which I think is really
+[25:32] good. So, please uh try it out. Okay.
+[25:35] And folks, by the way, this convolution
+[25:37] stuff, um it's sort of it grows in the
+[25:40] telling. So, I would encourage you to
+[25:41] revisit it, revisit it
+[25:43] a few times, and then it slowly becomes
+[25:45] part of your muscle memory.
+[25:48] Don't expect to just understand all the
+[25:49] nuances like one shot.
+[25:51] Do it a few times.
+[25:52] And it will become, you know, wired into
+[25:54] your into your head.
+[25:56] Okay. So, all right. The big question.
+[25:59] These seem excellent, but how are we
+[26:00] supposed to come up with these numbers?
+[26:02] Now, in fact, traditionally,
+[26:04] uh these filters actually used to be
+[26:05] designed by hand.
+[26:07] Uh computer vision researchers would
+[26:08] invest, you know, prodigious amounts of
+[26:10] time and effort and talent to figure
+[26:12] out, you know, the kind the right kinds
+[26:14] of filters to use for various specific
+[26:17] applications. So, if you wanted to build
+[26:19] an application which would look at, say,
+[26:20] MRI images and figure out, okay, what
+[26:22] kind of features should I extract from
+[26:24] this MRI thing to be able to say, you
+[26:27] know, predict the the evidence for a
+[26:28] stroke, they would actually, you know,
+[26:30] hand design the filter. They'd try lots
+[26:32] of different values and then come up
+[26:34] with, "Ah, I got the perfect filter for
+[26:35] this thing here." Right? So, that's the
+[26:37] way it used to be done.
+[26:39] Um and now,
+[26:41] I but as we figured out how to train
+[26:42] deep networks with lots of parameters,
+[26:45] right? We figured out things like ReLU
+[26:47] activation, stochastic gradient descent,
+[26:49] GPUs, backprop, things like that, you
+[26:51] know, uh this big idea emerged. Why
+[26:54] don't we think of the numbers in the
+[26:55] filter as just weights?
+[26:57] And why don't we just simply learn them
+[26:59] from the data using backprop?
+[27:01] Right? Just like we learn all the other
+[27:03] weights. What's the big deal?
+[27:06] And this simple idea,
+[27:08] and it feels a bit, I don't know,
+[27:09] blindingly obvious in hindsight.
+[27:12] I'm sure it was not obvious in
+[27:13] foresight.
+[27:14] Um right? This was the breakthrough.
+[27:16] This was the key breakthrough. And now,
+[27:18] it's actually possible to do this
+[27:20] because a convolutional filter that we
+[27:22] have seen is actually just a neuron.
+[27:25] And the underlying arithmetic of it is
+[27:27] just a neuronal arithmetic. And so, it
+[27:31] just happens to be a slightly special
+[27:32] one. It's actually even simpler than a
+[27:34] regular neuron. And in the interest of
+[27:37] time, I have a one or two slides in the
+[27:39] appendix which tells you exactly why
+[27:40] it's a neuron. So, check it out. But
+[27:42] just take my word for it. It's just a
+[27:44] particular kind of neuron. And because
+[27:46] it's a particular kind of neuron, and we
+[27:48] know how to work with neurons,
+[27:50] right? You know how to work with
+[27:51] neurons, which means that our entire
+[27:53] machinery,
+[27:55] layers, loss functions, gradient
+[27:57] descent, SGD, blah, blah, everything is
+[27:59] immediately applicable.
+[28:01] We don't have to invent any new stuff to
+[28:03] make it work.
+[28:06] Okay?
+[28:08] All right.
+[28:09] Do you initialize the layers differently
+[28:12] in applications or just because the
+[28:14] network has different sizes? Like
+[28:16] computer vision versus uh medical
+[28:18] imaging. Is it just because the network
+[28:20] has different numbers in them?
+[28:23] Yeah, so the initialization
+[28:25] So, let's It's a good question. Let's
+[28:27] come back to it when we get to something
+[28:29] called transfer learning, which I'm
+[28:30] going to get to by about 9:30.
+[28:34] All right. So,
+[28:36] that's it. All right. So, this turned
+[28:37] out to be a huge turning point in the
+[28:38] computer vision field, and this was the
+[28:40] massive unlock in the year 2012. This
+[28:43] computer vision system that used this
+[28:44] technology called AlexNet burst out onto
+[28:47] the world stage because it crushed the
+[28:49] competition in a, you know, in in a
+[28:51] competition called ImageNet, and uh the
+[28:53] previous best score was 26% error rate,
+[28:56] and this thing came in and had 16% error
+[28:59] rate. Right? It's the kind of thing
+[29:01] where if you see it, you'll be like,
+[29:01] "Oh, that must be a typo."
+[29:04] Right? Because every year, the
+[29:05] improvements in error rate were like
+[29:06] very little, half a percent, 1%, and
+[29:07] then this year was 10%, and that that
+[29:09] was because of this approach.
+[29:12] And so, all right. Now, one other thing
+[29:14] I want to cover talk about is that with
+[29:16] every succeeding convolutional layer,
+[29:19] uh this particular convolution any
+[29:21] particular convolutional filter, it's
+[29:23] basically implicitly seeing much more of
+[29:25] the input image as we go along.
+[29:28] Right? Which means that if in the very
+[29:29] beginning, if this is the input, right?
+[29:31] This little convolutional filter this
+[29:33] number here
+[29:34] in the first layer, let's say, only sees
+[29:37] like the top of the chimney or whatever
+[29:38] of this house.
+[29:40] But then the next layer, remember, the
+[29:42] next layer is input is this particular
+[29:44] layer.
+[29:45] And so,
+[29:47] this particular little thing here is
+[29:49] getting information from this whole
+[29:50] square here.
+[29:52] And every one of the points in that
+[29:53] square is actually something big in the
+[29:55] original picture.
+[29:57] So, with every additional layer, you're
+[29:59] seeing more and more and more of the
+[30:00] image.
+[30:03] All right? And this is a key part of why
+[30:04] these things work because you're
+[30:06] essentially hierarchically building a
+[30:08] better and better understanding of the
+[30:09] image.
+[30:10] It is the hierarchical understanding,
+[30:12] the hierarchical learning, that's a very
+[30:14] key part of the unlock.
+[30:17] And so, if you look at networks and what
+[30:20] they're visualizing, this actually a you
+[30:21] know, a face detection deep network
+[30:23] visualizes of what it's learning, you'll
+[30:25] see that the first layer is just
+[30:26] learning lines and edges and so on,
+[30:28] lines.
+[30:29] And the second layer is actually
+[30:30] learning edges. Look at this thing,
+[30:32] right?
+[30:33] It's it's learning to put these lines
+[30:36] together
+[30:37] to get some sort of an edge here,
+[30:38] another edge here. This looks like three
+[30:40] three quarters of a of somebody's ears.
+[30:43] And then, these things are now being
+[30:45] assembled
+[30:46] to get whole faces out.
+[30:49] Can you imagine the researchers who did
+[30:50] this work? They built the network, it's
+[30:52] doing really well on detecting faces,
+[30:53] and they turn around, "Okay, let's see
+[30:54] what it's actually doing."
+[30:56] And then, this picture pops up.
+[30:58] I mean, goosebumps.
+[31:00] Okay, so pooling layers, the next one.
+[31:03] So,
+[31:04] so far you've talked about convolutional
+[31:05] layers, this is the second thing, second
+[31:07] building block, and then we'll again go
+[31:09] go to the collapse. So, pooling layers
+[31:11] are also called subsampling or
+[31:12] downsampling layers.
+[31:15] So, the idea is that every time a tensor
+[31:17] is coming out of these convolutional um
+[31:19] layers,
+[31:20] we try to make it slightly smaller
+[31:23] because the act of making it smaller
+[31:25] will force the network to try to
+[31:27] summarize and learn what's going on in
+[31:29] this complicated thing it's coming into
+[31:30] it, okay? So, I will describe the
+[31:32] mechanics first. Um
+[31:35] So, let's say that this is the output of
+[31:37] a convolutional layer.
+[31:39] Okay?
+[31:40] Is this four of them? A 4 by 4.
+[31:42] So, what we do is that there are two
+[31:45] kinds of pooling, max pooling and
+[31:47] average pooling. This is called max
+[31:48] pooling, and the idea is really simple.
+[31:51] In this max pooling layer, there are no
+[31:52] weights parameters to be learned. It's
+[31:53] just a simple arithmetic operation. We
+[31:56] basically take
+[31:57] we take this we basically superimpose a
+[32:00] 2 by 2 empty grid
+[32:02] on the top left, and then we say, "Hey,
+[32:04] what's the biggest number on the among
+[32:06] these four numbers?" Well, the biggest
+[32:08] number is 43. Boom. Okay, I'm going to
+[32:09] stick a 43 here.
+[32:11] Then I move my 2 by 2 to the right
+[32:13] so that it overlaps with these numbers
+[32:15] in blue, and I say, "Hey, what's the
+[32:17] biggest number here?" Okay, that's 109.
+[32:19] And I move it down, what's the biggest
+[32:20] number here? 105. Stick it in here.
+[32:23] Biggest number here, 35, and I stick it
+[32:25] in there. That's it. This is max
+[32:26] pooling.
+[32:29] Similarly, there's this thing called
+[32:30] average pooling, but instead of taking
+[32:32] the maximum of these four numbers, we
+[32:33] just average the four numbers.
+[32:35] Okay, the average of these four things
+[32:36] in yellow,
+[32:38] am I done?
+[32:41] Average of these four numbers is 32.2.
+[32:43] The average of blue numbers is 25.5, you
+[32:45] get the idea.
+[32:46] That's it. Max pooling and average
+[32:48] pooling. Now,
+[32:50] as you can see, when you go when you
+[32:51] apply pooling, the number of entries
+[32:53] drops significantly.
+[32:55] Right? The number of entries drops
+[32:56] significantly.
+[32:58] And the output from this layer is just
+[32:59] fed to the next layer as usual.
+[33:02] Okay? There's nothing, you know, crazy
+[33:04] going on.
+[33:05] So, it's a way to shrink the output from
+[33:07] one convolutional layer before it passes
+[33:10] on to the next convolutional, you
+[33:11] interject with a pooling layer.
+[33:13] Now, I have actually a
+[33:15] even if I say so myself, a very nice
+[33:18] handwritten explanation of what pooling
+[33:20] does, the the effect of pooling.
+[33:23] And unfortunately, I can't get my iPad
+[33:25] to actually show up on my laptop.
+[33:27] So, I'm not going to be able to do it,
+[33:28] but I will record a walk-through.
+[33:31] Yeah, and I posted check it out, okay?
+[33:33] But the intuition that I tried to convey
+[33:35] with that thing is that oh, um Sorry,
+[33:38] I'll come back to this.
+[33:39] So, max pooling acts like an or
+[33:41] condition. It basically says, "I have
+[33:43] this big picture.
+[33:44] So, in the four things that I'm looking
+[33:46] at, if there's any number which is
+[33:48] really high,
+[33:50] that means that some feature is being
+[33:51] detected, right?
+[33:54] The number is really high coming out of
+[33:55] a convolutional layer, that means that
+[33:57] something somewhere fired up,
+[33:59] lit up.
+[34:00] And so, I'm just looking to see if
+[34:01] anything lit up in that part. If it did,
+[34:04] I'm going to say, "Yep, something lit
+[34:05] up."
+[34:06] If nothing lit up, then I'm going to
+[34:08] say, "Oh, nothing lit up."
+[34:09] So, in a in that sense, what it's it it
+[34:11] think you can imagine it's like acting
+[34:13] like an or condition.
+[34:15] Anything fired up? Anything fired up?
+[34:16] Anything fired up? Anything up? Yes,
+[34:17] okay. Otherwise, no.
+[34:19] And so,
+[34:22] sadly, I can't switch to Notability.
+[34:24] So, it acts like a feature detector. So,
+[34:27] if you have lots of things going on in a
+[34:28] particular picture, you want to be able
+[34:30] to summarize and aggregate all the
+[34:32] things that are going on so that you can
+[34:33] say you if you may have a big picture
+[34:35] with lots of things lighting up here and
+[34:36] there, but you want to step back and
+[34:38] say, "You know what? In this picture,
+[34:40] the top left, nothing lit up. The top
+[34:42] right, something lit up. Bottom left,
+[34:45] something lit up. And the bottom right,
+[34:46] nothing lit up."
+[34:48] So, you're operating at a higher level
+[34:49] of abstraction.
+[34:51] That's the effect of pooling.
+[34:55] But don't you lose spatial information?
+[34:59] Uh you don't because the
+[35:02] what you're actually saying is the top
+[35:04] left has this thing.
+[35:06] You already know it is in the top left.
+[35:08] And you already moved up to that level
+[35:10] of abstraction.
+[35:12] So, the fact for example, if if the top
+[35:13] left there is a human eye,
+[35:15] and there is a circle detector, it's
+[35:18] going to fire up and saying, "Hey, in
+[35:19] the top left there is an eye."
+[35:21] Yep, lit up. So, you're not looking at
+[35:23] the pixels anymore, you're already
+[35:24] operating at a higher level of
+[35:25] abstraction, and that's how we get
+[35:27] around it. But this proceeds slowly and
+[35:29] incrementally, which is why you have
+[35:31] these big networks.
+[35:34] All right.
+[35:35] So, now as we saw, some successive
+[35:38] convolution layers can see more and more
+[35:40] of the original image,
+[35:41] the max pooling layers that follow them
+[35:43] can detect if a feature exists in more
+[35:45] and more of the original input as well.
+[35:47] So, by the time you get to like the
+[35:48] seventh and eighth, ninth and layers and
+[35:50] so on, this thing is actually really
+[35:52] smart. It's operating at a very high
+[35:53] level of abstraction.
+[35:55] Right? It It is You can think of it It
+[35:56] is basically like tagged all the
+[35:58] features in that image at various
+[36:00] resolutions, and it can work with it.
+[36:04] Is there a trade-off between doing
+[36:06] pre-processing as opposed to adding
+[36:08] additional convolutional layers? I'm
+[36:11] thinking if you have a video turning
+[36:12] into a black and white static images in
+[36:15] a sequence as opposed to
+[36:17] shoving in a color video with a ton of
+[36:19] noise.
+[36:20] The greater the time expanse, is there a
+[36:22] trade-off element? There is a trade-off.
+[36:24] Um if your particular data set and input
+[36:27] has has some there is some very
+[36:29] important domain knowledge that you want
+[36:31] to encode
+[36:33] into the network so that the network
+[36:35] doesn't waste its capacity learning
+[36:37] things that you know have to be true,
+[36:39] then yeah, modify the input.
+[36:41] But if you're not sure,
+[36:43] right? Then you want to just let network
+[36:45] learn whatever it can as long as it's
+[36:47] focused on predicting accuracy as well
+[36:49] as possible, then just let it be.
+[36:55] Uh all right. So, that's the basic idea.
+[36:57] And I again, I'm sorry this is
+[36:59] Notability thing is is it's not working.
+[37:01] Uh but take a look to really understand
+[37:03] um how this max pooling thing business
+[37:05] works. Okay. Oh, uh I think I skipped
+[37:08] over this.
+[37:09] So, when you have something like this,
+[37:12] so this, let's say, is a tensor coming
+[37:13] out of some convolutional layer, and its
+[37:15] size is 224 by 224 by 64, then you apply
+[37:18] something like a pooling. The thing I
+[37:20] want to point out is that the pooling
+[37:22] will work with every slice of the
+[37:23] tensor.
+[37:25] Okay? So, if the tensor is 224 by 224 by
+[37:27] 64, it has a depth of 64,
+[37:30] which is basically like saying it's got
+[37:31] 64 tables of 224 by 224, and the pooling
+[37:35] will work on every one of those tables.
+[37:38] Which means that
+[37:40] the 64 will that you'll still have 64
+[37:42] things at the very end. It's just that
+[37:43] every one of the things of the 64, the
+[37:45] 224 by 224, will shrink to 112 by 112.
+[37:49] So, each table shrinks due to pooling,
+[37:52] but the number of tables does not
+[37:53] change.
+[37:57] Okay. So,
+[37:59] uh by the way, this
+[38:01] link here
+[38:03] has a beautiful explanation of all these
+[38:05] things with a little bit more complexity
+[38:06] as well from a course taught at Stanford
+[38:08] in like 2018 or 2019 or something, I
+[38:10] forget. Uh so, just check it out if
+[38:12] you're curious about this stuff. It's
+[38:13] really good.
+[38:15] Okay. Um
+[38:18] All right. So, that brings us to the
+[38:19] architecture of a basic CNN.
+[38:21] Um and so, what we do is we have an
+[38:23] input.
+[38:25] Okay? We take that input, we run it
+[38:27] through a bunch of convolutional and
+[38:29] pooling layers. So, there's a
+[38:30] convolutional layer, and then we pool
+[38:33] it, which is why it has shrunk
+[38:35] in size,
+[38:37] and then it goes through another
+[38:38] convolutional layer, then we pool it,
+[38:40] which is shrunk again,
+[38:42] and then it keeps on doing it. So, we
+[38:44] have a series of these these called
+[38:45] these are called convolutional blocks.
+[38:47] So, a convolutional block is typically,
+[38:49] you know, one to two convolutional
+[38:50] layers followed by a pooling layer.
+[38:52] Okay.
+[38:54] So, you have a series of convolutional
+[38:55] blocks.
+[38:57] Okay? And the thing to notice is that
+[38:59] as you go further and further in the
+[39:01] network,
+[39:03] the blocks will actually get smaller and
+[39:05] smaller because of
+[39:07] uh max pooling, right? They'll get
+[39:09] smaller and smaller, but they'll get
+[39:10] longer they'll get deeper and deeper.
+[39:14] Okay.
+[39:14] And we have empirically figured out that
+[39:16] that actually that model of reducing the
+[39:18] size, the height and height and the
+[39:20] width, but then making it deeper, tends
+[39:22] to work really well in practice.
+[39:25] And so,
+[39:27] in fact, uh and I apologies to the live
+[39:29] stream that I can't use iPad, I'm going
+[39:31] to do it on the the board.
+[39:35] So, let's say that you have a picture
+[39:38] which is
+[39:39] coming in as 224
+[39:44] and then you have
+[39:46] say three of them
+[39:48] because it's a color picture, so you
+[39:49] have three of them.
+[39:52] Can you folks see this okay?
+[39:54] All right. So, right? Let's say this is
+[39:56] the input coming in. And ResNet, which
+[39:59] is a very famous network that we're
+[40:00] actually going to work with in a few
+[40:02] minutes,
+[40:03] then it actually gets done with all this
+[40:05] convolution pooling business.
+[40:07] The final tensor that it it has is
+[40:11] actually of shape
+[40:13] 7 by 7.
+[40:16] But it is 2048 long.
+[40:22] Okay? So, it it has gone it has
+[40:24] processed something which is 224 224 * 3
+[40:26] to much smaller height and width just 7
+[40:28] by 7, but it's gotten much deeper, 2048
+[40:31] layers.
+[40:32] This is a this is a numerical example of
+[40:34] what I'm talking about there in terms of
+[40:36] as you go along, things get smaller but
+[40:39] deeper.
+[40:41] All right.
+[40:43] Uh
+[40:44] Yes?
+[40:45] Is the reason that it gets deeper
+[40:47] because each
+[40:49] Like it it gets deeper because each
+[40:50] layer has a single feature that is
+[40:52] picked up and then it gets stacked on
+[40:54] top
+[40:55] It's not so much that each layer has
+[40:57] picking up a single feature, it's more
+[40:58] that
+[40:59] uh
+[41:00] basically
+[41:01] the way I think about it is that
+[41:04] the the the the number of atomic
+[41:06] features that you may want to detect are
+[41:07] probably not that many, right? Lines,
+[41:10] curves, gradations in color and things
+[41:11] like that. But the way in which you can
+[41:13] combine these atomic features
+[41:16] to depict real world things
+[41:18] is combinatorial.
+[41:20] It's sort of like I have 10 kinds of
+[41:22] atoms, how many molecules can I make
+[41:23] from it?
+[41:25] You can make a lot of molecules from
+[41:26] those 10 atoms, which means that you
+[41:28] better give the network more the ability
+[41:30] to capture more and more of these
+[41:32] possible things that the real world can
+[41:33] come up with.
+[41:35] And so every as the depth increases, you
+[41:38] have more filters and every filter has
+[41:40] now has the ability to pick up some
+[41:42] combinatorial combination of what's
+[41:43] coming in.
+[41:49] Uh sorry, quick question related to
+[41:51] this. So, right now like our model is
+[41:53] being trained to detect certain specific
+[41:55] features like a line, a color, or
+[41:56] something of this sort. But still it
+[41:58] doesn't have meaning to this, right?
+[42:00] Like still they don't know if that
+[42:02] arc is a sun or is an eye, right?
+[42:06] So, yeah. So, we we don't tell it what
+[42:08] to learn, it just learns.
+[42:10] All we tell it is make sure that you
+[42:12] minimize the loss function. Now, once it
+[42:14] is finished learning, if it's a good
+[42:16] network, it has good accuracy, then we
+[42:18] can introspect. We can peek into the
+[42:21] internals and try to understand what is
+[42:23] it learning,
+[42:24] right? And sometimes you like you saw in
+[42:26] the face detection example, it's
+[42:27] actually learning interesting things
+[42:28] like basic lines and edges and then
+[42:30] slowly, you know, more complicated
+[42:32] shapes and then finally like entire
+[42:34] human faces. Sometimes it may not be
+[42:36] understandable.
+[42:37] And the way it's doing this is by
+[42:39] constructing features of my brain.
+[42:42] Like how do you figure out what it's
+[42:44] learning?
+[42:44] &gt;&gt; Yeah. Oh, oh, I see. So, I'm going to
+[42:46] give a reference in just a few minutes.
+[42:49] Read the paper. That was one of the
+[42:50] first ones to actually visualize what it
+[42:52] what these things are learning and
+[42:53] that'll give you an idea of how it
+[42:54] actually works. And I'm also happy to
+[42:56] talk about it offline. It's a bit of a a
+[42:58] tangent, but it's a really rich tangent,
+[43:00] so if if I keep talking about it, I'll
+[43:02] end up spending 10 minutes on it, so I'm
+[43:03] going to back off.
+[43:06] Okay.
+[43:08] Um all right.
+[43:09] So, now once we do that,
+[43:12] okay? Now we are back in familiar
+[43:13] territory where we take whatever tensor
+[43:16] is coming out from these convolutional
+[43:18] operations and pooling operations and
+[43:20] then we just flatten them only now into
+[43:22] a long vector. And once we flatten them,
+[43:25] we can connect them to some good old
+[43:27] dense layers
+[43:29] like we know how to do and then we
+[43:30] finally connect them with whatever, you
+[43:32] know, output layer you want, right? In
+[43:34] this case, this example is using some
+[43:36] multi-class classification of
+[43:39] classifying images to what kind of
+[43:41] automobile or whatever it is. So, it's
+[43:42] like a softmax. So, this is a general
+[43:44] framework.
+[43:48] Okay?
+[43:50] Any questions?
+[43:54] Yeah.
+[43:55] Can you explain again how the depth
+[43:57] increases exactly like Oh, the depth
+[44:00] increases because you decide what the
+[44:01] depth is.
+[44:03] So, when you add a convolutional layer,
+[44:05] you decide how many filters it has. So,
+[44:07] you just keep adding more and more
+[44:09] filters the later on you go in the
+[44:11] network.
+[44:13] So, it's in your control. So, remember
+[44:14] the number of neurons in a hidden layer
+[44:16] is in your control, right? Similarly,
+[44:18] the number of filters is in your
+[44:19] control. It's a design choice.
+[44:22] And we design it so that the later we
+[44:24] go, the more depth we have. So, you have
+[44:26] you stack
+[44:28] um layers with each of those layers has
+[44:31] a different filter applied to the end
+[44:35] Yeah, a layer is made up of filters and
+[44:37] so the depth just comes from having lots
+[44:39] and lots and lots of filters. And you
+[44:40] get to choose what they are.
+[44:44] All right. So, now let's go to the
+[44:46] fashion MNIST collab um that I did the
+[44:49] video walk-through on and then actually
+[44:51] solve it using a convolutional network.
+[44:56] All right, cool. So, uh at this point
+[44:58] I'm going to zip through some of the
+[44:59] stuff because you know the preliminaries
+[45:00] have to be done. Import all these
+[45:02] packages, set the random seed here.
+[45:05] Great. And then the we will load the
+[45:07] MNIST data set just like I did in the
+[45:09] collab yesterday. Uh we create these
+[45:11] little labels.
+[45:13] Uh and then we just have these standard
+[45:14] functions to plot accuracy and loss that
+[45:17] we've been using so far. All right. Now
+[45:19] we come to the convolutional thing and
+[45:21] so as before, we're going to um
+[45:24] we're going to divide it by 255 to
+[45:25] normalize everything to a zero to one
+[45:27] range. Uh let's confirm to make sure
+[45:29] that the data nothing has gotten
+[45:31] tampered with. Yep, we have 60,000
+[45:33] images, each one is 28 by 28 in the
+[45:35] training set. Now,
+[45:37] convolutional networks um they expect
+[45:40] the input to have
+[45:42] three channels or it expects to have
+[45:44] like a an additional thing which is like
+[45:46] a channel,
+[45:47] right? Uh the color images have three
+[45:49] channels,
+[45:50] but black and white images have only one
+[45:52] channel, right? One table of numbers.
+[45:54] So, instead of saying 28 by 28, we tell
+[45:56] this the convolutional layer expect 28
+[45:59] by 28 by one.
+[46:01] It's the same thing conceptually, but
+[46:03] that's the sort of the format that it
+[46:04] expects.
+[46:05] And so,
+[46:06] uh we go here and then we say, all
+[46:09] right, there's a thing called expand
+[46:11] dimension. I'm just telling it to expand
+[46:12] its dimension and once I do that, you
+[46:14] can see here it's still 60,000, but
+[46:17] instead of 28 by 28, it has become 28 by
+[46:19] 28 by one. Same thing.
+[46:21] Okay? Now, let's define our very first
+[46:24] CNN.
+[46:25] So, all right.
+[46:27] As as before, the the input is just
+[46:30] Keras.input as before, no difference
+[46:32] here and we tell it the shape and the
+[46:34] shape is of course just 28 by 28 by one.
+[46:37] Okay? That's what I have here.
+[46:39] And then we come to the first
+[46:40] convolutional block.
+[46:43] So, and this is the key thing.
+[46:45] If you want to tell Keras to use a
+[46:47] convolutional a layer,
+[46:49] you use this keyword layers.Conv2D.
+[46:53] And from this you can probably also
+[46:54] figure out that there's a Conv1D and
+[46:56] there's a Conv3D and so on and so forth,
+[46:58] which, you know, uh explore. It's really
+[47:00] good stuff.
+[47:01] But for image processing, Conv2D is all
+[47:04] you need. And now we tell it how many
+[47:06] filters you want. Okay. So, uh we decide
+[47:09] on the number of filters. So, I've
+[47:10] decided to have 32 filters. Okay? And
+[47:13] then I I we also have to decide the size
+[47:15] of the filter, right? The simplest size
+[47:18] is 2 by 2. So, I'm just going to go with
+[47:19] that.
+[47:20] Right? Kernel size is 2 by 2.
+[47:22] And then the activation is of course
+[47:23] ReLU. I give it a name, convolution one,
+[47:26] and then I feed it the input. And then
+[47:27] once I do that, I follow it up with a
+[47:29] little pooling layer which I where I use
+[47:31] MaxPooling2D.
+[47:33] And MaxPooling2D, you just literally
+[47:35] pass the input, you get the output back.
+[47:36] It just
+[47:37] shrinks everything using pooling.
+[47:39] So, that is the first convolutional
+[47:40] block.
+[47:41] And you know what?
+[47:43] I know how to cut and paste. Boom, cut
+[47:45] and paste, I get the second
+[47:46] convolutional block.
+[47:48] Okay? Here is the second convolutional
+[47:49] block. And I know in in I just lecture I
+[47:52] mentioned that as you go deeper, you get
+[47:54] more depth to it, but this is this is
+[47:56] just a starting point. I'm just going to
+[47:58] use the same depth. Not a big deal. It's
+[47:59] a simple problem. So, which is why in
+[48:01] the second convolutional block I'm still
+[48:03] using only 32.
+[48:04] But you can totally go to 64 for
+[48:06] instance to make it much deeper.
+[48:07] Okay?
+[48:08] Uh and once I do that,
+[48:10] I finally come to the point where I
+[48:12] flatten everything to a long vector,
+[48:14] then I connect it to one dense layer of
+[48:17] 256 neurons.
+[48:19] And then finally, I come to the softmax
+[48:22] where I have 10 outputs, right? 10
+[48:23] categories of clothing, softmax, and
+[48:26] then I tell Keras, okay, take this input
+[48:27] and the output, string them up together,
+[48:30] define a model for me.
+[48:32] So, that's it. That's a convolutional
+[48:33] network. The new concepts we are seeing
+[48:35] here are Conv2D for the convolutional
+[48:38] layer and then MaxPooling2D for the max
+[48:40] pooling layer.
+[48:42] Okay? That's it.
+[48:43] Uh
+[48:44] coming. So, let me just run this thing.
+[48:46] It runs. Okay, good. Yeah.
+[48:49] Uh how do you decide when to flatten and
+[48:52] would there ever be a situation in which
+[48:54] we just kind of use the method that we
+[48:56] used before and not use a CNN?
+[48:59] Well, we already tried it with MNIST,
+[49:00] right? We didn't use a CNN. We just
+[49:02] flattened right away.
+[49:03] &gt;&gt; work. It it was it's not bad, but we are
+[49:05] like, you know, can we do better than 85
+[49:06] or 88 or whatever the percent was,
+[49:08] right? So, but we are working with
+[49:09] images, it's typically a good idea to
+[49:11] just start with a CNN straight out the
+[49:13] back because you're not losing anything.
+[49:14] You're not giving up anything.
+[49:16] So, uh in terms of how many uh layers
+[49:19] you should have, my philosophy is start
+[49:20] simple and if it works, stop working on
+[49:23] it. If it doesn't, add more layers.
+[49:27] Uh yeah.
+[49:28] Yeah, just to uh is it the architecture
+[49:30] design, the number of filters, kernel
+[49:32] size, number of layers, convolution
+[49:34] pooling, is that just all based on trial
+[49:36] and error or what's sometimes? Yeah, so
+[49:37] typically it's based on trial and error,
+[49:39] Um to answer your question. But as you
+[49:41] will see in the transfer learning
+[49:42] discussion we're going to have soon,
+[49:44] you can actually, instead of doing
+[49:46] anything from scratch, it's much better
+[49:48] to just download a pre-trained model and
+[49:50] just adapt it for your particular
+[49:51] problem. That is actually the norm by
+[49:54] which people do these things. The reason
+[49:55] I'm doing it from scratch is because you
+[49:57] should know how it was done.
+[50:00] Like you it should not be a black box to
+[50:01] you. That's my goal.
+[50:03] Yeah.
+[50:05] Just for what notation perspective, I
+[50:07] noticed you named all of these layers X.
+[50:09] Is that a habit we should get into
+[50:11] naming them all the same or is that just
+[50:12] a
+[50:12] &gt;&gt; Actually, I'm not naming the layers as
+[50:15] X. What what's going on here is I'm
+[50:17] feeding it X.
+[50:19] And whatever is coming out of it, I'm
+[50:21] just calling it X.
+[50:22] That's all. It's just a notational
+[50:23] convenience for me to I'm I'm just
+[50:25] calling the input and the output and
+[50:27] Keras under the hood will track
+[50:28] everything and make sure the right thing
+[50:29] happens. Otherwise, I'd have to be like
+[50:31] X1, X2, X3, X4 and then if I want to add
+[50:33] a new layer somewhere in the middle
+[50:35] between X3 and X4, I have to call that
+[50:37] X4 and then I'll change everything to 5,
+[50:39] 6, 7. Complete pain in the neck. That's
+[50:41] why I do this.
+[50:42] All right. So, model.summary
+[50:46] It has got 302 thousand parameters. I'll
+[50:51] just plot it.
+[50:53] Great. And I encourage you to hand
+[50:56] calculate it later on and make sure the
+[50:58] numbers tally, okay?
+[51:00] For now, let's just go. So, as before,
+[51:03] we'll just use the same compilation.
+[51:06] We'll use Adam and then we'll train it
+[51:08] for, you know, just 10 epochs. We'll use
+[51:11] a validation split again, as usual, of
+[51:13] 20%. So, let's just run it.
+[51:15] So, it's actually going to run. And as
+[51:17] you will see,
+[51:18] convolutional networks there's a lot
+[51:19] more going on, so it's going to be a bit
+[51:20] slower to run. Hopefully not too much
+[51:23] slower.
+[51:25] While it's doing, other questions?
+[51:31] So, if we have a task other than image
+[51:32] classification, do we still flat the
+[51:34] model like first and then it's
+[51:35] segmentation?
+[51:37] Yeah, so this is for image
+[51:39] classification. For other kinds of
+[51:41] applications,
+[51:42] typically you run it through a bunch of
+[51:44] convolutional layers and so on and so
+[51:45] forth.
+[51:46] But the output side of the equation gets
+[51:48] much more complicated because if instead
+[51:51] of classifying just
+[51:53] the whole picture into, you know, dog or
+[51:56] cat, if you have to take every pixel and
+[51:58] classify it, right? Then, well, you
+[52:01] better have an output shape that is the
+[52:03] same dimensions as the input shape.
+[52:06] So, for that we use a different
+[52:07] architecture. It's called U-Net
+[52:09] and so on, which unfortunately I won't
+[52:11] be able to get into. But I know I am
+[52:13] planning to post another video
+[52:14] walk-through where I show you how to use
+[52:17] the Hugging Face Hub
+[52:19] to very quickly build models for the
+[52:22] other applications like segmentation and
+[52:23] so on. I'm hoping to post that tomorrow.
+[52:26] It's an optional viewing thing that
+[52:27] might help with that.
+[52:29] Okay. So, is it done? Okay, good. It's
+[52:32] done. All right, let's plot the
+[52:35] thing here.
+[52:36] All right, so it seems like training is
+[52:38] going down nice and nicely. Validation
+[52:40] is sort of flattening out somewhere here
+[52:42] around the eighth epoch. Let's look at
+[52:45] the accuracy.
+[52:47] Same situation here. The accuracy is in
+[52:48] the 90s. Of course, the final question,
+[52:51] of course, is how it will will it does
+[52:52] on the thing.
+[52:55] Whoa, 90.5%.
+[52:58] Pretty good.
+[52:59] By the way, if you're not impressed that
+[53:00] we went from 88 to 90,
+[53:04] this is the These applications are the
+[53:05] proverbial sort of diminishing returns
+[53:07] problems, okay? So, what you should
+[53:09] always think of is look at the amount of
+[53:11] error that's left and ask yourself how
+[53:13] much of that error am I able to reduce?
+[53:16] So, you we had 12% roughly of error left
+[53:20] when we did the simple collab yesterday.
+[53:22] From that 12% we have knocked off two of
+[53:24] the 12% to get to over 90, which is
+[53:26] amazing.
+[53:27] Okay?
+[53:28] And in fact, I think the state of the
+[53:29] art on this
+[53:31] um
+[53:32] is 97%.
+[53:34] So, I invite you
+[53:36] to take this thing and try different
+[53:39] filters and so on and so forth to see if
+[53:40] you can get to the the mid-90s.
+[53:42] It's not easy, but try it. Yeah.
+[53:45] Does the number of epochs have to be
+[53:48] related to the number of batches?
+[53:50] Because you did 64 batches and 10 No,
+[53:52] the epochs is an independent
+[53:55] the epochs is just the number of passes
+[53:56] through the whole data.
+[53:58] But within each pass, within each epoch,
+[54:01] the num the batch size tells you how
+[54:03] many batches you're going to process.
+[54:05] So, it is basically the number of
+[54:06] examples you have in your training data
+[54:08] divided by the batch size that you have
+[54:10] chosen,
+[54:11] right? That number rounded up is the
+[54:13] number of batches within each epoch.
+[54:16] And here I'm just choosing 10 because,
+[54:18] you know,
+[54:20] Siri found something on the web. Okay.
+[54:23] I chose 10 because it's going to be fast
+[54:24] to do for me to do it in class. And 10
+[54:26] is actually more than enough because you
+[54:27] can see it's already beginning to
+[54:28] overfit.
+[54:31] Yeah.
+[54:33] This is more of a conceptual question,
+[54:35] but is it always the case that a neural
+[54:37] network will have better accuracy than
+[54:39] this like machine learning algorithm?
+[54:42] And I'm asking more on the case of like
+[54:44] the heart disease problem. Oh, yeah,
+[54:45] yeah.
+[54:46] Great question. So, neural networks are
+[54:49] really good for unstructured data like
+[54:50] the ones we're having here. But if you
+[54:52] have structured data like the heart
+[54:53] disease problem, sometimes it actually
+[54:55] works really well. Sometimes
+[54:57] things like gradient boosting, XGBoost,
+[54:59] work really well. So, if I am actually
+[55:01] working on a structured data problem,
+[55:03] I'll try both.
+[55:04] I'm not going to axiomatically assume
+[55:06] that the DNN is going to be the best
+[55:07] thing. But if you have structured data,
+[55:09] it's the best game in town.
+[55:11] All right. Um
+[55:13] I'm just going to
+[55:14] By the way, I have a whole section here
+[55:15] on once you build a model, how do you
+[55:16] actually improve it?
+[55:17] Right? Check it out. It's an optional
+[55:19] thing.
+[55:20] All right, I'm going to stop this here.
+[55:22] All right. So, the next thing I want to
+[55:23] do is
+[55:25] So, we went from 88 to 90 plus percent,
+[55:27] right? Using convolutional networks.
+[55:29] Now, let's work with color images. Let's
+[55:31] kick it up a notch.
+[55:33] So, um
+[55:34] I actually
+[55:36] web scraped
+[55:38] all these pictures for you folks, for
+[55:40] your enjoyment. I web scraped about 100
+[55:42] color images of handbags and shoes.
+[55:44] Each 100 roughly 100 handbags, 100
+[55:46] shoes. So, the question is with these
+[55:48] essentially 200 images,
+[55:51] can we build a really good neural
+[55:52] network to classify handbags and shoes?
+[55:54] Right? It seems kind of absurd, right?
+[55:56] Because 200 examples, I mean, it's not
+[55:58] that much, right? It doesn't feel like a
+[55:59] lot. The MNIST data fashion has 60,000
+[56:02] images.
+[56:04] Right? So, there's no, you know, even
+[56:06] with that we are overfitting in like 5,
+[56:07] 6, 7, 8 epochs.
+[56:09] With 200 images, maybe, you know, is
+[56:10] there any hope? Obviously, there is
+[56:11] hope, otherwise it won't be in the
+[56:13] lecture. So, yeah. So, we're going to
+[56:15] take this data set and let's see what we
+[56:16] can do with it. So, we'll first actually
+[56:18] build a convolutional network from
+[56:19] scratch to solve this problem. Okay?
+[56:22] All right.
+[56:24] I'm actually going to run through the
+[56:25] code because at the end of it we'll have
+[56:27] a live demo. So, I would like one
+[56:29] volunteer to give me a handbag and one
+[56:31] volunteer to give me their footwear.
+[56:34] Boy, in class.
+[56:37] Okay. So, all right. Unlike the previous
+[56:40] data set, this one actually I just web
+[56:42] scraped it. So, I just, you know, it's
+[56:44] it's it's I've stuck it in this Dropbox
+[56:46] folder.
+[56:47] Let's just download it and unzip it. And
+[56:49] once we do that, we have to now organize
+[56:51] it with these 200 images. So,
+[56:54] I have to do some sort of
+[56:57] sort of boring-ish Python stuff here.
+[57:00] So, here what we're doing is that we
+[57:02] have 100 handbags, roughly 100 shoes.
+[57:04] And what this code is doing is it's
+[57:06] actually creating a directory of saying
+[57:08] it's it's splitting stuff into train and
+[57:10] validation and test. And then for each
+[57:12] of the splits it's doing the handbags
+[57:13] and the shoes folder. Okay? So, once we
+[57:16] do that, basically this directory
+[57:18] structure is created.
+[57:20] Okay? Training, validation folder, test
+[57:23] folder, handbags and shoes. In fact,
+[57:25] actually you can I think you can see it
+[57:26] here.
+[57:27] See here, handbags and shoes. And within
+[57:29] that, there is, you know, train, test,
+[57:31] validation. And within each of these,
+[57:33] there's handbags and shoes. So, the idea
+[57:34] is that when you're working with images,
+[57:36] right? What you can do is you can just
+[57:37] create folders for each kind of image,
+[57:40] right? Let's say dogs, cats,
+[57:42] two folders with cat images and dog
+[57:43] images and then just point Keras at it.
+[57:46] It'll automatically figure out those are
+[57:47] the labels.
+[57:49] It makes it easy for you. So, it's very
+[57:50] convenient when you're working with
+[57:51] images.
+[57:52] And the book explains this thing in
+[57:53] great detail.
+[57:55] All right. So, when working with these
+[57:56] images, color images, we'll follow this
+[57:58] process. We'll read in the JPEGs. We'll
+[58:00] convert them to tensors. And then since
+[58:02] I'm web scraping it, they all come in
+[58:03] different shapes and sizes. So, I need
+[58:05] to like bring it all to the same size.
+[58:06] Okay? I resize it and then I'm going to
+[58:08] batch it into whatever. I'm going to
+[58:10] batch it using a batch size of 32 here.
+[58:13] So, and this utility from Keras will do
+[58:16] all that for you, right? Very quickly.
+[58:19] So, basically what it says is that I
+[58:20] found 98 files in the 98 images in the
+[58:23] training data belonging to two classes,
+[58:25] 49 in the validation and 38 in the test.
+[58:28] So, less than 100 examples in the
+[58:29] training set. That's what we have here.
+[58:31] All right. What's the time? 9:30. Okay.
+[58:33] So, all right. Now, let us check the
+[58:35] dimensions to make sure Good. So, 224
+[58:38] 224 by 3. And the reason why did I pick
+[58:40] 224 224? As you will see later, we're
+[58:43] going to use something called ResNet
+[58:45] and the ResNet expects it to be 224 by
+[58:47] 224 by 3. That's why I resized it to 224
+[58:49] 224. Let's look at a few examples of my
+[58:52] wonderful web scraping in action.
+[59:01] It's pretty wild, right?
+[59:02] Okay. So, we have a Now, let's do a
+[59:04] simple convolutional network. Um
+[59:07] And before we would take all the X
+[59:09] values in Fashion MNIST and divide them
+[59:10] manually by 255 to normalize it to 0 1.
+[59:13] Well, you know what? We are actually
+[59:14] graduating to the higher levels of Keras
+[59:16] now. So, let's not do that, right?
+[59:17] Manual stuff is bad. So, we'll do it
+[59:19] within Keras by using something called
+[59:21] the rescaling layer where we just tell
+[59:22] it how much to rescale and boom, it'll
+[59:24] do it for you. The first convolution
+[59:26] block, just like the Fashion MNIST 32,
+[59:28] second block, again 32, max pool,
+[59:31] flatten. And then here we only have
+[59:33] handbags which are shoes, just a sigmoid
+[59:35] is enough, right? It's just a binary
+[59:36] classification problem. So, I'm just
+[59:38] using one output layer with a sigmoid,
+[59:40] and that's our model. So, let's do the
+[59:42] model.
+[59:43] All right, model summary.
+[59:48] 103 101,000 parameters in this little
+[59:52] model. Okay, let's compile it and run
+[59:54] it. Uh, and note here because it's a
+[59:56] binary
+[59:57] classification problem, I'm using binary
+[59:59] cross entropy.
+[01:00:02] Same Adam.
+[01:00:03] And accuracy, compile, and then boom,
+[01:00:05] let's run it. We'll run it for 20
+[01:00:07] epochs.
+[01:00:08] Hopefully.
+[01:00:12] Okay, while it's doing this business,
+[01:00:13] I'm going to shift to the PowerPoint.
+[01:00:17] So, we'll go back to see how well it
+[01:00:19] did, but the question is, uh, whatever
+[01:00:21] it did, we built it from scratch. So,
+[01:00:23] the question is, can we do better than
+[01:00:23] that? Okay? Because we only have 100
+[01:00:26] examples of each class, and which brings
+[01:00:28] us to something very cool and very
+[01:00:29] powerful called transfer learning. And
+[01:00:31] the idea, so the key thing is there are
+[01:00:33] two research trends that are going on
+[01:00:34] that we take advantage of. The first one
+[01:00:36] is that researchers have defined, you
+[01:00:38] know, designed architectures which
+[01:00:40] exploit the kind of input you have. So,
+[01:00:42] Olivia asked the question, if you have a
+[01:00:43] particular kind of input images, do you
+[01:00:45] actually change the input, or do you
+[01:00:47] actually change the network? As it turns
+[01:00:49] out, here, for example, if it's images,
+[01:00:50] we know that we should use convolutional
+[01:00:52] layers because convolutional layers were
+[01:00:53] designed to exploit the image-ness of
+[01:00:55] the input.
+[01:00:57] Okay? Similarly, if you have sequences
+[01:00:59] of information, like obviously natural
+[01:01:01] language, audio, video, gene sequences,
+[01:01:03] and so on, so forth, these things called
+[01:01:05] transformers were invented
+[01:01:07] to exploit them, and we're going to
+[01:01:08] spend a lot of time on transformers
+[01:01:09] starting next week. So, that's the first
+[01:01:11] trend. The second trend is that
+[01:01:13] researchers have used these innovations
+[01:01:15] to actually create and train models on
+[01:01:19] vast data sets, and thankfully, they've
+[01:01:21] made them publicly available for us to
+[01:01:23] use. So, transfer learning is the idea
+[01:01:26] that if you have a particular problem,
+[01:01:28] let's just take a pre-trained network
+[01:01:30] work somebody may have already created,
+[01:01:32] and then let's just customize it to our
+[01:01:33] problem, rather than actually build
+[01:01:35] anything from scratch.
+[01:01:37] Okay, that's the basic idea. So,
+[01:01:39] so here we have this basically we have
+[01:01:41] to build a classifier which takes in an
+[01:01:43] arbitrary image and figures out if it's
+[01:01:45] a handbag or a shoe, right? That's our
+[01:01:46] goal.
+[01:01:47] And so, now handbags and shoes are
+[01:01:49] everyday objects, and so what you can do
+[01:01:51] is, hmm, you you can look around and see
+[01:01:53] if there are any networks that have been
+[01:01:55] trained by other people which actually
+[01:01:57] have been trained on everyday images.
+[01:02:00] Right? As opposed to like MRI or X-rays,
+[01:02:02] right? Specialized images, everyday
+[01:02:04] images. Of course, the first thing you
+[01:02:05] should probably do is to see if anybody
+[01:02:07] has built the specific thing you want,
+[01:02:08] handbag shoes classifier on GitHub.
+[01:02:10] Assuming it's not, then you do transfer
+[01:02:12] learning. Okay? So, now it turns out
+[01:02:15] that there's this thing called ImageNet,
+[01:02:17] which is a database of millions of
+[01:02:19] images of everyday objects in a thousand
+[01:02:22] different categories, furniture,
+[01:02:24] animals, automobiles, you get the idea.
+[01:02:26] Okay? And so, we can look for the
+[01:02:28] networks that have been trained on
+[01:02:29] ImageNet.
+[01:02:31] Okay, let me just go back to the collab
+[01:02:33] just to make sure it doesn't time out.
+[01:02:37] All right, so it has finished doing it.
+[01:02:40] Um, let's just plot these things.
+[01:02:48] Okay, so
+[01:02:49] uh, there is some overfitting that
+[01:02:51] happens around here
+[01:02:52] on the training on the 10th epoch. Let's
+[01:02:55] look at the
+[01:02:59] So, the the training accuracy is
+[01:03:01] actually getting to almost to 100%. But
+[01:03:03] we're not interested in training
+[01:03:04] accuracy, right? We care about
+[01:03:06] validation and test accuracy, and that
+[01:03:08] seems to be kind of hovering around in
+[01:03:10] the 80s. Um, so let's just evaluate it
+[01:03:13] anyway to see what happens.
+[01:03:15] Okay, so it gets to 80 87% accuracy
+[01:03:19] on this data set.
+[01:03:20] It's actually pretty good given that we
+[01:03:22] only have 100 examples. So, 87%
+[01:03:24] accuracy, but we pre-trained the whole
+[01:03:26] thing. I'm sorry, we did everything from
+[01:03:28] scratch. Okay? Now, then
+[01:03:31] I'm going to there's this whole section
+[01:03:32] about data augmentation, which, um, you
+[01:03:35] know what? Do we have time?
+[01:03:38] So,
+[01:03:40] so the idea of augmentation is that when
+[01:03:42] you have an image,
+[01:03:44] let's say you take this image, and you
+[01:03:45] just rotate it slightly by 10°.
+[01:03:49] If it's a handbag before you rotated it,
+[01:03:51] it sure as hell is a handbag after you
+[01:03:52] rotated it.
+[01:03:54] Right?
+[01:03:55] It doesn't change The meaning of the
+[01:03:56] image doesn't change just because you
+[01:03:57] rotated it slightly. Or maybe you zoom
+[01:04:00] in slightly, you zoom out slightly, you
+[01:04:01] crop it slightly, nothing happens.
+[01:04:03] So, what you can do is you can take any
+[01:04:05] image you have, and you just perturb it
+[01:04:07] slightly,
+[01:04:08] like right there, and then add it as a
+[01:04:10] new example to your training data.
+[01:04:14] This is an unbelievable free lunch,
+[01:04:15] frankly.
+[01:04:16] And the same thing actually, same kinds
+[01:04:19] of techniques actually work for text
+[01:04:20] also, which we'll cover later on.
+[01:04:22] Right? This broad area is called data
+[01:04:24] augmentation.
+[01:04:26] It's a great way when you don't have a
+[01:04:27] lot of data to artificially bolster the
+[01:04:30] amount of data you have.
+[01:04:31] Okay?
+[01:04:32] Um, and so, and of course, Keras makes
+[01:04:34] it very easy for you to do all these
+[01:04:36] things. It has already predefined a
+[01:04:38] whole bunch of data augmentation layers
+[01:04:40] for you. So, here's a little example
+[01:04:43] where I basically take a picture and
+[01:04:45] then I randomly flip it. So, if it looks
+[01:04:47] like this, I flip it this way,
+[01:04:48] horizontal. Okay? Uh, and then I
+[01:04:50] randomly rotate it by 0.1. I forget if
+[01:04:53] it's 0.1° or radians, you can look up
+[01:04:55] the documentation. And then random zoom,
+[01:04:57] right? Zoom in and out a little bit. Uh,
+[01:05:00] but it won't do this for every picture.
+[01:05:02] It will only do it randomly. Okay? So,
+[01:05:04] that only some pictures will get
+[01:05:06] perturbed in some ways. And that's how
+[01:05:07] you make sure there's enough diversity
+[01:05:09] of pictures that you have.
+[01:05:10] So, once you do that,
+[01:05:12] you can actually take a picture and see
+[01:05:13] what it does.
+[01:05:15] I just randomly grab a picture, so it
+[01:05:17] keeps changing every time.
+[01:05:21] Yeah, look at this handbag.
+[01:05:22] Handbag slightly rotated this way,
+[01:05:24] rotated that way.
+[01:05:26] Some more. Maybe a little bit of zooming
+[01:05:28] going on, and so on. You get the idea,
+[01:05:30] right? And there's a whole list of these
+[01:05:31] things you can do. But when you do those
+[01:05:33] things, make sure
+[01:05:35] that what you're doing doesn't actually
+[01:05:37] change the underlying meaning of the
+[01:05:38] picture.
+[01:05:39] It's really important.
+[01:05:41] Okay? So, for example, if you're working
+[01:05:43] with satellite data,
+[01:05:45] yes, be very careful not to do flips of
+[01:05:47] crazy flips.
+[01:05:49] Right? Or even if you're working with
+[01:05:50] everyday images, horizontal flips are
+[01:05:51] okay. Don't do vertical flips.
+[01:05:54] Right? How many times will you have an
+[01:05:55] upside-down dog picture that you need to
+[01:05:57] classify?
+[01:05:59] Make sure your augmentation doesn't go
+[01:06:00] nuts.
+[01:06:02] All right.
+[01:06:05] Once you do that, you can actually just
+[01:06:07] insert the data augmentation layers in
+[01:06:09] your model right there, right after the
+[01:06:11] input. The rest of it can stay
+[01:06:12] unchanged.
+[01:06:14] So, this is a great way to increase the
+[01:06:15] size of your training data, and here is
+[01:06:17] a model, and then I invite you to
+[01:06:19] actually just play with it and uh, and
+[01:06:21] train it. We won't try In the interest
+[01:06:23] of time, we won't actually train this
+[01:06:23] model, but it's in the collab, you can
+[01:06:24] just try it. It also figures prominently
+[01:06:27] in homework one, by the way, data
+[01:06:28] augmentation. So, you'll get more
+[01:06:30] experience with this. Okay. So, uh, back
+[01:06:32] to the PPT.
+[01:06:34] So, this is what we have. Um, and so,
+[01:06:37] any network that has been trained on
+[01:06:38] this ImageNet thing, uh, turns out
+[01:06:41] learns all kinds of interesting features
+[01:06:42] in every one of its layers. So, here
+[01:06:44] this is the first layer, and you can see
+[01:06:46] it's picking up sort of gradations of
+[01:06:48] color, sort of line-ish kind of
+[01:06:49] behavior. Layer two, um, it's actually
+[01:06:52] picking up Hey, look, it's picking up an
+[01:06:54] edge. Can you see that edge?
+[01:06:56] Right? Like like that.
+[01:06:59] And then layer three is picking up these
+[01:07:01] interesting honeycomb shapes, uh, and so
+[01:07:04] on. Oh, it's actually this thing is
+[01:07:05] already already picking up like the
+[01:07:07] shape of a human torso.
+[01:07:12] Yeah, this layer is actually picking up
+[01:07:13] what looks like a Labrador retriever.
+[01:07:16] Okay.
+[01:07:17] Isn't that cute?
+[01:07:19] Come on, even if you're not a dog
+[01:07:20] person.
+[01:07:22] All right. So, the the this this is the
+[01:07:24] visualization I was referring to
+[01:07:25] earlier,
+[01:07:26] um, to figure out what are these
+[01:07:28] networks actually learning.
+[01:07:30] This paper was one of the first ones to
+[01:07:31] actually visualize what's going on
+[01:07:32] inside. So, if you folks are curious how
+[01:07:34] these pictures are actually produced, I
+[01:07:36] would encourage you to check this out.
+[01:07:38] Okay, yep.
+[01:07:40] So, we spoke about images and you
+[01:07:42] referred to classes, but sorry, we spoke
+[01:07:44] about images and you referred to classes
+[01:07:46] and
+[01:07:47] text next week on transformers, but
+[01:07:49] what about say an email which has both
+[01:07:52] text and image, and that may be white
+[01:07:54] space depending on who has written it
+[01:07:56] out. Does that get put in as an input
+[01:07:58] for an image or
+[01:08:01] So, we'll revisit this great question a
+[01:08:03] bit later on in the course.
+[01:08:04] So, the answer is a bit complicated, so
+[01:08:06] I don't want to I want to do it justice,
+[01:08:07] so we'll come back to it.
+[01:08:09] All right, so
+[01:08:10] so it turns out this thing called ResNet
+[01:08:12] is a family of networks that are which
+[01:08:14] were trained on this ImageNet data set,
+[01:08:16] and they did really well in this
+[01:08:18] competition that's associated with the
+[01:08:19] ImageNet data set called ImageNet. And
+[01:08:21] so, this is an example of such a
+[01:08:22] network. So, you we would expect the the
+[01:08:24] weights and the parameters of ResNet,
+[01:08:27] given that it's been trained on
+[01:08:28] ImageNet, to sort of have some knowledge
+[01:08:30] about lines and shapes and curves and
+[01:08:32] things like that. So, maybe we can just
+[01:08:34] use that, right? So, so the idea is we
+[01:08:37] But the thing is we can't use ResNet as
+[01:08:39] is because remember, it was trained to
+[01:08:40] classify an incoming image into a
+[01:08:42] thousand possibilities.
+[01:08:44] Here we only have two possibilities,
+[01:08:45] handbags and shoes. So, what we do is
+[01:08:47] very simple and elegant. We do just a
+[01:08:50] little bit of surgery.
+[01:08:51] We take ResNet and stop just before the
+[01:08:54] final layer. So, take my word for it,
+[01:08:57] this thing here, what it says is fully
+[01:08:59] connected thousand.
+[01:09:01] Because it's got thousand way, right?
+[01:09:02] Thousand objects. So, what we do is we
+[01:09:04] just take everything except and we stop
+[01:09:06] just before that last layer.
+[01:09:08] And then what comes out of that layer,
+[01:09:10] hopefully, will be like a very smart
+[01:09:11] representation of the images that it has
+[01:09:13] been trained on.
+[01:09:14] And so, what we do is we can think of
+[01:09:16] sort of headless ResNet
+[01:09:19] as our model.
+[01:09:21] And we can take that we can take all our
+[01:09:23] data and run it through ResNet up to but
+[01:09:26] not including the last layer.
+[01:09:28] Okay, you get some tensor and that
+[01:09:30] tensor is probably like a very has a
+[01:09:31] very rich understanding of what's going
+[01:09:33] on in that image, all the objects and
+[01:09:35] features and things like that. And then
+[01:09:36] we can just simply connect that we can
+[01:09:39] think of it as like a smart
+[01:09:40] representation of an input. We can
+[01:09:42] connect it to just a little hidden layer
+[01:09:44] and then we have a little sigmoid which
+[01:09:46] then tells you handbag or shoe. We can
+[01:09:47] just run this network.
+[01:09:50] Okay? Um and so since the outputs to the
+[01:09:53] hidden layer now are not raw images
+[01:09:54] anymore, but this much higher level of
+[01:09:57] abstraction that ResNet has learned,
+[01:09:59] hopefully it can get the job done with
+[01:10:00] hardly any examples.
+[01:10:02] Okay? And now you can get fancier.
+[01:10:04] That's the basic idea, but you can get
+[01:10:05] much fancier. You can connect up
+[01:10:07] headless ResNet directly with our little
+[01:10:09] network with a hidden layer and the
+[01:10:10] final thing and the whole thing can be
+[01:10:12] trained.
+[01:10:14] End to end. Uh but when you do that you
+[01:10:16] must start the training with the weights
+[01:10:18] that you downloaded with ResNet because
+[01:10:20] that is the crown jewel that's been
+[01:10:21] learned so you want to start from there.
+[01:10:23] Uh and you will do this in homework one.
+[01:10:26] Okay? All right. Uh by the way, these
+[01:10:28] pre-trained models are available all
+[01:10:29] over the internet. There is the
+[01:10:30] TensorFlow hub, the PyTorch hub and then
+[01:10:32] there's the Hugging Face hub. When I
+[01:10:34] checked it on the 13th yesterday, it had
+[01:10:36] over half a million models available
+[01:10:39] for download. Half a million.
+[01:10:41] I think last year it was like 50,000
+[01:10:42] when I taught the course. Uh so yes.
+[01:10:46] I was just wondering, doesn't this make
+[01:10:49] your neural network susceptible to
+[01:10:50] adversarial attacks because the weights
+[01:10:52] have been
+[01:10:53] pre-trained on a Yes. Uh it there is
+[01:10:55] some adversarial risk. I'm happy to talk
+[01:10:57] about it offline.
+[01:10:59] All right. So that's what we have. So
+[01:11:01] back to Colab. Okay. So that's what we
+[01:11:03] have. This is ResNet. So what we do is
+[01:11:06] and ResNet is all packaged up. It's
+[01:11:07] available for download. So we download
+[01:11:09] it here.
+[01:11:13] And you see here that I'm saying use
+[01:11:16] include top equals false.
+[01:11:19] So basically you are telling Keras
+[01:11:21] uh the top the very final layer of the
+[01:11:23] thing, don't give it to me. Just give me
+[01:11:25] everything up to but not including that.
+[01:11:27] And of course I think of it as left to
+[01:11:28] right. People think of it as bottom to
+[01:11:30] top. So they could the very very top
+[01:11:32] layer, don't give it to me. You're
+[01:11:34] telling it so that you don't have to
+[01:11:35] manually go and remove it.
+[01:11:37] Okay? And then I'm not going to
+[01:11:39] summarize uh well, I'll just summarize
+[01:11:40] some of it. Just show you how big it is.
+[01:11:44] Okay?
+[01:11:45] 23 million parameters.
+[01:11:48] ResNet. Okay? And I won't plot it
+[01:11:50] because then I'll be scrolling for 5
+[01:11:52] minutes. Uh
+[01:11:53] so let's just do this now. So what we're
+[01:11:55] now going to do is we're going to run
+[01:11:56] all the data through this thing and
+[01:11:58] whatever comes out in that penultimate
+[01:11:59] thing, I'm going to just grab it and
+[01:12:00] store it. So that's what this thing
+[01:12:02] does.
+[01:12:04] All right. And now we create this a
+[01:12:07] little handy function to do all these
+[01:12:08] things.
+[01:12:09] And once I do that,
+[01:12:11] uh every image has been sent through
+[01:12:12] ResNet up to but not the final layer and
+[01:12:15] then whatever comes into the final
+[01:12:16] layer, we're storing it. And then we're
+[01:12:18] going to create a network where we'll
+[01:12:19] only feed that layer that information to
+[01:12:21] a simple network.
+[01:12:23] Okay?
+[01:12:24] So what is coming out of ResNet, you can
+[01:12:26] see here 98 examples in the training
+[01:12:28] data and each example is now a 7 by 7 by
+[01:12:31] 2048 tensor.
+[01:12:33] That's what came out of ResNet and you
+[01:12:35] saw that's what I did there.
+[01:12:37] Okay?
+[01:12:37] All right. So that's what it looks like.
+[01:12:39] Now let's just create our actual model
+[01:12:41] now. Right? We have our input which is
+[01:12:43] just a 7 by 7 by 2048.
+[01:12:46] We flatten it immediately.
+[01:12:48] Then we run it through a dense layer
+[01:12:50] with 256 ReLU neurons and then we use
+[01:12:52] dropout which I haven't talked about yet
+[01:12:54] which I will talk about early next week.
+[01:12:56] Uh but I will come back to it. Don't
+[01:12:58] worry about this detail for the moment.
+[01:13:00] Uh and then we just run through a
+[01:13:01] sigmoid.
+[01:13:03] Okay? And that that's our model.
+[01:13:05] Finished. Plot the model. This is what
+[01:13:08] we have. Okay? Model summary.
+[01:13:13] It's one so far. All right, good. Now
+[01:13:15] let's actually train this thing.
+[01:13:18] I'm just going to run it for 10 epochs
+[01:13:20] because I tried running it uh previously
+[01:13:22] and it seems to do a fine job in just an
+[01:13:24] epoch. Okay, it's already done. It's so
+[01:13:26] fast because we ran everything through
+[01:13:28] this monster ResNet thing and basically
+[01:13:31] took all the output values and use them
+[01:13:33] as a starting point. Right? We don't
+[01:13:34] have to run it every single time. So you
+[01:13:36] can see here the accuracy is
+[01:13:40] quite high.
+[01:13:44] Wow, interesting. So the 10th epoch
+[01:13:45] something bad happened.
+[01:13:48] So maybe I should have stopped at the
+[01:13:49] ninth epoch. I didn't see this yesterday
+[01:13:51] when I was running. So much for random
+[01:13:53] reproducibility. Uh
+[01:13:55] So let's just run this. Oh wow, look. On
+[01:13:57] the test set it's achieving 100%
+[01:13:58] accuracy.
+[01:14:02] It's unbelievable. Okay folks, now for
+[01:14:04] the moment of truth. Um all right, I
+[01:14:06] have a little code snippet here to
+[01:14:08] capture stuff from the webcam.
+[01:14:10] Because that last epoch it went down,
+[01:14:12] I'm a little worried that the demo is
+[01:14:13] going to flunk.
+[01:14:14] But you know what? We all have to live
+[01:14:16] dangerously. So
+[01:14:18] So here's a little function to predict
+[01:14:20] what's going to happen.
+[01:14:21] Okay. Now I tried it at home yesterday
+[01:14:23] by the way.
+[01:14:24] I act and it's like, "Yay, it's a
+[01:14:26] handbag."
+[01:14:27] So okay. Now let's just do something
+[01:14:29] else.
+[01:14:30] Okay. Any volunteers?
+[01:14:32] I want a a piece of footwear
+[01:14:34] or a handbag.
+[01:14:37] It's like a backpack, right?
+[01:14:39] I don't know. It feels like an
+[01:14:40] adversarial example, but yeah, let's
+[01:14:42] just try it.
+[01:14:43] Okay.
+[01:14:45] No disrespect. I'll let me let me go
+[01:14:47] with the shoe first. I have a better
+[01:14:48] chance of it working.
+[01:14:50] So
+[01:14:51] it's a pretty big shoe. If it can't get
+[01:14:53] this shoe, I'm worried about this model.
+[01:14:55] All right. So
+[01:15:05] Okay. Hold on. Hold on. Hold on.
+[01:15:07] All right.
+[01:15:10] Please don't get distracted by my hand.
+[01:15:14] Capture.
+[01:15:16] It's a shoe! LOOK AT THAT.
+[01:15:21] PHEW. ALL RIGHT. THANKS.
+[01:15:25] OKAY. Now let's try that. I'm feeling
+[01:15:26] kind of brave now.
+[01:15:28] Thank you. All right. Let's do this.
+[01:15:32] All right.
+[01:15:34] Camera capture.
+[01:15:40] Okay.
+[01:15:44] Put its better side.
+[01:15:54] It's a handbag! Look at that.
+[01:15:59] I swear every time I do the demo I age a
+[01:16:01] few years. So
+[01:16:03] All right folks, I'm done. Thank you.

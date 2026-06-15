@@ -1,0 +1,1976 @@
+[00:16] So all right so today we actually come
+[00:18] to the last lecture of the class because
+[00:19] Wednesday it's going to be project
+[00:20] presentations and um so I want to talk
+[00:23] to you about diffusion models today
+[00:25] which is a incredibly exciting area
+[00:28] which I don't think gets It's the same
+[00:30] amount of attention in some ways
+[00:32] compared to large language models. Uh
+[00:34] but it's got enormous potential. Um so
+[00:37] I'm very excited to talk to you about
+[00:39] it. So you know just for kicks last
+[00:42] night I said I asked Chad GPT create a
+[00:44] photorealistic image of graduate
+[00:46] students in class in a class on deep
+[00:47] learning and this is what it came back
+[00:49] with.
+[00:51] There is a noticeable absence of an
+[00:53] instructor
+[00:57] plus various students are facing in
+[00:59] various directions
+[01:01] but apart from that it's not bad. Um and
+[01:05] uh here is an example of a midjourney
+[01:08] text to image abusion model uh which
+[01:12] produces the amazing picture from this
+[01:14] prompt. a quaint Italian seaside village
+[01:16] with colorful buildings blah blah blah
+[01:18] blah blah uh rendered in the style of
+[01:21] Claude Monet and so on so forth and
+[01:24] that's what you get. It's pretty
+[01:25] unbelievable.
+[01:27] Uh and I'm sure you folks have played
+[01:28] around with these things and you have
+[01:29] your favorite pictures and prompts and
+[01:31] whatnot.
+[01:33] Um now
+[01:35] uh February 15th um OpenAI released a
+[01:38] texttovideo model called Sora which your
+[01:41] folks may have seen uh which I find
+[01:44] frankly just stunning what it can do. It
+[01:46] can produce a one minute uh video from a
+[01:49] text prompt. And so,
+[01:52] so if you actually give it this prompt,
+[01:54] in an ornate historical hall, a massive
+[01:56] tidal wave peaks and begins to crash and
+[02:00] two surfers seizing the moment
+[02:01] skillfully navigate the fa the wave.
+[02:03] Okay. Uh I think we can all agree that
+[02:06] such a thing has never happened in
+[02:07] history and therefore there it was not
+[02:09] in the training data, right? So and then
+[02:12] you get this picture, this video
+[02:26] and then some random person is coming
+[02:28] back in a completely dry [laughter]
+[02:31] hall. So anyway, but it's pretty
+[02:32] amazing. I think you would agree. So
+[02:37] if you actually look at the open sora
+[02:39] technical report, you actually find this
+[02:42] uh opening paragraph where they say that
+[02:45] we train text conditional diffusion
+[02:48] models blah blah blah using a
+[02:51] transformer architecture. Okay, so now
+[02:54] we know what a transformer architecture
+[02:56] is. You've been working with it. You're
+[02:57] quite familiar with it at this point. So
+[03:00] today's class is really about text
+[03:02] conditional diffusion models. Okay, so
+[03:04] the other building block. Okay, so let's
+[03:06] get to it. Uh what I'm going to do is
+[03:09] I'm going to sort of uh divide this into
+[03:11] two parts. The first part is I'm just
+[03:12] going to talk about how do you get a
+[03:14] model to just generate an image for you?
+[03:16] Right? If you wanted to generate an
+[03:17] image from a class of potential images,
+[03:20] how can it just generate an image? And
+[03:21] then next we talk about okay, great. Now
+[03:24] that you can do that, how do you
+[03:25] actually control or steer the model to
+[03:27] do an image based on whatever prompting
+[03:29] you give it? Okay, how do you condition
+[03:31] it? How do you control it? Those are all
+[03:33] the words. How do you steer it? You'll
+[03:34] find all these synonyms being used
+[03:36] heavily in the literature. That's
+[03:37] basically what they mean. How do you
+[03:38] give it a prompt and then steer what
+[03:40] gets produced? All right, so let's say
+[03:43] we want to build a model that can be
+[03:44] used to generate images of stately
+[03:47] college buildings.
+[03:49] Okay, obviously our very own Killian
+[03:51] Court is the finest example of such a
+[03:53] thing. Um, and uh, but let's say you
+[03:56] want to do that. So what you do is you
+[03:58] as as we always do with machine
+[03:59] learning, we collect a bunch of data. In
+[04:01] this particular case, we collect a whole
+[04:03] bunch of images of stately college
+[04:05] buildings. Uh, and what you see here is
+[04:07] literally me just doing a Google image
+[04:08] search with the query stately college
+[04:10] buildings. Okay, so this is the kind of
+[04:12] stuff you get. Uh, so you have your
+[04:14] training data at your disposal. It's
+[04:15] ready to go. Now the question is if you
+[04:19] have such a model, let's say, and
+[04:20] obviously we'll talk about how to build
+[04:21] such a model very soon. But let's say
+[04:23] you have such a model and every time you
+[04:25] sort of sample this model, every time
+[04:27] you ask the model, hey, give me an
+[04:28] image, you obviously wanted to give a
+[04:30] different image, right? Otherwise, it's
+[04:31] kind of boring. All right? Some you know
+[04:34] maybe you want the Killian Court, maybe
+[04:36] you want the rotunda from the University
+[04:37] of Virginia. Anybody any UVA alums here?
+[04:42] Nobody. Okay. Um, so and right. So the
+[04:45] question is how can we actually get it
+[04:47] to randomly give us different images?
+[04:49] But but they all have to be stately
+[04:50] college buildings. It can't be just some
+[04:52] random stuff, right? So, how do you do
+[04:54] that? And the way we do that, and I
+[04:58] still find it really astonishing that
+[04:59] this approach actually works. The way we
+[05:02] do that is that we actually give it
+[05:03] noise.
+[05:05] And I will define very precisely what I
+[05:07] mean by noise in just a just a bit.
+[05:10] Okay, basically assume
+[05:13] an image in which all the pixel values
+[05:15] are randomly picked.
+[05:17] Right? So every time you generate a
+[05:19] random image and you give it to the
+[05:21] model, you'll it'll use that random
+[05:23] starting point and then create an image
+[05:25] for you. And because by definition, if
+[05:27] you choose noise randomly, they are, you
+[05:30] know, obviously going to be different
+[05:31] each time. It's hopefully going to
+[05:33] generate a different image. But if the
+[05:35] model is trained on stately college
+[05:37] buildings, it will produce images of
+[05:39] stately college buildings. It's not
+[05:41] going to produce a picture of a Labrador
+[05:42] retriever.
+[05:44] Okay, so that's basically what we're
+[05:46] going to do. Now, if you look at
+[05:49] something like this, the first question
+[05:51] of course is that how can we train a
+[05:53] model to generate an image from pure
+[05:54] noise? This just sounds ridiculous,
+[05:58] right? You basically give it a bunch of
+[06:00] random numbers and say, give me code.
+[06:04] It feels really ridiculous. And at that
+[06:06] point, you know, folks can sort of come
+[06:08] to a stop and say, "All right, this
+[06:10] approach is probably not going to take
+[06:11] me anywhere. It's a bit of a dead end.
+[06:14] But then some clever people had this
+[06:16] very interesting idea.
+[06:18] They said
+[06:20] um it's not clear how to do this you
+[06:24] know um just a quick aside there's this
+[06:26] really amazing book which is published
+[06:28] maybe 50 years ago maybe earlier than
+[06:31] that called how to solve it by George
+[06:33] Polia. George Poliov was a eminent
+[06:36] mathematician
+[06:37] um and he wrote this small book called
+[06:39] how to solve it and it lists a whole
+[06:41] bunch of huristics that mathematicians
+[06:44] use when they solve problems and perhaps
+[06:46] the most commonly used heristic is just
+[06:49] reverse the question
+[06:52] just reverse the question and see if
+[06:53] anything comes out of it most of the
+[06:55] time nothing will come out of it but
+[06:56] maybe some other time something amazing
+[06:58] comes out right this is a great example
+[06:59] of that heristic at work we don't know
+[07:01] how to do this so the question is can we
+[07:03] do the reverse
+[07:05] If I give you Killian code, can you
+[07:07] produce noise out of it for me?
+[07:10] And the answer is yeah, of course we can
+[07:12] do that.
+[07:14] Right? Given an image, we can easily
+[07:16] create a noisy version of it. So you can
+[07:19] take the original image, you can add
+[07:21] some noise to it to get this and you
+[07:23] keep on adding a lot of noise and
+[07:24] finally you'll get something that's
+[07:25] basically you can't tell that there is
+[07:27] clean clear clean code anymore. Right?
+[07:29] This process, the reverse process is
+[07:31] actually very easy to do. Okay? So the
+[07:33] question bec by the way for folks of who
+[07:36] may not be very familiar with this
+[07:37] notion of adding noise to an image or
+[07:39] making an image noisy. Let me just show
+[07:41] you in a collab just a minute how easy
+[07:44] it is.
+[07:47] All right. So um we let's say we import
+[07:51] a bunch of these things. As usual we
+[07:52] have numpy and so there is this thing
+[07:54] called the python imaging library pil
+[07:57] which is very handy for image
+[07:58] manipulations. So we import that and
+[08:01] then I just literally read read this
+[08:03] image in. I uploaded it before class.
+[08:04] Let's just make sure it's here. Okay,
+[08:06] good. Kalian.png.
+[08:07] So I I read this image. Okay. Uh and
+[08:11] then once I read it, I convert it into a
+[08:13] numpy array. And then remember in a in
+[08:16] any color image, you have three tables
+[08:18] of numbers. The the number there's a
+[08:20] number for each pixel for red, blue, and
+[08:23] green. And then each number is between 0
+[08:25] and 255. U and so here what we do is we
+[08:28] divide everything by 255 just to
+[08:29] normalize it so it's all between zero
+[08:31] and one and we have done this in the
+[08:32] past right I do that here uh all right
+[08:36] so let me just read this back in convert
+[08:38] it and then if you look at the shape
+[08:40] it's basically a 411 x 583 * 3 um three
+[08:45] channels as we have seen before and then
+[08:47] I'll just show it all right that's the
+[08:50] picture so now what we want to do is we
+[08:52] want to add noise to this picture all we
+[08:54] have to do Okay, for each pixel,
+[08:59] we basically randomly pick a normal
+[09:02] variable, a normal distribution,
+[09:03] normally distributed random variable
+[09:05] with a mean of zero and a small standard
+[09:08] deviation. So it's like a small number
+[09:10] and then we just literally add that
+[09:11] number to every pixel. But for every
+[09:14] pixel, we sample. Every pixel we sample.
+[09:16] It's not like we sample once and add it
+[09:17] to all the pixels. We sample for every
+[09:19] pixel. And so the way you do that is
+[09:22] basically literally np.random.normal.
+[09:25] normal and then this 3 here is a
+[09:28] standard deviation and we tell it
+[09:30] generate as many of these things as the
+[09:33] as the shape of the image that I gave
+[09:35] you. Okay. And then add each one of
+[09:38] these numbers to the original image you
+[09:40] get this noisy image. Okay. So if you
+[09:42] this is the original image these are all
+[09:44] the values between 0 and one. And then
+[09:46] you add do this noisy image. You can see
+[09:48] the numbers have become different. The
+[09:50] 23 has become.18.15
+[09:52] has become minus.17 and so on and so
+[09:54] forth. Right? You just added a small
+[09:56] number random to everything. But as you
+[09:58] can see here now you have some negative
+[09:59] numbers. You may have some numbers
+[10:01] that's greater than one. And we do want
+[10:02] everything to be between 0 and one. So
+[10:05] all we do is we do this thing called
+[10:06] clip it where essentially values smaller
+[10:10] than zero are set to zero. Values
+[10:11] greater than one are set to one. And so
+[10:13] we'll just do that. That's it.
+[10:16] Everything over one squashed to one.
+[10:17] Everything under zero set to zero.
+[10:19] Others leave it unchanged. Now it's
+[10:21] again well behaved between 0 and one and
+[10:23] we can just plot it and you get this.
+[10:28] That's it. That's all it takes to
+[10:29] actually add noise to an image. One line
+[10:31] of numpy. Okay. Uh obviously you can
+[10:34] just put this whole thing in a loop and
+[10:36] keep increasing that standard deviation
+[10:37] number from 3 point 4.5 so on and so
+[10:39] forth. And when you do that you get this
+[10:41] nice sequence of clean code and all the
+[10:44] way to some very very noisy version of
+[10:45] Ken code. That's it. So that's the basic
+[10:48] idea of adding noise.
+[10:52] Any questions on the the mechanics?
+[10:57] Okay, good. Um so so we can add random
+[11:00] numbers, right? And we can by increasing
+[11:02] the magnitude of the standard deviation
+[11:04] of these of these normal random
+[11:06] variables, we can make the image
+[11:08] noisier. Okay, so that suggests a really
+[11:12] interesting idea.
+[11:14] What idea would that be?
+[11:19] Yeah, doing the opposite. Could you
+[11:21] please uh microphone please?
+[11:25] &gt;&gt; Uh doing the opposite like recreating
+[11:26] the image from the noise.
+[11:29] &gt;&gt; So we are trying to create the image
+[11:31] from the noise. But
+[11:34] that feels a little hard. So what
+[11:37] exactly can we do? Be a little more
+[11:38] specific.
+[11:44] So here we have the ability to take any
+[11:46] image and add any amount of noise to it.
+[11:48] Right? That's the data we have. There is
+[11:51] Kian code and there's various noisy
+[11:54] versions of Kian code like that for the
+[11:56] return the unit Virginia and so on and
+[11:57] so forth.
+[11:58] &gt;&gt; I would assume you would do some kind of
+[12:00] loss function for the the final image
+[12:02] that you get and compare it with the the
+[12:04] original image that you train it on and
+[12:06] then find uh yeah fine as you go. Okay,
+[12:10] you're on the right track. Uh, any other
+[12:14] proposals?
+[12:18] &gt;&gt; I think we could try to train a neural
+[12:20] network to reconstruct the image going
+[12:22] from the noise to the noise noisy one.
+[12:25] Like we could have a whole data set with
+[12:27] images, find their noise counterpart and
+[12:30] train to do the oppos
+[12:34] network to do the opposite task.
+[12:38] Yeah, that's definitely on the right
+[12:39] track. That's definitely on the right
+[12:41] track. Yep, good ideas. So, what we do
+[12:44] more concretely is
+[12:47] we we can take each image in the
+[12:49] training data and create noisy versions
+[12:51] of it as we have seen before. And then
+[12:54] what we do is that we say uh we can
+[12:57] create XY training data pairs input
+[13:00] output pairs from all these images. So
+[13:04] specifically what we do is we take
+[13:09] the noisy slightly noisy version of
+[13:11] Killian code and call it the input and
+[13:14] we take the the the nice version of
+[13:16] clean code and call it the output.
+[13:19] Okay, that's the y1 x1 pair
+[13:22] and then we get y2 x2 we get y3 x3 and
+[13:27] all the way. So at any point in time,
+[13:30] the relationship between X and Y, what's
+[13:33] the relationship between X and Y? If you
+[13:36] set it up like this as the input and the
+[13:37] output,
+[13:43] &gt;&gt; it's the set of uh standard deviations
+[13:45] and uh the values which you change for
+[13:48] each pixels. Those are like weights to
+[13:51] which you transform,
+[13:53] &gt;&gt; right? Or maybe I was looking for
+[13:54] something simpler which was that that's
+[13:56] correct. So what he's looking for is
+[13:58] really the the relationship between X
+[14:00] and Y. X is an image, any image, and Y
+[14:03] happens to be a slightly less noisy
+[14:05] version of the image.
+[14:07] The slightly less noisy is really,
+[14:09] really important.
+[14:12] You're not going from Killian code,
+[14:14] right? You're not going from the image
+[14:16] to full noise. That's an impossible
+[14:19] leap. You're going from the image to a
+[14:21] slightly noisy version of the image.
+[14:24] Okay, it is that slightly that allows
+[14:27] all the magic to happen.
+[14:30] So that's what we have.
+[14:33] And so here what we can do with these XY
+[14:35] pairs when you have an So here's the
+[14:38] thing, right? This is like a larger
+[14:40] comment about machine learning and deep
+[14:41] learning. Um
+[14:43] whenever you have basically what machine
+[14:46] learning deep learning are or really
+[14:47] it's like this this black box where if
+[14:50] you can find interesting input output
+[14:52] pairs you can learn a function to go
+[14:55] from the input to the output that's it
+[14:57] but this sounds kind of simple when I
+[14:59] describe it like that but there are like
+[15:01] some incredibly non-obvious ways of
+[15:04] applying this idea right so for example
+[15:06] a few years ago Google had this uh thing
+[15:08] which may actually be in production in
+[15:10] Google Sheets now where whenever you um
+[15:13] sort of choose a bunch of numbers, a
+[15:15] range of numbers in a spreadsheet and
+[15:17] and then go into another cell, it'll
+[15:19] immediately suggest a formula for you.
+[15:21] Where is that coming from?
+[15:24] It's because all the Google Sheets users
+[15:26] all over the world, they have been
+[15:28] creating all these numbers with
+[15:30] formulas, right? So, someone says,
+[15:32] "Look, wait a second. We have all this
+[15:33] data on people choosing a range of
+[15:36] numbers and then entering a formula. So
+[15:38] let's imagine the range is the input and
+[15:40] the formula as the output
+[15:43] and let's just give a million examples
+[15:45] of this pair and see if anything comes
+[15:46] out of it and boom you get that feature.
+[15:50] Okay. So similarly here
+[15:53] X is an image less noisy version of the
+[15:55] image. What that means is that we can
+[15:58] build a dnoising network.
+[16:02] Okay, we can take an image and we can
+[16:04] build a network using all these XY pairs
+[16:06] to slightly dn noiseise it.
+[16:10] Okay. Um and so all how do we do it? We
+[16:15] just run stocastic gradient to sit on
+[16:16] the data. We have a network. It has X
+[16:19] and Y and then Y is a slightly less
+[16:22] noisy version and then B.
+[16:26] Okay, you're just a network. It has a
+[16:27] bunch of weights. we have the we have
+[16:29] the right answer in terms of what the
+[16:30] images need to be u we can do stocastic
+[16:33] gradient descent or atom or something
+[16:34] and before you know it if you have
+[16:36] enough data you have a network which can
+[16:37] d noiseise anything you give it okay um
+[16:40] you had a question
+[16:41] &gt;&gt; why slightly
+[16:43] &gt;&gt; why slightly um we'll come back to that
+[16:45] question the the reason is that u in
+[16:48] general you you have to do what you can
+[16:51] to help the model and this is sort of
+[16:53] the proverbial there is an old adage you
+[16:56] can't cross a ditch in two jumps.
+[16:59] It's too big. So, right. So, you can't
+[17:02] do it. So, what you do is you create a
+[17:03] bridge to go from here to there. And so,
+[17:05] what you do is if you can slightly d
+[17:07] noiseise something really well. Well, I
+[17:10] can actually den noiseise anything you
+[17:11] want really well using that fundamental
+[17:13] capability as you will see in a second.
+[17:17] &gt;&gt; Just to follow up. So, if you go back
+[17:18] the last slide, I could have created the
+[17:21] same thing as that is my x1 and that is
+[17:24] my y. Then the second one is x2 and
+[17:26] still this is the y. So there is
+[17:28] effectively there is a learning there
+[17:30] that it could have taken from those
+[17:33] pairs and come back with okay this is
+[17:35] also a possibility this is also a
+[17:37] possibility and it found out that noise
+[17:40] matrix and it can subtract.
+[17:42] &gt;&gt; Yeah. So the thing is you want to make
+[17:44] sure that each time the amount of
+[17:46] learning it has to do is as bounded and
+[17:48] small as possible. If you give it some
+[17:51] starting point and an ending point and
+[17:52] keep moving this ending point, the gap
+[17:55] is still really high for the first
+[17:56] several of those starting points. That's
+[17:59] the problem.
+[18:01] Okay. So to come back to this, so we can
+[18:04] build a dinoising model. We can do this.
+[18:07] And now when you have once you have
+[18:08] built such a thing, you give it some
+[18:10] noisy thing and then it'll you know give
+[18:13] you a slightly less noisy version of it.
+[18:15] Okay, the resolution is going to go up
+[18:16] slightly if you do that. This of course
+[18:19] suggests the obvious way in which you
+[18:20] would use it which is that once you
+[18:22] train it we can solve this problem.
+[18:26] Okay. And how can we solve this problem?
+[18:29] So what you do is you start with pure
+[18:32] noise and then repeatedly dn noiseise
+[18:35] it.
+[18:37] Okay. You get that, you get that, and
+[18:39] then before you know it, Killian Kurt
+[18:41] has emerged from the fog,
+[18:43] right? It's pretty insane that it
+[18:46] actually works this idea.
+[18:52] So, so the model will generate a
+[18:54] sequence of less noisy images and the
+[18:56] final one you have is the answer. Okay.
+[18:59] Now there's a whole bunch of detail here
+[19:01] which I'm glossing over about okay how
+[19:05] many times must we run this loop to get
+[19:08] to a really good picture. The short
+[19:09] answer is you it initially it was like
+[19:12] you have to run it like a thousand
+[19:13] times. Each each each doising step was
+[19:16] like a baby step. You have to do it a
+[19:17] thousand times to get a really good
+[19:18] answer. Again research has been very
+[19:21] active in the area continues to be very
+[19:22] active. Now you can I think do it like
+[19:24] 50 steps or 100 steps. Right? But
+[19:26] diffusion models like this uh they tend
+[19:29] to take more time than a large language
+[19:31] model which is why if you give a prompt
+[19:33] to one of these models like midjourney
+[19:35] it will take some time for it to come
+[19:36] back with an image and and that the
+[19:38] reason for the delay is because it's
+[19:40] going through this you know incremental
+[19:42] dnoising loop. Yeah.
+[19:45] &gt;&gt; Uh from this we understand that each uh
+[19:47] the final noise output sample would be
+[19:49] very particular to each image in the
+[19:51] matrix. So I mean like say two if you
+[19:55] take two images the final we are getting
+[19:57] is the image in the after when we start
+[19:59] voicing it and the final output we get
+[20:02] is the noise sample will be too distinct
+[20:04] for each of them right
+[20:05] &gt;&gt; correct
+[20:05] &gt;&gt; so but when we are picking up image to
+[20:08] generate a diffusion model and we work
+[20:10] backwards we may not have the exact
+[20:12] thing available to us what was there
+[20:14] initially
+[20:15] &gt;&gt; no no the thing is we don't want to
+[20:17] necessarily regenerate images that were
+[20:18] in the training data right that's kind
+[20:21] of pointless we want to geneneral new
+[20:22] images
+[20:24] and for new images we just use start use
+[20:26] noise as a starting point
+[20:29] you know the fact that Killian code was
+[20:31] here and then the fully noised version
+[20:32] of Kian code is here that is used for
+[20:35] training and once you use it for
+[20:36] training you don't need it anymore
+[20:37] because you're not trying to recreate
+[20:39] Killian code again you want to create
+[20:41] new images which belong to the category
+[20:43] of stately college buildings and for
+[20:45] that all you you just grab noise send it
+[20:48] in it gives you a stately college
+[20:49] building end of
+[20:53] And because noise by definition is
+[20:55] different each time you pick it, it's
+[20:57] going to come up with a different
+[20:59] stately college building.
+[21:01] So the way I think about it is that uh
+[21:07] all right so you can think of it as this
+[21:09] right this is
+[21:12] so when you sample think of this as like
+[21:14] the noise distribution
+[21:17] each time you sample right there's a
+[21:20] little point you pick from here another
+[21:22] time you sample maybe you get a point
+[21:24] here right each is just you know nice
+[21:26] distribution that's it what actually
+[21:29] these things are doing is they are
+[21:31] mapping mapping it
+[21:34] to the distribution of stately college
+[21:35] buildings which might be in a you know
+[21:38] strange crazy distribution.
+[21:41] So each time you sample you just go from
+[21:43] here and you land at a point here
+[21:47] and when you go from here you know you
+[21:49] land at a point there.
+[21:53] That's what so what you have done is
+[21:54] when you when you take the training data
+[21:56] you basically created points here and
+[21:59] then found the matching noise here and
+[22:01] then flipped it for training as we have
+[22:03] seen before and once you're done with it
+[22:05] you basically have a mechanism for
+[22:07] transforming any entry in this
+[22:09] distribution of images to an entry in
+[22:12] this distribution of images. So it's a
+[22:15] way to transform one distribution to
+[22:17] another distribution. That's what's
+[22:18] going on. Um all right. Um so there was
+[22:22] a question. Yeah. And then we'll go.
+[22:26] &gt;&gt; I understand the going from noise to to
+[22:28] the image and back how you how the
+[22:30] training works. So my question is you
+[22:33] know in some of these models today you
+[22:35] have you know when you give it the noise
+[22:37] now to generate with an image for
+[22:40] example it could generate a human with
+[22:42] four fingers or you know stuff like
+[22:44] that. So is it that the that the model
+[22:47] that the training data is not just quite
+[22:49] enough to or more as robust enough to uh
+[22:53] generate that kind of detail? [cough]
+[22:56] Can you kind of talk through like what's
+[22:57] more?
+[22:58] &gt;&gt; Yeah. So so fundamentally what it's
+[23:00] doing is it actually does not understand
+[23:03] the notion of fingers and things like
+[23:04] that. Right? Because there is like we
+[23:07] haven't injected any domain knowledge
+[23:09] into this whole process by saying that
+[23:12] hey we need to generate you need to
+[23:13] generate a human body and here are the
+[23:16] semantics of what the human body is
+[23:17] right it's got uh five fingers and all
+[23:20] the anatomical stuff we're not giving
+[23:21] anything we literally giving it pixel
+[23:23] values bunch of pictures so everything
+[23:26] you're seeing is basically just coming
+[23:27] out of that very blind statistical
+[23:29] transformation process so it's so you
+[23:32] would expect that macrolevel details
+[23:34] will probably get it Right? Because
+[23:36] there are so many right answers. So
+[23:38] imagine it's actually, you know, it's
+[23:40] creating um the roof of a house. There
+[23:43] could be all kinds of variations in the
+[23:45] roof of the house and you would still
+[23:46] think it's a roof of a house, right?
+[23:48] Because there are many possible right
+[23:49] answers. But when it comes to five
+[23:51] fingers, there are not many possible
+[23:52] right answers, which is why you notice
+[23:53] the error very quickly. As far as the
+[23:55] model is concerned, it doesn't know,
+[23:56] right? It's just producing a
+[23:58] statistically plausible sample from that
+[24:00] distribution. And since we haven't
+[24:03] forced it to obey constraints like five
+[24:05] fingers and so on and so forth, it's not
+[24:06] going to do any of that stuff. It's an
+[24:08] unconstrained process. Now over time,
+[24:10] these things have gotten better and
+[24:11] better and that's because the data has
+[24:14] gotten better to your point. But I think
+[24:15] our approach to doing these things is
+[24:17] also getting better, right? There are
+[24:19] lots of ways to now steer it and control
+[24:21] it so it behaves the right way. And that
+[24:23] is actually part of what's happening as
+[24:25] well. So when we talk about how do you
+[24:27] actually give a text prompt and have it
+[24:29] build the image for that particular
+[24:30] prompt, we would we'll revisit this
+[24:32] question. Um okay, there was there were
+[24:35] more questions. Yeah.
+[24:38] &gt;&gt; Is there some randomness in the model
+[24:40] itself? Right. So if you gave it the
+[24:42] same noise image twice, will it actually
+[24:44] produce the same final image or will it
+[24:47] &gt;&gt; Yeah, there is randomness in the process
+[24:49] as well.
+[24:49] &gt;&gt; In the process process, exactly.
+[24:53] Um, so to actually that's a really good
+[24:56] point, but now I'm afraid to open my
+[24:59] laptop. I'm an iPad. One second.
+[25:02] All right.
+[25:04] Okay. So, what's going on here is that
+[25:06] if you um go to this thing
+[25:10] so I talked about we are transforming
+[25:13] from here to some crazy distribution
+[25:16] here, right? So, what happens that let's
+[25:18] say that this is the starting point for
+[25:20] the the noise input. This is your noise
+[25:22] input and then what it does what you
+[25:25] actually do is you go here
+[25:28] and then you take this point and then
+[25:29] you do a small sample next to it. So you
+[25:33] use this as like the mean value and then
+[25:35] sample around it and that's actually
+[25:37] what gets published in the user
+[25:39] interface. That's where the randomness
+[25:40] comes in.
+[25:42] Okay. So um
+[25:48] so back to this was there another
+[25:49] question somewhere.
+[25:52] &gt;&gt; Yeah.
+[25:53] &gt;&gt; Um it's okay.
+[25:56] &gt;&gt; Uh I was just wondering about the when
+[25:59] going when training on a on a clear
+[26:02] picture to go to a noisy image uh to
+[26:05] pull from a random sample like random
+[26:08] this sample probably pseudo random. I
+[26:10] was just wondering if it's like learning
+[26:12] relationships that are dependent on
+[26:13] pseudo randomness and so when it goes
+[26:16] from a noisy image back to pure image
+[26:19] it's dependent on that or it matters at
+[26:22] all.
+[26:22] &gt;&gt; Oh I see. So if I understand your
+[26:23] question what you're saying is that it's
+[26:24] pseudo random not actually random
+[26:27] &gt;&gt; and so therefore there is some signal in
+[26:29] the supposedly random generation is it
+[26:32] actually glomming onto that signal right
+[26:34] is the question. Theoretically, it's
+[26:37] probably possible, but in practice, it
+[26:38] really doesn't matter because we
+[26:40] basically say random is good enough for
+[26:42] our purposes. And in fact, in practice,
+[26:44] you will see it's not an issue.
+[26:47] Um,
+[26:48] okay. So, oh yeah, go ahead.
+[26:52] &gt;&gt; There's a quick question. when you're
+[26:53] doing uh like text to text, let's say
+[26:58] you're uh tokenizing the input, but here
+[27:01] you somehow have to identify that this
+[27:03] is Killian Cord and like a stately home
+[27:06] and this is just going from pixel image
+[27:09] to or like decoding a pixel image. Um
+[27:13] where does the the tag or tokenization
+[27:16] of like columns or fingernails or like
+[27:20] &gt;&gt; does nothing. It's learning everything
+[27:21] from the pixel values.
+[27:23] &gt;&gt; Everything.
+[27:23] &gt;&gt; Yeah. And this is sort of what I was,
+[27:25] you know, when I when Ike asked the
+[27:27] question about the four fingers, five
+[27:28] fingers thing, it has no idea of
+[27:30] fingers. It has zero knowledge about any
+[27:33] of these things. All it's seeing is a
+[27:34] bunch of photographs.
+[27:36] &gt;&gt; Okay. So when you when you type in say I
+[27:38] want a hand with green.
+[27:40] &gt;&gt; Oh, I see. So we haven't yet come to the
+[27:42] stage of okay, how do you actually steer
+[27:44] this image using your text prompt? It's
+[27:47] coming
+[27:48] &gt;&gt; right now. All we're saying is that
+[27:49] look, I'm going to give you a bunch of
+[27:51] uh photographs of a particular kind of
+[27:52] thing, stately college buildings and I
+[27:55] want to have a model which at the end of
+[27:56] the day I just poke it. Every time I
+[27:58] poke it, it gives me a stately college
+[27:59] building. That's it. Now I'm going to
+[28:01] actually start giving it text and saying
+[28:02] okay build the you know create the thing
+[28:04] I'm just telling you about that's coming
+[28:06] and that's sort of some additional magic
+[28:08] is going on to get that done. U okay so
+[28:12] this is what we have u and this is
+[28:14] called a diffusion model. Okay. And this
+[28:16] is the original paper that figured this
+[28:18] out. Um, and
+[28:21] the the process of actually creating
+[28:24] taking an image and creating noisy
+[28:26] versions of it to create a training data
+[28:28] is called the forward process. And then
+[28:30] what we did in reverse is called the
+[28:32] reverse process. Uh, check out the
+[28:34] paper. It's actually really well
+[28:35] written. Uh, and I recommend it. Now, in
+[28:38] practice, uh, some other researchers
+[28:40] came along shortly after this and made a
+[28:42] small improvement. turns out to be
+[28:45] actually a big improvement in practice
+[28:46] in terms of improving the quality of
+[28:48] what's being produced. And so what they
+[28:50] said is hey instead of training the
+[28:52] model to predict the less noisy version
+[28:53] of the image we actually ask it to
+[28:55] predict just the noise
+[28:58] in the input and then we will just
+[29:01] simply subtract the noise from the input
+[29:03] to get the image. So instead of saying
+[29:05] here is an X X is an image Y is the
+[29:08] noisy image we actually tell it here is
+[29:10] an image here is the noise that we added
+[29:12] to X to get the the noisy version and
+[29:14] then just predict the noise for me and
+[29:16] then once I get it I just do X minus
+[29:17] noise and I get the less noisy version
+[29:19] of the image. Okay, this feels
+[29:21] arithmetically equivalent but in
+[29:24] practice it ends up generating much
+[29:26] higher quality images and there's some
+[29:28] very interesting theory as to why that
+[29:29] works and so on and so forth and you can
+[29:31] read this paper if you're interested.
+[29:33] Okay, so if you actually look at what's
+[29:34] going on in most diffusion models today,
+[29:36] they're basically using an approach like
+[29:38] this. They're actually predicting each
+[29:40] time they predict noise and take it
+[29:41] away, subtract it. So iterative
+[29:43] subtracting of predicted noise.
+[29:47] That's what's going on. So all right, so
+[29:49] that's what we have. U now at this point
+[29:52] you may be wondering, okay, so far in
+[29:55] the semester, uh we have actually
+[29:57] learned how to take an image and then
+[29:59] classify it into one of you know 20
+[30:01] things, 10 things, whatever. We also
+[30:03] taken text and figured out what to do
+[30:05] things with it. We haven't yet talked
+[30:07] about how do you actually take an image
+[30:09] and the how can we get the output also
+[30:11] to be another image. We haven't done
+[30:13] that yet. Okay. So we have actually not
+[30:16] done image to image. How do you actually
+[30:18] build a neural network to do image to
+[30:20] images? And in the interest of time
+[30:22] you're not going to get into it
+[30:23] massively but I want to give you a quick
+[30:25] idea of how it works. So the the most
+[30:29] sort of I would say the dominant
+[30:31] architecture
+[30:33] to take an in image as an input and
+[30:35] produce an image as an output is called
+[30:36] the unit. Okay. And that's the
+[30:39] architecture we see here. So
+[30:42] so fundamentally if you look at the left
+[30:45] half so there's a left half to the
+[30:47] network and a right half to the network
+[30:48] hence the U. If you look at the left
+[30:50] half of the network it's it's a good old
+[30:53] convolutional neural network like the
+[30:55] kind we know and love. Okay. And the the
+[30:58] kind that we are very familiar with. So
+[31:00] you take an input image and then you run
+[31:02] it through a bunch of convolutional
+[31:04] uh convolutional blocks and then we do
+[31:07] some max pooling and then we keep on
+[31:09] doing it and at some point it becomes
+[31:11] smaller and smaller and we get something
+[31:13] you know like this which we are very
+[31:15] familiar with right the the big image
+[31:17] with three channels gets smaller and
+[31:20] smaller smaller but the number of
+[31:21] channels gets wider and wider. it
+[31:22] becomes sort of much smaller but much
+[31:24] deeper right it becomes like a 3D volume
+[31:26] and we have seen that again and again
+[31:29] right the left part is just a good old
+[31:31] convolutional with pooling layers and
+[31:33] then you come to the middle and then
+[31:35] from this point on what we do is we take
+[31:37] whatever this thing here and then we
+[31:40] essentially reverse the process we go
+[31:43] from the small things which are really
+[31:44] deep to slightly bigger things that are
+[31:46] a little less steep and so on and so
+[31:49] forth till we get the original size back
+[31:50] again Okay. And we do that using the
+[31:54] some an inverse of the convolution layer
+[31:57] called an upconvolution or deconvolution
+[31:59] layer. Okay. And you can check out 9.2
+[32:02] in the textbook to to to understand how
+[32:05] it's done. It's it's also called con 2D
+[32:07] transpose.
+[32:09] Okay. It's a very similar idea and I'm
+[32:12] not going to get into the details here
+[32:13] but you essentially do an inverse of a
+[32:15] convolutional operation to get the size
+[32:17] to come back to the bigger size and you
+[32:19] do it gradually till the output you have
+[32:22] matches the size of the input that came
+[32:24] in.
+[32:25] Okay, so image gets smaller and smaller
+[32:27] into a thing and then you just blow it
+[32:29] back up again to get an image back. So
+[32:31] that is the unit. Now there's very one
+[32:34] very important thing that happens in the
+[32:36] unit, right? which is
+[32:39] you see these connections, right?
+[32:43] Basically, what they do is at every step
+[32:45] when you're coming back up in the right
+[32:47] half, you actually attach whatever was
+[32:50] in sort of the mirror image of the
+[32:53] original input as we processed on the
+[32:54] left side, we attach it to this side as
+[32:56] well. Remember I talked about this whole
+[32:59] notion of a residual connection back,
+[33:01] you know, many classes ago where I said
+[33:03] when uh when an input goes through each
+[33:06] layer of a neural network at one point,
+[33:09] let's say you're in the 10th layer,
+[33:10] you're only seeing what is the ninth
+[33:13] layer is produced for you. That's all
+[33:14] you're working with. But would it be
+[33:16] nice if the the the 10th layer actually
+[33:18] had access to the eighth layer, the
+[33:19] seventh layer, the sixth layer, the
+[33:21] fifth layer? Heck, why not the input,
+[33:23] right? Because the more information it
+[33:25] has, the more able it's probably to do
+[33:27] whatever it can with the input it's
+[33:28] giving. Why restrict it to only the
+[33:31] input of the the output of the previous
+[33:33] layer? Why can't we give it everything
+[33:34] that has came before it? Now giving
+[33:36] everything is too much. But we can be
+[33:37] selective in what we give it. Right? So
+[33:40] what these folks decided I'm sure after
+[33:41] much experimentation is that if they
+[33:44] actually attach whatever was coming out
+[33:46] of this layer to this layer before it
+[33:49] goes through the output, it really
+[33:51] helped. Similarly, this thing gets
+[33:53] attached and so on and so forth. And it
+[33:55] kind of makes sense. You know, why force
+[33:57] it to figure out everything it has to
+[34:00] figure out just from this thing that
+[34:01] came in, right? Let's give this that
+[34:03] that. Let's also give a little here, a
+[34:06] little here. So, these residual
+[34:07] connections are a huge building block
+[34:09] for why these things work as well as
+[34:10] they do. Okay? And in general, giving a
+[34:14] layer as much information as you can
+[34:15] give it is always a good idea, but you
+[34:17] can't go nuts, right? Because then you
+[34:19] have much more parameters and all kinds
+[34:20] of stuff happens. So there is a bit of a
+[34:22] balance you have to strike and this was
+[34:23] the balance struck by these researchers.
+[34:25] And so this thing was originally
+[34:27] invented for some medical segmentation
+[34:30] use cases but it's just heavily used for
+[34:32] everything now. It's a really powerful
+[34:35] architecture. Uh questions
+[34:39] &gt;&gt; uh can we have example of like in what
+[34:41] scenarios we use this kind of
+[34:44] &gt;&gt; anytime you have an image to image
+[34:46] &gt;&gt; like what kind of conversion do you get
+[34:49] image to image? or like what kind of
+[34:50] examples of use cases. Let's say that
+[34:52] for example you want to take an image
+[34:54] and like a black and white image and you
+[34:55] want to colorize it
+[34:58] for instance boom you unit you want to
+[35:00] take an image and make it a higher
+[35:02] resolution image unit you want to take
+[35:04] an image and for every pixel in the
+[35:06] image you want to classify it into you
+[35:08] know one of 10 things. So anytime when
+[35:12] you want the output shape the shape of
+[35:14] the output to be basically the same
+[35:16] shape as the input but with other data
+[35:18] you need to use this.
+[35:20] Yeah.
+[35:25] &gt;&gt; But this logic of having access to all
+[35:28] the previous iterations
+[35:30] &gt;&gt; not iterations
+[35:31] &gt;&gt; all the previous layers
+[35:33] &gt;&gt; right the outputs of the previous layers
+[35:35] &gt;&gt; layers. Uh but this would also help uh
+[35:40] clean up and give better categorization
+[35:42] like does it always have to be an image
+[35:44] to image?
+[35:45] &gt;&gt; No. No. In fact, if you look at restnet,
+[35:47] restnet is the one in fact that
+[35:49] pioneered the idea of the residual
+[35:50] connection. So we use it for restnet. We
+[35:53] actually use the the transformer stack
+[35:56] if you remember it goes through the self
+[35:58] attention layer. It comes out the other
+[36:00] end and then we add the input back to it
+[36:03] and then we send it through layer.
+[36:05] So you will see that this residual
+[36:07] connection is sitting in two different
+[36:08] places in a single transformer block. So
+[36:11] it's extremely heavily used. There is
+[36:13] something called deep and wide network
+[36:15] if I remember or denset which uses the
+[36:17] same trick. In fact if you when you're
+[36:20] working with structured data right good
+[36:22] old say linear regression and you've
+[36:25] looked at your data and you come up with
+[36:26] all kinds of very clever features you
+[36:28] know I'm going to look at price per
+[36:30] square foot right you do a bunch of
+[36:32] feature engineering and you have a bunch
+[36:33] of new features. Well, you should take
+[36:36] your old features and your new features
+[36:38] and send both in.
+[36:40] Why send only the new stuff that you
+[36:42] have concocted? Why can't you send
+[36:43] everything in? That's the idea.
+[36:47] All right. Um, so let's come back here.
+[36:53] Now we have seen how to generate a good
+[36:54] image. Okay. Now let's figure out how to
+[36:57] steer it or condition it with a text
+[36:59] prompt, right? Because that's sort of
+[37:00] the holy grail.
+[37:02] So we want to take
+[37:05] so here's some intuition. We want to
+[37:08] take the text prompt into account and
+[37:09] obviously generate the image. Now
+[37:11] imagine if we had like a rough image
+[37:14] that corresponds to the text prompt.
+[37:16] Just imagine. So the text prompt is you
+[37:18] know cute laborator retriever and you
+[37:21] have like a very noisy image of a
+[37:22] laboratory retriever. This just happens
+[37:24] to be handy. You have it. Well now
+[37:26] you're in good shape because you just
+[37:28] feed that in and your system will denise
+[37:30] it for you. Right? Right? You can get a
+[37:32] better image. That's pretty easy. So,
+[37:34] but obviously in reality, you don't have
+[37:36] a rough image. In fact, you're trying to
+[37:37] create one of those things in the first
+[37:38] place. We don't. So, but what if we had
+[37:41] an embedding for the prompt that's close
+[37:45] to the embeddings of all the images that
+[37:47] correspond to the prompt. So, let's take
+[37:49] a prompt and let's imagine all the
+[37:52] images in the in the universe that
+[37:54] correspond to that prompt. Okay?
+[37:57] And now further imagine because
+[37:58] everything is a vector. Everything is
+[38:00] embedding in our world that that image
+[38:02] has an embedding.
+[38:04] All sorry the text prompt has an
+[38:06] embedding. Every image has an embedding
+[38:09] and we have somehow calculated these
+[38:12] embeddings so that the text prompts
+[38:14] embedding is smack where all the image
+[38:17] embeddings are.
+[38:20] We will get to how we actually do it in
+[38:21] a in just a moment. But conceptually
+[38:23] imagine if we had an embedding if you
+[38:26] could calculate embeddings for text and
+[38:28] embeddings for images. So they all live
+[38:30] in the same space.
+[38:32] Okay. So if we feed this embedding to a
+[38:36] dinoising model because that text
+[38:39] embedding is sitting in the same space
+[38:41] as all the image embeddings that it
+[38:44] corresponds to. Maybe our model can just
+[38:47] d noiseise that embedding and give you
+[38:49] what you want.
+[38:51] Okay, so since this embedding is already
+[38:54] close to the embeddings of the things we
+[38:55] want to generate, maybe you'll just get
+[38:57] it done.
+[38:59] So ultimately we want to generate an
+[39:00] image and if we had an embedding for
+[39:02] that image, we could generate the image
+[39:03] from the embedding and we use the text.
+[39:07] So we go from text to embedding which
+[39:09] happens to live in the same space as all
+[39:11] the embeddings of the images we care
+[39:12] about. And then from that image
+[39:14] embedding, we go to the final image.
+[39:15] Okay, this is a bunch of me talking and
+[39:18] handwaving. it'll all become very clear
+[39:20] but that's sort of the rough intuition.
+[39:22] Okay. So, so what we'll know is we'll
+[39:25] describe an approach to calculate an
+[39:26] embedding for any text any piece of text
+[39:29] that is close to the embeddings of the
+[39:31] images that correspond to that piece of
+[39:34] text. So this is the problem we're going
+[39:36] to solve. There's a bunch of text
+[39:38] conceptually there are a whole bunch of
+[39:39] images that are describe that text and
+[39:42] we're going to now create embeddings so
+[39:43] that that is close to all the embeddings
+[39:46] of those images. Right? It feels kind of
+[39:48] like almost impossible that you can
+[39:50] actually do something like this, but
+[39:52] there's a very clever idea uh that
+[39:56] OpenAI came up with that tells you how
+[39:58] to do it. So, here's what we're going to
+[39:59] do. So, let's say we have an image and a
+[40:02] caption. So, here's an image. Uh here's
+[40:05] a caption, right? And we need some way
+[40:08] to take that piece of text and run it
+[40:10] through some network and create a nice
+[40:12] embedding from it. Okay? Similarly, we
+[40:15] want to take this image, run it through
+[40:16] some network and create an embedding
+[40:17] from it. Okay. Now, first first
+[40:19] question, how can we compute embeddings
+[40:20] from a piece of text? First question,
+[40:22] how can we comput an embedding from a
+[40:23] piece of text? You know the answer.
+[40:27] Run through a transformer. Piece of
+[40:30] cake. We know how to do that, right? U
+[40:34] right in particular, you can do
+[40:35] something like BERT. And for an image
+[40:37] encoder, you just run it through
+[40:38] something like restnet like the the
+[40:41] penultimate layer, right? one of the
+[40:42] final layer is going to be a very good
+[40:44] representation of that image. You get
+[40:46] another embedding. So using the building
+[40:48] blocks we already know, we can create
+[40:50] embeddings very quickly from these
+[40:52] things. Okay, but if you just take a
+[40:55] piece of text and run it through a bird
+[40:56] and you take an image and run it through
+[40:58] SNET, you're going to get some
+[40:59] embeddings. But why the heck should they
+[41:01] be related?
+[41:04] They were not trained together. So
+[41:06] there's no basis for them to be related.
+[41:08] They would just be some two embeddings.
+[41:10] Maybe they are kind of similar. Maybe
+[41:11] they're not. We don't know. There's no
+[41:13] reason to expect that they're going to
+[41:14] be similar. Okay, they're just two
+[41:16] embeddings.
+[41:20] Now, what we want to do is but once we
+[41:22] have these, we need to make sure the
+[41:24] embeddings that comes out of these two
+[41:26] things satisfy two very important
+[41:27] requirements.
+[41:32] We want to make sure that if you give it
+[41:33] an image
+[41:35] and a caption that describes that image.
+[41:39] So you have an image and a caption that
+[41:40] describes that image, we want to make
+[41:42] sure that the embeddings that come out
+[41:43] of these two boxes, they are as close to
+[41:45] each other as possible.
+[41:47] Okay? Given an em given an image and a
+[41:50] caption that describes it, that's the
+[41:51] connection. They have to be close to
+[41:53] each other. And conversely, if you have
+[41:56] an image and a caption that's totally
+[41:58] irrelevant,
+[42:00] right? A train rounding a bend with a
+[42:02] beautiful fall foliage all around,
+[42:03] right? Clearly irrelevant. Those
+[42:05] embedings should be far apart.
+[42:08] that it to really make sense,
+[42:10] right? Pairs of related things should be
+[42:12] together, irrelevant things should be
+[42:13] far apart. So if you can find embeddings
+[42:16] that satisfy these two criteria, maybe
+[42:18] we will be in the game. Okay. So now
+[42:23] this ensures that the text embedding and
+[42:24] the image embedding are referring to the
+[42:26] same underlying concept. Right? This
+[42:28] these requirements will enforce that. Uh
+[42:31] and so the embedding for any text prompt
+[42:32] is close to the embedding for all the
+[42:34] images that correspond to that prompt.
+[42:38] So the question is how do we do this? Uh
+[42:41] how can first of all how can we tell how
+[42:43] close two embeddings are? You know the
+[42:44] answer to this what's the answer
+[42:47] &gt;&gt; correct cosine similarity right? We use
+[42:49] the cosine similarity of the embeddings.
+[42:51] U so we know how to measure closeness.
+[42:54] So the question is how can we compute
+[42:55] embeddings that satisfy the two
+[42:56] requirements and openai uh built a model
+[42:59] called clip which is very famous uh to
+[43:02] solve this problem right it stands for
+[43:04] contrastive language image pre-training
+[43:07] uh and this forms the basis for a whole
+[43:08] bunch of models that have sprung up
+[43:10] after this called blip and blip 2 and so
+[43:12] on and so forth but this is the
+[43:13] fundamental idea
+[43:15] okay so
+[43:17] this is how clip works we uh what they
+[43:20] did is they took a a 12 block 12 layer 8
+[43:25] head transformer cosal encoder stack as
+[43:28] a text encoder
+[43:30] uh okay now you understand this right
+[43:33] that's what it is eight layer I mean
+[43:35] sorry 8 head 12 layer transformer causal
+[43:36] encoder TC stack um and and that's a
+[43:39] text encoder so we send any piece of
+[43:41] text through it right you get the next
+[43:43] word prediction embedding and that's the
+[43:45] embedding you're going to use uh and
+[43:48] they took restnet 50 and made it the
+[43:50] image encoder they took rest 50 chopped
+[43:53] off the top and whatever was left is the
+[43:55] the image encoder. Okay,
+[43:59] then they initialized with random
+[44:00] weights these things and then they
+[44:03] grabbed they grab a batch of image
+[44:05] caption pairs. So in this example, let's
+[44:07] say that we have these three images u
+[44:09] and I have captions to go with these
+[44:11] images. Okay, we have these three things
+[44:14] and this is the key step. They run the
+[44:18] images through the image encoder and the
+[44:20] captions through the text encoder and
+[44:22] get these embeddings. Okay, it's a
+[44:23] forward pass. You send it through this
+[44:26] network, you get two embeddings. Um, and
+[44:29] then this is what they do. With these
+[44:32] embeddings, they calculate the cosine
+[44:34] similarity for every image caption pair.
+[44:36] Okay? And so imagine something like
+[44:38] this. So you have these three captions,
+[44:41] you have these three images, and those
+[44:43] are the embeddings.
+[44:45] uh and then they calculate the cosine
+[44:47] similarity for every one of those
+[44:49] things.
+[44:51] It took me like 5 minutes or 10 minutes
+[44:52] to do this PowerPoint. You're welcome.
+[45:00] Particularly trying to get this comma to
+[45:02] line up is a real pain in the neck. So,
+[45:05] so all right. So, we have this here.
+[45:08] Okay. And now what we want to do is uh
+[45:11] we want these scores to be as high as
+[45:13] possible, right? Because the scores in
+[45:16] the diagonal are the ones where for the
+[45:18] matching picture and caption,
+[45:21] right?
+[45:23] Those are the those are the those are
+[45:24] the the scores for the matching pairs of
+[45:26] embeddings. We want them to be as high
+[45:28] as possible.
+[45:30] Okay. Um
+[45:32] so so we want to maximize the sum of the
+[45:35] green cells, right? These are the green
+[45:37] cells the diagonal. So, so if I if you
+[45:40] want to write it as a loss function
+[45:42] because the loss function is always
+[45:43] minimization, we basically say minimize
+[45:46] the negative sum of the green cells.
+[45:50] Okay, so the question is would this loss
+[45:52] function do the trick?
+[45:58] Seems reasonable. You want to make sure
+[46:00] the related things are really close
+[46:03] together. So you want to maximize
+[46:07] uh if that was the only part of the loss
+[46:09] function, wouldn't it just kind of
+[46:10] squish everything to the same spot in
+[46:12] the space?
+[46:13] &gt;&gt; Correct.
+[46:14] What it's going to do is it's going to
+[46:16] basically ignore the input.
+[46:20] The optimizer can simply ignore the
+[46:21] input, make all the embeddings the same.
+[46:24] For example, it can just make all the
+[46:25] embedding zero.
+[46:28] That's it. And then now we have a
+[46:30] perfect cosine similarity for
+[46:32] everything. For a any pair of image and
+[46:35] captions, the cosine similarity is going
+[46:36] to be one. It's perfect, right? So
+[46:38] clearly that's not enough. This is by
+[46:41] the way is called model collapse, right?
+[46:44] So to prevent it from doing that, we
+[46:46] need to do one more thing to the loss
+[46:47] function. Any guesses?
+[46:51] &gt;&gt; Yeah.
+[46:53] &gt;&gt; Uh make the images that aren't related
+[46:56] not have a cosine similarity.
+[46:58] &gt;&gt; Exactly. Right. Exactly right. So what
+[47:00] we want to do is we want the scores of
+[47:02] the red stuff to be as small as
+[47:05] possible.
+[47:07] We want the green stuff to be as much as
+[47:09] possible and the red stuff to be as
+[47:10] small as possible.
+[47:12] Together it'll get the job done.
+[47:16] Okay. And so um so we want to maximize
+[47:20] the sum of the green cells and minimize
+[47:22] the sum of the red cells. So the
+[47:24] equivalent loss function is minimize the
+[47:26] sum of the red cells and the negative
+[47:28] sum of the green cells. That's it. So
+[47:31] all clip does is that it just grabs a
+[47:34] batch of image caption pairs, runs it
+[47:37] through the networks, calculates the
+[47:38] embeddings and calculates this sum of
+[47:41] the stuff here and that is your loss and
+[47:44] then back propagates through the
+[47:45] network. Boom. Batch batch batch. Do it
+[47:48] a whole bunch of times. And OpenAI did
+[47:50] this with uh oh this is the official
+[47:53] picture from the open from the paper
+[47:55] which is worth reading by the way right
+[47:57] it comes in text encoder you get these
+[47:59] uh embedding vectors image encoder and
+[48:02] then boom the diagonal is maximized and
+[48:05] the off diagonals are minimized
+[48:07] and they did it with 400 million image
+[48:10] caption pairs scraped from the internet.
+[48:14] 400 million.
+[48:16] By the way, you folks who work in the
+[48:18] space may know this really well, but uh
+[48:20] one very easy way to get a caption for
+[48:23] an image, right? You we see images, but
+[48:26] where do you think the captions come
+[48:27] from? Where did they get those captions?
+[48:29] They didn't obviously they didn't ask
+[48:30] people to manually label each image of
+[48:32] the caption. Where do you think they got
+[48:33] it from?
+[48:35] &gt;&gt; Google search.
+[48:36] &gt;&gt; Uh Google search can help but why does
+[48:39] Google search actually find the caption?
+[48:41] How does it because Google search is not
+[48:42] creating the caption? um
+[48:45] &gt;&gt; take it from the alt text on the images.
+[48:47] &gt;&gt; Correct. Alt text. So a lot of folks for
+[48:50] accessibility reasons they have alt text
+[48:52] right on all the images they create. A
+[48:54] lot of people have alt text in their
+[48:56] images they publish on the web and
+[48:58] that's what we use. And the alt text
+[49:00] actually ends up being a a more verbose
+[49:03] description of the image than a typical
+[49:05] caption which tends to be much briefer.
+[49:07] And for us more verbose longer the
+[49:10] better because there's more stuff for
+[49:11] the bottle to learn from.
+[49:14] Um, so that's how they built clip.
+[49:17] And so now what we do is we use we can
+[49:19] use clip's text encoder by itself,
+[49:22] right? We can send in any text and get
+[49:24] an embedding that is close to the
+[49:25] embedding of any image that described by
+[49:28] the text.
+[49:31] Okay. Now, by the way, clip can be used
+[49:33] for zeros image classification.
+[49:37] And what I mean by zeroshot image
+[49:39] classification, I'll I'll walk through
+[49:40] the picture in just a second, is that
+[49:42] typically when you want to build an
+[49:43] image classifier, right, you can get a
+[49:45] whole bunch of training data of images
+[49:47] and their labels and then we train them,
+[49:50] right? Maybe you take something like
+[49:51] restnet, chop off the top, attach our
+[49:54] own output head and train, train, train.
+[49:56] Boom, you have a classifier. But the
+[49:58] only problem with that is let's say that
+[50:00] tomorrow so today for example you had
+[50:02] five classes in your problem and
+[50:04] tomorrow somebody comes along and says
+[50:06] oh actually we have a sixth category
+[50:09] right what do you do then well you have
+[50:10] to go back to the drawing board and
+[50:11] retrain the whole thing with six labels
+[50:13] now not five because your problem has
+[50:15] changed would it be great if you had a
+[50:17] classifier where you just come to it and
+[50:20] say here's an image and here are the six
+[50:22] possible labels I want you to pick from
+[50:23] pick one from me and you want to be able
+[50:26] to give it a different set of labels
+[50:27] those each time and it'll just use the
+[50:30] labels you're giving it and the image
+[50:32] and figures out which which label
+[50:33] corresponds to the image you just fed it
+[50:35] that would be an insanely flexible image
+[50:38] classification system right and that's
+[50:40] what I mean by zeroshot image
+[50:42] classification and you can use clip to
+[50:44] do zero short image classification
+[50:47] the now how you do it is actually in the
+[50:50] picture though not very clearly done
+[50:52] anyone wants to
+[50:58] How can you use clip to build a like a
+[51:01] infinitely flexible image classifier?
+[51:12] &gt;&gt; Um I mean the text input was like was
+[51:14] trained vert right? So in the same way
+[51:16] vert can handle words never seen before
+[51:19] does it essentially do that? Sorry, say
+[51:21] that again. The second part
+[51:22] &gt;&gt; you're saying you're saying it sees a
+[51:24] text input with something it's never
+[51:25] seen before, right? Yeah.
+[51:26] &gt;&gt; Okay. So, in the BERT model, which is
+[51:28] where where it came from, in the text
+[51:30] encoding in the BERT model, I think we
+[51:32] talked about when it sees a word it
+[51:35] doesn't know that it's never seen
+[51:36] before, it can use the the context words
+[51:39] around it to try to
+[51:41] &gt;&gt; Right. Right. So, but but here, just to
+[51:43] be clear, I I want you to use clip that
+[51:46] we just built, right? And assume clip
+[51:49] can see any knows all the words because
+[51:51] it's been trained on a big vocabulary.
+[51:53] You can give it any text you want. It'll
+[51:54] create an embedding from it. That's the
+[51:57] key capability.
+[52:02] &gt;&gt; So it creates a text embedding for
+[52:06] &gt;&gt; Yeah.
+[52:06] &gt;&gt; because like and then for your image.
+[52:11] So comparing similarity scores between
+[52:14] the two the image is complete but the
+[52:15] text is not complete. there'll be
+[52:17] missing pieces and then make some
+[52:18] prediction using this.
+[52:21] Why is there a missing piece in the
+[52:22] text?
+[52:24] &gt;&gt; Because um the image the the text
+[52:28] the text does not contain the class. Um
+[52:31] and then but for the image the way it
+[52:34] was trained it was trained like with
+[52:36] pairs with class including
+[52:38] &gt;&gt; right but we actually know the class now
+[52:40] because so the use case is that I come
+[52:42] to you with an image and I say here are
+[52:45] the seven possible labels for this image
+[52:48] and each label is a piece of text.
+[52:51] So you can you actually have seven
+[52:53] pieces of text and an image and all I
+[52:55] want clip to do is to tell me okay the
+[52:58] seventh the fourth label is the right
+[53:00] one for this image
+[53:03] but you're on the right track
+[53:08] once you see how it's done you'll be
+[53:09] like yeah of course
+[53:13] might not be understanding something but
+[53:15] wouldn't you just pick the embedding
+[53:16] that's the closest to the like the the
+[53:18] text embedding that's the closest to the
+[53:20] image embedding Correct. You're not
+[53:22] missing anything. That's the right
+[53:23] answer. Well done.
+[53:26] Come on people. Can you applaud our
+[53:27] fellow here? [applause]
+[53:30] You folks are hard to impress.
+[53:32] That's exactly what we do. So here
+[53:38] the the key thing to remember the key
+[53:40] thing to keep in your head is that when
+[53:42] you a label is just text,
+[53:45] dog, cat, right? It's just text. So you
+[53:47] can just imagine taking each label with
+[53:50] which in this case is plane car dog
+[53:52] whatever for each one of them you create
+[53:54] an embedding you get t1 through whatever
+[53:57] if you have n labels for the image you
+[53:59] just have one embedding i and then you
+[54:01] just create the cosine calculate the
+[54:03] cosine similarity and whichever is the
+[54:04] highest number you say okay it's a dog
+[54:06] that's it
+[54:09] it's super just imagine the level of
+[54:11] flexibility here
+[54:15] so that's a a side use of clip unrelated
+[54:18] to diffusion models but that's just
+[54:20] thought it's really clever so I wanted
+[54:21] to share that okay good u now let's see
+[54:23] how we can actually use this entire
+[54:25] capability to go to solve the original
+[54:27] problem we set out to solve which is can
+[54:29] we steer the diffusion model to create
+[54:31] an image based on a particular prompt we
+[54:33] give it um so now remember if you go
+[54:37] back to how we did it we created all
+[54:39] these training pairs of x and y based on
+[54:41] you know the the noising the image x is
+[54:44] the image y is the less noisy version of
+[54:46] image. So what we can simply do is we
+[54:51] can actually change the input so it
+[54:53] becomes the image and then the clip text
+[54:56] embedding of the caption for that image.
+[54:59] So you have an image and you have a
+[55:00] caption. You take the caption run it
+[55:02] through clip you get an embedding. By
+[55:05] definition that embedding is in the
+[55:07] lives in the same space as all the
+[55:09] images that correspond to that caption.
+[55:13] Right? So you just attach you
+[55:15] concatenate the embedding of the clip
+[55:18] output of a caption along with the
+[55:20] image. You say make that the new input.
+[55:22] Now Y continues to be the less noisy
+[55:24] version of the image or as we saw
+[55:26] earlier it could be just the noise
+[55:27] component of the image. Okay, this is
+[55:30] the new XY pair that we have. And so now
+[55:34] the model is you send the clip X
+[55:36] embedding the image X send it through
+[55:39] noisy version of the image and you keep
+[55:41] on training it for a while. Once your
+[55:43] model is trained for when you want to
+[55:44] use it for inference for a new uh
+[55:46] prompt, you just give it you know
+[55:49] Killian quoted MIT during the springtime
+[55:51] along with a bunch of noise goes in it
+[55:55] starts dinoising it. But because this
+[55:57] embedding of this thing thanks to clip
+[56:00] lives in the same image space as all Ken
+[56:02] code embeddings clean code images at
+[56:05] some keep on doing it for a while at
+[56:07] some point you'll get Kian code.
+[56:11] That's how they do it. That's how they
+[56:12] steer the image. It's a two-step
+[56:15] process. You create all these clip
+[56:16] embeddings uh which clip was a
+[56:19] breakthrough in my opinion because they
+[56:21] it was one of the maybe the first
+[56:22] example. I don't know if it's the very
+[56:24] first but one of the early examples of
+[56:26] saying we have different kinds of data.
+[56:28] We have images, we have captions, we
+[56:30] have text. How do we create embeddings
+[56:32] for every one of these very different
+[56:34] data types that all happen to live in
+[56:36] the same space, the same concept space?
+[56:38] That was the key idea. And if you look
+[56:40] at the modern multimodal large language
+[56:42] models, they are all based on the same
+[56:44] exact idea.
+[56:46] So it's very powerful this approach.
+[56:49] Yeah. Now I understand this for images,
+[56:51] but for video generation models like
+[56:54] Sora, do they have some sort of
+[56:56] underlying physics structure or do they
+[56:58] learn the physical representations?
+[57:00] &gt;&gt; There's a lot of debate on the internet
+[57:02] about this stuff. Um they haven't
+[57:04] published the results, the full
+[57:05] technical report yet. So we don't know
+[57:07] for sure but the consensus seems to be
+[57:09] no it's not they are not using a physics
+[57:11] engine what they have done uh and again
+[57:14] this may be wrong once the report comes
+[57:15] out we'll know for sure but uh people
+[57:17] what people are saying computer vision
+[57:19] experts is that it was has been trained
+[57:22] on a lot of video game data
+[57:25] uh along with actual videos and so on
+[57:28] and if you and the corpus of training is
+[57:30] so massive that it has basically learned
+[57:32] to mimic certain physics aspects to it
+[57:35] just as a side effect much like LLM you
+[57:38] train them on a large amount of text
+[57:39] data they begin to start to do things
+[57:41] which you didn't anticipate that they'll
+[57:43] do right so for example I read this I
+[57:46] thought it's a really great example of
+[57:48] what is surprising about large language
+[57:50] models is not that you know you train
+[57:52] them on a b bunch of high school math
+[57:54] problems and then you give it a new high
+[57:56] school math problem it can actually
+[57:57] solve it that's not surprising you give
+[57:59] it a whole bunch of high school math
+[58:00] problems in English then you ask it to
+[58:03] read a bunch of French literature and
+[58:05] then you give French high school math
+[58:07] will solve it. That is that is the new
+[58:08] news, right? So similarly here I think
+[58:12] the expectation is that it's not
+[58:13] actually using a physics engine under
+[58:15] the hood. It may have used a physics
+[58:16] engine to actually come up with the
+[58:17] videos and renderings but there are no
+[58:20] physics constraints in the model itself.
+[58:22] It just comes out of the training
+[58:23] process. That's the current view. Once
+[58:26] the technical report comes out, we'll
+[58:27] know for sure what they actually did.
+[58:30] U
+[58:33] &gt;&gt; so quick question about stability. It's
+[58:36] claiming to be a little bit more real
+[58:37] time in their image generation. Um, so
+[58:40] &gt;&gt; you mean stable diffusion?
+[58:41] &gt;&gt; Yeah, stable diffusion. So, are they
+[58:43] jumping through the noise more quickly
+[58:45] or are they kind of like pre-prompting
+[58:46] it and kind of trick?
+[58:47] &gt;&gt; Very good question and there's a very
+[58:48] key trick. It's coming.
+[58:50] &gt;&gt; Um,
+[58:52] &gt;&gt; so here the example of the noise is
+[58:55] normal distribution. However, if we have
+[58:57] changed the noise distribution, is it
+[59:00] change the result? Oh, you mean if you
+[59:02] change it to like a pson or some other
+[59:04] distribution, it'll definitely change
+[59:05] the results because u if you look at the
+[59:08] underlying math of why this works, it
+[59:10] heavily depends on the Gaussian
+[59:11] assumption.
+[59:13] &gt;&gt; Yeah. Um there was another question
+[59:15] somewhere here.
+[59:18] &gt;&gt; Um you may not know the answer because
+[59:20] the technical report out, but could it
+[59:21] be in terms of video generation sort of
+[59:23] analogous to going from like one fuzz
+[59:26] one noisy image to another? like you're
+[59:28] almost doing a series of still images
+[59:30] and learning how to
+[59:31] &gt;&gt; No, I think that I think people are sure
+[59:33] is is how it's done. So, basically you
+[59:35] think think of the video as just a
+[59:36] series of frames, right? And each frame
+[59:39] is an image and there is a sequentiality
+[59:41] to it. Um, which is where the
+[59:43] transformer stack will come in because
+[59:44] it handles sequentiality. So, in general
+[59:47] video stuff typically operates on frame
+[59:50] by frame which is just an image. So,
+[59:53] that is definitely there. What we don't
+[59:54] know is if they also used some
+[59:57] understanding of the fact that for
+[59:59] example that if an object is dropped it
+[01:00:02] has to fall to the earth in a certain
+[01:00:04] rate or if an object goes behind another
+[01:00:06] object you can't see the object anymore
+[01:00:08] right things like that which we take for
+[01:00:10] granted um the question is are they
+[01:00:12] using it and the consensus seems to be
+[01:00:15] uh in the absence of an actual technical
+[01:00:17] report that no they're not doing it
+[01:00:18] because there are lots of examples on
+[01:00:20] Twitter where people will show a Sora
+[01:00:22] video in which it's not obeying the laws
+[01:00:24] of physics. So you take like a beach
+[01:00:26] chair and then put it in the sand. You
+[01:00:28] see the sand come through the base of
+[01:00:30] the beach chair, right? Or you take an
+[01:00:32] object and put it behind an object. You
+[01:00:33] can still see the object even though the
+[01:00:35] original object is opaque. So you be
+[01:00:37] seeing some evidence that no no it's not
+[01:00:38] obeying the laws of physics. What you're
+[01:00:39] seeing is just an amaz
+[01:00:46] fingers without knowing there has to be
+[01:00:47] only five fingers.
+[01:00:50] Um
+[01:00:51] okay. All right. So we let's keep going
+[01:00:55] now. Um so this there was another paper
+[01:00:58] afterwards and this is the original
+[01:01:00] paper which took that idea of the
+[01:01:02] diffusion model and then diffusion is
+[01:01:05] very slow as Olivia you pointed out. So
+[01:01:07] the question is can we make it much
+[01:01:08] faster? Right? So what they did and I'm
+[01:01:11] not going to get into this whole thing
+[01:01:12] here. I just want to highlight a couple
+[01:01:14] of things. The first one is that um
+[01:01:18] first of all notice that you see unit
+[01:01:20] here. So it they are using a unit right
+[01:01:23] to go from image to image.
+[01:01:25] The second thing is that the clip
+[01:01:28] embedding of the text prompt is
+[01:01:30] basically is woven meaning it's
+[01:01:32] incorporated into the w the into the
+[01:01:34] into the unit through an attention
+[01:01:36] mechanism a transformer mechanism and
+[01:01:38] you can see the QKV business here which
+[01:01:41] should be familiar at this point. So it
+[01:01:43] is integrated into the transformer stack
+[01:01:45] directly that input the clip embedding
+[01:01:47] that's the second thing I want to point
+[01:01:48] out. And then thirdly
+[01:01:50] and this is where the speed up comes. So
+[01:01:52] what you do is instead of taking the
+[01:01:54] image running it through the whole
+[01:01:56] network and creating a slightly less
+[01:01:57] noisy version of the image here what you
+[01:01:59] do is you take the image you run it
+[01:02:02] through an image encoder you get an
+[01:02:03] embedding and now you only work with the
+[01:02:05] embedding you take the embedding and
+[01:02:07] create a slightly less noisy version
+[01:02:09] embedding keep on doing it and these
+[01:02:11] embeddings are much smaller than images
+[01:02:13] therefore they're much faster to process
+[01:02:14] and once you've done it like a thousand
+[01:02:16] times you get a very sort of almost pure
+[01:02:18] noless version of the embedding now you
+[01:02:20] run it through an image decoder to get
+[01:02:24] So this is the the idea here is that you
+[01:02:26] operate um
+[01:02:29] uh in the lat latent space meaning the
+[01:02:31] embedding space and hence it's called a
+[01:02:32] latent diffusion model. So that's where
+[01:02:35] the speed up comes but research
+[01:02:36] continues to be very strong to make it
+[01:02:38] even faster because for a lot of
+[01:02:40] consumer applications people are
+[01:02:41] obviously not going to wait around for I
+[01:02:43] mean who wants to wait for 10 seconds
+[01:02:44] right so uh and so there a lot of
+[01:02:46] pressure to make it even faster
+[01:02:49] um
+[01:02:52] all right so that's what we have
+[01:02:53] obviously um you know they're these
+[01:02:56] models are transforming everything and
+[01:02:58] uh by the way this site here lexicon.art
+[01:03:00] art. You can go check it out. Uh it has
+[01:03:01] a whole bunch of very interesting images
+[01:03:03] and prompts that created the images. So
+[01:03:06] if you're working in the space, it gives
+[01:03:07] you a lot of interesting ideas. But it's
+[01:03:09] not just for you know consumer fun
+[01:03:11] applications. U you know these models
+[01:03:13] are being used to actually you know
+[01:03:15] alpha fold if you'll recall if you give
+[01:03:18] it an amino acid sequence it can
+[01:03:19] actually create the 3D structure. Right?
+[01:03:21] So that's an example of they they don't
+[01:03:24] I don't think they use a diffusion
+[01:03:25] model. But you can imagine using a
+[01:03:27] diffusion model to create these
+[01:03:28] complicated objects. Meaning the objects
+[01:03:32] you create don't have to be images.
+[01:03:34] They can be arbitrarily complicated
+[01:03:36] things. As long as you have enough data
+[01:03:39] about such things to use for training
+[01:03:41] and the notion of noising the input is
+[01:03:43] meaningful, you can create some very
+[01:03:45] interesting structures. you can create
+[01:03:47] 3D things and u you know protein
+[01:03:49] structures and there's a whole bunch of
+[01:03:51] very interesting applications in
+[01:03:52] biomedical uh sciences. So this is
+[01:03:55] really just the tip of the iceberg and
+[01:03:57] now there are these things um there are
+[01:03:59] ways in which you can use diffusion
+[01:04:00] models to create to do large language
+[01:04:03] modeling as well. So there's a lot of
+[01:04:05] overlap and blending and so on going on
+[01:04:07] in the space. So so I'm going to do a
+[01:04:10] quick demo. Um if you look at hugging
+[01:04:11] face there is something called the
+[01:04:12] diffusers library which is like the the
+[01:04:15] as the name suggests it's a library for
+[01:04:17] a lot of diffusion models
+[01:04:20] and let's take a quick look.
+[01:04:25] All right so we will uh the diffusers
+[01:04:27] library has a whole bunch of diffusion
+[01:04:28] models. We going to work with stable
+[01:04:30] diffusion which is one of you know like
+[01:04:32] the the better known models. So let's
+[01:04:34] install diffusers.
+[01:04:38] Uh you will recall when we when I did
+[01:04:41] the quick lightning tour of the hugging
+[01:04:42] face ecosystem for language. Uh hugging
+[01:04:45] face is a whole bunch of u capabilities
+[01:04:48] sort of built out of the box and you use
+[01:04:50] this thing called the pipeline function
+[01:04:52] to very quickly use any model you want.
+[01:04:54] The same exact philosophy applies here.
+[01:04:56] You still use the pipeline. So I'm going
+[01:04:59] to import a bunch of stuff.
+[01:05:09] All right. So, oh, I see I have to do
+[01:05:11] this thing. Okay.
+[01:05:16] Great. F.
+[01:05:21] Okay. So, uh, all right. that we have
+[01:05:24] here. So you you'll remember that we
+[01:05:26] when we worked with text we had to pre
+[01:05:28] we we would grab a pre-trained model and
+[01:05:30] then we actually run it through a
+[01:05:31] pipeline and we can do all the inference
+[01:05:33] we want on it. The same exact philosophy
+[01:05:36] applies here. So um and this very
+[01:05:39] similar to what we did in lecture 8 for
+[01:05:41] NLP. So what we're going to do is we use
+[01:05:44] this command the stable diffusion
+[01:05:46] pipeline from pre-trained and we use
+[01:05:48] this version 1.4 stable diffusion model.
+[01:05:50] Um so let's just create the pipeline and
+[01:05:56] and obviously we have used tensorflow
+[01:05:58] not pyarch here but a lot of these
+[01:06:00] models unfortunately happen to be in
+[01:06:02] pyarch so knowing a little bit of pyarch
+[01:06:05] is actually very helpful um to be able
+[01:06:07] to work with these things and what we're
+[01:06:09] doing here uh while it's downloading uh
+[01:06:12] we are using this fp16
+[01:06:15] um storage format for the the model
+[01:06:18] weights because it's going to be a
+[01:06:19] little smaller than using 32 bits so
+[01:06:22] it'll download faster. So that's what's
+[01:06:24] happening here. So all right, it's
+[01:06:25] downloaded fine. So now we just give it
+[01:06:28] a prompt and this is actually one of the
+[01:06:29] original famous uh meme prompts a
+[01:06:32] photograph of an astronaut riding a
+[01:06:34] horse. And so uh once we have the
+[01:06:36] pipeline set up uh I'll just a seat for
+[01:06:38] reproducibility. And then literally I do
+[01:06:40] pipe of prompt and then it's actually
+[01:06:44] you can see here 50. So it's going
+[01:06:46] through 50 dinoising steps. Okay. Um and
+[01:06:50] you come up with a national rating of
+[01:06:52] horse. Okay. So that's that. Um you can
+[01:06:54] actually change the seed and you can get
+[01:06:56] get a different um the seed is basically
+[01:06:59] sets the the the random starting point
+[01:07:01] for the image. So therefore you would
+[01:07:03] expect a different astronaut. Yep. This
+[01:07:05] is an astronaut riding another horse. So
+[01:07:08] um I think people came up with these
+[01:07:09] kinds of fun examples because it's
+[01:07:11] guaranteed not to be in the training
+[01:07:12] data, right? So so whatever the model is
+[01:07:15] doing, it's not remember it's not
+[01:07:16] regurgitating what it has already seen.
+[01:07:18] Uh, all right. Give me a prompt.
+[01:07:26] Prompts. Anyone?
+[01:07:29] Wow.
+[01:07:34] &gt;&gt; Okay,
+[01:07:38] that might be a
+[01:07:40] All right. Riding a horse.
+[01:07:48] All right,
+[01:07:56] there are two of them and clearly MIT
+[01:07:59] professors don't have really.
+[01:08:03] Yeah, moving on. [laughter]
+[01:08:06] So, so by the way, um if you you should
+[01:08:10] spend some time with the diffusers
+[01:08:11] library, they have a bunch of tutorials
+[01:08:12] which are really interesting because
+[01:08:14] this core capability of giving a prompt
+[01:08:16] and getting an image out can actually be
+[01:08:18] manipulated for all sorts of very
+[01:08:20] interesting use cases. So, for example,
+[01:08:22] there is this thing called negative
+[01:08:23] prompting. And the idea of negative
+[01:08:25] prompting is that you can give it two
+[01:08:28] prompts and say create an image which
+[01:08:31] embodies the first prompt but not the
+[01:08:33] second prompt. essentially subtract the
+[01:08:36] second prompt from the first one. That's
+[01:08:37] called negative prompting. And you might
+[01:08:39] be wondering like what use is that?
+[01:08:41] There are lots of fun uses. So here we
+[01:08:45] are going to the prompt is going to be a
+[01:08:46] labrador in the style of vermier. Okay,
+[01:08:49] that's the first prompt. 50 steps.
+[01:08:53] Uh look at that. Amazing, right? Uh but
+[01:08:57] maybe you don't care for the blue scarf.
+[01:09:00] So you basically give it a negative
+[01:09:02] prompt. And you basically the negative
+[01:09:04] prompt is blue meaning remove everything
+[01:09:06] that's blue. I don't like this otherwise
+[01:09:09] keep the Labrador thing going. So you
+[01:09:11] run it.
+[01:09:16] Look at that. The blue is gone. Negative
+[01:09:18] prompting. Okay. Yeah.
+[01:09:22] &gt;&gt; If you change that from five from 50 to
+[01:09:26] a th00and will it become less pixelated
+[01:09:28] or will it eventually just keep going
+[01:09:30] and iterating?
+[01:09:31] &gt;&gt; No. Typically, if you do more of these
+[01:09:32] things, it gets better. The quality is
+[01:09:34] much better because each step will den
+[01:09:36] noiseise it very slightly. So, errors
+[01:09:38] won't accumulate and things like that.
+[01:09:40] And the diffuses library gives you lots
+[01:09:42] of controls for fiddling around with all
+[01:09:44] these things. Um, okay. So, that's what
+[01:09:47] we had. Uh, 949.
+[01:09:50] Okay. So, check out this tutorial if
+[01:09:52] you're curious about how this stuff
+[01:09:54] works. And I'm going to do one other
+[01:09:56] thing um because I didn't get to do it
+[01:09:58] earlier on. So uh we spent some time
+[01:10:01] with the hugging face hub and I walked
+[01:10:03] you through a few use cases for text uh
+[01:10:05] where you can take a text model and use
+[01:10:07] it for you know classification uh things
+[01:10:10] like that summarization and so on and so
+[01:10:11] forth. You can do the same thing for
+[01:10:13] computer vision models. So if you have a
+[01:10:16] computer vision problem that just maps
+[01:10:17] to a standard C uh computer vision task
+[01:10:20] you can just use the hugging face hub as
+[01:10:21] well. So um let me just show you very
+[01:10:25] quickly the same kind of thing actually
+[01:10:27] works here.
+[01:10:32] All right. Okay. So,
+[01:10:35] so let's say that you want to classify
+[01:10:37] something. You just import the pipeline
+[01:10:38] as before.
+[01:10:40] And once you import it, you can just
+[01:10:43] literally give it the standard task that
+[01:10:45] you care about like image
+[01:10:46] classification.
+[01:10:48] And and then you can start using it
+[01:10:50] right from that point on.
+[01:10:53] Okay.
+[01:10:59] All right. Okay. So now I'm going to
+[01:11:02] just get this image. So it's a very
+[01:11:04] famous image. Um, right. And we're going
+[01:11:06] to ask it to classify this image. So we
+[01:11:08] just literally run it through the
+[01:11:09] pipeline.
+[01:11:12] And it says the most likely label is 94%
+[01:11:15] probability. It's an Egyptian cat. Seems
+[01:11:18] reasonable. Okay. I mean, it's it's a
+[01:11:20] tough picture, right? Because there are
+[01:11:21] lots of things going on in that picture.
+[01:11:22] It's not like one one image, one object.
+[01:11:25] Um okay so you don't have to use the
+[01:11:27] default model you can actually give it
+[01:11:29] your own model that you want. So for
+[01:11:31] example, you can go um sorry
+[01:11:35] you can go to the hub hugging face hub
+[01:11:38] and you can go in there and say all
+[01:11:40] right I want image classification these
+[01:11:42] are all the models 10,487 models let's
+[01:11:45] sort by I don't know most downloads or
+[01:11:49] maybe most likes
+[01:11:51] u and you have all these models you can
+[01:11:53] pick any one of them so for example
+[01:11:54] let's say you want to pick Microsoft
+[01:11:56] restnet as your one that's what I tried
+[01:11:57] here so I have Microsoft restnet you
+[01:12:00] just s model equals that run it and it
+[01:12:04] takes care of all the tokenization this
+[01:12:05] that and whatnot. It's really very handy
+[01:12:08] and then you run it through the pipeline
+[01:12:09] again and it says tiger cat 94%
+[01:12:12] probability according to restnet. Um so
+[01:12:15] yeah so that's how you do it. Now let's
+[01:12:17] actually try a more interesting example
+[01:12:18] where you want to detect all the objects
+[01:12:20] in the picture which we didn't talk
+[01:12:21] about in class object detection. So just
+[01:12:23] create an object detection pipeline.
+[01:12:27] Same thing as before. when you actually
+[01:12:29] run this command, an astonishing some
+[01:12:31] amount of complicated stuff is going on
+[01:12:33] under the hood. Okay, and we are all the
+[01:12:35] beneficiaries of that. So, thank you.
+[01:12:37] Um, so yeah, so we have this here and
+[01:12:39] then we run it through um the pipeline.
+[01:12:42] It's looking at all the possible things
+[01:12:44] that might be sitting in the pipeline.
+[01:12:45] The results are hard to read. So, let's
+[01:12:46] actually visualize them. Um,
+[01:12:49] and I got some nice code from this site
+[01:12:51] for how to visualize them. Let's just
+[01:12:53] reuse it. So, yeah. So if you plot the
+[01:12:56] results,
+[01:12:58] look at that.
+[01:13:03] Okay, so it has picked up the cat. 100%
+[01:13:06] probability, I guess. The remote, the
+[01:13:09] couch, the other remote, and then the
+[01:13:12] cat. Pretty good, right? Off the shelf,
+[01:13:14] ready to go. No, no heavy lifting
+[01:13:17] required. Now, in in this case, we are
+[01:13:19] actually putting these boxes called
+[01:13:20] bounding boxes around each picture. But
+[01:13:22] what if you actually don't want a
+[01:13:23] bounding box? what you want to actually
+[01:13:25] find the exact contour of that cat or
+[01:13:28] the remote. No problem. We do something
+[01:13:30] called image segmentation. So let's do
+[01:13:32] an image segmentation pipeline
+[01:13:36] uh and run it through.
+[01:13:42] It takes some time. Um all right. All
+[01:13:46] right. Let's visualize it. So you can So
+[01:13:49] each object it finds it gives you a
+[01:13:51] mask. It basically tells you for each
+[01:13:53] object what object it is and then which
+[01:13:56] pixels are on for that object and off
+[01:13:58] for everything else. It's a mask. It
+[01:14:00] tells you where it stands. And you can
+[01:14:02] see here it is the first the object has
+[01:14:04] found is this thing here. And it's
+[01:14:06] perfectly delineated, right? It's pretty
+[01:14:08] amazing. So we can overlay this on the
+[01:14:10] original image and see it has found that
+[01:14:14] and it is Let's look at the other
+[01:14:15] objects. Oh, it has found the remote.
+[01:14:17] That's the second object.
+[01:14:20] And the third remote
+[01:14:24] and the fourth. You think any other
+[01:14:27] objects are remaining?
+[01:14:28] &gt;&gt; Couch. Good. All right, let's find the
+[01:14:32] couch.
+[01:14:33] And look, the couch is pretty good
+[01:14:36] except that the middle part has gotten
+[01:14:37] confused.
+[01:14:39] All right, but it's still pretty good,
+[01:14:41] right? So, yeah. So, that is um so
+[01:14:44] hugging faces all all these things and
+[01:14:46] so you should definitely check it out
+[01:14:48] and if you're not already very familiar
+[01:14:49] with it. So, uh, we have one minute
+[01:14:51] left. Any questions?
+[01:14:58] No questions. Okay. All right, folks.
+[01:15:00] See you on Wednesday. Thanks.

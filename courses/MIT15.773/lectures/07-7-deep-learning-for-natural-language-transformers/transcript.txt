@@ -1,0 +1,2291 @@
+[00:16] So, all right. So, transformers, even
+[00:18] though they were originally invented for
+[00:20] machine translation, right, going from
+[00:22] English to German and German to French
+[00:24] and so on and so forth,
+[00:25] they have turned out to be an incredibly
+[00:27] effective deep neural network
+[00:29] architecture for just really a vast
+[00:32] array of domains. It has reached a point
+[00:34] where if you're actually working with on
+[00:36] a particular problem, you almost
+[00:37] reflexively to will try a transformer
+[00:39] first because it's probably going to be
+[00:40] pretty darn good.
+[00:42] Okay? So, they have just taken over
+[00:45] everything.
+[00:46] Um and obviously they have they've
+[00:48] transformed translation, which is the
+[00:50] original sort of target, uh Google
+[00:52] search, really information retrieval,
+[00:54] completely transformed speech
+[00:55] recognition, text-to-speech, even
+[00:57] computer vision. Even the stuff that we
+[00:59] learned with convolutional neural
+[01:00] networks, now there are transformers for
+[01:03] computer vision problems that are
+[01:04] actually quite good.
+[01:06] Right?
+[01:07] Um which is kind of shocking because
+[01:08] they were not even designed for that.
+[01:10] Um and then, you know, reinforcement
+[01:12] learning. And of course, all the crazy
+[01:14] stuff that's going on with generative
+[01:15] AI, large language models, multimodal
+[01:17] models, everything everything runs on a
+[01:20] transformer.
+[01:21] Okay? Uh and then there are numerous
+[01:23] special purpose systems
+[01:25] and I find these to be even more
+[01:27] interesting.
+[01:28] Um you know, like AlphaFold, the protein
+[01:30] folding AI, is run runs on a transformer
+[01:32] stack.
+[01:33] Okay? And I could just list examples one
+[01:35] after the other.
+[01:36] So, it's just amazing. It's incredibly
+[01:38] uh flexible architecture.
+[01:40] Um and I think we are lucky to be alive
+[01:43] during a time when such a thing was
+[01:44] invented.
+[01:47] And I'm not getting paid to tell you any
+[01:48] of this stuff.
+[01:50] All right, it's just amazing. Okay. So,
+[01:52] let's get going. We will use search um
+[01:55] or more broadly information retrieval as
+[01:57] a motivating use case. So, these are all
+[01:59] examples where people are typing in
+[02:00] natural language queries or uttering
+[02:02] natural language queries into a phone
+[02:03] and we need to sort of make sense of
+[02:05] what they want. And it's not like, you
+[02:07] know, write me a limerick about deep
+[02:08] learning where there could be many
+[02:10] possible right answers. It's more like,
+[02:12] okay, tell me all the flights that are
+[02:14] leaving from Boston to going to
+[02:15] LaGuardia tomorrow morning between 8:00
+[02:16] and 9:00. Well, you better get it right.
+[02:19] Okay? Accuracy is a high bar.
+[02:21] So,
+[02:22] um or, you know, how many customers
+[02:23] abandoned their shopping cart? Find all
+[02:24] contracts that are up for renewal next
+[02:26] month. Uh you know, tell me the all the
+[02:28] customers who ended the phone call to
+[02:30] the call center yesterday not entirely
+[02:32] pleased with the transaction. Right? The
+[02:34] list goes on and on. And so, in
+[02:37] particular, we'll focus on this
+[02:38] travel-related example today. Okay? Uh
+[02:40] find me all flights from Boston to
+[02:42] LaGuardia tomorrow morning, right? That
+[02:44] kind of query.
+[02:45] Um and so, in these sorts of use cases,
+[02:48] a very common approach historically has
+[02:50] been, well, we will take this, you know,
+[02:53] natural language query
+[02:55] and then we will convert it into a
+[02:57] structured query. By that I mean we will
+[03:01] parse the query and we'll extract out
+[03:03] key things in that query. Once we
+[03:05] extract out those key things, we will
+[03:07] reassemble it into a structured query,
+[03:09] like a SQL query, right? Uh SQL is just
+[03:12] one example of a possible structured
+[03:14] query. There are many many ways to
+[03:15] structure queries.
+[03:17] But SQL is sort of familiar to lots of
+[03:18] people, so I'm using that. So, you take
+[03:20] the SQL. Once you have the SQL query,
+[03:23] you're in a very comfortable structured
+[03:25] land, in which case you just run the
+[03:27] query through a some database that you
+[03:28] have, get the results back, format it
+[03:30] nicely, and show show it to the user.
+[03:32] Right? That's the flow.
+[03:34] So, the question becomes
+[03:36] um
+[03:37] how do we automatically extract all the
+[03:40] travel-related entities from this query?
+[03:43] Right? We want to be able to extract
+[03:45] BOS, LGA, tomorrow, morning, flights, so
+[03:49] on and so forth. These are all the
+[03:50] travel-related entities we want to
+[03:51] extract out, right? That's the problem.
+[03:54] And so,
+[03:56] we will use a really cool data set
+[03:58] called the airline travel information
+[03:59] system data set and I'll explain the
+[04:01] data set in just in just a bit. We'll
+[04:02] use this as the basis for this example.
+[04:05] And so, the way we think about it is
+[04:07] that
+[04:08] we we have a whole bunch of queries in
+[04:10] this data set.
+[04:12] And fortunately for us, the researchers
+[04:14] who compiled this data set,
+[04:16] they went through every one of these
+[04:18] queries, right? And we have, you know,
+[04:20] several thousands of them. They went
+[04:22] through every one of those queries and
+[04:24] they manually tagged each word in the
+[04:26] query
+[04:28] with what kind of travel entity it is
+[04:31] or none of them, right? So, for
+[04:33] instance, so they class they call them
+[04:35] slots. So, they will take each word in
+[04:37] the query and assign it to a slot, a
+[04:39] particular kind of slot, and I'll
+[04:41] explain what slot means in just a
+[04:42] second. Okay? That's the basic idea. So,
+[04:45] so, for example, if you have something
+[04:47] like I want to fly from
+[04:49] Okay? And this is a flight database, so
+[04:52] you can assume that everything is
+[04:53] related to a flight flying. So, if you
+[04:56] have all these words, I want to fly
+[04:57] from,
+[04:58] each of these words these five words
+[05:00] gets mapped to something called the O,
+[05:02] which means other.
+[05:04] It's the other slot, right? We don't
+[05:06] really care about it. It's the other
+[05:07] slot.
+[05:09] And then we come to Boston.
+[05:11] Oh, Boston is very special, right?
+[05:13] Because, you know, it's clearly a
+[05:15] departure city. So, we actually tag it,
+[05:18] we assign it this label. Think of it as
+[05:20] just like a classification problem,
+[05:21] right? A multi-class classification
+[05:23] problem. So, we assign it to B from
+[05:26] loc.city_name.
+[05:29] Okay? That is the label you assign it.
+[05:31] Okay?
+[05:32] And then you go to at. You don't care
+[05:34] about at. It's O, other. You come to
+[05:37] 7:00 a.m.
+[05:38] And then, okay, that is depart time. So,
+[05:41] depart time and then another depart
+[05:43] time. And here you see there is a B and
+[05:45] then there is an I.
+[05:47] Right? So, what's what we are saying
+[05:49] here is that there could be entities who
+[05:51] are described using more than one word.
+[05:54] Like 7:00 a.m., right? Two tokens.
+[05:57] And for that, we need to be able to
+[05:58] figure out, okay, the second token is
+[06:00] really
+[06:01] is part of the first token. Together,
+[06:03] they define the notion of a departure
+[06:05] time. So, what the B means that is that
+[06:08] this is the word this is the token in
+[06:10] which we are beginning the idea of a
+[06:12] departure time. And then I means we are
+[06:15] in the middle of this description.
+[06:17] B is for beginning.
+[06:19] So,
+[06:21] you can see here. So, there is a B here
+[06:23] and there is an I. B for beginning, I
+[06:25] for intermediate or in the middle.
+[06:27] Um and then at, we don't care. 11:00 B
+[06:31] arrive time.
+[06:33] Boop boop boop. Morning arrive time
+[06:35] period.
+[06:38] So, this is an example of how you can
+[06:40] take a sentence and then manually label
+[06:43] every word in the sentence with
+[06:45] something that's relevant to your
+[06:46] particular problem.
+[06:50] And
+[06:51] turns out these people
+[06:54] every word is classified into one of 123
+[06:56] possibilities.
+[06:59] Okay? Um so, aircraft code, airline
+[07:02] code, airline name, airport code,
+[07:04] airport name, arrival date, relative
+[07:07] name. Now, you get the idea.
+[07:08] They want a round trip versus a one-way.
+[07:11] The relative to today because if
+[07:13] somebody say tomorrow morning, it's
+[07:14] relative to today, so you need to notion
+[07:16] you need absolute time and you need
+[07:17] notion of relative time.
+[07:19] So, they basically thought of every
+[07:20] possibility with these researchers. And
+[07:23] so, the every word in every one of these
+[07:25] queries is assigned one of these 123
+[07:27] labels.
+[07:32] Any questions on the setup?
+[07:36] Um
+[07:39] Did they have to contextualize what
+[07:42] comes before than let's say Boston? So,
+[07:44] if someone says from
+[07:46] Boston, so that there should be
+[07:47] contextualization with the from to
+[07:49] Boston. So, because they did it
+[07:50] manually, they could just read it and
+[07:52] figure it out, that's what they mean,
+[07:54] right? You Boston is the the departure
+[07:55] city and not the arrival city. So, do
+[07:57] they have two tags to Boston, which is
+[07:59] some like, you know, departure city as
+[08:01] well as arrival city
+[08:03] word Boston? In that particular phrase,
+[08:05] it's it's clear from that particular
+[08:07] case in the context of it as a human
+[08:08] reading it that Boston is a departure
+[08:10] city. So, it just only gets that tag. In
+[08:13] that sentence. In some other sentence
+[08:15] where people are coming into Boston,
+[08:16] it'll have a different tag.
+[08:21] I was wondering if my query like the
+[08:23] others, basically there is like, for
+[08:25] example, if my query was
+[08:27] giving flights from Boston at 7:00 a.m.
+[08:29] and
+[08:29] uh the
+[08:31] flights from Denver at 11:00 a.m.
+[08:33] You mean like a compound query? Yeah.
+[08:35] So, this one only takes single queries
+[08:37] into account.
+[08:39] Because most people are like, you know,
+[08:40] give me a flight from here to there. Or
+[08:42] what is the cheapest thing from here to
+[08:43] there? And we'll see examples of queries
+[08:45] later on.
+[08:50] Okay.
+[08:51] Uh all right. So, that's that's the
+[08:52] deal.
+[08:53] So, basically what we have this you
+[08:56] know,
+[08:58] uh this problem that we have here is
+[08:59] really a word-to-slot,
+[09:02] word-to-slot multi-class classification
+[09:04] problem.
+[09:06] Okay?
+[09:07] Um because if you look at that that
+[09:09] input, we want to be able to take that
+[09:10] input and a really good model will then
+[09:12] give you this as the output.
+[09:17] Right? Because this is what a human
+[09:18] would have done.
+[09:20] So, that is our problem. Okay?
+[09:23] So, the question is
+[09:25] um the the key thing here is that each
+[09:27] of the 18 words in this particular
+[09:29] example must be assigned to one of 123
+[09:32] slot types, right? Each word. It's not
+[09:34] like we take the entire query and
+[09:36] classify the entire query into one of
+[09:38] 123 possibilities. Every word in the
+[09:40] query has to be classified.
+[09:42] That is the wrinkle.
+[09:45] Okay?
+[09:46] So, now, if we could run the query
+[09:49] through a deep neural network and
+[09:51] generate 18 output nodes,
+[09:54] it goes through some unspecified deep
+[09:55] neural network. And when it comes out
+[09:57] the other end, the output layer has 18
+[09:59] nodes.
+[10:00] Okay?
+[10:01] Because that is that is the that is the
+[10:03] that is the the the dimension of the
+[10:04] output that we care about. 18 in, 18
+[10:06] out. 18 in, 18 out, right?
+[10:09] And then for each one of those 18 nodes,
+[10:11] maybe we could attach a 123-way softmax
+[10:15] to each of those 18 outputs.
+[10:20] By the way, isn't it cool that we can
+[10:21] just casually talk about sticking a
+[10:23] 123-way softmax onto each one of the 18
+[10:25] nodes?
+[10:27] Folks, wake up.
+[10:31] You're not easily impressed. I'm
+[10:32] impressed by that.
+[10:34] So, okay.
+[10:37] So, so the So, here's the key thing,
+[10:39] right? We want to generate an output
+[10:41] that has the same length as the input.
+[10:45] But the problem is the inputs could be
+[10:47] of different lengths as they come in.
+[10:48] They could be short sentences, long
+[10:50] sentences, we don't know, right?
+[10:52] Yet we need to accommodate this range
+[10:55] this variable size of input that's
+[10:56] coming in.
+[10:58] But the key thing is the output has to
+[10:59] be the same thing as the input, the same
+[11:00] cardinality as the input.
+[11:02] Okay, that's a one big requirement.
+[11:05] In addition, we want to take the
+[11:07] surrounding context of each word into
+[11:08] account, right? To go to Ronak's
+[11:10] question, when you see the word Boston,
+[11:12] you can't conclude whether it's a
+[11:14] departure city or arrival city.
+[11:15] You have to look at what else is going
+[11:17] on around it. Is there a from? Is there
+[11:19] a to? Things like that to figure out
+[11:21] what how to tag it. So, clearly the
+[11:22] context matters.
+[11:24] And then we clearly have to take the
+[11:25] order of the words into account.
+[11:28] Going from Boston to LaGuardia is very
+[11:29] different than going from LaGuardia to
+[11:30] Boston.
+[11:31] So, clearly the order matters.
+[11:33] Right? So, the context matters and the
+[11:35] order matters. And the output has to be
+[11:37] the same length as the input.
+[11:40] Okay?
+[11:42] So, context matters, right? Just a few
+[11:44] fun examples.
+[11:45] Remember from the last week that the
+[11:47] meaning of a word can change
+[11:48] dramatically depending on the context.
+[11:50] And we also saw that the standalone or
+[11:53] uncontextual embeddings that we saw for
+[11:55] last week, like Glove, um
+[11:58] you know, they don't take context into
+[11:59] account because they give a single
+[12:01] unique embedding vector to every word.
+[12:04] And if a word ends up having lots of
+[12:05] different meanings, that vector is kind
+[12:07] of some mushy average of all those
+[12:09] meanings.
+[12:11] Okay. So,
+[12:13] the word see. I will see you soon. I
+[12:15] will see this project to its end. I see
+[12:16] what you mean. Very different meanings
+[12:18] of the word see. This is my favorite,
+[12:20] bank.
+[12:21] Uh I went to the bank to apply for a
+[12:23] loan. I'm banking on the job. I'm
+[12:24] standing on the left bank. And so on. Uh
+[12:27] it. The animal Oh, this is actually very
+[12:29] It's a good one. The animal didn't cross
+[12:31] the street because it was too tired. The
+[12:33] animal didn't cross the street because
+[12:34] it was too wide.
+[12:37] Can you imagine
+[12:39] a deep neural network looking at this
+[12:40] word it and trying to figure out what
+[12:42] the heck does it word it mean?
+[12:44] What is it referring to?
+[12:46] Tricky, right?
+[12:48] Um and then, you know, if you take the
+[12:50] word station, and I have the station
+[12:52] example here because we're going to use
+[12:53] it a bit more the rest of the lecture.
+[12:55] The train You know, the station could be
+[12:57] a radio station, a train station, being
+[12:59] stationed somewhere, the International
+[13:00] Space Station. The list goes on.
+[13:03] So, clearly order matters. I mean,
+[13:04] context matters.
+[13:05] And
+[13:08] clearly order matters. You can come up
+[13:10] with your own examples. Let's keep
+[13:12] moving.
+[13:13] Okay?
+[13:15] So, the Transformer architecture
+[13:18] is a very elegant
+[13:20] architecture
+[13:22] which checks these three boxes
+[13:23] beautifully.
+[13:25] Okay?
+[13:26] Um it takes the context into account,
+[13:27] order into account, and then, you know,
+[13:29] whatever is produced out there
+[13:32] is the same length as whatever is coming
+[13:33] in.
+[13:34] And the reason it's called the
+[13:35] Transformer
+[13:36] is because if 10 things come in,
+[13:39] 10 things go out, but the 10 things that
+[13:41] go out are a transformed version of the
+[13:43] 10 things that came in.
+[13:46] That's why it's called the Transformer.
+[13:47] Okay?
+[13:48] If 10 things came in and like one thing
+[13:50] go goes out, well, sure, it's been
+[13:52] transformed, but what is it? It's some
+[13:54] weird thing. But when 10 comes in and 10
+[13:56] goes out, the 10 10 is preserved. Each
+[13:58] one is getting transformed in
+[13:59] interesting way.
+[14:01] That's why it's called the Transformer.
+[14:04] So, developed 2017, just dramatic
+[14:07] impact.
+[14:08] So, by the way, the effect of
+[14:09] Transformer, um
+[14:11] Google had spent a lot of research on
+[14:13] machine translation and obviously
+[14:15] search. Uh and then when the Transformer
+[14:17] is invented, uh they took a model called
+[14:20] BERT, which we will uh see on Wednesday
+[14:22] in detail, and then they introduced BERT
+[14:25] into their search, and the results were
+[14:28] dramatic.
+[14:29] And from what I've read, apparently the
+[14:32] impact of doing that was a
+[14:34] Typically, when you make an improvement
+[14:35] to search, the improvement is very, very
+[14:37] marginal because it's already a very
+[14:38] heavily optimized system.
+[14:40] And then when the Transformer thing came
+[14:42] along, there was actually a significant
+[14:43] jump in search quality. So, for example,
+[14:46] and you can actually read this blog post
+[14:48] uh which came out when they introduced
+[14:49] BERT into search. It gives you a bit
+[14:51] more detail. But here, so if you had if
+[14:54] you were querying something like uh you
+[14:56] know,
+[14:57] "Brazil traveler to USA needs a visa."
+[15:00] Right? You would think that it is it
+[15:02] should give you information about how to
+[15:03] get a visa if you're a Brazilian want to
+[15:04] come to the US, right? Uh but it turns
+[15:06] out the first result was how US citizens
+[15:09] going to Brazil can get you know,
+[15:11] get a visa.
+[15:13] So, clearly it's not taking the order
+[15:14] into account.
+[15:16] Uh but once they introduced it, boom,
+[15:19] the first thing was the US Embassy in
+[15:20] Brazil.
+[15:21] And a page on how to get a visa.
+[15:24] So, the effect was dramatic.
+[15:26] And so, this is a seminal paper,
+[15:30] right? And it's actually worth reading
+[15:31] the paper. And uh and it's worth and you
+[15:34] know, this is the picture this this is
+[15:35] like an iconic picture at this point
+[15:38] in the deep learning community. And we
+[15:39] will actually understand this picture
+[15:41] by the end of Wednesday.
+[15:43] Um and so, but the funny thing is that
+[15:45] when the researchers came up with it,
+[15:46] they didn't realize, in some sense, like
+[15:48] what they had stumbled on uh because
+[15:50] they were really focused on machine
+[15:51] translation.
+[15:53] It's only the rest of the research
+[15:54] community that took it and started
+[15:55] applying to everything else and found it
+[15:56] to be really, really effective.
+[15:59] Okay. So, we're going to take each one
+[16:01] of these things and figure out how to
+[16:02] address them and thereby build up the
+[16:04] architecture.
+[16:05] Any questions before I continue?
+[16:07] Yeah.
+[16:11] Is there any uh
+[16:13] benefits to discarding some of those
+[16:16] unclassified nodes before it goes out
+[16:18] rather than going like you have 18 words
+[16:21] input, discarding all the ones that
+[16:23] don't actually matter and just doing
+[16:24] like eight for your output?
+[16:26] Yeah, yeah. I think that's a totally
+[16:28] fine way to think about it. Basically,
+[16:29] what you're saying is that can we have a
+[16:31] two-stage model? The first-stage model
+[16:33] is like a O non-O classifier. And the
+[16:35] second-stage model only goes after the
+[16:37] non-Os. That's a totally fine way to do
+[16:38] it.
+[16:39] Yeah.
+[16:40] But as you can see, if you even if you
+[16:41] go with the just a simple one-stage
+[16:43] model, if you use a Transformer, you get
+[16:44] fantastic accuracy.
+[16:47] And we'll do the collab in a bit.
+[16:50] Uh all right. So, let's take the first
+[16:52] thing. How do you how do you take the
+[16:53] context of everything around the word
+[16:55] into account?
+[16:56] So,
+[16:59] so let's say that this is this is the
+[17:01] sentence we have. The train slowly left
+[17:03] the station.
+[17:04] Okay? For each of these words,
+[17:06] we can calculate a standalone embedding,
+[17:09] say something like Glove.
+[17:11] Okay? So, I'm just rep- depicting these
+[17:13] standalone embeddings using these uh
+[17:15] you know, thingies here.
+[17:18] Please appreciate them because it took
+[17:19] me a while to get them to do in
+[17:20] PowerPoint.
+[17:22] Okay? So, these are W1 through W6. These
+[17:24] are the vectors standing up. Okay?
+[17:27] Um now, let's say that So, we can easily
+[17:29] do that.
+[17:30] Now, what we want to figure out is we
+[17:32] want to focus on the word station.
+[17:34] And since station could mean very
+[17:36] different things in different contexts,
+[17:37] we want to figure out how do we actually
+[17:39] take
+[17:40] station's embedding and contextualize it
+[17:43] using all the other words that are going
+[17:45] on in that sentence.
+[17:46] Okay? Clearly, it's a train station.
+[17:49] So, we need to take the fact that there
+[17:50] is a train involved to to alter the
+[17:53] embedding of the word station. Right?
+[17:55] That's what taking context into account
+[17:56] actually means.
+[17:58] So,
+[17:59] how can we modify station's embedding so
+[18:03] that it incorporates all the other
+[18:04] words? That's the question.
+[18:07] Okay?
+[18:08] So, when you look at it this way,
+[18:11] imagine just for a moment,
+[18:14] just for a moment,
+[18:15] that
+[18:16] we
+[18:17] Now, some of the other words in the
+[18:18] sentence don't matter. The word the
+[18:20] probably doesn't matter.
+[18:22] But some of the other words like train,
+[18:24] slowly, left probably does matter.
+[18:26] And suppose, just magically, we have
+[18:29] been told
+[18:30] all the other words in the sentence,
+[18:32] this is how much weight you have to give
+[18:34] to them. These don't give it any weight.
+[18:36] Those give it a lot of weight. Okay?
+[18:38] Suppose we are told that.
+[18:39] Or to put it another way, and this this
+[18:41] is the word that's heavily used in the
+[18:42] literature,
+[18:44] someone tells you how much attention to
+[18:46] pay to the other words.
+[18:47] Whether you got to pay it a lot of
+[18:48] attention or very little attention.
+[18:50] Okay?
+[18:51] And this
+[18:52] how much attention to pay is given in
+[18:54] the form of a weight that you can use.
+[18:55] Okay? So,
+[18:57] um
+[18:58] if you look at it that way, from this
+[19:00] notion of which word should I give a lot
+[19:01] of weight to and very little weight to,
+[19:04] in this example, intuitively, which
+[19:05] words do you think should get the most
+[19:06] weight and which words do you think
+[19:07] should get the least weight?
+[19:09] Yeah. Train.
+[19:11] Train. Right.
+[19:12] Time matters.
+[19:13] Uh
+[19:14] you can do one at a time.
+[19:16] Train. Okay, thank you.
+[19:18] Uh
+[19:18] okay. Others?
+[19:21] Slowly.
+[19:22] Slowly. Right. So, that also seems to
+[19:23] have some bearing to it. What about
+[19:25] words that don't really I don't
+[19:27] we don't think is going to are going to
+[19:28] help at all?
+[19:31] The. The. Exactly. It probably doesn't
+[19:33] do much here. Some context it actually
+[19:35] might make a difference, but in this
+[19:37] sentence, maybe not.
+[19:38] Right? Intuitively.
+[19:40] So,
+[19:42] we should probably give a lot of weight
+[19:43] to train, maybe a little to slowly and
+[19:45] left, and hardly anything to the.
+[19:47] Okay?
+[19:49] And so, this intuition that we have
+[19:52] can be written numerically as maybe we
+[19:56] have a bunch of weights that add up to
+[19:58] one.
+[20:00] Okay?
+[20:02] Okay, maybe something like this. So, we
+[20:03] are saying the train 30% weightage,
+[20:07] maybe 8% weightage to left, maybe 12%
+[20:11] weightage to slowly, uh and then as you
+[20:14] will see here,
+[20:15] the station's own embedding also plays a
+[20:17] role. Because we want to take its own
+[20:20] standalone embedding and just move it
+[20:22] slightly, change it slightly, which
+[20:23] means that has to be the starting point.
+[20:26] So, it will get a lot of weight. We
+[20:28] can't ignore itself, in other words.
+[20:30] Right? So, we give it maybe 40% weight.
+[20:33] By the way, these numbers I just made
+[20:34] them up.
+[20:35] Okay? Uh yeah.
+[20:38] I'm sorry, it's a quick question. So,
+[20:40] the weights
+[20:43] are they
+[20:44] Are they Are they standalone for the
+[20:46] context of the entire sentence or are
+[20:48] they related to station that we started
+[20:50] off with? The The These six numbers are
+[20:54] only pertinent to station.
+[20:56] And for each word, we're going to do
+[20:57] something similar.
+[20:59] Yeah.
+[21:01] And at this point, does the model
+[21:03] understand order? Because like I'm just
+[21:05] thinking of like left because like I
+[21:07] gave it a very low
+[21:08] a
+[21:09] a very low weight. But let's say left
+[21:11] comes slowly, leave left station. The
+[21:14] station only have the two be higher.
+[21:15] Yeah, correct. So, at this point, we are
+[21:18] not worrying about order. We are only We
+[21:20] are worrying about context.
+[21:22] Later, we'll take order into account.
+[21:24] But how does the model know that left
+[21:25] here is of lesser importance because
+[21:28] it's a verb rather than a
+[21:31] It's It has to figure it out.
+[21:33] We don't It doesn't We We are just
+[21:34] giving it a whole bunch of capabilities.
+[21:36] How it manifests those capabilities is
+[21:38] all going to emerge from training.
+[21:42] Okay. So, all right. So, let's say we
+[21:45] have something like this. So, what we
+[21:46] can do,
+[21:48] right? And we'll get to the
+[21:49] all-important question of where do we
+[21:50] get these numbers from in just a moment.
+[21:51] But suppose you had the numbers,
+[21:54] how can we use these numbers to
+[21:56] contextualize W6? What can we do?
+[22:00] What is the simplest thing you can do?
+[22:05] You have W6, you want to make it a new
+[22:07] W6, which is now contextual, is aware of
+[22:10] what else is going on. Okay?
+[22:17] It's working now, I think.
+[22:20] We can take a weighted average. Exactly.
+[22:22] Exactly. So, when you have a bunch of
+[22:23] things and you have a bunch of weights
+[22:25] and I, you know, and we have when we
+[22:26] have to somehow modify one of those
+[22:27] things with those weights, the simplest
+[22:29] thing you can do is to take a weighted
+[22:30] average.
+[22:31] Right? So, that's exactly what we're
+[22:33] going to do.
+[22:34] So, we're going to take all these
+[22:35] weights
+[22:37] and just like move them up.
+[22:39] Okay?
+[22:40] Move them up.
+[22:42] Don't even get me started on how long it
+[22:44] took me to get this arrow to run.
+[22:46] I don't know about you, folks. Is it
+[22:47] It's extremely painful to get the U-turn
+[22:49] arrows to work in PowerPoint.
+[22:51] Okay?
+[22:52] Anyway, uh back to work. So,
+[22:54] so we just move these up here, okay? So,
+[22:57] now we can do 0.05 * this vector + 0.3 *
+[23:01] that vector and so on and so forth.
+[23:03] And the result is just another vector.
+[23:06] Right?
+[23:08] And that vector, folks,
+[23:11] is the contextual embedding vector of
+[23:13] station.
+[23:15] Okay? That was the standalone embedding.
+[23:17] And now we did the We multiplied this by
+[23:19] that that by whoop whoop whoop, add them
+[23:21] all up, and then you get a new vector.
+[23:24] And contextual embeddings have this
+[23:27] bluish kind of color.
+[23:29] Okay?
+[23:30] And I'll maintain that color scheme as
+[23:32] we go along.
+[23:33] So, that's it.
+[23:36] That's it. That's the idea.
+[23:38] Any questions?
+[23:41] Yeah.
+[23:43] How did you come up with the original
+[23:44] weights again? You just kind of guessed?
+[23:46] No, these weights I just I just
+[23:49] hand typed them in manually just to make
+[23:51] the point. And And now I'm going to talk
+[23:53] about how we are actually going to
+[23:54] calculate them.
+[23:57] Okay.
+[23:58] Uh all right, cool. So, now I'm going to
+[24:00] uh okay, enough pictures. Let's switch
+[24:03] to some math. So,
+[24:05] so basically what I'm So, let's write it
+[24:07] a bit more formally.
+[24:08] So, we have these W1 through W6, which
+[24:11] are the standalone embeddings.
+[24:12] And then for station, we want to
+[24:14] calculate, you know, W6 with a little
+[24:16] hat on it, which is the contextual
+[24:17] embedding. And the way we do it is to
+[24:19] say we calculate some weights for each
+[24:22] of these words. So, this weight S16
+[24:25] means that the weight
+[24:27] of the first word on the sixth word,
+[24:30] which happens to be station.
+[24:32] The The weight of the second word on the
+[24:33] sixth word, and so on and so forth. And
+[24:35] so, what we are saying is that W6 is
+[24:38] just, you know, this weight times W1,
+[24:40] this time W whoop whoop whoop,
+[24:41] that's it.
+[24:43] Okay?
+[24:45] I have to inflict all these, you know,
+[24:47] subscripts and all that because
+[24:48] you know, we need it.
+[24:51] All right. So, that's it.
+[24:53] That's what we have.
+[24:56] Now, let's talk about Okay, any
+[24:58] questions on the mechanics of it
+[25:00] before I get to Okay, where do these
+[25:01] weights come from?
+[25:02] Yeah.
+[25:06] Utilizing something like Google, for
+[25:08] example, like how does it understand
+[25:11] like the context of
+[25:12] new words
+[25:13] and context like
+[25:16] process immediately through the training
+[25:18] data the users played or
+[25:20] like basically
+[25:21] &gt;&gt; like a totally new word that didn't
+[25:22] exist before? A new word or a new
+[25:24] context to a word that already exists.
+[25:27] No, I think that the context is supplied
+[25:29] because the query coming into something
+[25:31] like Google is a full sentence.
+[25:33] And we only take that sentence and take
+[25:35] only the sentence into account as the
+[25:36] context for us.
+[25:37] So, the context is always present to us
+[25:40] when we get the input.
+[25:41] But the other question you had uh of
+[25:44] Okay, what if there's a brand new word
+[25:45] you've never seen before, for which
+[25:46] there is not even a standalone
+[25:47] embedding? What do you do then?
+[25:49] So, let's punt on that till Wednesday
+[25:51] because I have to talk about something
+[25:53] called byte pair encoding and stuff like
+[25:55] that before I can answer that.
+[25:57] And And really quickly, does that
+[25:59] immediately translate to their
+[26:00] predictive search queries?
+[26:03] Utilizing like verb
+[26:06] Yeah, a new word, for example.
+[26:08] Does that automatically get applied to
+[26:10] the predictive search queries like when
+[26:12] we're saying how to and then just home?
+[26:14] Oh, you mean like the auto complete?
+[26:15] You know, auto complete uses a slightly
+[26:17] different mechanism.
+[26:18] Um I They had a very complicated
+[26:20] non-transformer thing for a long time.
+[26:23] I'm sure they have a transformer version
+[26:24] now, but I don't I'm not privy to how
+[26:26] exactly they've done it. So, I don't
+[26:28] quite know how they do it. But what
+[26:29] you're proposing is a reasonable way to
+[26:31] think about it.
+[26:33] Yeah.
+[26:34] Um my question is like we have six
+[26:36] words, station and but number parameters
+[26:39] as in weights, let's say 10 of them.
+[26:41] And then we have calculated the
+[26:43] contextual version of W6. Yeah. So, this
+[26:46] has a different parameter or it remains
+[26:48] the same? It replaces. Okay.
+[26:50] Yeah, W becomes W6 becomes W6 hat.
+[26:54] Okay. And how we are expecting
+[26:57] Right.
+[26:58] This contextual word will be really
+[27:00] good. That's what we want.
+[27:07] Do we lose that
+[27:08] or retain No, we lose it. And as you
+[27:11] will see here, as it flows through the
+[27:12] transformer, it's getting more and more
+[27:14] and more contextualized.
+[27:16] So, it's a left-to-right flow.
+[27:20] All right. Uh all right, great. So, the
+[27:22] By the way, this thing that we did for
+[27:23] station, we will do it for each word in
+[27:25] the in the in the sentence.
+[27:27] The same exact logic. Obviously, the
+[27:30] weights are going to change.
+[27:31] Okay? But what will happen is that W1
+[27:34] through W6 will become W1 hat through W6
+[27:37] hat.
+[27:39] The same exact logic is going to hold.
+[27:41] Okay? That's what I just don't have the
+[27:43] slides for it because it's a waste of
+[27:44] time.
+[27:45] The same exact logic is going to hold.
+[27:47] All right. Now, switch gears
+[27:48] and and answer the all-important
+[27:50] question of where are the weights going
+[27:51] to come from.
+[27:52] Okay? So, the intuition here is really
+[27:54] really interesting and elegant.
+[27:56] So, clearly the weight of a word
+[27:59] should be proportional to how related it
+[28:02] is to the word station.
+[28:04] Right?
+[28:06] The word train clearly is very related
+[28:08] to the word station.
+[28:09] The word the is not clear how it's
+[28:11] related it is. Probably not all that
+[28:12] related. So, the relatedness matters to
+[28:15] the weight. More related, higher the
+[28:17] weight, right? Just intuitive.
+[28:19] So, one way to quantify how related two
+[28:21] words are is to take their standalone
+[28:23] embeddings and calculate the dot
+[28:25] product.
+[28:28] Okay? So, um
+[28:30] in case folks have
+[28:33] sort of forgotten about the dot product,
+[28:39] Oops, that's not what I want.
+[28:42] So, um So, if you have a Let's say you
+[28:44] have a vector.
+[28:50] Okay, let's Let's Let's say this is the
+[28:51] vector for
+[28:52] train.
+[28:55] This is the vector for station.
+[28:59] Okay? So, the dot product of these two
+[29:01] vectors,
+[29:05] I'll write it as train
+[29:09] station
+[29:12] equals
+[29:13] basically the length
+[29:17] of
+[29:20] the vector for train
+[29:23] times the length
+[29:26] of the vector for station
+[29:30] times the cosine
+[29:33] of the angle between them.
+[29:36] Okay?
+[29:38] Okay?
+[29:42] So, how long is each vector?
+[29:45] Product of the two and then the angle
+[29:46] between them. Okay? Now, let's assume
+[29:48] for simplicity that these lengths are
+[29:50] roughly the same.
+[29:52] They're just one unit length. Okay? Just
+[29:54] roughly.
+[29:55] So, if you assume that,
+[29:57] okay? This thing, let's say, becomes
+[30:01] becomes one, let's say.
+[30:03] Okay?
+[30:05] This thing becomes one.
+[30:07] So, all the action
+[30:09] is here.
+[30:11] Okay?
+[30:12] So, all the action is here.
+[30:14] So, basically, the dot product of these
+[30:15] two vectors is really the cosine of
+[30:17] angle between them.
+[30:20] So, now, the question is, if you have
+[30:22] something like this,
+[30:27] right? Which are very close to each
+[30:28] other, the cosine of a very small angle,
+[30:31] actually, the cosine of zero is what?
+[30:34] One.
+[30:35] So, if the angle is really, really
+[30:37] small, the cosine is going to be very
+[30:39] close to one.
+[30:40] Right? Because zero is one. The cosine
+[30:41] of zero is one. So, this thing is going
+[30:43] to be, you know, pretty close to one.
+[30:46] If you have a cosine of two vectors that
+[30:49] are like this, 90° apart, what is the
+[30:51] cosine?
+[30:52] Zero. They're orthogonal, right? Which
+[30:55] maps to the English orthogonal.
+[30:58] So, the cosine of that is zero.
+[31:00] And then, if you have something like
+[31:01] this,
+[31:03] where they're literally pointing in
+[31:04] opposite direction,
+[31:07] what is the cosine of that 180?
+[31:09] Minus one.
+[31:11] So, that's it. So, the if these things
+[31:13] if these these these two vectors are
+[31:14] very close to each other,
+[31:16] the cosine of the angle between them is
+[31:18] going to be very close to one. If they
+[31:19] are really kind of unrelated, it's going
+[31:21] to be zero. If they're anti-related,
+[31:22] it's going to be minus one.
+[31:24] Right? So, that's how dot products
+[31:27] capture this notion of closeness or
+[31:28] relatedness.
+[31:30] Okay?
+[31:31] So, all right. Um iPad.
+[31:36] So, we can use the dot product of these
+[31:37] embeddings to capture relatedness.
+[31:40] And so, okay, iPad done.
+[31:43] So, now, what we do is we know now that
+[31:45] we know that dot products can be used,
+[31:48] we can't use them as is because we need
+[31:49] to do one more thing to make them proper
+[31:51] weights. And what I mean by proper
+[31:53] weights is that the we want the weights
+[31:55] to be, first of all, non-negative, and
+[31:58] we want to add up we want them to add up
+[31:59] to one, right? That's that's what a
+[32:00] weighted average actually is going to
+[32:01] mean.
+[32:02] But these cosines could be negative.
+[32:05] Right? And so, we need to now adjust
+[32:07] them to make them proper so that every
+[32:08] one of them is guaranteed to be
+[32:10] non-negative and they will add up to
+[32:11] one.
+[32:12] When was the last time you had to take a
+[32:14] bunch of numbers, which could be
+[32:15] anything, and then somehow make sure
+[32:18] that they are going to be positive,
+[32:20] non-negative, and they add up to one?
+[32:22] When was the last time?
+[32:23] Yeah, softmax. Exactly. So, we'll do the
+[32:25] same trick.
+[32:27] So, what we'll simply do is we'll just,
+[32:29] you know, exponentiate them, right? So,
+[32:32] like this W1 W6, this angle bracket
+[32:35] thing is the dot product. That's the
+[32:36] notation I'm using. EXP of that is just
+[32:39] you exponentiate them, e raised to that.
+[32:41] And once you exponentiate them, they all
+[32:42] become non-negative, and then we just
+[32:44] divide each by the sum of everything.
+[32:46] So, it the whole thing will become like
+[32:47] a probability, right? It'll just add up
+[32:48] to one.
+[32:50] Make sense? So, that's how we take
+[32:52] arbitrary numbers and make them proper
+[32:53] weights.
+[32:56] All right.
+[32:59] So,
+[33:01] to summarize,
+[33:02] from embeddings to contextual
+[33:04] embeddings, that's what we do.
+[33:05] We take all the stand-alone embeddings,
+[33:08] we calculate these weights using this
+[33:09] formula, and then we just do the
+[33:11] weighted average, and we arrive at the
+[33:12] contextual embedding, and boom, done.
+[33:16] Okay?
+[33:17] And so, by way choosing weights in this
+[33:20] manner, the embedding of a word gets
+[33:22] dragged closer to the embeddings of the
+[33:24] other words in proportion to how related
+[33:26] they are. So, just imagine for a second,
+[33:29] right? In this case, station obviously
+[33:30] has many contexts, but let's assume for
+[33:31] a second that only has the train context
+[33:33] and the radio station context.
+[33:35] Okay?
+[33:37] In the current context, train is closely
+[33:39] related to station, and therefore exerts
+[33:40] a strong pull on it.
+[33:42] Right?
+[33:43] Now, radio is also related to station,
+[33:45] but it doesn't appear in the word in the
+[33:47] sentence.
+[33:48] So, effectively, it has a weight of
+[33:49] zero.
+[33:52] Okay? And that's the beauty of it. And
+[33:55] And please do not ask me things like,
+[33:56] you know, I I was listening to a great
+[33:58] song on the radio station and the train
+[33:59] pulled out of the station.
+[34:01] Okay? Transformers can deal with stuff
+[34:03] like that. Okay? But yeah, but you get
+[34:05] the idea, the main idea.
+[34:07] So, by paying moving station closer to
+[34:09] train,
+[34:11] by paying more attention to train, we
+[34:13] are contextualizing the station the word
+[34:15] the embedding to the context of trains,
+[34:18] platforms, departures, tickets, and so
+[34:20] on. It's like this portal into the whole
+[34:22] train world.
+[34:25] Right? It's beautiful. This simple idea
+[34:27] will get you there.
+[34:30] Okay?
+[34:31] So, this, folks, is called
+[34:33] self-attention.
+[34:36] What we just described is called
+[34:37] self-attention.
+[34:39] And it's the key building block of
+[34:41] transformers.
+[34:42] Okay? Um and so, the the So, to
+[34:44] summarize, stand-alone embeddings come
+[34:46] in, contextual embeddings go out.
+[34:50] Any questions?
+[34:52] Uh yeah.
+[34:54] Uh I'm still struggling a little bit
+[34:56] with the intuition of the word
+[34:58] contextual embedding. So, like the
+[35:00] weight of station in the station
+[35:02] embedding, how how should I think about
+[35:03] that? It seems intuitive that it would
+[35:05] be high for all contextual embeddings,
+[35:07] but I assume that's not the case.
+[35:12] It'll be high. It'll be typically be a
+[35:13] high number because the cosine of the
+[35:15] the vector to itself is going to be very
+[35:17] cosine is going to be one, right? So,
+[35:19] it's going to be pretty high, but it
+[35:20] there's no guarantee it's going to be
+[35:21] the highest.
+[35:22] Right? Because they're not actually the
+[35:24] the length doesn't have to be one. They
+[35:26] could be We try to keep them kind of
+[35:28] smallish, but they don't have to be.
+[35:30] Uh so, the way I would think about it is
+[35:31] imagine that you take an average of
+[35:33] everything else first, and then you
+[35:35] average it with the new the old
+[35:37] embedding.
+[35:38] Effectively, it's the same as just
+[35:39] calculating the different weights and
+[35:40] averaging the whole thing together.
+[35:42] Sure.
+[35:44] So, why should you say that the
+[35:45] embedding of a word would be the same
+[35:47] number but same place? But is this the
+[35:50] reason why you need a contextual
+[35:52] embedding?
+[35:53] But even if it's like a
+[35:55] other word
+[35:56] and it's not related, that's what
+[35:59] I'm saying. Correct. Correct. Exactly.
+[36:01] Exactly. And the other thing to remember
+[36:02] is that by getting
+[36:04] by keeping the origin the input sort of
+[36:07] the size of the input cardinality intact
+[36:09] as you move through the transformer
+[36:10] stack,
+[36:11] when you finally come out the other end,
+[36:12] there is sort of no loss of information.
+[36:14] And in the very end, you can choose to
+[36:16] aggregate, simplify, summarize, and so
+[36:18] on and so forth. It preserves your
+[36:19] optionality as long as possible.
+[36:23] Do you know
+[36:25] how how long the embedding contextual
+[36:27] embedding is?
+[36:28] Is that a factor between the
+[36:29] two?
+[36:31] You know
+[36:33] Yeah, so, what we do is the the sentence
+[36:34] comes in. There's a whole notion of
+[36:35] something called a context window, or
+[36:37] what is the sort of the maximum length
+[36:39] that these sentences will handle, and
+[36:40] that's a parameter you can set. And
+[36:42] we'll come to that when you actually
+[36:43] look at the collab.
+[36:44] Um
+[36:46] Was that a question in the middle? No.
+[36:48] Okay.
+[36:49] All right. So, that is self-attention.
+[36:53] Um and now,
+[36:55] because that's felt too easy,
+[36:58] we're going to do a little tweak called
+[37:00] multi-head attention.
+[37:02] So,
+[37:03] this is this is the self-attention we
+[37:04] just saw.
+[37:06] What we can do is we can be like, you
+[37:07] know what?
+[37:08] Why can't we have more than this? Why
+[37:10] can't we have more than one of these?
+[37:12] So, this is called an attention head,
+[37:13] self-attention head. We'll have multiple
+[37:16] self-attention heads. Okay?
+[37:18] Now, and I'll come back to the top thing
+[37:20] in a second, okay? But So, the question
+[37:22] is, why should we have multiple
+[37:23] self-attention heads?
+[37:25] Because a particular attention head is
+[37:26] going to pick up some patterns. The
+[37:28] reason is because
+[37:30] it'll help us attend to the multiple
+[37:32] patterns that may be present in a single
+[37:34] sentence.
+[37:35] So far, when I've been explaining, uh
+[37:37] I've sort of basically been looking at
+[37:38] what the meaning of these words are.
+[37:40] Just the meaning of these words. But in
+[37:42] any complicated sentence, you have to
+[37:44] worry about grammar, you have to worry
+[37:45] about tense, you have to worry about
+[37:47] tone. You have to worry about facts
+[37:49] versus, you know, opinions. There could
+[37:51] be any number of complicated patterns
+[37:53] that are sitting in a simple sentence.
+[37:55] Which means, well, there is just not one
+[37:57] way to pay attention. There could be
+[37:59] many ways of paying attention, many sort
+[38:02] of There could be many needs to pay
+[38:03] attention. Right?
+[38:05] Which means that we'll let's have many
+[38:07] of these attention heads.
+[38:09] And each one could be learning something
+[38:10] else. It's exactly like having lots of
+[38:12] filters in a convolutional network.
+[38:14] Right? Uh one filter might learn a line,
+[38:16] another filter might learn a curve, and
+[38:17] so on and so forth. And we don't want to
+[38:19] decide a priori, oh, you're going to
+[38:21] learn a line, right? Similarly here,
+[38:22] we're not telling any of these things
+[38:23] what you have to learn. They just have
+[38:25] to learn based on the training process.
+[38:27] So, what we do is
+[38:28] So, actually, this is an example where
+[38:30] this is from the original transformer
+[38:32] paper, where this sentence is the lawyer
+[38:35] will Sorry, the law will never be
+[38:37] perfect, but its application should be
+[38:39] just. This is what we are missing, in my
+[38:43] opinion.
+[38:44] The complicated sentence, right? So, the
+[38:46] first one attention head, actually, this
+[38:48] is the pattern of things it's it's it's
+[38:50] So, for example, the word perfect here,
+[38:53] the contextual embedding of the word
+[38:54] perfect
+[38:57] draws upon heavily from the word law
+[39:00] in this example.
+[39:01] Okay?
+[39:02] If you look at another attention head,
+[39:04] the contextual embedding for the word
+[39:06] perfect is actually drawing heavily from
+[39:07] just perfect and nothing else. Right?
+[39:11] And if you look at other words, the
+[39:13] patterns are subtly different of what
+[39:14] it's paying attention to.
+[39:17] So, these are two different attention
+[39:18] heads, and they're learning different
+[39:20] kinds of attentions.
+[39:21] Okay? In reality, trying to make sense
+[39:24] of why they
+[39:25] pay attention to the way they do, it's
+[39:27] usually quite sort of difficult to
+[39:29] figure that out. You can't actually
+[39:30] interpret it. But when you have lots of
+[39:32] attention heads, the performance on the
+[39:34] task that you care about gets really
+[39:35] much better.
+[39:37] Right? And then you're saying, okay, I
+[39:39] can use that. Uh yeah.
+[39:40] That's the
+[39:42] I think that's the idea behind this. Is
+[39:43] that the idea behind this?
+[39:49] Right.
+[39:50] Exactly. Same logic. Same logic.
+[39:53] Yeah.
+[40:13] Actually in the convolutional case, the
+[40:15] ones and zeros I had were just example
+[40:17] numbers to show that that particular
+[40:19] filter could detect a vertical line or
+[40:21] horizontal line. You will recall that
+[40:23] when we actually train a convolutional
+[40:24] network, we actually don't specify the
+[40:26] numbers. We start with random
+[40:27] initialized weights and then we let back
+[40:30] back propagation figure it out.
+[40:32] Similarly here, we don't decide any of
+[40:34] these things. We just let back prop
+[40:35] figure it out.
+[40:37] Okay? And now the question of what are
+[40:39] the weights that are actually going to
+[40:40] be learned? We'll come come to that in a
+[40:42] bit.
+[40:43] Okay? Uh yeah.
+[40:47] Uh I was wondering how come we have
+[40:50] different attention head even though
+[40:53] uh it seems like they're only function
+[40:55] of a dot product and we have the same
+[40:57] dot product for same embeddings.
+[40:59] Great question. Great question. And I
+[41:01] literally have a a note in my slide
+[41:02] saying, "If a student asks this good
+[41:04] question, tell them to wait till
+[41:06] Wednesday."
+[41:08] So, great question. And we'll come back
+[41:10] to that uh on Wednesday and spend a fair
+[41:12] amount of time on it. So, uh
+[41:14] the the the point that's being made here
+[41:17] is that oops.
+[41:19] When we look at self-attention,
+[41:22] the embeddings came in and we did all
+[41:24] these dot products and the contextual
+[41:26] things popped out the other end. Note
+[41:28] that inside the self-attention box,
+[41:30] there are no parameters.
+[41:32] There are no parameters.
+[41:34] So, the question that is being raised
+[41:36] here is that so what are we learning
+[41:38] really? If there is nothing inside to be
+[41:40] learned, if there are no parameters, no
+[41:42] coefficients, what are we learning?
+[41:43] That's the question. And by extension,
+[41:46] if we have two of these and neither of
+[41:48] them is learning anything, what's the
+[41:49] point?
+[41:52] Sadly, you have to wait till Wednesday.
+[41:55] Okay? But we have a great answer to the
+[41:57] question. So,
+[41:58] it'll be worth it. And if you can't
+[42:00] stand the suspense, read the book.
+[42:03] All right. So, that is uh that's why we
+[42:05] need multiple heads. Okay? And now to
+[42:07] come back to this, so what we do is it
+[42:09] goes through this head and you get these
+[42:11] W's, right? And it goes through here and
+[42:13] we get the another set of W's.
+[42:15] Then what we do at the very end is we
+[42:17] concatenate them.
+[42:19] Okay? We concatenate them and we do a
+[42:21] projection. And this is what I mean by
+[42:23] that.
+[42:29] So, we have
+[42:30] uh this this is one self-attention head,
+[42:33] self-attention one.
+[42:35] This is self-attention two.
+[42:38] And let's say that
+[42:41] W1 hat comes out.
+[42:44] And I'm just going to call it Z Z1 for
+[42:47] the same thing so that there's no name
+[42:48] clash.
+[42:49] Okay? And uh the W2, W6, all of them are
+[42:52] coming, right? Let's focus on W1 and Z1.
+[42:55] W1 and Z1 are both contextual embeddings
+[42:57] for the same word.
+[42:59] Okay? For the first word, word one. And
+[43:01] so what we do is let's say this is W1 uh
+[43:04] let's call let's say this vector is like
+[43:06] this. Okay?
+[43:07] And let's say that this vector is like
+[43:10] this.
+[43:12] What I mean when I say concatenated here
+[43:14] is we literally take
+[43:16] um this word here,
+[43:18] this embedding here, then we take this
+[43:20] thing here.
+[43:23] Okay? And we just make it a long vector.
+[43:25] We concatenate it. But now this vector
+[43:27] has become twice as long, right?
+[43:30] So, what but remember, we always want to
+[43:32] preserve this the the number of inputs
+[43:34] we have and the lengths of these vectors
+[43:36] everywhere as we go along. So, what we
+[43:39] do is at this point, we run it through
+[43:42] a single dense layer
+[43:44] which will take this thing and make it
+[43:46] back into the same small shape as
+[43:48] before.
+[43:50] So, this is a dense layer.
+[43:54] That's it. So, this vector comes in
+[43:56] and it becomes it gets compressed back
+[43:58] to the original shape that came out of
+[44:00] here.
+[44:01] So, you could have like 20 of these uh
+[44:03] attention heads
+[44:04] and the concatenated will be 20 times
+[44:06] long and then just project boom, one
+[44:08] dense layer comes back to the original
+[44:09] shape.
+[44:12] So, that's that is the projection step.
+[44:16] And that's what I mean here when I say
+[44:17] concatenate and project.
+[44:20] So, at this point, what we have is
+[44:21] things come in, we contextualize them
+[44:23] using these different attention heads,
+[44:25] and when they come out of the attention
+[44:27] heads, we take them all, we just like
+[44:29] concatenate them, and then compress them
+[44:31] back to the same original starting
+[44:32] shape. Right? If these vectors are 100
+[44:35] units long or 100 dimension long,
+[44:37] whatever comes out is 100 still.
+[44:39] And to pre- preserving this
+[44:42] size as we go along is very important
+[44:43] for reasons that'll become apparent a
+[44:44] bit later.
+[44:46] Okay. So, that is the multi-attention
+[44:49] thing.
+[44:50] Now, a final tweak for today
+[44:53] is that we will inject some
+[44:55] non-linearity
+[44:57] with some dense layer dense ReLU layers
+[44:59] at the very end. So, we'd went through a
+[45:01] bunch of attention heads. We we came up
+[45:03] with a bunch of contextual embeddings
+[45:04] now.
+[45:05] So, at this point so far,
+[45:07] there are no since there are no
+[45:08] parameters inside these boxes,
+[45:10] uh
+[45:11] right? And there are some parameters
+[45:13] here.
+[45:13] We need to do some non-linearity. So
+[45:15] far, there's been nothing that's
+[45:16] non-linear so far. So, here we actually
+[45:18] send it through one or more ReLUs.
+[45:21] Typically, they just use one ReLU. So,
+[45:24] and what I mean by that
+[45:34] Sorry.
+[45:37] So, this is what we had here and then
+[45:41] we take it in
+[45:46] and then run it through
+[45:50] actually
+[45:54] we typically run it through
+[45:57] a ReLU.
+[45:58] This is a nice ReLU.
+[46:01] Okay? And all and and the rule of thumb,
+[46:03] as you will see, if let's say this
+[46:04] vector is say 100 dimensions long, they
+[46:06] typically will choose a ReLU which is
+[46:08] about 400
+[46:10] wide. And then it just gets projected
+[46:12] out again back to 100.
+[46:16] So,
+[46:17] this is just a simple, you know, the
+[46:20] input comes in, goes through a single
+[46:21] hidden layer with four four times as
+[46:23] many as here, and then it
+[46:26] project another dense layer
+[46:28] to 100 again.
+[46:29] And this since there are ReLUs here,
+[46:32] we in- we have injected some
+[46:33] non-linearity into the processing.
+[46:35] Okay? Now,
+[46:37] a lot of this stuff when it came out
+[46:39] felt very ad hoc.
+[46:41] Right? It didn't come from some deep,
+[46:43] you know, theoretical motivations.
+[46:45] But and people had strong intuitions as
+[46:47] to why these things were helpful. And as
+[46:49] it turns out, since the transformer came
+[46:51] out, people have tried to optimize every
+[46:53] aspect of this thing.
+[46:55] It's actually pretty difficult to beat
+[46:56] the starting architecture.
+[46:58] Right? Improvements have been made, but
+[47:00] it's actually very robust architecture.
+[47:02] So,
+[47:03] so that's what's going on here. And then
+[47:05] when we come out of this thing,
+[47:08] this is what we have, the story so far.
+[47:10] We start with random standalone
+[47:13] embeddings. This could be
+[47:14] GloVe embeddings, it could be random
+[47:15] weights, doesn't matter. It goes through
+[47:18] a bunch of self-attention heads. We
+[47:19] concatenate it when it comes out the
+[47:21] other end.
+[47:23] Concatenate it when it comes out the
+[47:25] other end. And then we project it back
+[47:27] to the same size as before. Then we run
+[47:29] it through, you know, a ReLU followed by
+[47:31] a linear layer and we get these things
+[47:33] again. So, in this whole process, if six
+[47:36] things came in, six things will come
+[47:37] out. And if six and if those six things
+[47:40] that came in
+[47:41] were embedding standalone embedding
+[47:43] vectors of 100 dimensions, what comes
+[47:45] out is also 100 dimensions.
+[47:47] So, in that sense, you could think of
+[47:48] this whole thing as a black box in which
+[47:50] whatever you send in, the same number of
+[47:52] things will come out of the same length.
+[47:54] The numbers will be different because
+[47:56] they will have been heavily
+[47:56] contextualized.
+[47:58] The numbers are much smarter, in other
+[48:00] words.
+[48:02] So, so far what we have seen is that we
+[48:04] have satisfied two of the three
+[48:05] requirements. We have taken the context
+[48:08] of each word into account
+[48:09] by using these dot products in the
+[48:11] self-attention layer, and we can
+[48:12] generate an output that is the same
+[48:13] length as the input, but we have ignored
+[48:15] the fact that we have ignored word order
+[48:17] completely.
+[48:19] Okay? Because whether I had said the
+[48:21] train slowly left the station or I had
+[48:23] said the the station slowly left the
+[48:25] train,
+[48:26] this thing won't know the difference.
+[48:30] Because dot products
+[48:32] function on sets, not on sequences. They
+[48:34] function on sets.
+[48:36] Okay? Regard- You can you should
+[48:37] convince yourself of this. Regardless of
+[48:39] the order, the dot product calculation
+[48:40] doesn't change anything.
+[48:42] Because we are doing every pair.
+[48:46] Okay? So, the question is how do we take
+[48:48] the order of the words into account? Um
+[48:50] right. As I was saying, we can scramble
+[48:52] the order of the words in a sentence and
+[48:53] we'll get the exact same contextual
+[48:54] embeddings at the end.
+[48:55] So, by the way, if you're working on a
+[48:57] problem in which the order doesn't
+[48:58] matter,
+[49:00] then you can stop right now and use the
+[49:01] transformer.
+[49:04] And there are many problems that are
+[49:05] actually in that category where the
+[49:06] order doesn't matter. So, if you take
+[49:08] traditional structured data, right? Uh
+[49:10] tabular data,
+[49:12] uh you know, blood pressure, cholesterol
+[49:14] level, boom boom boom. Does it predict
+[49:15] heart disease? Well, there is no order
+[49:17] in that thing. You can use the
+[49:18] transformer as is without doing anything
+[49:20] more.
+[49:22] So, transformers work for both sets and
+[49:24] sequences where order matters.
+[49:27] Okay. So, the fix for this is something
+[49:29] called the positional encoding.
+[49:32] Um
+[49:33] so what we do is very simple. There are
+[49:34] By By there are many things that been
+[49:36] invented um to to to tell transformers
+[49:40] to give an transformer some information
+[49:42] about the order of each of the things
+[49:44] that are coming in.
+[49:45] I'm going to go with something called
+[49:46] the, you know,
+[49:47] the simplest possible way which actually
+[49:49] works pretty well in practice. So, what
+[49:51] we do is
+[49:52] for each position
+[49:55] each possible position in the input
+[49:56] starting from the first position all the
+[49:58] way through the last position
+[50:00] we imagine that that position itself is
+[50:02] a categorical variable.
+[50:05] Right? If a sentence can only be 30 30
+[50:07] words long, let's say, we say that hey,
+[50:10] the position of each word is a number
+[50:11] between 0 and 29.
+[50:14] And so, we can just think of it as a
+[50:16] categorical variable.
+[50:17] And because the categorical variable, we
+[50:20] can just imagine an embedding for that
+[50:22] for each potential value. So, it'll
+[50:24] become clear in just a moment because I
+[50:25] have a numerical example.
+[50:27] And so, what we do is we will just take
+[50:28] that standalone embedding and then we'll
+[50:30] take this position embedding
+[50:32] which represents the position of the
+[50:33] word in the sentence, we just add them
+[50:35] up.
+[50:36] Okay? Uh yeah.
+[50:39] So, if
+[50:40] in the initial sentence itself, I have a
+[50:43] mistake, so I just write it as the train
+[50:45] slowly the station.
+[50:48] So, which means my output is actually
+[50:49] going to be wrong. Yes.
+[50:52] Now, the transformers are since they're
+[50:53] trained on lots of data,
+[50:55] they will be quite robust to these
+[50:57] things.
+[50:58] But strictly arithmetically speaking
+[51:00] correct, yes.
+[51:02] Um okay. So, here's let's look at an
+[51:05] example.
+[51:06] Let's assume that
+[51:08] um
+[51:09] your standalone embeddings, right? This
+[51:11] is your vocabulary, okay?
+[51:13] Unknown, cat, mat, I, sit, love, the,
+[51:15] you, on. That's it. That's our
+[51:17] vocabulary.
+[51:18] And for this vocabulary, we have these
+[51:20] standalone embeddings.
+[51:22] And just for argument, let's assume
+[51:23] these embeddings are only two long.
+[51:26] Okay? The dimension of these embeddings
+[51:27] is two.
+[51:28] If you recall the glove embeddings we
+[51:30] used last week, I think they were what?
+[51:31] 100 long?
+[51:33] And the ones we're using in the homework
+[51:34] are even longer than that.
+[51:35] Um but here we are assuming they're only
+[51:37] two long, okay? So, the embedding for
+[51:39] cat is 0.5, {comma} 7.1.
+[51:42] All right. Now, let's assume that the we
+[51:45] can have at most 10 words in any
+[51:47] sentence that's coming in.
+[51:49] And obviously, a particular word could
+[51:50] be in position 0 all the way through
+[51:52] position 9.
+[51:53] And we will learn embeddings for each of
+[51:56] these positions, and these embeddings
+[51:57] are also two long.
+[51:59] Two units long. Dimension two.
+[52:03] Okay?
+[52:04] Now, where will these embeddings come
+[52:06] from?
+[52:07] What's the answer to that question? What
+[52:09] is the answer to the general question of
+[52:10] where will these weights come from?
+[52:14] We will learn it with backprop.
+[52:18] Okay?
+[52:20] We will start initially with random
+[52:21] numbers and then we'll get them make
+[52:23] them better and better
+[52:24] as over the course of training.
+[52:26] So, what we do is we have these two
+[52:28] tables
+[52:29] of embeddings.
+[52:30] Um the standalone embedding for the word
+[52:32] and the position embedding.
+[52:34] And then, we literally add them up.
+[52:37] So, for example, let's say the word the
+[52:39] sentence that came in is cat sat mat.
+[52:41] That's the sentence. It's got three
+[52:43] words, cat sat mat. So, what we do is we
+[52:46] say, well, the embedding for cat is this
+[52:49] thing here, 0.571.
+[52:51] So, I write it here, 0.571.
+[52:53] Cat happens to be the zeroth position of
+[52:55] the word.
+[52:56] So, I grab the embedding for zero, which
+[52:58] is 1.3, 3.9. I stick it there, and then
+[53:01] I literally add them up. 0.5 + 1.3, 1.8.
+[53:04] 11.0. That's it.
+[53:07] So, now the positional encoded embedding
+[53:10] for the word cat is 1.8, 11.0, not 0.5,
+[53:15] 7.1.
+[53:18] So, if cat happens to show up in another
+[53:20] part of the sentence, let's say instead
+[53:22] of cat sat mat, we had
+[53:25] mat sat cat.
+[53:28] Now, cat is now the third position,
+[53:29] right? Which is 0, 1, and 2. Which means
+[53:33] its embedding doesn't change. It's just
+[53:34] the embedding for cat, but now instead
+[53:36] of picking zero, we'll pick this one,
+[53:38] 0.6, 8.1, and put that here and add them
+[53:40] up instead.
+[53:43] So, this is the idea of the positional
+[53:45] encoding.
+[53:46] This is how we inject position knowledge
+[53:48] into the transformer.
+[53:52] Yes.
+[53:54] Um
+[53:55] the positional embedding would be
+[53:56] different for each sentence, right? How
+[53:58] do you No, this is just one table which
+[54:00] tells you what the position is.
+[54:01] So, the it says for a word that appears
+[54:04] in the seventh position in any input
+[54:06] sentence that you're feeding in,
+[54:08] this is the embedding that you need to
+[54:09] use
+[54:11] for that position.
+[54:16] If the word appears twice in the same
+[54:19] sentence, how do
+[54:21] Great question. So, if if let's say just
+[54:23] for argument, let's say the word the the
+[54:25] sentence was cat cat cat.
+[54:27] So, the
+[54:29] for each one of those cat for cat cat
+[54:31] cat,
+[54:32] the this embedding will be the same,
+[54:34] 0.571, because that is happens to be
+[54:36] just the embedding for cat regardless of
+[54:38] position.
+[54:39] But then, the first cat
+[54:42] for the first cat, we will use 1.3, 3.9
+[54:45] as the addition. For the second cat,
+[54:47] we'll use 6.3, 3.7. The third cat will
+[54:50] use 0.6, 8.1.
+[54:51] So, only the things that are adding the
+[54:53] position encoding will change, the
+[54:55] positional embedding. So, the resulting
+[54:57] sum is going to be different for each of
+[54:58] these three words, even though they're
+[54:59] exactly the same word.
+[55:05] Is that position embedding table
+[55:07] specific to the standalone embedding
+[55:09] table? Like if you were to add or remove
+[55:12] some words from the standalone It's
+[55:14] independent.
+[55:15] Independent. It only depends on your
+[55:18] assumption about how long the sentences
+[55:19] can be.
+[55:21] That's it.
+[55:21] It doesn't really care about what's what
+[55:23] words are coming in. That's a whole
+[55:24] different thing.
+[55:26] So, these are two independent tables
+[55:27] that just learned as part of this
+[55:28] process.
+[55:31] So, yeah, I have the same thing for sat
+[55:33] and mat.
+[55:35] Sat and mat, that's what we have.
+[55:39] So, just make sure you understand these
+[55:40] two slides to really like make sure the
+[55:42] mechanics are clear. Yeah.
+[55:46] How do you control for filler words? For
+[55:48] example, if you're taking
+[55:50] NLP output for transcription and you're
+[55:53] trying to run a transformer and you have
+[55:55] a lot of
+[55:56] um's and likes that are
+[55:58] disproportionately large and have these
+[56:00] random assignments or
+[56:03] really deep embeddings, is there other
+[56:04] ways to look at through the noise?
+[56:07] Typically, what they do is um
+[56:09] as we will we'll talk about this thing
+[56:10] called byte pair encoding in which we
+[56:12] take individual characters,
+[56:14] fragments of words, and words into
+[56:16] account as tokens. So, when you hear
+[56:18] stuff like uh and so on, it gets mapped
+[56:21] to these small tokens.
+[56:23] Right? And then we treat them as just
+[56:24] any other token.
+[56:28] Um yeah, is aggregation like a simple
+[56:31] sum where here and is the actual
+[56:33] semantic meaning of the word standalone
+[56:36] not be more important than its
+[56:37] relative position in the sentence?
+[56:40] It could be. We just don't know a priori
+[56:42] whether it's going to be important or
+[56:43] not for any particular sentence.
+[56:45] We when we train the transformer with a
+[56:46] lot of textual data,
+[56:48] right? It'll just figure out the right
+[56:50] values for these things so that on
+[56:51] average, the accuracy is as high as
+[56:53] possible.
+[56:55] So, in many of these things, there's
+[56:56] always a tension between our human
+[56:58] intuition as to how it should work and
+[57:00] whether you should just throw it into
+[57:01] the meat grinder of backprop and see
+[57:02] what happens.
+[57:04] And so, here it does it turns out you
+[57:05] can just throw it into backprop, it'll
+[57:06] actually do a pretty good job.
+[57:08] Uh yeah.
+[57:10] For the positional encoding, we would
+[57:13] just be as using the sum vector, we
+[57:15] would be using like this 2 by 3 matrix
+[57:18] that you have for our right?
+[57:20] Uh oh yeah, this is just for
+[57:21] demonstration. Basically, this is the
+[57:23] thing that will actually go into the
+[57:24] transformer. Correct.
+[57:26] Yeah.
+[57:28] That was just me being overly verbose in
+[57:30] the slides.
+[57:31] Uh yeah.
+[57:33] I can see sentences in the input. At
+[57:35] this point, are we still parsing out
+[57:36] punctuation or if we have like a
+[57:38] multi-sentence input, is there a
+[57:40] positional embedding vector for each of
+[57:41] the sentences? Yeah, so here um
+[57:44] basically, the starting point is tokens.
+[57:47] Right? And in our example, because we're
+[57:48] working with the idea of simple
+[57:50] standardization and stripping and things
+[57:51] like that, I'm just showing actual
+[57:53] words.
+[57:54] If you go to something like GPT-4, since
+[57:56] it uses a different tokenization scheme,
+[57:58] uh each token might be part of a word.
+[58:01] It might be it might be an individual
+[58:02] character, it might be a punctuation
+[58:03] mark, it could be in fact um the GPT
+[58:06] family doesn't strip out punctuation.
+[58:08] Which is why when you ask a question, it
+[58:10] comes back with intact punctuation in
+[58:12] its response.
+[58:13] Uh and so, we'll get we'll revisit this
+[58:15] when you look at BPE, byte pair encoding
+[58:17] later on.
+[58:19] But the key thing to remember is that
+[58:21] all the stuff we're talking about starts
+[58:22] from the notion of a token.
+[58:24] As to how you define a token given a
+[58:26] bunch of text, that's the tokenizer's
+[58:28] job. And we just assumed a simple
+[58:30] tokenizer for the time being.
+[58:33] Okay? So, at this point, folks, we have
+[58:36] satisfied all the requirements.
+[58:38] Uh we have taken the surrounding context
+[58:40] of each word, we have taken the order,
+[58:42] and so on and so forth, because what's
+[58:43] coming in here is the positional
+[58:45] embeddings. Okay? And it runs through
+[58:47] the whole transformer stack.
+[58:49] So,
+[58:51] this is called a transformer encoder.
+[58:54] Okay?
+[58:55] This is the transformer encoder.
+[58:57] And you can see here, this is the
+[58:59] original picture from the paper.
+[59:01] It's an iconic picture at this point.
+[59:03] So, it says here this is these are the
+[59:04] input This is like the cat sat on the
+[59:06] mat.
+[59:07] It comes in here, gets transferred to
+[59:09] transformed into embeddings, standalone
+[59:11] embeddings.
+[59:12] And then, based on the position of each
+[59:14] word, we add that's why you see a plus
+[59:17] sign here, we add the positional
+[59:20] embedding to that.
+[59:22] And the resulting thing goes into this
+[59:24] transformer block. And here,
+[59:26] we go through multi-head attention.
+[59:30] And things come out the other end.
+[59:32] Then there is this thing called add and
+[59:34] norm, which we'll visit we'll revisit on
+[59:36] Wednesday.
+[59:37] And then it goes through a feed forward
+[59:38] network, another add and norm, which
+[59:40] we'll revisit on Wednesday.
+[59:42] And then it comes out the other end.
+[59:43] That's it. That's a transformer encoder.
+[59:46] Okay?
+[59:47] Um
+[59:48] and so if you look at this
+[59:52] just to point out a couple of things,
+[59:53] the input embeddings can be random
+[59:55] weights or it could be pre-trained
+[59:56] embeddings.
+[59:57] Um
+[59:58] we add in a position-dependent embedding
+[01:00:00] to represent the position of each word
+[01:00:01] in the sentence. That's the plus.
+[01:00:02] Then we pass it through multi-headed
+[01:00:04] attention to get a contextual uh
+[01:00:05] representation.
+[01:00:07] Then we finally we pass all this through
+[01:00:09] a simple
+[01:00:10] typically it's a two-layer network. A
+[01:00:12] one hidden layer with relus and then a
+[01:00:13] linear layer after that and boom. Uh and
+[01:00:16] then we do it. This is the encoder. And
+[01:00:20] here is the perhaps the most important
+[01:00:21] point to keep in mind.
+[01:00:23] Because we have taken inordinate care to
+[01:00:25] make sure that the things that are
+[01:00:26] coming in and the things that are going
+[01:00:28] out have the same size
+[01:00:30] both in terms of the number of tokens as
+[01:00:32] well as the length of each vector.
+[01:00:34] We can then stack them up like pancakes.
+[01:00:37] We can have lots of transformers stacked
+[01:00:39] one on top of each other.
+[01:00:41] Right? Because it's the perfect API.
+[01:00:43] It's the simplest possible API. The same
+[01:00:45] thing comes in, same thing goes out.
+[01:00:47] In terms of size. So you can have a
+[01:00:49] transformer encoder, another one top,
+[01:00:51] boom, boom, boom, boom, boom, one after
+[01:00:53] the other. GPT-3 has 96 transformer
+[01:00:55] stacks.
+[01:00:58] And like in all things deep learning
+[01:01:00] related, the more layers you have, the
+[01:01:02] more complicated things we can do with
+[01:01:04] it.
+[01:01:05] As long as you have enough data to keep
+[01:01:06] the model happy so it doesn't overfit.
+[01:01:11] Okay?
+[01:01:13] All right. So, what we haven't covered,
+[01:01:15] which we'll cover on Wednesday
+[01:01:17] uh is is the question that
+[01:01:20] he had posed about how
+[01:01:22] uh you know, since there are no
+[01:01:23] parameters inside the self-attention
+[01:01:24] block, what are we actually learning?
+[01:01:26] And then there is these things called
+[01:01:27] residual connections and layer
+[01:01:29] normalization. We'll talk about all
+[01:01:31] those things on Wednesday. Those are all
+[01:01:32] like, you know, refinements to the idea.
+[01:01:35] So, all right, 9:39. Um let's apply the
+[01:01:38] transformer encoder to an actual
+[01:01:39] problem.
+[01:01:40] Any questions?
+[01:01:43] Uh yeah.
+[01:01:45] My question is regarding like you said
+[01:01:46] you could have multiple transformers.
+[01:01:48] What is the difference with having
+[01:01:50] multiple self-attention heads uh and
+[01:01:53] rather than that having multiple When I
+[01:01:54] say a transformer block within the block
+[01:01:57] there could be multiple heads. So, if
+[01:01:59] you're if the accuracy is the same, why
+[01:02:01] would you use this rather
+[01:02:04] Yeah, you can have a lot of attention
+[01:02:06] heads. And that's totally fine. And
+[01:02:08] typically I forget how many GPT-3 and 4
+[01:02:10] have. They have a whole bunch of them.
+[01:02:12] But you can So you can go wide and you
+[01:02:13] can go deep.
+[01:02:15] Both are done in practice.
+[01:02:18] But the thing is if
+[01:02:19] The one thing you have to remember is
+[01:02:20] that if you if you go wide, you have a
+[01:02:22] lot of attention heads then given the
+[01:02:24] particular input that's coming into that
+[01:02:26] block, it'll learn different patterns
+[01:02:28] from it.
+[01:02:29] While if you stack them all up, it's
+[01:02:31] going to learn different ways to
+[01:02:32] contextualize the things that are coming
+[01:02:33] in. It operates at higher levels of
+[01:02:35] abstraction. So the analogy would be
+[01:02:36] that like the seventh layer of a
+[01:02:38] convolutional net may take the sixth
+[01:02:40] layer's output and say, "Oh, I'm seeing
+[01:02:42] a lot of edges here. I'm going to take
+[01:02:44] an edge like this, two circles like that
+[01:02:46] and call it a face."
+[01:02:48] So it'll operate at a higher level of
+[01:02:49] abstraction.
+[01:02:52] Okay.
+[01:02:53] Um
+[01:02:58] All right, let's go to the collab.
+[01:03:01] So what we're going to do is we're going
+[01:03:02] to take the transformer that we just
+[01:03:04] learned about and we're going to apply
+[01:03:05] it to solve the the travel uh slot
+[01:03:07] problem. Okay?
+[01:03:09] Uh all right. So
+[01:03:12] Okay, so we'll start with the usual
+[01:03:14] preliminaries.
+[01:03:16] And then we have taken the ATIS data set
+[01:03:18] I talked about and we have stuck them in
+[01:03:20] raw box for easy consumption.
+[01:03:23] It's here.
+[01:03:29] Okay.
+[01:03:30] So if you look at to the top view
+[01:03:33] you can see here, for example, I want to
+[01:03:35] fly from Boston 8:30 a.m. And then this
+[01:03:37] is the output. The slot filling is the
+[01:03:39] output. Um and so as it turns out here
+[01:03:42] there is
+[01:03:43] this these people also gave it a another
+[01:03:46] They took the whole query and gave it an
+[01:03:47] intent as to is it it's a flight query,
+[01:03:49] it's a something else query and so on,
+[01:03:51] which we're not going to use. Are you
+[01:03:52] kidding me?
+[01:03:54] I want to fly from Boston at 8:30 a.m.
+[01:03:56] and arrive in Denver at 11:00 in the
+[01:03:57] morning. What kind of ground
+[01:03:59] transportations are available in Denver?
+[01:04:01] What's the airport at Orlando?
+[01:04:03] Um how much does the limo service cost
+[01:04:06] within Pittsburgh? Okay.
+[01:04:08] And so on and so forth. So you get So
+[01:04:09] you get the idea. It's a very wide range
+[01:04:11] of queries that are in this data set.
+[01:04:13] Um okay. So let's just ignore that for a
+[01:04:16] sec. Um okay. So what we're now going to
+[01:04:18] do is we are going to take only
+[01:04:22] um this column, right? The query column.
+[01:04:24] That's going to be our input text. Okay?
+[01:04:27] And then the slot filling column is
+[01:04:29] going to be our dependent variable, the
+[01:04:31] output.
+[01:04:32] So we'll just gather them all up
+[01:04:34] uh here.
+[01:04:37] Let it run. We'll do it for the training
+[01:04:38] data and the test data.
+[01:04:40] And so what we have done is that we have
+[01:04:42] taken um the transformer related code in
+[01:04:45] Keras and we have packaged it into a
+[01:04:47] little hardel library for easy
+[01:04:49] consumption.
+[01:04:50] Um and so that thing is here. You can
+[01:04:53] download it.
+[01:04:55] Calling it a library is like overstating
+[01:04:56] it. We literally just collected a bunch
+[01:04:57] of code and stuck it in a file. Okay?
+[01:04:59] So
+[01:05:00] and so what we'll do is from hardel
+[01:05:02] we'll we'll import the transformer
+[01:05:03] encoder.
+[01:05:04] And we'll import this positional
+[01:05:06] embedding layer.
+[01:05:08] Because what we're going to do is we are
+[01:05:09] going to take the input do the
+[01:05:11] positional encoding business and then
+[01:05:12] send it into the transformer.
+[01:05:14] Okay?
+[01:05:15] Um so but first let's vectorize the
+[01:05:18] input uh queries that are coming in.
+[01:05:21] So we'll define a thing here.
+[01:05:24] The use this uh
+[01:05:26] max query length is not defined. That's
+[01:05:28] what happens when you
+[01:05:30] don't run everything.
+[01:05:32] All right.
+[01:05:38] Okay. So now we have this thing here. So
+[01:05:41] turns out that there are 8,888 tokens,
+[01:05:44] right? 8,888 words in the input queries
+[01:05:47] that are we have in the data. Uh so I
+[01:05:49] take a look at the first few.
+[01:05:52] And you can see here, you know, there is
+[01:05:54] unk. Uh and because the output mode here
+[01:05:56] is you just want integers to come out
+[01:05:58] not multi-hot encoding or anything
+[01:06:00] because we're going to take these
+[01:06:01] integers and then do embeddings from
+[01:06:02] them. So it'll it'll create it'll
+[01:06:04] reserve this empty string as the pad
+[01:06:07] token. This should be familiar from last
+[01:06:10] week.
+[01:06:11] And then the unk for unknown tokens and
+[01:06:13] then two from flights these are all some
+[01:06:14] of the most frequent. Um turns out
+[01:06:17] Boston is actually the most frequent. I
+[01:06:18] don't know what's up with that.
+[01:06:20] It is what it is. Then we'll do the same
+[01:06:22] vectorization to the train and test data
+[01:06:24] sets.
+[01:06:25] Now uh we need to do STIE for the output
+[01:06:28] side of the problem because the slots
+[01:06:30] the the dependent variable here,
+[01:06:31] remember, are all sentences as well with
+[01:06:33] the B, O, things like that, right? So we
+[01:06:36] need to vectorize those.
+[01:06:38] So we do or we need to do STIE on them.
+[01:06:40] So let's take a look at some of these
+[01:06:42] slots.
+[01:06:43] And you can see here all this stuff is
+[01:06:44] going on.
+[01:06:45] Note So now here is an example where you
+[01:06:48] have to be very careful when you do the
+[01:06:49] standardization.
+[01:06:51] Typically standardization you will
+[01:06:52] remove punctuation and you know, do
+[01:06:54] things like that and lowercase, right?
+[01:06:56] But here
+[01:06:57] these things have a specific meaning.
+[01:07:00] We can't just go in there and remove the
+[01:07:01] period and the underscore and then take
+[01:07:03] make the B into lowercase B and stuff
+[01:07:04] like that. That'll just harm it.
+[01:07:06] Right? We need to be able to preserve
+[01:07:07] the nomenclature of the output in terms
+[01:07:10] of all those tags. So
+[01:07:12] um so we don't want the standardization
+[01:07:13] to do all those out. So what we do is we
+[01:07:15] say standardization none.
+[01:07:17] Look at that.
+[01:07:18] We tell Keras do not standardize this.
+[01:07:20] Do not do your usual thing.
+[01:07:22] Okay?
+[01:07:23] Um so
+[01:07:25] we do that
+[01:07:26] for the output side. And then let's look
+[01:07:29] at the vocabulary.
+[01:07:30] Yeah, so this sounds pretty good.
+[01:07:33] These are all the things that we would
+[01:07:34] expect to see.
+[01:07:35] These are the distinct tokens in the
+[01:07:37] output strings.
+[01:07:39] Um all right.
+[01:07:43] Okay, we get it.
+[01:07:45] So we have 125 of them. In the in the
+[01:07:48] lecture I said there are 123 slots,
+[01:07:50] possible slots. Why is it 125 here?
+[01:07:54] Yes, unk and pad. Correct.
+[01:07:57] Um okay. Now we'll set up a transformer
+[01:07:59] encoder, right? Uh this Oh, wait, wait,
+[01:08:02] wait. I forgot about um doing this. My
+[01:08:05] bad. Um
+[01:08:07] All right.
+[01:08:11] I just thought when I saw the slide that
+[01:08:12] we should go to the collab
+[01:08:15] without giving you a bit more
+[01:08:16] background. No problem. So
+[01:08:18] So
+[01:08:20] the way we're going to model this
+[01:08:21] problem is that we're going to have
+[01:08:22] something like this, right? Fly from
+[01:08:23] Boston to Denver.
+[01:08:24] That's the input that's coming in and
+[01:08:26] that is the correct answer.
+[01:08:28] 0 0 some B something or others I mean O
+[01:08:31] and then something else, right? That's
+[01:08:32] the correct answer. That's the that's
+[01:08:34] the input and that is the right answer.
+[01:08:36] So what we'll do is we will
+[01:08:38] create these positional input embeddings
+[01:08:40] like we have discussed before.
+[01:08:42] We will run it through a transformer.
+[01:08:45] It gives us contextual embeddings.
+[01:08:47] So if we send five in, it's going to
+[01:08:49] send us five out except the color is now
+[01:08:50] blue.
+[01:08:51] Right? And then what we do is
+[01:08:54] we will run it through a relu.
+[01:08:57] Okay, we'll run it through a relu.
+[01:08:59] We will still have
+[01:09:01] you know, five vectors here, five
+[01:09:02] vectors will come in.
+[01:09:04] And then for each of the things that
+[01:09:05] comes in, we will stick a 123-way
+[01:09:07] softmax.
+[01:09:11] Okay, for each thing that comes out
+[01:09:13] we'll have a 123-way softmax and that's
+[01:09:15] the classification problem we're going
+[01:09:16] to solve.
+[01:09:20] Okay?
+[01:09:21] So
+[01:09:23] the weights in all these layers will get
+[01:09:25] optimized by backprop.
+[01:09:28] All these weights are going to get
+[01:09:29] optimized.
+[01:09:30] Uh yeah.
+[01:09:34] Sorry?
+[01:09:40] Oh no, the that's a layer. The weights
+[01:09:43] in the layer will still need to be
+[01:09:44] learned.
+[01:09:46] It's sort of like the text vectorization
+[01:09:48] layer is a bunch of code and then you
+[01:09:50] actually run it on a particular corpus
+[01:09:51] to adapt it and fill our vocabulary out
+[01:09:53] of it.
+[01:09:54] So, it's like an empty shell that needs
+[01:09:55] to get populated.
+[01:09:57] Okay, so with the weights and all these
+[01:09:59] things are going to get updated when we
+[01:10:00] when we train the model
+[01:10:02] by backprop.
+[01:10:03] Uh and that's it. That's the setup.
+[01:10:06] Does this make sense before I switch
+[01:10:07] back to the collab?
+[01:10:09] In particular, does this make sense?
+[01:10:11] This part of it.
+[01:10:15] Bunch of things come out and then for
+[01:10:17] each one of those things we need to
+[01:10:18] figure out a classification of a 123-way
+[01:10:20] classification. And that's where we
+[01:10:22] stick a softmax on every one of those
+[01:10:23] output nodes.
+[01:10:25] Yeah.
+[01:10:32] Oh oh, I see.
+[01:10:36] Yeah, so
+[01:10:40] It could be whatever or to put it
+[01:10:41] another way, it is your choice as the
+[01:10:43] user as the modeler. Correct? The thing
+[01:10:45] is at this point with the blue stuff the
+[01:10:47] transformer is basically saying, my job
+[01:10:49] is done.
+[01:10:51] It has given you these valuable
+[01:10:52] contextual embeddings at some high-level
+[01:10:54] abstraction. What you do with it depends
+[01:10:56] on your particular problem. And so that
+[01:10:58] the best practice would be to take it
+[01:11:00] and then maybe, you know, if these
+[01:11:01] embeddings are embeddings are really
+[01:11:03] long, maybe you make them a little
+[01:11:04] smaller, right? Using a ReLU. And using
+[01:11:07] a ReLU is always a good idea because
+[01:11:09] when in doubt, throw in a bit of
+[01:11:10] non-linearity.
+[01:11:11] Right? Uh and then once you're done with
+[01:11:13] that, well, at this point you need to
+[01:11:15] actually classify it. So, you stick an
+[01:11:17] output softmax on it.
+[01:11:20] Okay. So, that's what we have.
+[01:11:24] Um
+[01:11:27] All right, back to this picture.
+[01:11:29] So, what we're going to do is we
+[01:11:32] we also get to decide how long are these
+[01:11:34] embedding vectors. How long because here
+[01:11:36] we're not going to use Glove embeddings.
+[01:11:37] We're just going to learn everything
+[01:11:37] from scratch.
+[01:11:39] Right? We're going to learn everything
+[01:11:40] from scratch. So, and we can decide how
+[01:11:42] long these embedding vectors are. So, um
+[01:11:45] these embedding vectors I'm going to
+[01:11:46] decide
+[01:11:47] uh I have decided that I want them to be
+[01:11:49] 512 long, right? I want these actually
+[01:11:52] to be 512 long. So, that's what I have
+[01:11:54] here, 512.
+[01:11:57] And then inside the transformer,
+[01:11:58] remember
+[01:12:00] when we
+[01:12:01] concatenate everything and then we have
+[01:12:02] something, we run it through a final
+[01:12:04] ReLU layer, how big should that layer
+[01:12:07] be?
+[01:12:08] That's what it here what I mean by dense
+[01:12:11] dim. I want it to be 64.
+[01:12:13] And then I, you know, for fun I'm going
+[01:12:15] to use five attention heads.
+[01:12:17] Because why not?
+[01:12:20] Okay. And then in the final thing here
+[01:12:24] to go to Ali's question here these
+[01:12:27] things are all 512 long as I mentioned
+[01:12:29] earlier, right? These are all 512.
+[01:12:32] But this thing here I'm going to make it
+[01:12:34] just 128.
+[01:12:36] Okay, that's what I mean by units here.
+[01:12:38] And so if you look at the actual model
+[01:12:41] okay, whatever comes in has a max query
+[01:12:43] length of I think 30 if I recall.
+[01:12:45] Um actually let's just make sure of
+[01:12:47] that. What did I assume?
+[01:12:51] 30, correct? Max query length 30. So,
+[01:12:53] each sentence is 30. So, if a sentence
+[01:12:55] has 35 words in it, what's going to
+[01:12:57] happen?
+[01:12:59] The last five will get chopped,
+[01:13:01] truncated. If it comes in at 22, we're
+[01:13:03] going to pad it with eight more tokens
+[01:13:05] with a pad token. Okay? That's how we
+[01:13:06] make sure everything uh gets to 30.
+[01:13:09] All right. So, we come back here.
+[01:13:12] So, the input is still sentences which
+[01:13:14] are 30 long, tokens which are 30 long.
+[01:13:16] And then we run it through a positional
+[01:13:18] embedding layer.
+[01:13:20] Okay? This positional embedding layer
+[01:13:23] has the the actual embedding for each
+[01:13:25] word, that table and it has the
+[01:13:27] positional table, positional embedding
+[01:13:29] table. So, just to be clear, this
+[01:13:31] positional embedding layer is basically
+[01:13:34] it's basically this.
+[01:13:37] So, this table
+[01:13:38] and this table together are packaged up
+[01:13:41] into the positional encoding layer.
+[01:13:43] But they are two distinct tables. They
+[01:13:45] just happen to be packaged up.
+[01:13:47] So,
+[01:13:49] so this is what we have here.
+[01:13:51] And then we get a nice positional
+[01:13:52] embedding out and then boom, we run it
+[01:13:55] through the transformer. And you know,
+[01:13:57] this transformer encoder object we have
+[01:13:59] to tell it obviously, hey, this is the
+[01:14:01] embedding dimension that's going to come
+[01:14:02] out. This is the dense dimension you're
+[01:14:04] going to use in that final feedforward
+[01:14:06] layer inside each attention block and
+[01:14:09] this is the number of attention heads I
+[01:14:10] want you to use. That's it.
+[01:14:11] Very, right? Only three things have to
+[01:14:13] be specified.
+[01:14:14] And then whatever comes out of the
+[01:14:16] transformer encoder are these blue
+[01:14:18] vectors.
+[01:14:19] And then we are back into good old sort
+[01:14:20] of, you know, traditional DNN stuff
+[01:14:22] where we take this thing, run it through
+[01:14:24] a ReLU with 128 units, we add a little
+[01:14:27] dropout uh and then we run it through a
+[01:14:30] dense layer which the the vocab size
+[01:14:33] here is 125, which is the 125-way
+[01:14:35] softmax.
+[01:14:37] Okay? Activation softmax.
+[01:14:39] Connect up everything into model input
+[01:14:41] and output and boom, that's the whole
+[01:14:42] model.
+[01:14:44] So, that's what we have here.
+[01:14:47] Okay?
+[01:14:48] Now,
+[01:14:51] this for the you know, after Wednesday's
+[01:14:53] class
+[01:14:54] for extra credit and for your personal
+[01:14:56] edification
+[01:14:59] try to work through this thing to come
+[01:15:00] up with this number.
+[01:15:03] 53 million
+[01:15:04] um sorry, 5.3 million.
+[01:15:06] Right? Uh and see if it matches this
+[01:15:10] number here.
+[01:15:12] It should match.
+[01:15:13] Hand calculate the number of parameters
+[01:15:15] inside the transformer. Okay? For fame
+[01:15:17] and fortune. That's an optional thing.
+[01:15:19] So,
+[01:15:20] uh do it after Wednesday's class, not
+[01:15:22] right now.
+[01:15:23] And I have actually listed the exact
+[01:15:24] math that goes into it here. Okay? All
+[01:15:26] right. So, by the way, you can peek into
+[01:15:28] any layers' weights using its weight
+[01:15:30] attribute. This is the embedding
+[01:15:31] uh the positional embedding thing we
+[01:15:33] had. So,
+[01:15:34] we can click it and you can see here it
+[01:15:36] has two tables. There's the first table
+[01:15:39] which is just the embedding table which
+[01:15:40] says
+[01:15:41] there are eight eight eight tokens in my
+[01:15:43] vocabulary and each of those tokens is a
+[01:15:45] an embedding vector which is 512 long.
+[01:15:47] That is the first table here. And then
+[01:15:49] it has the second object which is the
+[01:15:51] positional embedding and it says here,
+[01:15:53] well, my sentences can be 30 long and
+[01:15:56] for each position of the 30 long
+[01:15:58] sentence, I will have a 512 embedding.
+[01:16:02] Both these tables as I mentioned earlier
+[01:16:04] are packaged up inside and you can
+[01:16:05] actually see what the weights are before
+[01:16:06] you do any training.
+[01:16:08] Okay?
+[01:16:09] So, all right. So, I'm going to stop
+[01:16:11] here uh because the model it's going to
+[01:16:13] take a few minutes to run and we're
+[01:16:14] already at 5 9:45.
+[01:16:16] Um so, we will continue the journey on
+[01:16:17] Wednesday. If some of it is not super
+[01:16:19] clear, don't worry about it. It will
+[01:16:20] become much clearer on Wednesday. All
+[01:16:21] right? All right, folks, have a good
+[01:16:22] couple of days. I'll see you on
+[01:16:23] Wednesday.
