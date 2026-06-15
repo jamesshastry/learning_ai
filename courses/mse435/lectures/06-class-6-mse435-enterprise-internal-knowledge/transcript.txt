@@ -1,0 +1,1418 @@
+[00:10] Today we're going to talk about
+[00:13] this part of the stack
+[00:15] models
+[00:17] and uh how do you
+[00:21] build better models for better
+[00:22] applications. Uh our guest for today is
+[00:25] Yash Bottle, founder and CEO of Applied
+[00:27] Compute. I'm so excited to have Yash
+[00:30] here, not only because he's a grad uh a
+[00:33] recent Stanford grad. He's going to talk
+[00:35] a lot about his his journey, but also
+[00:37] because he uh was one of the very few
+[00:39] undergrads who went directly to OpenAI
+[00:41] research um uh after Stanford was a part
+[00:44] of the post training team. uh started
+[00:47] applied compute um after OpenAI because
+[00:49] of an insight that he had during his
+[00:51] work at OpenAI and has built applied
+[00:53] compute into one of the most uh
+[00:56] successful businesses uh applying his
+[00:58] learnings to incredible enterprises.
+[01:00] Yash, thank you for doing it. Please
+[01:02] join us.
+[01:04] [applause]
+[01:05] Thank you.
+[01:07] >> Awesome.
+[01:08] >> That's on.
+[01:09] >> Cool.
+[01:09] >> Thanks for having me.
+[01:11] >> Thanks for joining us.
+[01:12] >> Yeah.
+[01:12] >> Yeah. Tell us a little bit about
+[01:13] yourself. You've had an incredible
+[01:14] journey. Um and uh you've made some some
+[01:18] tough choices. Actually, we were talking
+[01:19] a lot with this class right before you
+[01:20] joined about decisions about what to
+[01:22] study. So, walk us through your your
+[01:24] journey.
+[01:24] >> Yeah.
+[01:25] >> Um and that led you to today.
+[01:27] >> Yeah. Yeah. So, so I'll talk a little
+[01:29] bit about uh my my journey. It's not
+[01:32] actually that long. Um I uh I was
+[01:35] actually sitting in here taking finals
+[01:37] not that long ago and I'm I'm class of
+[01:40] 25. So, um, you know, was this hasn't
+[01:44] been that that that long since I've been
+[01:45] on on campus and stuff, but, um, yeah.
+[01:48] So, so, you know, grew up in Austin,
+[01:50] Texas, came here for school. Um, I I
+[01:53] like to say I was a very good student in
+[01:55] high school, was a very bad student
+[01:57] here. Um, not grades or anything, but,
+[02:00] you know, kind of never went to class,
+[02:02] watched the online lectures, did that
+[02:04] sort of stuff. Um, and sort of the the
+[02:06] the rapid fire history is ended up
+[02:08] building a bunch of stuff on campus. Um,
+[02:11] got connected to Sam Alman very
+[02:14] serendipitous serendipitously through
+[02:16] through some mutual friends. Um, one
+[02:19] thing about Sam that I think not many
+[02:21] people know is he has an incredible soft
+[02:24] spot for helping young people early on
+[02:26] in their careers. Um, so yeah, ended up
+[02:29] meeting Sam. We hit it off uh freshman
+[02:32] year summer um you know a friend and I
+[02:34] were kind of deciding hey do we want to
+[02:36] do our summer internships? Do we want to
+[02:38] go and work on a project? Ended up
+[02:40] saying hey let's go work on our project
+[02:42] done our internships and we were kind of
+[02:44] looking for money. Um Sam uh we shot Sam
+[02:47] a blind email. He gave us a very small
+[02:49] check to kind of like cover food and and
+[02:52] rent and things like that. So worked on
+[02:53] that for the summer. Ended up shutting
+[02:55] it down coming back to school. Uh so
+[02:57] that that you know came back for my
+[02:59] sophomore year. um was doing a lot of
+[03:01] fun things here on campus like tree
+[03:03] hacks. Shout out to tree hacks. Uh that
+[03:05] was kind of my main thing here. Um
+[03:06] really loved putting on that hackathon
+[03:08] for folks. Uh but then late 2022 is when
+[03:12] chat GBT came out and I was kind of just
+[03:15] like playing around with it and I was
+[03:18] like, "Holy crap, this is the coolest
+[03:19] thing I've ever seen. I have to go work
+[03:21] on it." Like I couldn't think about
+[03:23] anything else. So ended up shooting Sam
+[03:26] another email saying, "Hey, how do I
+[03:27] come and work on this thing?"
+[03:29] um he you know put me in touch with what
+[03:31] was called the OpenAI residency. I think
+[03:33] it still exists. It's actually how a lot
+[03:35] of folks at OpenAI went from you know
+[03:37] academic researchers or people in
+[03:39] different industries to full-time
+[03:41] employees at OpenAI. Um joined OpenAI uh
+[03:44] early 2023 on the post training team. Um
+[03:47] worked with some people I really really
+[03:49] looked up to in in the language model
+[03:51] universe. um starting on evals which you
+[03:54] know a tip for anyone here is whenever
+[03:56] you join a company work on this the sort
+[04:00] of like hairiest thing that no one wants
+[04:02] to work on because people will like you
+[04:03] for it. So I ended up working on emails
+[04:05] for the first year and then the second
+[04:07] year was kind of when these reasoning
+[04:09] models uh started coming out of the
+[04:11] woodwork. So, uh, people were training
+[04:13] these reasoning models on primarily
+[04:15] competitive math and it was kind of this
+[04:18] like wow moment for everyone at the
+[04:20] company where we're like, oh, you know,
+[04:21] we're seeing massive performance
+[04:23] increases in in using these models. Uh,
+[04:25] so a friend and I were like, hey, what
+[04:27] if we actually try applying these models
+[04:29] to things outside of competitive
+[04:31] encoding and math? I I wasn't a
+[04:33] competitive coding or math kid growing
+[04:34] up. A lot of the Frontiers Futures folks
+[04:36] were. Um, so we ended up hacking
+[04:38] together this agent that could kind of
+[04:39] browse the internet, write some code,
+[04:42] showed it to a bunch of leadership. They
+[04:44] were really excited about it. So we
+[04:46] started this team called Long Horizon
+[04:48] Tasks, and I was primarily focused on
+[04:50] leading a lot of the agentic coding
+[04:52] research, which eventually became became
+[04:54] CodeEx. Um, but yeah, left left uh left
+[04:58] to start applied compute about a year
+[04:59] ago. So our one year was actually last
+[05:02] Saturday. So hasn't hasn't been too
+[05:05] long. But uh yeah, we we we sort of saw
+[05:08] this gap where you know these models
+[05:10] were getting really really smart. But
+[05:12] when you actually went to go and apply
+[05:14] them inside of the enterprise, they're
+[05:16] like they're like smart geniuses that
+[05:18] know nothing about your business. And
+[05:20] inside of enterprise is actually where
+[05:21] you have most of the data in, you know,
+[05:24] in the world, right? Like all of these
+[05:26] companies have have tons and tons of
+[05:28] data, proprietary data that they've
+[05:29] built up over time. So we're actually
+[05:31] helping companies take the same frontier
+[05:33] technology that led to these smart
+[05:34] reasoning models and create their own
+[05:36] specialized models um to sort of enhance
+[05:39] their business.
+[05:40] >> Amazing. What a journey.
+[05:42] >> Yeah, it's a lot of fun.
+[05:43] >> Yeah.
+[05:44] >> Um I thought we'd start at the models.
+[05:46] Yash. So I went to the past century,
+[05:50] things have clearly escalated. And then
+[05:53] if you zoom in to this side of it uh
+[05:55] post Alexnet
+[05:57] >> uh things are moving
+[05:59] >> pretty fast.
+[06:00] >> Yeah.
+[06:00] >> What like could you put this in context
+[06:02] what what is going on at the model
+[06:04] airframe for us? Uh why is the
+[06:07] advancement in the last four years
+[06:08] notable and and what is driving it?
+[06:10] >> Yeah. So
+[06:11] >> and I got some of your slides if you
+[06:12] want.
+[06:13] >> Yeah. Yeah. Yeah. So scroll through
+[06:14] them.
+[06:14] >> I thought we'd start with like a bit of
+[06:16] history. Um you mentioned Alex Dent. Uh
+[06:19] does anyone here have have you guys
+[06:20] heard of deep learning or what that is?
+[06:23] >> Of course.
+[06:24] >> Okay. Nice. Nice. Um deep learning was
+[06:28] was kind Alexnet was kind of the the I
+[06:30] would say the pivotal moment for deep
+[06:32] learning and it also is kind of the
+[06:34] moment that we stopped understanding
+[06:36] what any of these models actually do. So
+[06:39] essentially what deep learning is, it's
+[06:40] it's it's a method of it's a piece of
+[06:42] machine learning technology that allows
+[06:44] you to learn underlying representations
+[06:47] from data. Um and and you basically like
+[06:50] train train on a bunch of data uh push
+[06:53] in a bunch of compute and you get out
+[06:54] these really smart models that you know
+[06:57] are are made up of you know millions or
+[06:59] billions of parameters. You actually
+[07:00] don't know what they do. Um but they
+[07:02] actually are really good at doing you
+[07:04] know tasks like prediction um language
+[07:06] model you know ne like next token
+[07:08] prediction is is what like looms do and
+[07:11] the sort of before and after was before
+[07:13] alexnet people were creating handcrafted
+[07:16] features sort of looking at um you know
+[07:20] pieces of underlying data training very
+[07:23] sort of like call it call it rudimentary
+[07:25] classifiers to detect edges things like
+[07:27] that on a lot of vision tasks and then
+[07:28] what Alexet did is they applied
+[07:31] GPUs um a massive data set called image
+[07:35] nets against neural nets which um led to
+[07:38] this sort of breakout moment where you
+[07:40] actually prove that hey if you scaled
+[07:42] compute and data you were able to see
+[07:44] these massive gains in sort of
+[07:46] predictive accuracy of these models
+[07:48] >> you know the model development has a lot
+[07:51] of different uh aspects to it
+[07:54] >> uh maybe give us an overview I know
+[07:56] we're going to go deep into a couple of
+[07:57] aspects of it what is model training the
+[08:00] modern day model training look like.
+[08:02] >> Yeah. So, so I think this is kind of a
+[08:04] snapshot. This is like by no means the
+[08:07] uh most detailed timeline of events of
+[08:09] things that have happened, but I wanted
+[08:10] to pick out a few a few pivotal moments
+[08:13] um in in recent years. Starting with the
+[08:16] the transformer. So, um you know, I'm
+[08:18] sure everyone here has heard of the
+[08:20] transformer and sort of self attention.
+[08:22] This was sort of the moment where uh you
+[08:25] know researchers at at Google brain came
+[08:27] up with a new architecture that actually
+[08:30] allowed scaling language model training.
+[08:33] Um it was way more performance on
+[08:34] existing hardware. So G like could
+[08:36] actually run these workloads on GPUs and
+[08:39] compared to previous method like
+[08:41] previous neural net architectures like
+[08:43] recurren ne neural nets or LSTMs they
+[08:46] were able to employ this technique
+[08:47] called attention which basically led to
+[08:50] way better performance in ne next token
+[08:52] prediction and could scale to these
+[08:54] massively long sequences in language. Um
+[08:57] sort of fast forwarding over the years
+[09:00] uh 20 2018 to 2019 was really this era
+[09:03] of pre-training. So people were taking
+[09:05] these massive corpuses of text teaching
+[09:08] models to sort of predict the next token
+[09:09] by optimizing on loss. So basically you
+[09:12] have a model try to predict the next
+[09:13] token. You see what the actual next
+[09:15] token was in the in the corpus of text
+[09:17] and then you do back propagation on the
+[09:19] model weights to sort of tweak the model
+[09:21] so that it's more likely to predict what
+[09:23] that ground truth uh next token was.
+[09:26] Then you sort of entered the era of
+[09:28] scaling laws. So starting with like the
+[09:29] OpenAI scaling laws which showed hey if
+[09:32] you actually scale these models up and
+[09:34] make them really really big you start to
+[09:35] get much better performance. Um so this
+[09:38] was like the Kaplan scaling laws uh
+[09:40] really proved out with GPT3 which was
+[09:42] the first kind of model that seemed to
+[09:44] have like some level of general
+[09:46] intelligence. So that was kind of a
+[09:47] breakthrough moment. And then you
+[09:49] continue to compound on this with like
+[09:50] the chinchilla scaling laws which should
+[09:52] hey not only do you need to make the
+[09:54] model really really big. You should
+[09:55] actually there's actually a compute
+[09:56] optimal way to scale these models. You
+[09:59] both make the parameter size much larger
+[10:01] but you also should train it on much
+[10:03] more data. Um and then once we started
+[10:06] to have these models that were sort of
+[10:09] generally useful uh it became a sort of
+[10:12] story of how do we actually make them
+[10:13] useful to the to the normal person? How
+[10:15] do we create like these inner interfaces
+[10:18] where it's like a tool that the everyday
+[10:21] person can use? And this was kind of the
+[10:23] era of of reinforcement learning uh with
+[10:25] human feedback preference tuning sort of
+[10:28] being able to steer these models because
+[10:30] general base models are are just doing
+[10:32] next token prediction, right? So they
+[10:33] hallucinate a ton. They don't actually
+[10:35] answer your question. They may say
+[10:37] things that are unaligned or not, you
+[10:39] know, not up to safety standards. And
+[10:41] then GPT4 was kind of this like you know
+[10:44] next next level step change in the
+[10:46] quality of these models.
+[10:49] Um I'll kind of go through these very
+[10:51] quickly. I think this is what people are
+[10:53] probably most familiar with in the past
+[10:54] couple years which are the error of
+[10:56] reasoning models. So you know in in in
+[10:59] 2024 um you know OpenAI came out with
+[11:02] this model called 01 which was kind of
+[11:05] this new axis for scaling model
+[11:07] intelligence which was test time compute
+[11:10] and this was kind of felt this I I I
+[11:13] want people to to to know that chain of
+[11:16] thought is like a completely emergent
+[11:18] behavior. um the the model reasoning
+[11:20] whenever it answers your question and
+[11:22] sort of spending time thinking
+[11:23] correcting itself no one trained it to
+[11:27] do that basically by putting it in these
+[11:29] constrained RL environments and then
+[11:31] funneling a ton of compute towards it
+[11:33] you actually got these models who had
+[11:34] this emergent property to be able to
+[11:36] reason and then combining that with tool
+[11:39] use which a lot of people you know if
+[11:40] you guys use cloud codecs deep research
+[11:43] you actually started to get these agents
+[11:44] that could reason work for really long
+[11:46] periods of time and sort of become um
+[11:49] what people are calling today AI
+[11:50] co-workers.
+[11:52] >> Fascinating.
+[11:53] >> Um do you have a slide? Okay, great.
+[11:55] This is this is perfect. So
+[11:57] >> yeah, you know
+[11:58] >> we have understood there to be multiple
+[12:00] ingredients of that go into making a
+[12:03] great model data compute talent.
+[12:06] >> Yeah.
+[12:07] >> Algorithms
+[12:08] uh maybe other things that I haven't
+[12:10] listed.
+[12:10] >> Yeah.
+[12:11] >> What is the bottleneck today? What has
+[12:13] been the bottleneck in the past? And
+[12:14] what do you suspect will the bottleneck
+[12:16] be in X years from now? Maybe maybe a
+[12:18] maybe a tour of history and then a
+[12:19] prediction for the future.
+[12:20] >> Yeah. So I mean kind of running through
+[12:22] what we what we just talked about, you
+[12:24] know, the the bottlenecks kind of went
+[12:26] from having the compute to train these
+[12:28] models to the correct architecture to
+[12:30] actually being able to scale to the
+[12:33] pre-training you know levels of data
+[12:35] that we need like the entire training on
+[12:37] the entire internet being able to make
+[12:39] these models usable by preference tuning
+[12:41] them. And then today what the bottleneck
+[12:43] is is I'm sure people have heard of like
+[12:45] RL environments which is actually how
+[12:47] these very recent families of models
+[12:50] have gotten so good at at reasoning um
+[12:53] and sort of intelligent thinking.
+[12:55] >> I think what the bottleneck is for the
+[12:57] future is
+[12:59] >> is it's it's basically this idea of
+[13:00] continual learning which I know we're
+[13:02] going to talk about a bit later. Um but
+[13:04] so far we've kind of gotten more more
+[13:06] and more data efficient methods of
+[13:07] training. So pre-training not super data
+[13:10] efficient like you have to train on the
+[13:11] whole internet to you know get the base
+[13:13] model no one you know people here uh you
+[13:16] to learn something you don't need to go
+[13:18] and like sort of like read internet uh
+[13:20] scale data so that that that was super
+[13:22] data efficient then we started to kind
+[13:24] of go to these these methods in post
+[13:25] training which were a little bit more
+[13:26] data efficient the most data efficient
+[13:28] today being like RL environments but the
+[13:32] thing that is kind of the holy grail and
+[13:33] I think what people think of when they
+[13:35] think of ASI or AGI is like How can a
+[13:38] model go and do something once and learn
+[13:40] from an extremely sparse reward? So, you
+[13:43] know, just like you know, you guys, if
+[13:45] if you're, you know, you go and burn
+[13:47] your hands on the stove, it's uh you
+[13:50] just need to do that once and then uh
+[13:52] you know, the stove is hot and not to
+[13:53] put your hand on the stove. These models
+[13:55] today are not really like that. Um, so I
+[13:57] think like this this this idea of
+[13:59] continual learning and being able to be
+[14:01] extremely data efficient with like in
+[14:03] real world interactions, that's the next
+[14:05] bottleneck.
+[14:06] >> Gotcha. Gotcha.
+[14:08] >> Super helpful. Well, you know, when you
+[14:09] burn your hand, it's also very loud
+[14:10] feedback.
+[14:11] >> Yeah. Exactly.
+[14:12] >> So, so hopefully continual learning is
+[14:13] giving us loud feedback.
+[14:14] >> Yeah.
+[14:15] >> Um,
+[14:16] >> and you know, the other big question,
+[14:18] maybe maybe not on the slide, is uh why
+[14:21] have all the labs converged at focusing
+[14:25] on software engineering? Why have they
+[14:27] focused on code as the first frontier?
+[14:29] I'm sure there'll be other frontiers
+[14:31] like life sciences or or or cyber
+[14:33] security or others that I don't know
+[14:35] about
+[14:35] >> but why software engineering why has
+[14:38] what is the unique property of code that
+[14:40] >> yeah people find so interesting
+[14:42] >> so so the type of RL training that these
+[14:45] labs are doing is our like reinforcement
+[14:47] learning with verifiable rewards so in
+[14:50] order to actually like get the learning
+[14:52] signal or the reward signal you need to
+[14:53] have a deterministic way to check if
+[14:56] what your model did was the correct
+[14:57] thing
+[14:58] >> code and math are really really good for
+[15:00] this because what can you do? You can
+[15:02] compile the code. You can run unit tests
+[15:04] against it. You can actually check to
+[15:06] see if the code was is doing the right
+[15:08] thing.
+[15:08] >> So you know that that is one reason why
+[15:12] co code has been super valuable. The
+[15:14] other is like it's really easy to make a
+[15:15] lot of synthetic data on this
+[15:17] >> right scale of data.
+[15:18] >> The scale of data the prior is really
+[15:20] good. There's a ton of code tokens on
+[15:22] the internet. Um and then I think the
+[15:24] other thing is just like a lot of
+[15:26] researchers uh me included think coding
+[15:28] models are kind of like AGI complete in
+[15:31] the sense that every task when you kind
+[15:34] of boil it down is a coding task right
+[15:36] like so that's why you see Claude and a
+[15:38] lot of these other uh models writing
+[15:41] code to do instead of doing like uh you
+[15:44] know tool calls or or or things that are
+[15:47] are more specific to the task. they're
+[15:49] actually just like using code as a
+[15:51] general language to interact with the
+[15:53] the real world.
+[15:54] >> Mhm. You know, one of the questions we
+[15:55] were discussing right before you came is
+[15:56] how do we get good at jobs with AI that
+[16:00] are not code or code adjacent? Give you
+[16:03] an example.
+[16:04] >> Um making slides
+[16:06] >> like this one by the way completely
+[16:08] generated with with with cloud co-work
+[16:09] with with initial set of conversations
+[16:11] that we had.
+[16:11] >> Yeah. Um, what is the relationship
+[16:15] between code and slide generation that
+[16:17] that would make these models good at
+[16:19] generating slides because they got good
+[16:20] at code?
+[16:21] >> So, did you did you make these slides
+[16:23] with cloud code?
+[16:23] >> I did all of the formatting.
+[16:24] >> Oh, great. Okay. Yeah. Yeah. So, so
+[16:26] basically um you know I've also made
+[16:29] slides with with with cloud code and
+[16:31] >> basically it you know it's able to make
+[16:34] the this table it's able to set the
+[16:36] formatting on the on the title. It's
+[16:38] able to put that random blue line there.
+[16:42] But what you can do is you can combine
+[16:44] the outputs of this model with other
+[16:47] auxiliary rewards to sort of tell it how
+[16:50] good the code was that it wrote. So here
+[16:52] this is like extremely functional, but
+[16:54] if we wanted to really optimize for
+[16:56] aesthetics, we could combine not only
+[16:58] the the you know the code execution and
+[17:00] actually being able to make the slides
+[17:01] and they're structurally relevant, but
+[17:03] also some sort of reward model that can
+[17:05] look at the the the output of the
+[17:07] slides. And it's been trained on human
+[17:09] preferences of what aesthetically
+[17:11] pleasing slides look like and what, you
+[17:13] know, ugly slides look like. And you can
+[17:15] combine those rewards and jointly
+[17:16] optimize for both writing, you know, the
+[17:18] functional slides and then also making
+[17:20] them look pretty.
+[17:21] >> Right. Yeah.
+[17:22] >> Right. Right. Right. Well, this is a
+[17:23] great segue.
+[17:24] >> Yeah.
+[17:24] >> Into your work. Um, you know, talk tell
+[17:28] us a little bit about pre-training,
+[17:30] post-training. What do those words mean?
+[17:32] >> Yeah.
+[17:33] >> Um, and I know you are the world's best
+[17:34] expert on on one of those. So, we we'll
+[17:36] dig into that.
+[17:37] >> That's that's very flattering. Um but
+[17:39] but yeah I mean you know sort of the in
+[17:42] in language modeling I think the two big
+[17:44] buckets to talk about are are
+[17:45] pre-training and post- training.
+[17:46] Pre-training is sort of this massive uh
+[17:51] training effort where you take internet
+[17:52] scale data you know trillions and
+[17:54] trillions of tokens. You throw a ton of
+[17:57] compute at it through this you know
+[17:58] architecture the transformer and you
+[18:00] train a neural net to get really good at
+[18:03] sort of learning patterns in language.
+[18:06] And you know the thing that falls out of
+[18:08] this is some form of intelligence. So
+[18:10] essentially what what pre-training is is
+[18:12] is is this idea of compression where
+[18:15] you're able to actually take you know
+[18:16] all of human knowledge i.e. the internet
+[18:19] and put it into a set of weights that
+[18:21] actually understands you know the
+[18:22] patterns in language how to think about
+[18:24] things whatnot. The problem is once you
+[18:26] have this pre-trained model which by the
+[18:28] way takes like orders of magnitude more
+[18:31] compute than post- training you actually
+[18:33] need to go and align this thing. So it's
+[18:35] just next sequence next token
+[18:36] prediction. So if you write a sentence
+[18:38] like you know um who should I invite to
+[18:43] dinner and it starts to basically say
+[18:46] like a bunch of random names or
+[18:47] something like that. That makes no sense
+[18:49] because like it you really the model
+[18:51] should be like oh I have no idea who's
+[18:52] on your invite list or like who you know
+[18:54] please tell me who these people are. So
+[18:56] post- training is actually the the
+[18:58] process of taking this model and telling
+[19:01] it what good and bad outputs look like
+[19:03] and you actually get a model that you
+[19:05] know learns a chat format where there's
+[19:07] a user message and an assistant message
+[19:09] that responds to you. Um you learn you
+[19:11] learn you know safety guidelines. So if
+[19:13] a you know if a sort of user asks how do
+[19:16] I make like a weapon or a bomb or
+[19:18] something like that you can actually
+[19:19] tell the model hey don't tell these
+[19:21] people how to to go and make these these
+[19:23] harmful weapons and sort of like in both
+[19:26] of these these cases what's what's
+[19:28] scarce is is is data. So um you know I
+[19:31] have this slide here which is like very
+[19:33] dense um you know you you guys probably
+[19:35] don't need to look at too closely but um
+[19:38] essentially what what pre-training does
+[19:39] is it's just optimizing um for for for
+[19:42] loss right so how do you get really good
+[19:44] at predicting that next token um but
+[19:47] what happened is you know the you know
+[19:48] we talked about the chinchilla scaling
+[19:50] laws you're scaling model size and
+[19:52] you're scaling the data that you're
+[19:53] trading these models on we've just ran
+[19:56] out of data like there's only so much
+[19:58] data on the
+[20:00] And we're sort of I know the other side
+[20:01] later talking about this, but we sort of
+[20:03] have approached uh the frontier on like
+[20:06] what data is available to these labs. Um
+[20:08] and like sort of the labs are the only
+[20:10] ones that can sort of do this level of
+[20:12] of of of training because it requires so
+[20:15] much compute and so much data. It's a
+[20:16] huge capex um you know uh requirement.
+[20:19] Um and then you know I think on the
+[20:22] post-training side uh you you sort of
+[20:24] have all these different methods for uh
+[20:27] you know training models from supervised
+[20:28] approaches uh like SFT to you know this
+[20:32] preference tuning RLHF to RLVR which
+[20:34] we'll we'll we'll talk a bit more about
+[20:37] [snorts]
+[20:37] >> there's a really good uh article
+[20:40] actually in the readings if you guys
+[20:41] read Karpathi's write up on RLVR in the
+[20:43] readings that talks about what happened
+[20:45] in 2025 you know RLVR really came to
+[20:48] prominence in in 2025.
+[20:51] >> Um, we'll get into that in a second, but
+[20:53] actually if you if you just click one
+[20:54] slide forward.
+[20:56] >> Oh, actually here. Can I
+[20:57] >> Yeah. Yeah.
+[20:57] >> I had a question on data for you. So,
+[20:59] >> yeah,
+[21:00] >> there's a lot of uh Oh, we spoke about
+[21:03] this.
+[21:04] >> Data.
+[21:05] >> Yeah.
+[21:06] >> Running out of data. This is the point
+[21:08] you were making. Mhm.
+[21:09] >> Um, you know, we had Ali here two
+[21:12] weeks ago and he spoke about actually
+[21:15] most of the data beyond this frontier is
+[21:17] going to be AI generated. A lot of
+[21:19] tokens on the world will be just AI
+[21:20] generated given the volume of which
+[21:22] they're being generated.
+[21:23] >> Yeah.
+[21:23] >> Talk about that for the second like what
+[21:24] is the what is the frontier of data?
+[21:26] Where do we get more data from here on
+[21:28] the model that will be trained in let's
+[21:30] say 20 2030? What is the input to that
+[21:33] and and where do we get it?
+[21:34] >> Proprietary public.
+[21:36] >> Yeah. So, so I think I think you know
+[21:38] there's multiple layers to this
+[21:40] question. The first is
+[21:41] >> and there's a whole economy, sorry to
+[21:42] interrupt you, there's a whole economy
+[21:44] of these companies whose full-time job
+[21:45] like Scale and Merur and others is to
+[21:48] maybe touch on that as well.
+[21:49] >> Yeah, exactly. Yeah. So, so this I think
+[21:51] is a is a visualization of of of
+[21:53] pre-training data which is really just
+[21:56] about like scale. Um you have people who
+[21:59] are starting to like buy old libraries
+[22:02] with ancient books in them going and
+[22:05] scanning these books to get more tokens.
+[22:07] You have a lot of investment in
+[22:08] synthetic generation. So how can you
+[22:10] take uh primary source documents and
+[22:13] sort of explode them to multi you know
+[22:16] orders of magnitude more tokens and see
+[22:17] if you can learn more from that. Um so
+[22:20] so I think pre-training you know that
+[22:22] that is kind of going to be the
+[22:23] methodology. Um really what people are
+[22:25] focusing on now I think in pre-training
+[22:27] is new architectural advances um to
+[22:30] actually make better use of the data
+[22:32] that we have today because on principle
+[22:34] right like you shouldn't need internet
+[22:37] scale data to learn a lot of this stuff
+[22:38] so people are trying to be like okay how
+[22:40] do we actually use the data better um so
+[22:42] there's all these like data wall
+[22:43] challenges that you know the frontier
+[22:45] labs are are working on now what you're
+[22:47] talking about is like RL environments so
+[22:50] this is kind of a a different
+[22:52] >> type of data this is Hey, let's actually
+[22:55] construct the world that the model
+[22:58] operates in, have it go and do a bunch
+[23:00] of things and then exchange,
+[23:04] you know, compute for less high quality
+[23:07] data. So basically like we we can use
+[23:09] way way way more compute and learn a lot
+[23:12] more from a single sample or roll out.
+[23:14] So you know, we were talking about code
+[23:16] a little bit and we could talk about
+[23:17] this on the RLVR slide. when you're when
+[23:19] you make a code environment, it's not
+[23:21] like pre-training where you're going and
+[23:24] you know training on a codebase and sort
+[23:27] of just learning all the tokens in the
+[23:28] codebase. You're saying, "Hey, I want
+[23:30] you to go and implement this feature."
+[23:32] You actually have the model try it
+[23:35] >> hundreds or thousands of times.
+[23:37] >> You have a way of checking if the model
+[23:39] actually did the correct thing. Right?
+[23:40] So that's that verifiable reward and you
+[23:42] get this distribution of rewards because
+[23:44] sometimes the model will go and do it
+[23:45] correctly, sometimes it will do it
+[23:47] wrong. And you're actually able to learn
+[23:49] way more from that type of training than
+[23:51] you are from pre-training alone. So just
+[23:54] next token prediction.
+[23:55] >> Fascinating.
+[23:56] >> Yeah.
+[23:56] >> And um maybe the same question for eval.
+[23:59] >> Yeah, I think you had something on
+[24:00] evals, but like talk to us about eval.
+[24:02] Why is um why are eval important?
+[24:04] >> Why do labs guard their eval? You know,
+[24:06] there's a lot of chatter about this
+[24:08] being the most
+[24:09] >> um the the most protected asset.
+[24:12] >> Tell us all about it. And as you you
+[24:13] know, you referenced this being the
+[24:15] >> hairy job to be done. Why is that the
+[24:17] case? So I think like you know as we as
+[24:19] we start to train these these models on
+[24:22] um essentially reward functions what
+[24:24] becomes uh sort of the most important
+[24:27] thing is actually knowing what good and
+[24:29] bad look like. So eval are a way of of
+[24:33] benchmarking your your your model and
+[24:35] and sort of you know given a certain
+[24:37] task understanding how the model acts.
+[24:40] Um the reason why you know eval are so
+[24:43] important to the labs is because it eval
+[24:45] set the road map. So if you know if we
+[24:48] want to go and train a really really
+[24:49] good code model um basically Sweetbench
+[24:52] I think was was kind of the the eval
+[24:55] that sort of started the whole you know
+[24:57] co code model race and that was because
+[24:59] people had something that they could
+[25:00] sort of optimize towards in terms of
+[25:03] like what does useful coding look like
+[25:04] now threebench I think is a very flawed
+[25:07] eval and there's been a lot of new evals
+[25:09] that have come out since that are that
+[25:10] are much better but that's kind of the
+[25:11] whole point is like whatever hill you
+[25:14] want to climb you first define it with
+[25:16] an eval
+[25:16] Then RL is kind of this like eval maxing
+[25:19] machine. So you go and create a you know
+[25:22] a training pipeline that looks very much
+[25:24] like your eval. Um obviously different
+[25:26] data because you don't want to overfit
+[25:28] directly to those eval data points and
+[25:30] then you just climb that hill and then
+[25:31] it's on to the next eval.
+[25:33] >> So this is also particularly important
+[25:36] when it comes to enterprises.
+[25:37] Enterprises h in internally have their
+[25:40] own idea of what good and bad looks
+[25:41] like. Right? good and bad is not the
+[25:43] same across you know like a JP Morgan
+[25:45] and a Goldman Sachs right like they they
+[25:47] have different standards they have
+[25:48] different ways of operating so they will
+[25:50] have their own EVs and you sort of get
+[25:52] this like tiered effect where you know
+[25:53] there's these EVs that the model labs
+[25:55] optimize towards and then there's these
+[25:57] EVLs that the the enterprises optimize
+[25:59] towards and we're actually that layer
+[26:01] that specialization layer applied
+[26:02] compute to sort of help enterprises
+[26:04] optimize to their specific
+[26:06] >> ELS
+[26:07] >> fascinating
+[26:08] >> good segue into applied compute
+[26:10] >> yeah yeah So what led you to start
+[26:13] applied compute? Um yeah, why better to
+[26:16] do it as an independent business than
+[26:18] inside of OpenAI where you were before
+[26:20] applied compute?
+[26:22] >> Uh and what do you guys do?
+[26:23] >> Yeah. So so um you know like I mentioned
+[26:26] we started applied compute a little bit
+[26:27] over over a year ago. Um and it was you
+[26:30] know I started with my co-founders uh
+[26:32] Rhythm Rhythm and Lyndon who were
+[26:34] actually both students here at Stanford.
+[26:36] Um we were also all at OpenAI together.
+[26:39] Um funny funny story is like when I
+[26:41] joined um you know Sam was basically
+[26:44] like who's the smartest person you know
+[26:45] that was rhythm couple months later he
+[26:47] asked rhythm the same thing that was
+[26:48] Lynden and that's how we all sort of
+[26:49] ended up there um but we really started
+[26:52] applied compute uh based on this core
+[26:55] idea that the future is is very specific
+[26:58] to enterprises where you'll have these
+[27:01] general models which are workhorse
+[27:02] models um but actually going and
+[27:05] specializing them towards individual
+[27:07] enterprises needs is actually going to
+[27:08] be how people differentiate. So general
+[27:11] models sort of set the floor but in
+[27:12] order to set the ceiling you need to go
+[27:14] and build train models create these
+[27:16] specialized systems in order to
+[27:18] differentiate yourself from all your
+[27:19] competitors.
+[27:20] >> So an [clears throat] example here is
+[27:22] you know Door Dash is a customer of
+[27:24] ours. Um I'm sure you know a ton of
+[27:26] people order it all the time. I'm I'm
+[27:29] very guilty of of ordering it like way
+[27:31] more than I should but um
+[27:32] >> it's all a part of the RL environment.
+[27:34] Right.
+[27:34] >> I know exactly. we were just testing the
+[27:36] testing the product. But um so one of
+[27:38] one of the the sort of tasks that we
+[27:40] worked on Door Dash with and you know
+[27:42] I'm picking this one because it's very
+[27:43] practical. It kind of shows what what
+[27:45] what what we do. Um Door Dash onboards
+[27:48] like 100,000 plus merchants every year
+[27:51] to their platform. And when these these
+[27:53] merchants come to the platform, they
+[27:55] basically supply a bunch of unstructured
+[27:57] information about their business,
+[27:59] including menus and menu extraction.
+[28:02] Actually being able to go from um you
+[28:04] know images like this to a Door Dash
+[28:07] storefront is actually a really really
+[28:09] hard task because
+[28:11] >> I see digitizing that.
+[28:12] >> Exactly. Door Dash has these this very
+[28:15] specific style guide for how modifiers
+[28:18] are supposed to be attached on top of
+[28:19] items. you know, what you
+[28:21] [clears throat] can mix and match,
+[28:22] what's an add-on versus like a, you
+[28:24] know, special ingredient, things like
+[28:25] that. And when we tried using the
+[28:27] general models on this, they just
+[28:29] weren't able to sort of like do that
+[28:31] task. So instead of and we you know we
+[28:33] tried prompting and all this sort of
+[28:35] stuff
+[28:36] >> what actually ended up being the
+[28:37] solution is you could take you know
+[28:39] outputs of of our model you could have
+[28:42] humans go and correct those those menus
+[28:45] and understand the delta and then we
+[28:47] could basically during training have a
+[28:50] model uh have a model's output be
+[28:52] checked against the ground truth and
+[28:53] essentially we had a way of uh you know
+[28:56] quantifying the the loss or the you know
+[28:58] the reward like how the error rate
+[29:00] essentially and we were able to just
+[29:01] optimize directly against reducing error
+[29:03] rate. So this is a very clear example of
+[29:06] how like a company just needs to go and
+[29:08] define what good and bad looks like and
+[29:10] you actually don't need to do prompting
+[29:12] or any of sort of this stuff. You can
+[29:14] just directly optimize towards like the
+[29:15] outcomes that you want.
+[29:16] >> Fascinating. Can I ask you a followup on
+[29:18] this? Um
+[29:19] >> so
+[29:20] >> you know the prior gen let's say before
+[29:23] transformers this would be a problem
+[29:24] that an OCR model would have would would
+[29:26] have been applied to like a vision model
+[29:27] of some kind.
+[29:28] >> Yeah. is the part where you guys come in
+[29:33] optimizing the specific problem and this
+[29:35] is not using a vision model using a
+[29:36] transform model.
+[29:37] >> This is using a VLM. Yeah. So, so it's
+[29:39] like a a vision model with a you know
+[29:42] transformer architecture. Yeah.
+[29:43] >> Fascinating. Um
+[29:46] why would Door Dash and and sorry to ask
+[29:48] you a hard question on the spot which
+[29:50] was offcurriculum. No.
+[29:51] >> Um why would why would you guys
+[29:53] specialize an existing model when maybe
+[29:55] there's a chance that I'm making it up.
+[29:57] GPT7
+[29:59] >> might be out of the box much better.
+[30:01] >> Yeah.
+[30:02] >> Are you incentivized to just wait
+[30:04] >> for the next series of models or should
+[30:06] should you work with applied compute to
+[30:08] >> Yeah. No, no, it's branch out.
+[30:09] >> It's a great question. I'm glad you
+[30:10] asked me. Um I think like what what
+[30:14] people, you know, often don't realize is
+[30:16] that enterprises care about being at the
+[30:18] frontier at any point in time. So GPT17
+[30:21] is going to be, you know, quite a long
+[30:23] time from here. I think you know by the
+[30:24] time we have ASI or this this this model
+[30:27] that kind of controls everything which
+[30:29] uh actually I I I don't believe that's
+[30:31] going to happen. I I I think the the
+[30:33] world is just very fragmented place and
+[30:35] you know if you just look at where the
+[30:36] data is it's it's it's kind of you know
+[30:38] dispersed
+[30:39] >> but yeah the time to value is just way
+[30:42] the ROI on being able to train your own
+[30:44] models today with uh you know way less
+[30:46] compute like RL has become very very
+[30:48] data efficient. um you need to use an
+[30:50] order of magnitude less compute than
+[30:52] pre-training or these other types of of
+[30:53] training and you're able to optimize
+[30:55] performance um you know like way more
+[30:58] than you were in SFT and RHF makes it a
+[31:01] lot more appealing to be able to train
+[31:02] these models
+[31:03] >> like the order of magnitude investment
+[31:06] that goes into post- training uh
+[31:08] pre-training versus post- training could
+[31:10] you give us an estimate for that so
+[31:11] let's say there was a $100 budget for
+[31:14] training how much of that would be
+[31:15] pre-training how much of that would be
+[31:16] post training
+[31:16] >> yeah yeah so I think I I think I looked
+[31:19] up on on the way here. Um, Deepseek V3
+[31:24] uh was trained on about like 2.4
+[31:28] 2.5 million H800 hours. Um, the RL
+[31:32] training, so the the training that led
+[31:35] to DeepSeek R1 was trained on like about
+[31:37] 150K. So,
+[31:39] >> comes out to about 5% of the training
+[31:43] compute that's needed for for
+[31:44] pre-training. But
+[31:46] >> that's it.
+[31:46] >> That's it. But I think what's really
+[31:48] interesting is that trend is is starting
+[31:51] to to to change where people are
+[31:53] pre-training these models, but then
+[31:55] they're also doing data centerwide,
+[31:57] multi-data centerwide RL runs because
+[32:00] >> you have these scaling laws which I
+[32:02] think I had a photo of Jensen and the
+[32:04] the three scaling laws. There's
+[32:06] pre-training scaling, then there's
+[32:07] post-training scaling, and then there's
+[32:09] test time scaling. Test time scaling is
+[32:10] inference. But post-training scaling you
+[32:13] can actually uh you know massively
+[32:15] increase the batch size of of each you
+[32:17] know each of these training steps and
+[32:18] you get you know a lot you know a lot
+[32:20] better performance. You can have these
+[32:21] models do a lot more reasoning when
+[32:23] they're attempting these tasks. So
+[32:26] >> I think the trend you're actually seeing
+[32:27] is that the compute spent on RL is
+[32:29] actually increasing quite quite heavily.
+[32:31] >> Got it. So it's 5% today but you expect
+[32:33] it to go up as
+[32:35] >> Oh it is going up. Okay [clears throat]
+[32:36] as relative percent of the total
+[32:37] training budget.
+[32:38] >> Yeah. So, so it I you know I don't know
+[32:41] the latest uh stats on like a mythos or
+[32:44] like a 55 um but you know up until kind
+[32:47] of uh basically when when we were
+[32:50] scaling out
+[32:51] >> 01 03 you know codeex uh deep research
+[32:55] we basically saw like more compute you
+[32:57] put into RL the better performance you
+[32:59] get. So these things stack
+[33:00] >> makes sense.
+[33:01] >> Yeah.
+[33:01] >> Um maybe a couple other examples. I
+[33:03] found that to be very very helpful. Are
+[33:05] there other examples of domains um
+[33:07] outside of for example converting this
+[33:09] menu to to a door dash that you could
+[33:11] share with us of where this is a a
+[33:12] particularly useful application?
+[33:14] >> Yeah. Yeah. So I mean we we were talking
+[33:15] about coding before. We recently just
+[33:18] put a model in production with with
+[33:20] cognition windsurf. Um basically the
+[33:23] idea is when you're writing code and you
+[33:26] write you know you save your file. How
+[33:28] cool would it be if you had a model that
+[33:29] kind of ran sub two seconds, checked
+[33:32] what code you wrote, and then told you
+[33:34] if there was a bug in it or not. So, you
+[33:36] know, this is not something you can get
+[33:37] with a general model because there's
+[33:38] this paro frontier of performance, cost,
+[33:41] and latency. So, if you take a really
+[33:43] small model, you kind of post train the
+[33:46] heck out of it on getting really good at
+[33:47] this task of of bug catching, you're
+[33:50] able to get the benefits of cost and
+[33:52] latency and the performance of some of
+[33:54] these larger um sort of bigger models.
+[33:56] >> Got it. And so the value ad for your for
+[33:58] for for Cognition and Vinsurf is that
+[34:01] they're extending their product suite
+[34:02] from just writing code but also now to
+[34:04] testing and and and bug uh
+[34:06] >> Exactly. Yeah. And and I think this gets
+[34:08] into this really interesting idea of
+[34:11] sort of model harness context code
+[34:14] development which is like you know you
+[34:17] >> you never really can focus on just one
+[34:19] layer. um you know a lot of these
+[34:22] application layer companies are um doing
+[34:25] a ton of innovation on the harness and
+[34:27] that's actually how they're able to
+[34:28] squeeze uh value out of these these
+[34:30] models especially when it you know
+[34:32] relates to like the service that they're
+[34:34] providing and then context is just like
+[34:36] often times if you don't have access to
+[34:38] the right data you won't know the right
+[34:40] thing to do. So being able to plug into
+[34:42] all of these different data sources
+[34:43] inside of companies that's also
+[34:45] extremely extremely important.
+[34:47] >> Fascinating. So this is in this case in
+[34:48] the case of cognition it is it might be
+[34:51] a true competitive advantage for them to
+[34:53] expand their product frontier.
+[34:55] >> Exactly. Yeah. Yeah. I mean I I I think
+[34:56] like you're seeing uh people start to
+[35:00] push the frontier on what these models
+[35:02] can do and and it's usually an ensemble
+[35:04] of models right like general models
+[35:06] extremely powerful really good
+[35:08] orchestrators but you know fast sub
+[35:11] agents or agents trained on proprietary
+[35:13] data that's out of distribution of these
+[35:15] models like like something like this um
+[35:17] those can be orchestrated with the
+[35:19] general models and to create a really
+[35:20] powerful system so like I think today
+[35:23] actually um you know ramp ramp labs
+[35:26] the the you know the corporate card
+[35:27] company which we're actually really good
+[35:30] friends with them and you know know a
+[35:32] lot of folks there they like trained
+[35:33] this RL model um to basically do fast
+[35:37] search inside of your spreadsheets
+[35:39] >> and that's a way you can actually go and
+[35:40] improve the product experience
+[35:42] >> fascinating
+[35:43] >> we'll we'll change topics Yosh and talk
+[35:45] about a bunch of these emerging model
+[35:47] training techniques uh that we've been
+[35:48] hearing about and maybe you can
+[35:49] decompose those for us
+[35:50] >> love to yeah
+[35:51] >> we'll start with continual learning
+[35:54] >> what is it a lot of smart people we know
+[35:56] talk about that as the next frontier
+[35:58] including you. Break it down for us.
+[36:00] >> Yeah, so continual learning is is really
+[36:03] the kind of what I what what I mentioned
+[36:05] before which is like how do you learn
+[36:07] from extremely sparse rewards, right? So
+[36:11] um you know like if you have a system
+[36:14] deployed in production um how are you
+[36:16] actually able to understand how that
+[36:18] that AI model is being used? understand,
+[36:22] you know, the downstream consequences of
+[36:24] of of its actions and then use that to
+[36:26] update the system so it gets better over
+[36:28] time. So, you know, what I what I have
+[36:31] here is is kind of like two examples of
+[36:34] of uh
+[36:35] >> yeah, two examples of what what I think
+[36:38] like these this is starting to look
+[36:40] like. And to be clear, I think this is
+[36:41] going to be a very gradual thing. So, um
+[36:43] you know, a lot of continual learning is
+[36:45] blocked on just having access to the
+[36:48] right data. So when you go and deploy an
+[36:50] agent in production, like are you
+[36:53] putting it in front of the right people
+[36:54] to get feedback? Are you actually deeply
+[36:57] understanding all of the context
+[36:58] necessary to know um what good and bad
+[37:01] looks like? That's like just a data
+[37:02] access problem. So I I think this is
+[37:04] going to look like kind of a slow
+[37:05] gradual roll out rather than like oh
+[37:07] there's some like uh you know extremely
+[37:10] valuable insight that that someone comes
+[37:11] up with. But a couple of examples of of
+[37:14] how how you're seeing this today is you
+[37:16] know cursor they have this model called
+[37:18] composer which is essentially their um
+[37:21] their own coding model trained on their
+[37:25] coding data uh on top of an open source
+[37:27] model. And what they did was really
+[37:28] cool. They basically took this model um
+[37:31] had people use it in production were
+[37:34] able to capture a bunch of that
+[37:35] telemetry take steps online. And so take
+[37:38] a training step based off of like some
+[37:41] implicit rewards that they um that they
+[37:44] sort of calculate. So basically they
+[37:45] would look at like did the user accept
+[37:48] this code suggestion or did they revert
+[37:50] this code or
+[37:52] >> realistic for success.
+[37:53] >> Exactly. Yeah. And and they kind of
+[37:54] optimized towards it and they were able
+[37:56] to see improvement by doing this sort of
+[37:58] like online training where you're
+[37:59] collecting data taking a train step
+[38:01] collecting data training to trade up.
+[38:04] Then this is something that we've been
+[38:06] doing
+[38:06] >> actually just to follow up on cursor
+[38:07] [clears throat] the x-axis here yash is
+[38:09] steps
+[38:11] >> could you convert that for us into time
+[38:13] like order of magnitude how much time
+[38:14] did cursor have to invest in improving
+[38:17] cursor's performance
+[38:18] >> yeah it's like days or weeks or hours or
+[38:21] >> it's a good question we're I think we're
+[38:23] talking about days or days or weeks here
+[38:26] um and then I think couple hours per
+[38:28] step
+[38:28] >> got it
+[38:29] >> I don't know the exact uh terms but um
+[38:32] one one interesting thing here is like
+[38:34] in in RLVR when you're training offline,
+[38:36] you have this like replayable
+[38:38] environment where you're um sort of like
+[38:40] it's the same task. It has a a defined
+[38:42] reward and then you're rolling out that
+[38:44] sample, you know, hundreds or thousands
+[38:46] of times in parallel. You can't do that
+[38:48] in production, right? Because people are
+[38:50] using this, you know, they have dynamic
+[38:53] environments or whatnot. So what they
+[38:55] really experimented with was could we
+[38:57] just take a massive batch so like many
+[38:59] many many conversations d noiseise the
+[39:01] gradient that way and then take a step
+[39:03] and hopefully that'll be like
+[39:04] directionally the the way to improve the
+[39:06] model. So yeah so that's this is like um
+[39:10] I think like hours per step and then
+[39:12] each of those steps is quite quite quite
+[39:14] big or a lot of samples in them. Mhm.
+[39:16] >> Um on the right here is is something we
+[39:18] actually have been been working on which
+[39:20] is um this this we we this idea of
+[39:24] context base which is like can you
+[39:26] actually go and use agents expend
+[39:28] compute offline to be able to go and
+[39:31] analyze a bunch of documents analyze a
+[39:33] bunch of past traces that humans uh have
+[39:36] had with agents and extract learnings
+[39:38] from that that will improve performance
+[39:40] um downstream. So one thing that we were
+[39:42] able to see is like yeah we were able to
+[39:44] see uh at different reasoning efforts a
+[39:48] massive increase in performance um while
+[39:51] sort of using the same amount of of of
+[39:53] of tokens. So yeah so these are just
+[39:57] kind of two examples but I I I think
+[39:58] like high level you're going to see
+[40:01] innovations at weight updates context
+[40:04] and the harness itself to actually be
+[40:06] able to capture this information.
+[40:07] >> Fascinating.
+[40:08] >> Yeah. More to come on this. Um,
+[40:11] >> second topic is nontransformer
+[40:14] models.
+[40:14] >> Yeah,
+[40:15] >> a lot of talk in the class about
+[40:17] transformers not being a very efficient
+[40:19] architecture. Takes up a lot of power.
+[40:21] >> Uh, we had Ali Gocei, he said that well
+[40:24] look uh flying like the airplanes is far
+[40:27] less efficient than like the boards do.
+[40:28] Turns out we're heavy a heavy specy
+[40:31] heavier than birds. uh is the
+[40:33] transformer like that in that it it
+[40:35] while not efficient will be the dominant
+[40:37] way because the world's infrastructure
+[40:38] has morphed and moved along that way or
+[40:40] do you think there's a there's a shot
+[40:42] for a non-transformer architecture like
+[40:44] like the Mamba architecture or one other
+[40:46] to be a dominant player in uh AI models
+[40:49] going forward? Yeah, I think I think my
+[40:50] honest take is like scaling transformers
+[40:52] is working and as you know there's a
+[40:55] very simple recipe to be able to make
+[40:57] these things smarter and better and um
+[41:00] >> you know probably more likely that the
+[41:02] AI will tell us what the better
+[41:04] architecture is if we just continue
+[41:05] scaling it up then try to come up with
+[41:07] one ourselves. um you know if there were
+[41:09] if there was kind of a a wall in terms
+[41:11] of you know what this architecture would
+[41:13] allow us to do then I think you know we
+[41:15] we we would see some um innovation there
+[41:18] and there there certainly is really cool
+[41:19] research happening but my opinion is
+[41:22] just like concentrate on scaling scaling
+[41:24] transformers
+[41:25] >> very smart people on the other side of
+[41:27] this debate as you know Ilia Jan lun
+[41:29] others
+[41:30] >> going at it uh if you if you can share
+[41:32] do you know what the core insight is
+[41:34] that that leads them to believe the
+[41:35] other side of the debate and disagree
+[41:37] with you Yeah. So, I think I think like
+[41:40] um you know the core insights are you
+[41:44] kind of like what I said before is you
+[41:46] don't need pre-training levels of of of
+[41:48] of data to be able to actually learn the
+[41:50] underlying representations of language.
+[41:52] I think Yan Mukun talks about this a lot
+[41:54] where it's like you know humans don't
+[41:55] need that therefore the architecture
+[41:57] that we developed shouldn't shouldn't um
+[41:59] require that. Um so I think that's the
+[42:01] underlying argument. It's just like
+[42:03] first principles like
+[42:04] >> you shouldn't need it. Therefore, there
+[42:06] must be a better solution out there.
+[42:08] >> But I think like kind of to your point,
+[42:10] the investments we're making in our
+[42:11] compute scale outs um
+[42:14] >> you know, I think there's people who are
+[42:15] actually optimizing for the architecture
+[42:18] directly in the chips.
+[42:20] >> That is kind of I think a a big ship to
+[42:23] turn and so far what we've seen from the
+[42:26] labs which are going to I think control
+[42:27] a lot of this uh this buildout is is
+[42:30] just investing more in the transformer
+[42:31] architecture. They're definitely doing
+[42:33] research on like new new stuff, but um I
+[42:36] think it's it's all experimental and you
+[42:38] know,
+[42:38] >> yeah,
+[42:39] >> could work.
+[42:40] >> Could work. What a time because you know
+[42:42] >> big big large sums of money are going
+[42:44] into these these techniques. So, we'll
+[42:46] see. We'll see how it shakes out.
+[42:47] >> Yeah.
+[42:47] >> Um rapid fire. Last five minutes.
+[42:50] >> Um you know, a lot of folks in the class
+[42:52] deciding where to build, what part of
+[42:54] the stack to build, what to start.
+[42:56] >> If you were not if you had if you were
+[42:58] not building applied compute today,
+[43:00] >> yeah,
+[43:00] >> what would you be doing? what's your
+[43:01] next best idea?
+[43:03] >> Yeah. So, been thinking a lot about this
+[43:06] cuz I think like what one thing that
+[43:08] we've been running into at at Applied
+[43:09] Compute and I know a lot of other AI
+[43:11] companies are running to into is like
+[43:14] scarcity of compute.
+[43:15] >> Mhm. Um, like I think uh the the the
+[43:19] demand is just far outpacing the supply
+[43:21] for for compute and I think there's
+[43:23] going to be massive innovations in like
+[43:25] the energy sources needed to power this
+[43:28] compute and then also making more
+[43:29] efficient chips themselves.
+[43:31] >> So, you know, not that I have a
+[43:32] background in like hardware or or chip
+[43:34] design or anything like that, but I
+[43:36] think we could be making way better
+[43:38] hardware um to sort of optimize the code
+[43:41] of training and um
+[43:44] >> and and chip design. So, I I would
+[43:46] probably like look into hardware.
+[43:48] >> Okay. Thank you. The long short game,
+[43:50] uh, pick a business, a product, a person
+[43:54] >> that you like a lot, that you're excited
+[43:56] about.
+[43:56] >> Yeah.
+[43:56] >> Uh, and the counterfactual, some
+[43:58] something that is there's more, uh, hype
+[44:00] than there's reality.
+[44:01] >> Yeah. Yeah. So, I think I think, you
+[44:04] know, um, kind of kind of goes along
+[44:07] with my last answer like compute and the
+[44:10] chip providers like Nvidia, I'm very
+[44:12] long long them. I think they're gonna
+[44:14] continue to win. They're going to
+[44:15] continue to supply all of the the um you
+[44:19] know all the labs. And actually it it is
+[44:21] interesting though like once once you
+[44:22] kind of look at the compute economics of
+[44:24] of of Nvidia you know they take like a
+[44:27] 75% margin on top of their chips you
+[44:30] have these labs spending hundreds of
+[44:31] billions of dollars. Um you know
+[44:34] question is like hey like maybe we take
+[44:35] a couple hundred billion dollars and
+[44:37] invest that in in actual like our own
+[44:38] chip design. Then we could do all the
+[44:40] co-development of uh you know model
+[44:42] training architecture and chips
+[44:44] internally and you know maybe our chips
+[44:46] are like 80% as effective but we'll just
+[44:47] make like you know 1 you know two or
+[44:49] whatever it is x more. Um so I I think
+[44:52] like that that is generally I think
+[44:57] chips and you know Nvidia is going to be
+[44:59] like the the the sort of leader here. I
+[45:02] think that's valuable, but I do think
+[45:03] there's also a risk of like, hey, the
+[45:05] labs are the biggest customers are maybe
+[45:06] just going to in-house do this stuff
+[45:08] themselves, but it's very hard.
+[45:10] >> Um, one thing I'm a little less bullish
+[45:13] on, I think, is like the data the data
+[45:16] market is just really tough. Um so you
+[45:20] know if you think about an RL task um
+[45:22] you have
+[45:24] basically like models that are not very
+[45:26] smart you train them to be very smart at
+[45:29] particular tasks and then it becomes
+[45:31] that much harder to go and create new
+[45:33] tasks that you can actually hill climb
+[45:35] on. Right. So when we were
+[45:36] >> because because the problem is much
+[45:37] harder.
+[45:38] >> Exactly. you're you're you're sort of
+[45:39] getting squeezed where it's like, okay,
+[45:41] yeah, I'm selling to my customer and I'm
+[45:44] improving their model, but I'm also
+[45:46] making it harder for myself because the
+[45:48] next time they come to me and say, hey,
+[45:49] I want you to to go and build this task.
+[45:51] I have to spend way more money. It's
+[45:53] going to take a lot longer. All that
+[45:54] sort of stuff. And then I also think the
+[45:56] models are just getting really really
+[45:58] good. So, um, you're I think you're
+[46:00] starting to see a lot of synthetic data
+[46:01] generation
+[46:02] >> because if you think about an RL task, a
+[46:05] lot of times what it is is exploiting
+[46:07] some sort of generator verifier gap
+[46:09] where like for code, right? Um, you hold
+[46:11] out the unit tests, you have the model
+[46:13] attempt the task and then you run the
+[46:15] tests against the the model's output.
+[46:17] Um, that's not something that you really
+[46:19] need a human to do. You can the smarter
+[46:21] your models get, the better pipelines
+[46:23] you can build around synthetic data. So,
+[46:26] I'm not like like I think
+[46:28] data has been a thing that people have
+[46:29] been like, "Oh, it's going to die every
+[46:31] couple of years." And it hasn't. But I
+[46:33] do think it's going to change. And the
+[46:34] best the best founders in the data
+[46:36] market um kind of are just really good
+[46:39] at pivoting and sort of like, you know,
+[46:41] the ne what's the next wave? Robotics
+[46:43] data, egocentric data, like put on a you
+[46:45] know, put on a GoPro and like collect a
+[46:47] bunch of stuff. So I think like
+[46:49] >> RL environments today is going to be
+[46:51] tough, but it'll get you know they'll go
+[46:54] on to the next wave of things.
+[46:55] >> Awesome. Final question. Um, your
+[46:58] favorite AI product or favorite AI
+[46:59] modality?
+[47:00] >> Yeah. Oh, this is a good one. I I love
+[47:02] GPT uh or sorry, image GPT2.
+[47:06] >> Image DO.
+[47:06] >> Image 2. Image Duo. Yeah. I you know,
+[47:09] when it when it came out um I was having
+[47:11] a ton of fun with it. It It's like
+[47:14] >> I think it's massively like for people
+[47:16] who can't do design like me or who want
+[47:19] to like look at things visually. Like a
+[47:22] lot of times I'll just take some paper
+[47:25] or something and like drop it into uh
+[47:28] image 2 and it gives me this nice visual
+[47:30] sort of like walkthrough of how things
+[47:32] work. So um that's probably been my
+[47:34] favorite AI product.
+[47:36] >> I'll show you an artifact. The most
+[47:37] beautiful slide on this uh on this
+[47:39] presentation was an image tool
+[47:41] representation. When I fed it the course
+[47:43] syllabus, it was like how about this
+[47:45] >> this one?
+[47:46] >> Oh wow.
+[47:47] >> And the signature for those who you can
+[47:48] tell is this one right here. That's the
+[47:51] images to watermark.
+[47:53] >> Oh, really?
+[47:54] >> Oh, interesting.
+[47:55] >> Um, anyway, awesome. Well, thank you so
+[47:57] much for being here.
+[47:58] >> No, thank you.
+[47:59] >> We'll uh continue this conversation and
+[48:00] see how these bets play out.
+[48:02] >> Let's do it. Awesome. Thanks for having
+[48:03] me.

@@ -1,0 +1,2275 @@
+[00:05] So, welcome back everyone.
+[00:07] So,
+[00:08] on Monday, Tatsu did an excellent job of
+[00:11] describing a high-level overview of GPUs
+[00:14] and how to think about performance and
+[00:16] all the quirks that come with GPUs.
+[00:19] This lecture is going to be a
+[00:20] continuation of that where we're going
+[00:22] to dive more deeply into the code, write
+[00:25] some Triton kernels,
+[00:27] and as well as do some benchmarking
+[00:28] profiling.
+[00:30] So, just to start,
+[00:32] just to refresh what's going on with
+[00:34] GPUs,
+[00:36] here is a simplified diagram of what a
+[00:39] typical GPU
+[00:41] you know, looks like.
+[00:44] There's memory and then the actual GPU
+[00:48] chip.
+[00:49] And
+[00:50] just to keep in your head
+[00:53] what are the characteristics of a GPU?
+[00:56] So, of course, we're talking about
+[00:57] Nvidia GPUs, but Tatsu also talked about
+[00:59] TPUs and there's AMD and and so on.
+[01:03] But focusing on Nvidia GPUs, we've had
+[01:05] multiple generations from M100s to H100s
+[01:09] to B200s.
+[01:10] And and
+[01:12] in each generation,
+[01:15] you have a GPU, it has a number of
+[01:17] streaming multiprocessors or SMs.
+[01:20] And
+[01:22] the number of SMs is, you know, about
+[01:24] 100 between 100 and 200. So, that hasn't
+[01:27] really changed that much.
+[01:30] And then
+[01:31] within individual SM, there's a set of
+[01:35] registers.
+[01:37] So, B200s have 65,000 registers uh for a
+[01:43] total of 256 K per
+[01:47] SM.
+[01:48] And this also hasn't changed that much.
+[01:52] In addition, there's a L1 cache as well
+[01:56] as shared memory. So, remember these are
+[01:57] the same memory, shared memory you can
+[01:59] control L1. Uh you can't. This is per
+[02:02] SM.
+[02:03] And this is like in the same order
+[02:06] ballpark size.
+[02:08] And then there's a L2 cache.
+[02:12] And this is not per SM, this is for the
+[02:14] whole chip.
+[02:16] And this is a bit larger. And then
+[02:18] finally, you have a high-bandwidth
+[02:19] memory HBM, which is large. And you see
+[02:23] that this is the number that's actually
+[02:24] going up quite a quite a bit.
+[02:27] Okay.
+[02:28] And then
+[02:29] you can
+[02:31] in addition to size, you can think about
+[02:33] what's happening with the bandwidth. And
+[02:36] essentially, it's
+[02:37] you know, kind of inversely
+[02:39] correlated. So, registers are very fast,
+[02:43] L1 is slightly less fast,
+[02:45] L2
+[02:47] is less fast and high-bandwidth memory
+[02:49] is the slowest. Although 8 terabits
+[02:52] terabytes a second is still, you know,
+[02:54] not not
+[02:55] that slow
+[02:57] in the grand scheme of things.
+[02:59] So, this is the kind of main hierarchy
+[03:01] you should have in your head. Memory,
+[03:03] large memory is slow and far, but big.
+[03:06] And fast memory like registers and L1
+[03:10] resides on SM, it's local and it's fast,
+[03:13] but small. Okay? That's the what the
+[03:15] environment we're dealing with.
+[03:18] Okay, so then how do you program a GPU?
+[03:20] So, the the program model is as follows.
+[03:24] So, there's notions of threads, which
+[03:26] each thread executes a piece of code on
+[03:29] a small part of the data. So, each of
+[03:32] one of these arrows, you can think about
+[03:33] it as a thread. These threads are
+[03:35] organized into thread blocks.
+[03:37] Also known as a concurrent thread arrays
+[03:39] or CTAs. And this is a group of threads.
+[03:42] And then finally, you have you have a
+[03:43] collection of thread blocks, which forms
+[03:45] the grid. So, when you launch a kernel,
+[03:48] you're basically launching a grid of
+[03:51] threads and thread blocks to all
+[03:53] parallel
+[03:55] you know, simultaneously do some you
+[03:56] know, computation.
+[03:59] Okay. So, this is a simplified, there's
+[04:02] some other things that are happening.
+[04:04] For example, there's H100s and B200s
+[04:07] also have thread block clusters, which
+[04:10] are clusters of thread blocks that
+[04:12] enable some amount of
+[04:14] distribution memory. Also, B200s have
+[04:17] tensor memory now for tensor cores,
+[04:19] which is somewhere between the registers
+[04:21] and shared memory.
+[04:22] Some of these things are kind of
+[04:23] invisible to the programmer, but they
+[04:25] are in and
+[04:26] in the hardware.
+[04:28] But we won't worry about them for this
+[04:32] intro lecture.
+[04:34] Okay, so one thing you might ask about
+[04:36] is why do we have thread blocks?
+[04:38] Why can't we just have a grid of threads
+[04:40] and each thread just takes a piece of
+[04:43] data and does something?
+[04:45] And this would be normally fine if all
+[04:47] you want to do is element-wise
+[04:48] operations, which we'll see. For
+[04:50] example, GELU is a activation function
+[04:52] that applies element-wise. And threads
+[04:54] are pretty natural. Each thread
+[04:56] processes one element. So, it's like FI
+[04:59] for I equals you know, ranging over your
+[05:03] data set.
+[05:05] But for operations
+[05:08] that are
+[05:09] involved
+[05:11] communicating with you know, threads
+[05:13] such as softmax or matrix
+[05:15] multiplication,
+[05:16] this view isn't really enough.
+[05:19] And and the reason is that well, it it
+[05:22] could be enough if you were willing to
+[05:25] pay the cost of writing and reading HBM.
+[05:28] Because then you can still have, for
+[05:31] example, in a matrix, we'll see later,
+[05:33] you can just have every element in a
+[05:34] cell, it goes and computes that element
+[05:36] of the matrix.
+[05:38] And it can just read and write HBM. But
+[05:41] as we've noticed,
+[05:43] HBM is very slow, so this would not be a
+[05:46] good strategy.
+[05:48] So, instead, what we should do is use
+[05:51] shared memory.
+[05:53] Which is local to a
+[05:54] SM.
+[05:56] And what the thread block allows you to
+[05:58] think about is a collection of threads
+[06:01] that are all going to access the shared
+[06:03] memory.
+[06:05] So,
+[06:06] um
+[06:07] So, uh consequently, you can think about
+[06:09] a thread block, one of these
+[06:12] thread blocks is being scheduled on one
+[06:15] of these semantic
+[06:17] not semantic streaming multiprocessors
+[06:20] and it does its thing.
+[06:22] And what it's going to do is it's going
+[06:23] to read a bunch of data from HBM and
+[06:26] then process it. Where the processing
+[06:29] might involve communication between you
+[06:31] know, the the threads via the shared
+[06:34] memory and then writes it back out.
+[06:37] Okay?
+[06:38] So, this is kind of a critical piece
+[06:40] that comes up. Later, we'll talk about
+[06:41] tiling and that's the whole kind of game
+[06:43] here.
+[06:45] Okay, in in Triton, in fact, which we'll
+[06:48] see as the primary way that we're going
+[06:50] to write kernels these days, we're going
+[06:52] to think natively in thread blocks.
+[06:55] And you know, I think once you get the
+[06:57] hang thing of hang of thinking in thread
+[06:59] blocks, this makes
+[07:00] a lot of sense and makes your life a lot
+[07:02] easier as we'll see.
+[07:05] Okay, so the programming model is is
+[07:07] fairly
+[07:09] you know, simple, I think. There's
+[07:10] threads, thread blocks, and grids.
+[07:13] Okay, so
+[07:15] where I think things get a bit more you
+[07:18] know, complicated is the interaction
+[07:19] between the programming model and the
+[07:21] hardware.
+[07:23] So, the programming model is actually
+[07:25] very nice. It provides abstraction of
+[07:27] the hardware. You when you you can write
+[07:29] a kernel, you just
+[07:31] all you have to know is that there's a
+[07:33] bunch of thread blocks, you define them,
+[07:35] and then define what computations
+[07:38] each thread
+[07:40] within the block or the thread block has
+[07:42] to do. And those are just like writing
+[07:45] it's like writing Python.
+[07:47] So, that part isn't hard. And in fact,
+[07:50] if you don't care about if you just care
+[07:52] about correctness, that's all you need
+[07:53] to know.
+[07:55] But in practice, the performance is very
+[07:58] sensitive to the hardware.
+[08:00] And so, you need to really deeply
+[08:02] understand the hardware to obtain high
+[08:04] performance. In fact, the whole reason
+[08:05] we're talking about GPUs and kernels is
+[08:08] that you're trying to squeeze out
+[08:10] performance.
+[08:11] So, there's sort of these two levels
+[08:12] here where you're trying to understand
+[08:15] the computation and that is only
+[08:18] a part of the programming model, but you
+[08:20] know, how fast it runs is going to be
+[08:22] strongly dependent on the hardware.
+[08:26] Okay, so I'm going to give you some
+[08:28] examples of why this matters. And some
+[08:30] of this will be review from what Tatsu
+[08:33] you know, talked about, but hopefully
+[08:34] it'll reinforce some of these concepts.
+[08:37] So, I think there will be around five
+[08:39] different examples. And
+[08:41] you know, this is just to give you a
+[08:43] flavor of
+[08:44] the considerations.
+[08:47] So, there's something called warps,
+[08:49] which I didn't talk about. So, in the
+[08:52] very simplified view, warps are not
+[08:54] really part of the this clean picture of
+[08:56] the programming model. You have threads
+[08:57] and thread blocks or
+[08:59] grids.
+[09:01] Technically, you can also
+[09:03] exceed the warps, but you don't you
+[09:05] know, have to when you're just you know,
+[09:06] programming.
+[09:08] So, what is a warp? So, each thread
+[09:10] blocks, remember, is a collection of
+[09:13] threads. But these threads are actually
+[09:15] grouped into warps. And
+[09:18] you know, there's basically 32 threads
+[09:21] per warp. So, for example, if you have
+[09:23] 64 threads in a thread block, there's
+[09:25] two warps, the first 32 and the second
+[09:28] 32.
+[09:29] And as Tatsu mentioned last time, all
+[09:32] threads within a warp, all of these Ts,
+[09:35] must execute the same instruction in
+[09:36] lockstep on
+[09:39] SM. So, every cycle,
+[09:41] they have to execute exactly the same
+[09:43] instruction. And control divergence
+[09:46] is when
+[09:47] different threads within a warp need to
+[09:50] actually execute different instructions.
+[09:51] For example, if you have branching, if A
+[09:54] um if something then A else B.
+[09:57] And then what happens is that you can
+[10:00] only do the A's in your threads in your
+[10:03] warp, and then you do the B. So this
+[10:05] gets kind of sequentialized.
+[10:07] So this is bad and inefficient, and
+[10:09] that's why branching is
+[10:11] is something you want to generally
+[10:13] avoid.
+[10:15] One thing that's I think really
+[10:17] cool about warps is that a SM actually
+[10:21] is running multiple warps. There's a
+[10:23] warp scheduler, and there's a bunch of
+[10:25] you know resident warps that are
+[10:28] about to to run. Each warp has some you
+[10:30] know
+[10:31] and threads have registers.
+[10:33] And you this SM can switch between them
+[10:37] with
+[10:38] you know zero cost.
+[10:40] Right? This is not true in general like
+[10:42] on a on a CPU, but this way that it's
+[10:44] designed is to hide latency.
+[10:48] So
+[10:49] this is important because one of one of
+[10:51] the warps is for example reading from
+[10:53] HBM, which remember is is very
+[10:56] expensive. Can take like a you know 100
+[10:58] cycles or something. You don't want to
+[11:00] just sit around waiting for that warp to
+[11:02] do nothing. You switch immediately to
+[11:04] another warp where it can actually do
+[11:06] some tensor core operations.
+[11:09] Okay. So so that's one thing to note
+[11:12] about the warp. And another reason why
+[11:14] warp comes
+[11:16] up is this idea of occupancy,
+[11:19] more specifically warp occupancy.
+[11:22] So each thread
+[11:24] just you know the hardware constraint
+[11:26] says that each thread can use at most
+[11:29] 255 registers.
+[11:31] Okay?
+[11:32] And so what happens is that the SM has a
+[11:35] fixed number of registers. So the more
+[11:36] registers each thread is using, the
+[11:39] fewer threads you can have. That's just
+[11:41] you know
+[11:42] math. And
+[11:44] that is called
+[11:46] that can reduce your occupancy.
+[11:49] But that's not necessarily bad because
+[11:52] if you have fewer threads,
+[11:54] but each thread is doing more work, that
+[11:56] can actually be good. So you know
+[11:58] occupancy is
+[12:00] something that you can measure, but it's
+[12:01] not necessarily the larger
+[12:04] the better because there are some other
+[12:05] trade-offs here.
+[12:07] In fact an example where
+[12:09] you might want to
+[12:13] you know have fewer threads is this idea
+[12:15] of thread coarsening where let's say you
+[12:17] have a
+[12:18] you know element-wise operation, and
+[12:20] you're going to
+[12:23] you can have one thread just perform
+[12:26] work on one element. Okay? So then you
+[12:28] have a lot of threads. But you can also
+[12:30] say each thread processes multiple
+[12:32] elements like a constant maybe eight. So
+[12:35] that gives you fewer threads, which
+[12:37] makes scheduling and these things
+[12:39] easier, but each thread is doing more
+[12:41] work.
+[12:42] So if your threads are very light, maybe
+[12:44] you want to fatten them up a little bit.
+[12:47] Okay.
+[12:49] So
+[12:50] just as an example of
+[12:52] what might happen here. So suppose you
+[12:54] have a block a thread block with 128
+[12:58] threads in it. And each thread is using
+[13:01] 160 registers.
+[13:03] Okay? So there's a hardware constraint.
+[13:06] So the the B200s have a maximum of
+[13:08] registers of 65,000
+[13:11] per
+[13:12] SM.
+[13:13] And it also has a constraint that says
+[13:15] you can't run more than 65 64 warps at a
+[13:18] time.
+[13:20] So then you can can go and do some
+[13:21] simple math to compute how many
+[13:24] what is a you know occupancy here.
+[13:27] So you know number of registers per
+[13:29] thread, this has to be less than 255.
+[13:31] That's fine.
+[13:32] The number of registers that you're
+[13:35] using per block is the number of threads
+[13:36] per block times number of registers per
+[13:38] thread. That's 20,000. That means you
+[13:41] can run at most three blocks on your SM
+[13:44] concurrently.
+[13:46] And then that corresponds to
+[13:49] 12 warps.
+[13:51] And because the number of maximum warps
+[13:53] is 64, that means you have a occupancy
+[13:56] of
+[13:57] you know 18%. So you're only using
+[14:00] running 18% of the total number of
+[14:03] you know warps you have. And this is
+[14:04] because you have a lot of register use
+[14:07] per thread.
+[14:08] Okay? So this is an example of where
+[14:12] I guess this is sort of memory is kind
+[14:15] of constraining you in terms of how much
+[14:17] compute you can do.
+[14:21] Okay. Here's another example, something
+[14:24] called bank conflicts. This applies to
+[14:26] shared memory.
+[14:28] So remember shared memory is um
+[14:31] like L1. It's on a SM.
+[14:33] And just the way the hardware works is
+[14:36] that shared memory is divided into 32
+[14:38] banks, each one 4 bytes wide. Okay? So
+[14:42] these are my 32 banks, and this is my
+[14:46] memory
+[14:47] here. Each bank has
+[14:49] many
+[14:51] elements here.
+[14:52] So there's a constraint that says every
+[14:57] you know clock cycle, each bank can only
+[15:00] be accessed by one thread, at most one
+[15:03] thread.
+[15:04] Assuming that's not a location. So for
+[15:06] example, if
+[15:08] you can't access this location and this
+[15:10] location
+[15:12] you know at the same time.
+[15:13] Which means that if you have multiple
+[15:16] threads that are trying to access the
+[15:18] same bank, the accesses have to be
+[15:21] serialized.
+[15:22] And this leads this is called a bank
+[15:25] conflict. In the worst case example,
+[15:26] imagine this were a matrix that was kind
+[15:29] of laid out like this, and you had some
+[15:32] operation where 32 threads, you think
+[15:34] wow this 32 is so great I can massively
+[15:37] parallelize this, and you try to all
+[15:38] access this first column. They're just
+[15:40] going to just wait in line.
+[15:42] And this is a 32-way bank conflict,
+[15:45] which is the worst possible
+[15:47] setting you can be in.
+[15:49] And now you could say well okay, why do
+[15:51] you do that? Just like access rows of
+[15:53] course, but you know this is unavoidable
+[15:55] because for example, if you're doing a
+[15:57] matmul, you have to access rows of one
+[16:00] matrix and columns of the other matrix,
+[16:02] and sometimes you do transposes. So you
+[16:04] can't always just get away with choosing
+[16:07] the order in which you
+[16:09] go down. Um
+[16:11] you know um
+[16:12] you know for element-wise operations
+[16:13] it's fine. You can go in any kind of
+[16:15] order. But if you're doing matmuls, you
+[16:17] can't control like for every matrix
+[16:19] which
+[16:21] row major or column major you're doing.
+[16:24] There's some solutions here, which I
+[16:25] won't get into. Something called
+[16:27] swizzling, which arranges your shared
+[16:29] memory so that when you're going
+[16:32] through, you can kind of avoid bank bank
+[16:35] conflicts.
+[16:37] Okay. So that's you know another you
+[16:38] know consideration. And when you're you
+[16:41] know profiling, you can look at the bank
+[16:43] conflicts. You can look at occupancy,
+[16:45] and you can kind of see
+[16:47] you know what's what's happening.
+[16:49] A final note, which are actually two
+[16:52] more things. So memory coalescing, which
+[16:54] talked to you talked about, so I'll just
+[16:55] really quickly remind people
+[16:58] what this is about. So when you have 32
+[17:01] threads in a warp, and they try to
+[17:03] access HBM,
+[17:05] the memory accesses actually get
+[17:07] combined into a transaction
+[17:09] of 20 to 128 bytes, which are called
+[17:13] cache lines, and it goes and fetches it
+[17:15] all at
+[17:16] at once.
+[17:17] So
+[17:18] imagine you have memory laid out like
+[17:20] this. This is
+[17:22] 32
+[17:24] uh um
+[17:26] wide.
+[17:27] And
+[17:28] you know in the in the best case, which
+[17:31] is called full coalescing,
+[17:33] um
+[17:34] all the threads are accessing the same
+[17:37] cache line. So you have thread one
+[17:38] accessing M00, thread two accessing M01,
+[17:42] and so on. Which means that
+[17:45] you know at all at once you're going to
+[17:46] grab this entire cache line.
+[17:48] Right? And whereas if you
+[17:51] go down the columns, then
+[17:54] um then
+[17:56] you know you're going to fetch a lot of
+[17:58] memory here, which you're not going to
+[18:00] use.
+[18:01] Same for the second row and and so on.
+[18:03] Um And so this is similar to feel
+[18:07] similar to bank conflicts, but it's a
+[18:08] very different constraint. And this is
+[18:10] about shared memory, and this is about
+[18:12] HBM.
+[18:13] Okay?
+[18:15] Okay. So final thing, block occupancy.
+[18:19] So thread blocks are remember scheduled
+[18:21] onto SMs.
+[18:23] But you know we live in a you know
+[18:25] finite
+[18:26] you know logically you can define as
+[18:27] many thread blocks as you want, but
+[18:29] physically on chip you only have a
+[18:31] certain number of SMs. For example, 148.
+[18:35] So if you launch 160 thread blocks, then
+[18:39] you can only schedule 148 of them, and
+[18:41] then you have to wait until they're
+[18:43] done, and then you schedule the 12. But
+[18:45] what happens if you schedule 12 is that
+[18:49] there's a bunch of the SMs are just not
+[18:50] doing anything.
+[18:52] So that's called you know low occupancy
+[18:55] when the last wave of thread blocks gets
+[18:59] fewer
+[19:00] than the total maximum number of
+[19:03] thread blocks.
+[19:05] Okay. So in general, you know maybe it's
+[19:08] a good idea to make the number of thread
+[19:09] blocks divide the the SMs. Um
+[19:13] So
+[19:14] so maybe it's just just to summarize
+[19:16] here.
+[19:18] You know there is a very elegant
+[19:19] programming model where you have a grid
+[19:21] of thread blocks, and the thread blocks
+[19:23] have individual threads in them. And
+[19:27] you know at and in terms of the memory,
+[19:30] HBM is global to everyone. Shared memory
+[19:32] is local to a thread block,
+[19:35] and registers are local to a thread.
+[19:38] But again, all the details of the
+[19:40] hardware, warps, bank conflicts, memory
+[19:42] coalescing, occupancy
+[19:44] really determine you know performance.
+[19:48] So so I think um
+[19:50] you know and and many of these details
+[19:52] are sort of hard to know because you
+[19:55] don't I mean, the profiling tells you
+[19:58] a bunch of information, but you know,
+[20:01] you have to know exactly how many
+[20:03] SMs there are and exactly the sizing of
+[20:05] everything and that's gets
+[20:07] you know, sometimes the scheduler does
+[20:10] something you don't really have control
+[20:11] over what it's doing.
+[20:14] So, it's a lot messier than the the
+[20:16] programming model.
+[20:20] Okay.
+[20:20] I will stop there for questions. Yeah.
+[20:23] Yeah, so quick question. So, can is
+[20:25] there a scenario in which the
+[20:27] kernel can share an SM or like for
+[20:30] example like in the problem we see like
+[20:32] 148 SMs and 165 blocks, right? And we
+[20:36] have to like launch in the two different
+[20:38] ways. Is there no way in which a block
+[20:41] can like share an SM?
+[20:44] Yeah, so the question is can a block
+[20:47] you know, share an SM? I think the issue
+[20:50] is is if you're doing things right then
+[20:52] the the
+[20:54] you know, the I guess it depends on the
+[20:56] block. This is if you have a block
+[20:58] that's for example using most of the
+[21:01] tensor cores on the SM then putting
+[21:03] another
+[21:05] you know, block there isn't really going
+[21:06] to you know, speed things up.
+[21:09] I think fundamentally there is this sort
+[21:11] of jagged you know, problem here
+[21:14] of unevenness. The because the blocks
+[21:17] have to stay together. So, you can't
+[21:19] like take this and like spread it out
+[21:20] over here. You can define your
+[21:24] you can I think the thing the thing you
+[21:26] would do is to change your block size.
+[21:28] So, you should change the number of
+[21:29] blocks. So, you don't get this kind of
+[21:32] tail here.
+[21:36] Any other questions?
+[21:45] Okay. So, let's move on. So, that was
+[21:49] hopefully you guys are
+[21:51] you know, getting more comfortable with
+[21:53] GPUs now.
+[21:55] So, now I'm going to talk about
+[21:56] benchmarking and you know, profiling.
+[21:59] I'm not going to actually maybe say
+[22:02] that much in terms of content,
+[22:04] but I do want to emphasize the the
+[22:07] philosophy here
+[22:08] which is here's a recipe for success.
+[22:12] You benchmark and profile your code. You
+[22:14] make changes and you benchmark your
+[22:16] profile your code again.
+[22:18] And and the reason I'm doing
+[22:20] benchmarking and profiling as opposed to
+[22:22] teaching you try and earlier is because
+[22:25] you know, you should always just measure
+[22:27] what's going on
+[22:28] in your code and find figure out what
+[22:31] the bottlenecks are before you start you
+[22:33] know,
+[22:34] writing kernels.
+[22:36] Okay, so
+[22:38] benchmarking
+[22:39] is basically how long things take. And
+[22:44] it gives you just this end-to-end time.
+[22:46] It doesn't tell you where things are you
+[22:48] know, spent,
+[22:49] but nonetheless it's pretty useful
+[22:51] because ultimately that's the thing that
+[22:53] you you care about how long you know,
+[22:56] things are running for.
+[22:58] And it also gives you because it
+[23:00] distills things into one number, you can
+[23:01] see how things are scaling. Let's say
+[23:03] with dimension.
+[23:05] So, there's a you know, nice
+[23:07] tool for benchmarking, but because this
+[23:10] class is language models from scratch,
+[23:12] I'm going to do it from scratch.
+[23:14] But you know, I I think I'm doing it
+[23:16] just to highlight a few
+[23:19] gotchas with
+[23:20] you know, benchmark. So,
+[23:22] let's say we have this um
+[23:24] operation
+[23:26] matrix multiplication.
+[23:27] So, run operation two is this this
+[23:30] wrapper that basically instantiates two
+[23:33] random square matrices of size dimension
+[23:36] by dimension
+[23:37] and then it returns a function to
+[23:38] perform the operation. Okay, so matmul
+[23:41] if you call this basically does the
+[23:43] matmul of those two random matrices.
+[23:47] The matrix random matrices are already
+[23:49] generated it's just like multiplying the
+[23:51] two.
+[23:53] Okay, so how do you benchmark?
+[23:55] So, the naive thing to do is just start
+[23:58] time, run it and then stop time,
+[24:01] but you know, there's a few things. One
+[24:04] is that always remember to do you know,
+[24:06] warm up. I think I mentioned this
+[24:08] you know, on the first on the second
+[24:10] lecture, but I think it's worth
+[24:13] emphasizing.
+[24:14] And this is because if you have some
+[24:17] some things are lazily compiled and you
+[24:19] want to just make sure that that thing
+[24:22] is
+[24:24] that is that time doesn't
+[24:26] factor into because most of the time you
+[24:28] care about
+[24:29] how fast something is because you're
+[24:30] going to run it over and over again. So,
+[24:32] the initial conditions don't really
+[24:33] matter.
+[24:34] And then you often want to time it
+[24:37] multiple times because there is some
+[24:39] variance. The
+[24:41] kind of the proper way to time things
+[24:44] is to use the these CUDA events that
+[24:47] a start event and an end event which you
+[24:49] can kind of call record on, actually do
+[24:52] the computation and then hit this the
+[24:55] end event record.
+[24:57] And then remember to you know,
+[24:59] synchronize to wait for the CUDA threads
+[25:01] to to finish because
+[25:03] everything on the GPU is happening kind
+[25:05] of async and this is a synchronization
+[25:06] barrier.
+[25:08] And then you record the time.
+[25:12] Okay, and then you can do this again
+[25:15] and then again
+[25:17] and then
+[25:19] you know, here we're just taking the
+[25:20] average.
+[25:22] I think you might want to do you know,
+[25:24] if you are being very particular, you
+[25:26] want probably want to
+[25:27] maybe look at the whole distribution the
+[25:30] P95 or or whatever, but we'll just do
+[25:33] the average here.
+[25:35] And then one thing that you can do with
+[25:37] benchmarking is you can
+[25:38] let's say
+[25:40] scale up your your matrices and see how
+[25:43] the time you know, changes and you can
+[25:46] see that in this case matrix
+[25:48] multiplication you know, as expected it
+[25:52] should grow you know, cubically,
+[25:55] but you know, notice that there is this
+[25:56] floor where up until you get up to like
+[25:59] almost 2000 dimensional matrices things
+[26:03] are basically kind of a you know,
+[26:05] constant, right? And this is because as
+[26:07] we've kind of discussed the shapes of
+[26:10] the you know, these
+[26:12] you know, GPUs are built for fairly
+[26:14] large matrix multiplications and if you
+[26:17] have like a 2 by 2
+[26:19] matrix [clears throat] it's going to be
+[26:20] very kind of inefficient.
+[26:23] Okay.
+[26:25] So,
+[26:26] really quickly on profiling
+[26:29] profiling tells you where time is
+[26:30] actually spent. Hopefully all of you are
+[26:32] familiar with profiling and are
+[26:35] doing it. Maybe less obviously profiling
+[26:38] even if you don't care about the time
+[26:40] helps you
+[26:42] figure out what's actually happening
+[26:43] under the hood because especially with
+[26:45] these high-level languages you write
+[26:46] some code and then it runs and you get
+[26:48] some result and sometimes it can be just
+[26:50] like good to understand what's actually
+[26:52] going on.
+[26:53] So, PyTorch has a built-in profiler in
+[26:55] your assignment you're using site which
+[26:57] gives you
+[26:59] more details,
+[27:01] but we're going to skip that for the in
+[27:03] the interest of time.
+[27:05] So,
+[27:07] let's start with just you know, the
+[27:09] if you add two numbers and or sorry two
+[27:13] tensors in in PyTorch.
+[27:16] Again, run operation creates two random
+[27:20] matrices and and applies operation.
+[27:24] So, in profiling I'm warming up and then
+[27:28] I'm just you know, putting this context
+[27:30] and
+[27:32] the profiling context and doing the the
+[27:34] run.
+[27:35] And then
+[27:37] let's look at what the profile looks
+[27:40] like for just A plus B in in PyTorch.
+[27:43] So, if you're not you know,
+[27:45] normally
+[27:47] doing PyTorch you probably don't think
+[27:48] about it. It's like okay, well, these
+[27:50] two tensors just get added. So, what's
+[27:51] actually going on underneath the hood?
+[27:54] Right? So, if you look at
+[27:56] the things that it's it's calling there
+[27:57] is this um
+[27:59] you know, long name kernel at
+[28:03] CUDA functor add.
+[28:05] So, this is basically you know, a kernel
+[28:07] that adds two two you know, tensors and
+[28:12] you know, the the times aren't going to
+[28:13] be that interesting because I'm only
+[28:14] adding. So, that's going to take 100% of
+[28:16] the time.
+[28:17] But this tells you that well, underneath
+[28:19] the hood there is this thing called add.
+[28:23] What about matmul?
+[28:25] So, I'm going to
+[28:27] you know, in PyTorch I'm doing A at B.
+[28:30] Um
+[28:32] Similarly, there is this
+[28:34] you know, long name that describes this
+[28:36] particular matmul you know, kernel.
+[28:38] Um color
+[28:41] F32 F32 64 64 16 and so on.
+[28:45] Notice that if you change the the
+[28:49] dimensions. So, now I'm doing a 128 by
+[28:51] 128 matmul. You get actually a different
+[28:55] one. If you look closely that this is 64
+[28:58] 64 16. This is 32 32 16.
+[29:02] Okay, so
+[29:03] underneath the hood you know, PyTorch
+[29:07] it looks like you're doing just add, but
+[29:08] underneath the hood there could be all
+[29:10] sorts of things that are you know,
+[29:11] happening.
+[29:13] So, observations.
+[29:15] Here you can see which CUDA kernels are
+[29:17] actually being called. These are
+[29:18] generally the ones that are have the
+[29:20] long names and different CUDA kernels
+[29:22] are invoked depending on
+[29:24] the you know, tensor dimensions.
+[29:27] The name actually tells you something
+[29:29] about the implementation as well. So,
+[29:31] this name So, CUTLASS is the NVIDIA CUDA
+[29:35] library for
+[29:37] linear algebra. SM100 corresponds to the
+[29:40] Blackwall you know, architecture. So,
+[29:42] this is a kernel that's specifically
+[29:43] designed for Blackwall.
+[29:46] This is FP 32 and then 64 64 16 is the
+[29:52] shape
+[29:53] of the tile, which we're going to talk
+[29:55] about later when we talk about tiling in
+[29:57] the context of matmuls.
+[30:01] Okay.
+[30:02] So, uhm
+[30:04] last benchmarking profiling, just
+[30:05] remember to to do it. Uhm I think we
+[30:08] make you do it on the assignment, so you
+[30:10] have no choice.
+[30:11] Uhm okay.
+[30:14] So, let's apply this uhm
+[30:17] to another example here on the GELU.
+[30:21] So, uhm
+[30:23] So, remember the GELU activation uh you
+[30:26] know function is uhm this this function,
+[30:30] which is a typical non-linearity that's
+[30:32] used. Often it's approximated with this
+[30:34] uhm uh
+[30:36] you know tanh approximation, which is uh
+[30:39] more compute-friendly.
+[30:42] Okay. So, uhm so naively, uhm if you
+[30:47] implement the the GELU, you can do it in
+[30:50] PyTorch uhm just like this.
+[30:53] So, you take a tensor, you just you know
+[30:55] take this equation and you just put it
+[30:57] into PyTorch, okay?
+[30:59] Uhm that's fine.
+[31:01] And you get some number.
+[31:03] Uhm PyTorch also has a built-in uhm
+[31:06] you know if you call
+[31:07] NN functional GELU, uhm you can get that
+[31:10] version as well.
+[31:11] So, uhm and you can check that they're
+[31:14] they're the same. You can run uhm the
+[31:18] the two uh
+[31:20] you know GELU versions and make sure
+[31:21] that the answer is the the same for a
+[31:23] random input.
+[31:25] Uhm there's also something that uhm
+[31:28] you know people probably some have
+[31:30] discovered. It's it's a if you you know
+[31:32] haven't encountered this, this is a
+[31:34] important thing to know, is that you can
+[31:36] take any PyTorch function, you call
+[31:38] torch.compile it on it and it generates
+[31:40] another uh you know function
+[31:43] uhm and it does the same thing.
+[31:47] Uhm okay. So,
+[31:49] we have three uhm horses in this race.
+[31:52] We have the naive uhm implementation.
+[31:56] We have the built-in implementation. We
+[31:57] have the compiled implementation. So,
+[31:59] let's we can benchmark them. Naive takes
+[32:01] uh three
+[32:03] uhm
+[32:04] uh I guess this is
+[32:07] 3.75. Built-in is much faster and uhm
+[32:12] compiled is is much faster as well, but
+[32:14] not maybe as quite as
+[32:16] fast as built-in.
+[32:18] Okay. So,
+[32:20] so what's what's happening here? Like
+[32:23] why are why are these things you know
+[32:25] different?
+[32:26] They you know all compute the same
+[32:28] answer, but they have wildly different
+[32:30] performance you know characteristics.
+[32:33] And so, here we can pull up the profiler
+[32:36] and see what's actually going on
+[32:37] underneath the hood. So, if you look at
+[32:40] the naive
+[32:41] uhm GELU here, uhm and just do a
+[32:45] profile, uhm this something's wrong with
+[32:48] this view, so I'm going to go to uhm
+[32:51] this. So, you see that
+[32:53] uhm the profiler shows
+[32:56] uhm you know how time is being spent.
+[32:59] There's a bunch of different kernels on
+[33:02] this binary functor, unary,
+[33:04] uh add,
+[33:06] uhm a tanh is a is a you know kernel
+[33:08] here. And this corresponds to the fact
+[33:11] that in PyTorch, when we write the
+[33:13] PyTorch expression, you look at the
+[33:15] computation graph and each you know
+[33:17] primitive in the computation graph is
+[33:19] actually realizing a kernel.
+[33:21] Right?
+[33:22] And the reason this is slow is that you
+[33:26] know when you launch a kernel,
+[33:28] you know the the kernel has to read from
+[33:31] HBM, pull it all the way over to your
+[33:34] SM, do the computation, and write it
+[33:36] back. And then the next kernel picks it
+[33:38] up from HBM,
+[33:40] you know, and then writes it back and so
+[33:42] on and so forth. So, you're doing a lot
+[33:43] of reads and writes back and and writes
+[33:45] back and forth because between kernel
+[33:48] invocations,
+[33:49] you know, things have to go back to you
+[33:51] know HBM.
+[33:53] >> [clears throat]
+[33:53] [snorts]
+[33:53] >> So,
+[33:55] and if you look at what the built-in is
+[33:57] doing, this is actually not that
+[33:59] interesting. There's this uh GELU CUDA
+[34:01] kernel implementation, which is a single
+[34:03] kernel that just implements the GELU.
+[34:06] And so, why does this exist? Well, well,
+[34:08] because you know, people use GELU, so
+[34:11] someone wrote a kernel for it and put it
+[34:13] in the standard library. Uhm I mean,
+[34:15] this is how
+[34:17] you know, there's no nothing magical.
+[34:21] So, com- compilation is really
+[34:23] interesting here. I'm not going to say
+[34:24] too much about uhm how it works, but
+[34:27] the is is really I think uhm a
+[34:30] fascinating
+[34:31] uhm you know topic where you can take a
+[34:35] a naive implementation,
+[34:37] which you know remember in PyTorch it
+[34:39] has a computation graph, and run a
+[34:41] compiler, which basically
+[34:44] if you look at what's underneath the
+[34:45] hood, it's just a single kernel.
+[34:48] And this is because it's it's figured
+[34:50] out to
+[34:51] uhm uh you know, look at the computation
+[34:54] graph and essentially write that kernel
+[34:57] in
+[34:58] uhm in Triton. So, you can see that this
+[34:59] is actually a Triton kernel.
+[35:03] Okay. So, naive implementation multiple
+[35:06] kernels requires multiple reads and
+[35:07] writes to and from HBM. There's no uh
+[35:10] you know kernel fusion here.
+[35:12] Uhm this is uh slow. The built-in and
+[35:15] compiled version, there's one kernel.
+[35:17] The basically all the operation in the
+[35:19] GELU have been fused together into one
+[35:21] kernel. So, you read from HBM once, you
+[35:24] write to HBM once per you know element.
+[35:27] Uhm and you see that the compiled kernel
+[35:29] is a you know is a Triton kernel.
+[35:34] Okay. So, that maybe is a good segue to
+[35:37] talk about uh what this Triton thing is
+[35:40] all about. Yeah. So, what you know what
+[35:42] is
+[35:43] kernel is this the built-in? Is it also
+[35:46] in
+[35:47] the indices go straight out of CUDA and
+[35:50] So, I don't let's see. I mean, I guess
+[35:52] this says CUDA kernel implementation, so
+[35:54] I imagine someone wrote it in CUDA.
+[36:03] Okay. Any other questions?
+[36:07] Yeah.
+[36:08] Why is
+[36:09] why is Triton kernel
+[36:11] faster than this one?
+[36:13] Uh is CUDA kernel
+[36:15] What uh
+[36:16] So, why is a Triton kernel faster? So, a
+[36:18] Triton kernel is actually not faster in
+[36:20] this
+[36:22] uh case. Oh, sorry.
+[36:25] The the the compiled kernel is the
+[36:29] is one Triton kernel and this is slower
+[36:31] than the built-in. Yeah.
+[36:34] I think last year when I did this, it
+[36:35] was actually closer. Uhm
+[36:38] or
+[36:39] but you know, these things change and
+[36:41] it's very hardware-dependent and you
+[36:44] know, I think none of this is like
+[36:46] terribly optimized. This is just giving
+[36:48] you a the general idea here.
+[36:51] Okay. So, let's uh write some uh Triton
+[36:54] kernels.
+[36:55] Uhm
+[36:57] So, remember our
+[36:59] uh programming model. You have a bunch
+[37:01] of threads organized by thread groups by
+[37:03] thread blocks and there's a grid of
+[37:06] thread blocks.
+[37:07] Okay. And uhm if you were to you know,
+[37:11] write in CUDA, which was originally
+[37:13] developed by NVIDIA and that's been for
+[37:15] years the thing that you do when you
+[37:16] write kernels,
+[37:18] uhm the mental model is what does each
+[37:21] thread do? So, you write a bit piece of
+[37:23] code, which essentially has some ID that
+[37:26] that identifies which thread you're
+[37:27] talking about and it just like executes
+[37:29] the code.
+[37:31] So, the nice thing about this is that
+[37:33] it's very closely related to what is
+[37:36] actually
+[37:37] uhm happening underneath the hood. Uhm
+[37:40] and it's uh you know, fine-grained gives
+[37:44] you fine-grained control,
+[37:46] uhm but you know, there's cons here,
+[37:49] which is that remember all these threads
+[37:52] uhm
+[37:53] uhm are in a thread block
+[37:57] you know, some operations require them
+[37:58] to communicate. So, what has to happen
+[38:03] is that they have to synchronize and uhm
+[38:07] like they read from HBM all at once and
+[38:09] they have to synchronize and do the
+[38:10] computation and then
+[38:12] or uhm and you have to basically do that
+[38:15] you know bookkeeping.
+[38:16] So, if you were doing all element-wise
+[38:18] operations, you know,
+[38:20] this CUDA is just fine. It doesn't
+[38:22] really
+[38:23] uh matter, but as you get more complex
+[38:26] operations, then Triton provides uh some
+[38:28] value uhm
+[38:30] uh of the abstraction. So, Triton
+[38:32] developed by was developed by OpenAI. I
+[38:35] think by now it's been pretty you know
+[38:36] standard. You basically specify what
+[38:39] each thread block you know does.
+[38:42] Uhm generally it's powerful enough,
+[38:43] especially for you know, this class and
+[38:45] you're getting started. If you really go
+[38:48] and want to exploit every single new
+[38:50] feature of the latest hardware, you
+[38:52] know, it might not give you the full
+[38:54] flexibility, but you know, uhm
+[38:56] you know, let's not worry about that.
+[38:59] And the conceptual framework to think
+[39:01] about in Triton is that you're think
+[39:04] about what does a block do?
+[39:05] A block is going to load data into
+[39:07] shared memory, operate it on, and write
+[39:10] it back to you know global memory.
+[39:12] So, in some sense, these blocks are
+[39:15] intermediate point between
+[39:17] uhm thinking about what individual
+[39:18] elements are doing, as well as thinking
+[39:20] about the general operation. And so, in
+[39:22] PyTorch, you basically define these huge
+[39:24] matrices and you say multiply them
+[39:26] together and that's the sort of the
+[39:28] atomic operation and a lot of what
+[39:30] you're thinking about is how do I get
+[39:32] things into big matmuls,
+[39:34] right? And at the at some level, Triton
+[39:37] is sort of
+[39:38] uh you know, hybrid between that and you
+[39:40] know, the individual elements.
+[39:43] As we'll see.
+[39:44] Okay, so let's start with a the value
+[39:47] example here.
+[39:49] Um
+[39:50] So, let's define a 8,000 dimensional
+[39:53] vector and start writing some Triton.
+[39:57] Okay, so
+[39:58] um
+[39:59] So, Triton is basically going to be you
+[40:01] know, you write you know, Python. How
+[40:03] many of you have you have written Triton
+[40:05] before?
+[40:06] Just as a show of hands. Okay. Okay, so
+[40:08] hopefully this I'll try to not that
+[40:10] many, so which is
+[40:12] good because then you won't be bored.
+[40:15] Um okay, so
+[40:18] you know, so this is normal
+[40:21] this is normal PyTorch, right? There's
+[40:22] no Triton here,
+[40:23] but I'm just preparing.
+[40:27] And so what I'm going to do is
+[40:29] I take this tensor
+[40:31] and I'm going to allocate an output
+[40:33] you know, tensor.
+[40:35] Okay? Because in Triton we're not
+[40:38] thinking functionally anymore, we're
+[40:40] just thinking about moving you have to
+[40:42] explicitly read and write. So, there's
+[40:45] no like returning value. So, I'm going
+[40:47] to allocate the output tensor which I'm
+[40:49] going to the kernel is going to write
+[40:50] to.
+[40:51] Um and then
+[40:53] so this tensor is can be you know,
+[40:56] arbitrarily big, right?
+[40:58] And I can't generally fit this all into
+[41:02] one SM because
+[41:04] you know, it's just it's just too big.
+[41:06] Um so, I need to break it up into
+[41:08] blocks.
+[41:10] So, what I'm going to do is you can
+[41:12] think about
+[41:14] um
+[41:14] you know, this this X is being this
+[41:17] array.
+[41:18] I'm going to chop it up into blocks, so
+[41:20] the total number of elements is 8,000.
+[41:22] I'm just going to set the block size to
+[41:24] 1024 you know, for now.
+[41:27] And and then I have eight blocks.
+[41:31] Okay.
+[41:33] Um so,
+[41:35] then I'm going to
+[41:38] use this sort of weird syntax to call
+[41:41] the the kernel. Um so, Triton value
+[41:44] kernel
+[41:45] this basically in in brackets tells me
+[41:50] the
+[41:51] essentially the shape of the grid.
+[41:54] So, basically this says the grid has num
+[41:57] blocks
+[41:59] you know, blocks.
+[42:00] Um and I'm going to for every one of
+[42:03] these blocks invoke
+[42:06] this function Triton value kernel which
+[42:08] I'll talk about in a bit. I'm going to
+[42:10] pass in an X, Y,
+[42:13] num elements and the block size.
+[42:17] Okay?
+[42:19] All right, so unfortunately I'm not
+[42:21] going to be able to trace through this,
+[42:22] so I'll just show you that what the code
+[42:24] looks like
+[42:26] um here.
+[42:27] So,
+[42:29] let me get rid of that.
+[42:31] Okay, so this is
+[42:33] probably the kind of the simplest kernel
+[42:36] you can imagine. So,
+[42:38] when you
+[42:39] are looking at the Triton value kernel.
+[42:41] Now, this is um
+[42:44] you know, before we had X and Y. So, now
+[42:47] these are pointers, right? You can think
+[42:49] about these are just like
+[42:51] integers, they're addresses.
+[42:54] Um so, you have to get comfortable with
+[42:55] that. Um and then we have the number of
+[42:58] elements and the block size
+[43:00] which are basically passed um
+[43:04] and
+[43:06] uh
+[43:07] actually passed in from here.
+[43:10] Okay, so the way to think about is that
+[43:12] for every block
+[43:14] we're going to have this function being
+[43:18] you know, called.
+[43:20] And um
+[43:23] and what happens is the first thing I'm
+[43:25] going to do is I'm going to wake up this
+[43:27] this you know, block wakes up and say
+[43:29] who am I? Um well, the program ID is is
+[43:33] basically the PID is basically
+[43:34] identifying the block. So, PID would be
+[43:36] zero for this block one, two and three
+[43:39] here.
+[43:40] Okay, so now I have to figure out what
+[43:43] data I'm going to operate on.
+[43:45] So, that's PID times block size.
+[43:48] So, this is the this is the offset into
+[43:51] X pointer.
+[43:52] So,
+[43:53] if PID is zero, then start is zero. If
+[43:56] PID is one, then start is block size. If
+[43:59] PID is two, then it's two times block
+[44:01] size and so on.
+[44:04] Okay?
+[44:04] So, now I'm going to
+[44:06] figure out the the span I'm operating
+[44:08] on. So, offsets is start plus
+[44:11] this is the you know, the Triton
+[44:14] um you know, library
+[44:17] A range zero block size which gives
+[44:20] conceptually gives you the integers zero
+[44:22] through block size minus one.
+[44:24] So, offsets is going to be
+[44:27] essentially you know,
+[44:29] for let's say block one, it's going to
+[44:31] be block size, block size plus one all
+[44:33] the way to blocks two times block size
+[44:34] minus
+[44:36] one.
+[44:39] Okay, so um
+[44:42] you know, in this case num elements
+[44:44] divides block block size, but in general
+[44:45] that's not the the case. So, you'll
+[44:47] often see in Triton code there's this
+[44:48] masking which says well, sometimes if
+[44:52] the let's say the tensor only goes up to
+[44:54] here, then I'm going to form a a mask
+[44:58] which is
+[44:59] going to be true up until that point and
+[45:01] false after that point.
+[45:04] And for blocks that are don't are not
+[45:06] the final block, it's going to be just
+[45:08] all ones.
+[45:11] Okay, so now I've done the the setup.
+[45:13] What I do is I read
+[45:15] and this is basically pointer
+[45:17] arithmetic. So, X pointer remember is
+[45:19] the integer that specifies the memory
+[45:21] location of where X is. I'm going to add
+[45:23] offsets to that which gives me the
+[45:26] the first block size number of elements
+[45:30] there.
+[45:31] Um you know, according to the mask if
+[45:33] I'm masked out and I don't you know, I
+[45:35] don't I don't read it.
+[45:37] Um and then now I I think you know, you
+[45:40] can just think about this as a you know,
+[45:42] a vector.
+[45:44] Um and then you do your normal
+[45:46] computation.
+[45:49] And and then you get you know, Y.
+[45:52] And Y is the same size as X and then you
+[45:55] do TL store
+[45:58] Y pointer plus offsets on Y and and the
+[46:01] mask.
+[46:02] Okay? So, this load loads from HBM
+[46:06] does some stuff and then it writes back
+[46:08] to HBM.
+[46:12] Okay, I'm going to stop there
+[46:14] um and take any questions about this
+[46:18] first
+[46:19] kind of Triton kernel.
+[46:21] Uh yeah.
+[46:33] Yeah, so the difference is what is the
+[46:34] difference between CUDA? And that it's
+[46:38] for this element wise it looks
+[46:40] pretty much the same, right? And in in
+[46:42] fact, CUDA's even I think simpler
+[46:45] because it really is element wise. You
+[46:47] wake up and you I identify the thread
+[46:50] and then you just operate on that
+[46:52] element. Um now, the only thing here is
+[46:55] that it's sort of like the vectorized
+[46:56] version where you
+[46:59] you have a block and you operate on that
+[47:01] block.
+[47:02] Um later we'll see that
+[47:05] operating on blocks is is doing more
+[47:08] than if you do more something more than
+[47:09] element wise, then CUDA's going to be a
+[47:11] lot more annoying to work with. Uh
+[47:14] there's a bunch of questions. Yeah, back
+[47:15] there.
+[47:21] So, how is this related to if you want
+[47:23] to use the tensor units?
+[47:25] Um so, I'll later show you what this
+[47:28] code actually compiles down into and
+[47:32] maybe we'll I'll get back to that.
+[47:35] But the short answer is that you don't
+[47:36] control that. Like the hardware figures
+[47:39] out what where to put things.
+[47:43] Yeah. Can you actually walk through
+[47:45] what's happening at the level
+[47:47] from HBM to shared to register? What's
+[47:51] like the step-by-step where things are
+[47:53] actually going?
+[47:54] Yeah, so the question is what is
+[47:56] actually happening when this
+[47:58] uh um the same end is executed. Um
+[48:02] you know, so the the short version is
+[48:04] that this is in some sense a a lie,
+[48:07] right? It's not like the GPU
+[48:09] actually uh calls the
+[48:11] you know, the Triton library on the GPU
+[48:13] and it's like actually executing this
+[48:14] code. This is basically for our
+[48:17] consumption to you know, specify the
+[48:20] computation. The compiler takes this as
+[48:22] we'll see later and writes it into
+[48:24] something called PTX and then it will
+[48:26] actually do the
+[48:28] you know, the work.
+[48:29] But conceptually like conceptually um so
+[48:33] so that's mechanically what's happening
+[48:35] which I'll get to later. Um
+[48:37] if you're asking about the conceptual
+[48:39] question um
+[48:42] the way to think about this is that um
+[48:46] you know, this
+[48:48] ish
+[48:48] X pointer is uh
+[48:51] you know, a memory location in in HBM.
+[48:55] And this basically specifies a range of
+[48:57] memory locations and load takes those
+[48:59] memory locations and returns the data
+[49:01] associated with them.
+[49:03] And it gets you know, here I have a
+[49:05] local variable I called X.
+[49:08] In practice this is going to be
+[49:10] generally you know, a register or shared
+[49:13] memory. Actually, you know, you don't
+[49:15] actually
+[49:17] you know, Triton kind of figures out
+[49:18] what to what to do there.
+[49:22] Um the thread level
+[49:24] and this is like so when this is
+[49:26] invoked, it's not really clear like did
+[49:28] it did I did I line up what is going to
+[49:32] be in shared and going to be at the
+[49:34] register level beforehand or is it
+[49:36] happening now? Like, which is like way
+[49:38] late. And so, that's just we're all all
+[49:40] the threads are sitting
+[49:42] idle to get
+[49:44] uh memory to flush in.
+[49:47] Um
+[49:50] execute so that it's not we're not
+[49:52] sitting there twiddling our thumbs just
+[49:53] waiting for data to come in from HBM.
+[49:55] Yeah, yeah. So, the question is like,
+[49:57] when does this actually get executed?
+[49:59] Doesn't this like block? Um let me try
+[50:02] to come back to this question while I
+[50:03] show you the PTX and maybe hopefully
+[50:05] it'll provide a bit more context on
+[50:08] what's happening.
+[50:09] Okay, any other questions?
+[50:15] Okay, so this is a all the kernels are
+[50:17] going to look something like this. So, I
+[50:19] I do want to make sure people understand
+[50:22] um
+[50:22] you know, the just the general form,
+[50:25] which is that you have generally your
+[50:26] inputs, your outputs, you wake up, you
+[50:29] figure out uh which index you're going
+[50:31] to look at, you read, you do some stuff,
+[50:33] and then you write to HBM.
+[50:37] Okay.
+[50:39] Um
+[50:41] So,
+[50:43] Okay, so let's talk about PTX briefly.
+[50:47] Um
+[50:48] So, let's see, how does this work? Does
+[50:50] this link work?
+[50:53] Okay.
+[50:54] Um so,
+[50:55] um when you
+[50:57] you know, uh write Triton,
+[51:00] the compiler generates uh PTX code,
+[51:02] which is this intermediate assembly
+[51:04] language for new GPUs.
+[51:06] Um
+[51:08] You know, I am obviously not going to go
+[51:10] through all this, but just to give you
+[51:12] the the flavor of what this uh you know,
+[51:15] um you know, looks like.
+[51:17] Um let me actually start with obser-
+[51:20] observation. So, a few things. So,
+[51:23] um
+[51:24] you know, this is now what a thread is
+[51:27] actually doing.
+[51:29] Um not a a thread block because that's
+[51:31] been kind of compiled, you know, away.
+[51:34] Um
+[51:35] And so, um
+[51:38] you know, if you look at
+[51:40] um a few few notes here. So, this LD
+[51:44] global
+[51:45] is is basically saying load from
+[51:48] um HBM
+[51:50] into some registers, and the registers
+[51:52] are denoted as as like the R R are
+[51:56] integer registers, FR you know, floating
+[51:59] point, you know, registers.
+[52:01] Um and then you have statements like,
+[52:03] you know, move zero into R5, move zero
+[52:06] into R6, and so on.
+[52:08] Um and then you have multiplication,
+[52:10] you're going to multiply this register
+[52:12] by this, you know, constant, and then um
+[52:15] put it in you know, this.
+[52:17] So, this code gets executed, and at the
+[52:20] bottom you should see
+[52:22] um you know, global uh store. So, this
+[52:25] is writing back into the HBM.
+[52:28] So, this gets executed. This is actually
+[52:31] the code that uh gets executed on, you
+[52:34] know, a thread.
+[52:35] Um
+[52:36] you know, and Triton is basically a you
+[52:39] know, a layer above you know, above
+[52:40] that.
+[52:41] Um
+[52:42] one other thing to notice is that, you
+[52:44] know, you see all these you know, kind
+[52:46] of blocks, and what's going on there.
+[52:49] And what's going on there is what you
+[52:51] know, I'm alluding to thread coarsening,
+[52:53] which is that this is one thread, but
+[52:55] rather than processing a single element,
+[52:57] it's actually processing eight uh
+[52:59] elements. So, the compiler decided that,
+[53:01] well, actually this thread is pretty
+[53:02] lightweight, it doesn't do that much, so
+[53:04] let's just try to thicken it up a little
+[53:06] bit.
+[53:07] Um so,
+[53:09] you know, looking at PTX can give you
+[53:10] some sort of appreciation for um you
+[53:13] know, what's what's going on underneath
+[53:15] the hood.
+[53:17] Yeah. So, it makes this for each
+[53:20] individual So, all of these are
+[53:22] So, probably
+[53:24] the same one for the whole thing.
+[53:26] Uh so, the question is, does it make
+[53:28] this for each thread? So, this is
+[53:32] compiled uh you know, once, and it's the
+[53:35] same piece of code that each thread
+[53:38] runs.
+[53:39] And the way that the thread uh
+[53:41] distinguishes itself is that this piece
+[53:44] of code gets passed
+[53:46] um
+[53:47] basically the you know, the thread
+[53:50] um
+[53:50] you know, ID.
+[53:52] Uh so, here the CTA.x
+[53:54] is the block index, and TID.x is the
+[53:57] thread index. So, um this basically if
+[54:01] this piece of code is running, this
+[54:03] tells you which block I'm um in.
+[54:07] And uh T- TID.x tells you which thread
+[54:11] inside that block I'm in.
+[54:16] Okay.
+[54:21] Okay. Um
+[54:22] any other questions? And I'm trying to
+[54:24] figure out a
+[54:26] Okay.
+[54:32] Okay, so that's a
+[54:34] generally a flavor of you know, your
+[54:36] first Triton kernel kernel um
+[54:39] load from HBM, compute, write back to
+[54:41] HBM, and
+[54:44] um
+[54:44] and
+[54:46] and then we saw the PTX, which is like
+[54:48] kind of the the grungy what actually
+[54:50] happens underneath the the hood. There's
+[54:53] still a lot of things that are not
+[54:56] specified in the PTX. Like, for example,
+[54:58] which SMs things are operating on, and
+[55:00] the you know, the warps and everything,
+[55:02] and that's a lot of those are kind of
+[55:04] hardware controlled, so um you don't
+[55:06] even you know, see. Yeah.
+[55:08] So,
+[55:09] >> [snorts]
+[55:09] >> PTX code is generated by the compiler,
+[55:12] not something that you would normally
+[55:15] go write in.
+[55:16] It looks like it's assembly code.
+[55:18] Yeah, so the question is, do
+[55:20] uh is PTX this is generated by the
+[55:23] compiler? So, there are people who do
+[55:26] write PTX. Um if you really, you know,
+[55:29] think you're better than uh the
+[55:31] compiler. Um
+[55:33] And I I think, you know, the NVIDIA
+[55:36] compilers are generally pretty mature,
+[55:38] but some other, you know, accelerators
+[55:40] that are less developed, I think, you
+[55:42] know, sometimes you just have to reach
+[55:43] in and actually hand-hold a bit more.
+[55:47] But generally, yeah, you
+[55:49] shouldn't um
+[55:50] need to do that. Yeah.
+[55:54] So, when I look at the PTX, so I
+[55:56] when a warp will get scheduled onto an
+[55:57] SM,
+[55:59] I'll get to that TF.load, and it's
+[56:00] almost like a CPU trap call, where like
+[56:03] I'm just waiting for like, you know,
+[56:05] some
+[56:06] you know, something to happen, and like
+[56:08] now I'm just I am twiddling my thumbs,
+[56:09] so some other warp will get scheduled
+[56:11] over me, and then they will do
+[56:13] operations. Now that the TF.load is
+[56:15] done, then I'll reschedule that warp,
+[56:18] and then I'll continue on. Is that kind
+[56:20] of Yeah, that's that's right. So, just
+[56:22] to repeat the the the question
+[56:25] um or the comment. Um so, if you look at
+[56:28] this this Triton code,
+[56:30] um these statements like the uh this
+[56:33] load is going to block for some number
+[56:35] of cycles. And then so, this is running
+[56:37] on some thread on some warp on some SM.
+[56:40] And remember the SM is running multiple
+[56:42] warps at the same time. So, um
+[56:45] you know, when you get to that point, it
+[56:47] can just like, you know,
+[56:49] find another warp to run. And then when
+[56:51] this is done, the warp scheduler comes
+[56:52] back and um takes over.
+[56:55] Why would
+[56:56] four warps be
+[56:58] So, um Uh I'm sorry.
+[57:00] Why would there be four warps in the
+[57:02] same kernel on each SM if four warps are
+[57:04] scheduled
+[57:06] Yeah, so what the question is, why four
+[57:08] warp schedulers? I don't know exactly
+[57:11] the reason behind that.
+[57:16] Okay, so now let's go through some other
+[57:18] examples. Maybe just as a kind of a
+[57:20] quick preview. We're going to do three
+[57:22] more examples. Gelu Gelu is this kind of
+[57:25] the simplest
+[57:26] uh you know, form, even though the the
+[57:28] computation is kind of like, you know,
+[57:31] has a lot of messiness. It's just
+[57:32] element-wise, so conceptually in the
+[57:35] context of um this this lecture is
+[57:38] actually very simple.
+[57:39] Um now we're going to look at softmax,
+[57:41] where now uh you're going to have to do
+[57:44] reduction.
+[57:46] Um but in this case, we're going to
+[57:47] think about the case where row fits on a
+[57:49] block, and then we're going to uh
+[57:52] consider the case where row doesn't fit
+[57:54] on a block, and then we're going to do
+[57:55] go up to matmul.
+[57:57] And then hopefully by that point, you'll
+[57:59] have all the ingredients that you need
+[58:01] to uh do the assignment and implement
+[58:03] flash attention.
+[58:04] Okay.
+[58:06] So,
+[58:07] um so far we looked at element-wise
+[58:08] operations. Um
+[58:10] now let's think about other operations
+[58:12] that aggregate over multiple uh values.
+[58:16] So, remember what the softmax does.
+[58:18] Um
+[58:19] It it's ex- takes a let's just think
+[58:22] uh as a matrix. You exponentiate
+[58:25] and normalize each row of a matrix.
+[58:29] Okay, so this is used in attention, it's
+[58:30] used in, you know, generating
+[58:32] probability output um probabilities. Uh
+[58:35] generally a good good thing to do.
+[58:37] Um
+[58:39] So, let's just start with a naive
+[58:41] implementation, um
+[58:43] and just keep track of what's what's
+[58:45] happening. So, here I'm defining this
+[58:48] tensor, and um
+[58:51] here's the naive implementation.
+[58:53] Um
+[58:55] Actually, I think this is
+[58:56] it's on assignment one.
+[58:58] Um
+[58:59] Okay, anyway. So, uh here I have a M by
+[59:03] N matrix, and so I need to for every row
+[59:07] uh
+[59:08] you know, compute the
+[59:10] you know, I'm going to compute the max
+[59:12] of each row,
+[59:13] and this is for numerical stability. I'm
+[59:15] going to subtract off the max,
+[59:18] um
+[59:19] and then I'm going to, you know,
+[59:21] exponentiate
+[59:22] element-wise, and I'm going to um sum
+[59:26] and compute the normalization constant
+[59:27] for every
+[59:29] um
+[59:30] every row, and I'm going to divide.
+[59:33] Um
+[59:34] and then that's it.
+[59:38] Okay.
+[59:39] So, um
+[59:41] so if you count the number of reads and
+[59:44] writes, remember this is just plain
+[59:46] PyTorch. So, this is a different kernel,
+[59:48] this is a different kernel and unless
+[59:50] you call a torch that compile, these are
+[59:52] going to be different, you know,
+[59:53] operations and each operation is going
+[59:56] to read and write, read and write from
+[59:58] HBM.
+[59:59] Okay, so you have, you know, five uh MN
+[01:00:02] you know, reads, three MN writes,
+[01:00:06] um
+[01:00:06] and in principle
+[01:00:08] you should really only have
+[01:00:10] you know,
+[01:00:11] uh much fewer.
+[01:00:14] Okay, so this is uh you know, a piece of
+[01:00:16] code kind of makes sense. Everyone
+[01:00:18] should be familiar with what a softmax
+[01:00:19] is doing.
+[01:00:21] Okay.
+[01:00:23] So, let's uh let's write now the the
+[01:00:26] Triton kernel.
+[01:00:27] Um and
+[01:00:29] you know, in some sense the the
+[01:00:31] the form is going to be very similar.
+[01:00:34] Just like in a GELU, right? Once you do
+[01:00:36] the scaffolding, the core computation
+[01:00:38] looks very much like the naive uh
+[01:00:40] version.
+[01:00:41] Um so what we're going to do is we're
+[01:00:44] going to um say each row is a block.
+[01:00:47] Okay? And why do I make each row a
+[01:00:49] block?
+[01:00:51] Well, because now remember each row I
+[01:00:53] have to normalize and sum. So, it's not
+[01:00:55] element-wise. Softmax is not
+[01:00:57] element-wise, but it is sort of sort of
+[01:00:59] row-wise. So, the blocks don't interact.
+[01:01:02] Um so, they don't need and the blocks
+[01:01:04] don't have, you know, shared memory, so
+[01:01:05] that's that's fine.
+[01:01:07] A There's no shared memory across
+[01:01:09] blocks. Um so then within each row, I'm
+[01:01:14] just going to do some stuff.
+[01:01:16] Okay, so let's see what happens. Um
+[01:01:19] so again, I'm going to in Python, I'm
+[01:01:22] going to allocate my output tensor. Um I
+[01:01:25] have this M by N, you know, matrix.
+[01:01:28] Um
+[01:01:28] I'm going to
+[01:01:30] define the block size as
+[01:01:33] uh
+[01:01:34] you know, basically the number of
+[01:01:36] columns. Um you know, go to the next
+[01:01:38] power of two for good luck. Um and then
+[01:01:41] the number of blocks is just uh um the
+[01:01:44] number of rows.
+[01:01:45] Okay, and then I'm going to call this uh
+[01:01:47] kernel.
+[01:01:48] So, how many blocks are there?
+[01:01:52] M, right? One for each row.
+[01:01:54] And each block I'm going to pass the the
+[01:01:56] input pointer, the output pointer.
+[01:01:59] Um and then I'm going to
+[01:02:02] also uh pass these, you know, uh
+[01:02:05] you know, strides which tell me um how
+[01:02:07] how far to move down.
+[01:02:09] Um okay, so
+[01:02:14] Okay, let me actually go and show you
+[01:02:18] the softmax
+[01:02:20] kernel. Okay.
+[01:02:23] Um okay, so what does this uh look like
+[01:02:26] here?
+[01:02:27] Um
+[01:02:28] so
+[01:02:30] I wake up. I'm on a particular row.
+[01:02:33] Okay? And this is going to give me the
+[01:02:36] all the columns from zero to the number
+[01:02:38] of block size, which you know, I'm
+[01:02:40] assuming that's all the the columns. Um
+[01:02:43] I'm going to
+[01:02:45] um
+[01:02:46] you know, uh read. So, so basically I
+[01:02:49] need to figure out which
+[01:02:51] um where to read from memory and that's
+[01:02:53] going to be the start of my data
+[01:02:56] plus the you know, which row and the row
+[01:02:59] stride basically gives me, you know, uh
+[01:03:02] every row
+[01:03:03] is is basically this is the number of
+[01:03:05] columns um essentially. It's going to
+[01:03:07] get tell me where how far to go down.
+[01:03:10] Um and then this is X pointers is
+[01:03:12] basically the addresses of all the data
+[01:03:14] I need to load. I load them up. Um
+[01:03:18] and here I do this thing where if it's
+[01:03:21] uh you know, if it's masked out, then I,
+[01:03:23] you know, put minus infinity because I
+[01:03:25] know those are that's going to be kind
+[01:03:28] of the the equivalent of a a a zero for
+[01:03:30] the soft softmax operation.
+[01:03:33] And then this part is essentially the
+[01:03:35] same as the naive uh softmax. I'm just
+[01:03:37] going to compute the max, subtract it
+[01:03:40] off, exponentiate, sum, and divide.
+[01:03:44] And then I write it back.
+[01:03:48] Okay.
+[01:03:50] Yeah.
+[01:03:58] Yeah, so this is the version where each
+[01:04:01] block can just uh span the entire row.
+[01:04:05] So, yeah, this is sort of the and you
+[01:04:08] you can see that
+[01:04:10] um
+[01:04:11] Triton makes this very easy, right?
+[01:04:13] Because this is as if you were just
+[01:04:15] normal writing normal PyTorch code.
+[01:04:20] So, if everything fits in a block, you
+[01:04:22] basically the the the thing is the thing
+[01:04:23] is if you can fit anything through a
+[01:04:25] block, you can just like write normal
+[01:04:27] PyTorch almost.
+[01:04:29] Yeah. Um what if my uh number of columns
+[01:04:32] and number of rows are uh
+[01:04:35] bigger than block size?
+[01:04:37] Yeah, so we'll get to that. Now, if the
+[01:04:39] number of columns, rows, in general,
+[01:04:41] it's going to be much larger than that
+[01:04:42] block size, so we'll come back to that.
+[01:04:43] Yeah. So, if you wanted to do like a
+[01:04:45] softmax like
+[01:04:52] Um so, the question is if you wanted to
+[01:04:53] softmax by column, um I think that
+[01:04:57] should be fine because here we're
+[01:04:59] tracking these pointers, right? So, the
+[01:05:01] pointers are can be anything and here
+[01:05:04] I've um basically I think all you would
+[01:05:06] have to do is change the stride uh here.
+[01:05:09] Um to basically access the the columns.
+[01:05:12] Actually, it would be here. The column
+[01:05:13] offsets, you would just make um like the
+[01:05:17] multiply this by like the row stride, I
+[01:05:19] think.
+[01:05:21] Okay, let's let's move on.
+[01:05:23] All right, so um
+[01:05:26] now
+[01:05:28] you know, warming up to the mammal,
+[01:05:30] suppose that your row doesn't fit into a
+[01:05:32] block.
+[01:05:34] Okay, so what do you do in this case?
+[01:05:36] So, for example, if you have, let's say,
+[01:05:39] a a row that's uh 400 4,000 columns, but
+[01:05:42] the block size is only 1,024.
+[01:05:46] So, you can't cons
+[01:05:48] uh you know, you have to do something
+[01:05:49] here.
+[01:05:50] So, here's the strategy. We're going to
+[01:05:53] break up the row into tiles.
+[01:05:55] So, in this case, there's going to be
+[01:05:57] four tiles
+[01:05:58] and each thread is going to iterate over
+[01:06:02] the tiles and accumulate a sum.
+[01:06:04] And then finally at the end,
+[01:06:06] um we're going to do the the kind of the
+[01:06:09] uh reduction.
+[01:06:11] Um
+[01:06:13] uh by
+[01:06:14] you know, uh summing everything that
+[01:06:16] each thread produced. So, I'll I'll show
+[01:06:18] you an example of this. And now I'm I'm
+[01:06:20] sort of switching from softmax to row
+[01:06:22] sum
+[01:06:23] um because it's just easier to think
+[01:06:25] about.
+[01:06:26] Okay. So, um
+[01:06:29] So, here Okay, well, this is not very
+[01:06:32] interesting. The built-in row sum does
+[01:06:34] uh what you would expect. Um So, the row
+[01:06:38] sum operation just basically takes
+[01:06:41] um a a matrix and then computes uh the
+[01:06:43] sum of each row. Okay? So, just no
+[01:06:45] surprises there.
+[01:06:47] Um Okay, so conceptually what we're
+[01:06:51] going to do here is as follows. Okay, so
+[01:06:54] each block is still in charge of one
+[01:06:56] row. So, that part hasn't changed. So,
+[01:06:59] suppose I'm block one, row one.
+[01:07:01] I wake up and what do I do?
+[01:07:03] I'm going to remember now there's tiles
+[01:07:05] and suppose tile zero is columns zero
+[01:07:08] through three, tile one is columns four
+[01:07:10] through seven, call uh and then tile two
+[01:07:12] is columns eight through 11.
+[01:07:15] Okay, so what I'm going to do here is
+[01:07:18] that
+[01:07:19] I'm going to iterate now. So, first I
+[01:07:22] basically process
+[01:07:24] uh this um all the threads. Basically,
+[01:07:27] each thread keeps a kind of accumulator
+[01:07:28] and and processes the first tile and
+[01:07:32] it's going to move on to the next tile
+[01:07:34] and it's going to add the the current
+[01:07:37] element to the accumulator. So, here I'm
+[01:07:40] um putting 3 1 4 1 and then the the
+[01:07:44] second loop uh iteration, I'm going to
+[01:07:48] add five to this, I get eight. I add
+[01:07:50] nine to this, I get 10, two to four, um
+[01:07:53] and six to one, right? So, each of these
+[01:07:55] four threads is going to be kind of
+[01:07:56] accumulating um its own thing.
+[01:08:00] And then at the end, you know, I do
+[01:08:01] another for tile two, um I add five and
+[01:08:05] three to their respective accumulators.
+[01:08:08] So, at the end of the day, I have this
+[01:08:11] um you know, a vector of accumulators
+[01:08:13] and then
+[01:08:14] that is actually uh you know, that I can
+[01:08:17] just like sum up.
+[01:08:21] Okay, so let's see what the code looks
+[01:08:23] like here. Um
+[01:08:25] so I'm just going to call the the row
+[01:08:27] sum kernel and uh
+[01:08:30] let's see.
+[01:08:33] Okay, so here's what it looks like. So,
+[01:08:35] wake up. I am on a particular row
+[01:08:38] and um
+[01:08:40] and this is what one row looks like.
+[01:08:42] There's one tile, a second tile, a third
+[01:08:45] tile, and so on. So, N is the number of
+[01:08:48] um elements of that row and block size
+[01:08:52] is the
+[01:08:53] uh
+[01:08:54] um size of this uh this tile.
+[01:08:58] Okay? So, remember block size is the
+[01:09:00] number of threads. I'm processing more
+[01:09:02] data than the larger than the block
+[01:09:04] size. I just have to do it iteratively
+[01:09:06] now.
+[01:09:07] So, uh I'm going to loop over all of the
+[01:09:09] tiles. So, start is going to go from
+[01:09:12] zero to block size, to two times block
+[01:09:15] size, and so on and so forth.
+[01:09:18] So, each um time I'm, you know, jumping
+[01:09:20] across, I
+[01:09:23] I am doing
+[01:09:25] uh you know, calls uh, basically get
+[01:09:27] the,
+[01:09:28] um,
+[01:09:30] the the offsets
+[01:09:32] at the particular tile.
+[01:09:34] Um,
+[01:09:35] and then I'm going to load
+[01:09:37] the data
+[01:09:38] from HBM
+[01:09:40] and I'm going to add it to the
+[01:09:41] accumulation. So, this accumulation is
+[01:09:43] going to be, um, either in registers or,
+[01:09:45] uh, shared memory.
+[01:09:48] Okay?
+[01:09:49] And then finally after I loop over all
+[01:09:50] the tiles, I process a whole row, I get
+[01:09:53] basically uh, for every thread I have a
+[01:09:55] cumulator of what that the thread has
+[01:09:58] picked up and I can do just do a sum
+[01:10:01] to get a scalar and I write it out.
+[01:10:06] Okay? So, this is a little bit more
+[01:10:07] complicated than before because now we
+[01:10:08] have a for loop within a thread and this
+[01:10:10] is, uh, necessary when your data doesn't
+[01:10:13] fit within a block.
+[01:10:18] Yeah.
+[01:10:30] Yeah, so the question is, I think, if
+[01:10:32] you can control where the cumulator
+[01:10:34] there resides. At least in this Triton
+[01:10:36] program, you don't explicitly say and
+[01:10:39] this is up to the, uh, Triton compiler
+[01:10:42] to, uh, figure out where to put it.
+[01:10:48] But in general, if the block size is
+[01:10:49] large enough, it has to go in shared,
+[01:10:51] uh, shared memory.
+[01:10:55] Okay.
+[01:10:57] All right. Does this, uh, kind of make
+[01:10:58] sense? So,
+[01:11:00] you know, you it might
+[01:11:02] you know, just just to, I think,
+[01:11:04] make sure people on the same page.
+[01:11:06] Remember in uh, gelu, we also split a
+[01:11:08] row into a bunch of, um, pieces, but
+[01:11:11] those were blocks, right? And so, each
+[01:11:14] of those pieces was a block that was
+[01:11:16] processed independently. These are not
+[01:11:18] blocks. These are tiles.
+[01:11:21] The block corresponds to this whole, uh,
+[01:11:23] row.
+[01:11:24] And and has to basically process all the
+[01:11:27] tiles and so, this is where it starts to
+[01:11:30] not look like PyTorch because, uh,
+[01:11:33] you're not able to process all your data
+[01:11:35] in one nice kind of
+[01:11:37] not everything fits into shared memory.
+[01:11:40] Yeah.
+[01:11:44] Yeah, I let's say uh, the cumulator is
+[01:11:46] stored in shared memory.
+[01:11:48] Yeah.
+[01:11:51] Okay.
+[01:11:53] All right. So, um,
+[01:11:56] let's now maybe go on to our finale,
+[01:11:59] which is matmul.
+[01:12:00] Okay? So, matmul of of course is the
+[01:12:03] bread and butter of deep learning. It's
+[01:12:04] been optimized to death, um,
+[01:12:07] and, um, and it's, you know, in some
+[01:12:10] sense, uh, very,
+[01:12:11] uh,
+[01:12:12] you know, fundamental operation. So, you
+[01:12:14] take two matrices, you multiply them.
+[01:12:16] I'm going to add a little bit of a twist
+[01:12:18] here. Um, I'm going to do a matmul
+[01:12:20] followed by a relu just because just for
+[01:12:22] kicks.
+[01:12:24] Okay?
+[01:12:25] Um, and this is, well, this happens,
+[01:12:27] right? Because if you have, uh, you
+[01:12:29] know, one linear layer, it's a matmul
+[01:12:31] and then you apply, uh, a relu
+[01:12:33] activation. So, this is not like
+[01:12:35] completely out of nowhere.
+[01:12:37] Um, but I'll show you later why I I I
+[01:12:39] did this.
+[01:12:41] Okay, so how do you build a matmul
+[01:12:42] kernel?
+[01:12:44] All right. So,
+[01:12:46] here's the naive approach.
+[01:12:48] Okay, so here's my, uh, let's say, a
+[01:12:50] matrix. I'm multiplying A times, uh, B
+[01:12:54] and I'm trying to write out, uh, the
+[01:12:55] matrix C.
+[01:12:57] And A is M by K, uh, B is K by N, so C
+[01:13:01] is M by N.
+[01:13:03] Okay?
+[01:13:04] So, what I'm going to do is I'm going to
+[01:13:05] fix an, uh,
+[01:13:07] a
+[01:13:08] a one of these elements. Let's say M
+[01:13:10] equals 1, N equals 2. Okay? So, I'm
+[01:13:12] processing Actually, let's do M equals
+[01:13:14] 1, uh, N equals 1. So, I'm doing C5.
+[01:13:18] And then basically for every K,
+[01:13:21] I'm going So, I'm going to, um,
+[01:13:25] uh,
+[01:13:27] yeah, I'm going to iterate over over the
+[01:13:30] the K, the rows of A and the columns of
+[01:13:33] B.
+[01:13:34] I'm going to read from HBM. I'm going to
+[01:13:37] multiply them, accumulate that and at
+[01:13:39] the end, I'm going to write out to, uh,
+[01:13:42] this this element.
+[01:13:44] So, that is a valid matmul kernel.
+[01:13:47] Okay?
+[01:13:49] So, what's wrong with that?
+[01:13:57] It's correct, but, you know, if you look
+[01:14:00] at how many reads and writes it's doing,
+[01:14:03] uh, this is not good, right? So, um,
+[01:14:05] basically for every M and N and K, I
+[01:14:08] have to read from HBM. So, it's on the
+[01:14:10] order of M times K times N reads.
+[01:14:13] Uh, number of writes, I mean, it doesn't
+[01:14:15] matter, but this is a bottleneck, right?
+[01:14:18] And, um, if you remember from the the
+[01:14:21] second lecture, if you look at the
+[01:14:23] number of, um, operations you're doing
+[01:14:26] divided by the number of bytes that were
+[01:14:27] transferred, that's the arithmetic
+[01:14:29] intensity, which you want to be high.
+[01:14:32] So, the number of operations is M times
+[01:14:34] K times N
+[01:14:35] order, um, and then the number of reads
+[01:14:38] is also the same, so arithmetic
+[01:14:39] intensity is a constant, which is, uh,
+[01:14:41] not good.
+[01:14:43] Okay, so if you look carefully, you
+[01:14:46] know, you notice that there is a lot of
+[01:14:48] redundant reads. So, imagine computing
+[01:14:50] C4.
+[01:14:52] Um, you needed to read A4, A5 and A6 and
+[01:14:56] if you compute C5, you're going to have
+[01:14:58] to read those over again as well.
+[01:15:01] So,
+[01:15:03] um,
+[01:15:05] so if you can just read those once, then
+[01:15:07] you really save on reads and that's
+[01:15:09] that's great. So, let's try to use, uh,
+[01:15:11] shared memory to do that.
+[01:15:14] So, here's the idealized approach.
+[01:15:18] I'm going to load all of A and B into
+[01:15:20] shared memory
+[01:15:21] and then I'm going to just compute C.
+[01:15:24] So, if I can do that, then I get, um,
+[01:15:28] now I don't have this cubic number of
+[01:15:30] reads, I only get quadratic number of
+[01:15:31] reads,
+[01:15:32] um, which means I get the arithmetic
+[01:15:34] intensity of order N,
+[01:15:37] um, which in the second lecture I sort
+[01:15:38] of, um,
+[01:15:40] you know, said was a I kind of ideal
+[01:15:42] thing you could hope for.
+[01:15:45] Okay, so this if you can do that, that's
+[01:15:47] that's great because you basically
+[01:15:49] there's no redundant reads. You read
+[01:15:50] everything once into shared memory, you
+[01:15:52] do the computation and you write it
+[01:15:54] back.
+[01:15:55] Okay, but what's the problem with this
+[01:15:57] idealized approach?
+[01:16:02] Uh, the problem is that A and B are
+[01:16:05] usually too large to fit into shared
+[01:16:06] memory.
+[01:16:09] Right?
+[01:16:10] So, so then what do you have to do now?
+[01:16:14] Okay, so the idea here is this, you
+[01:16:17] know, very classic idea of tiling.
+[01:16:19] And the idea basically is to, well, fit
+[01:16:23] as much you can to shared memory as you
+[01:16:24] can, essentially.
+[01:16:26] So, in some sense, it's it's going to be
+[01:16:29] look like the naive It's going to
+[01:16:31] globally look like the naive approach,
+[01:16:32] but locally look like the idealized
+[01:16:34] approach is the way to, you know, think
+[01:16:36] about it.
+[01:16:37] Um, so here's the, you know, the
+[01:16:39] picture. Um,
+[01:16:41] uh, I think Tatsuo showed this as well.
+[01:16:43] So, what we're going to do is we're
+[01:16:44] going to take this matrix C
+[01:16:47] and instead of the Remember the naive
+[01:16:48] approach just said for every element,
+[01:16:50] I'm going to do compute it. But now I'm
+[01:16:52] just going to say for every tile,
+[01:16:54] um, I'm going to do it. So, I break it
+[01:16:56] up into tiles.
+[01:16:58] Um, and each of these tiles is going to
+[01:17:00] be a thread block.
+[01:17:02] I'm going to have a bunch of threads
+[01:17:03] that is responsible to for computing
+[01:17:06] this.
+[01:17:07] Now, a different tile is going to be
+[01:17:09] computed, you know, completely
+[01:17:11] separately by another, uh, thread block.
+[01:17:14] Okay, so I'm going to, you know, imagine
+[01:17:17] I'm in Triton, I'm a
+[01:17:19] I wake up, I'm I'm looking at this
+[01:17:20] thread block. So, what do I have to do?
+[01:17:23] Well, in some sense, it's the same as
+[01:17:25] the, you know, naive approach where for
+[01:17:29] every, um,
+[01:17:30] you know, row tile of A, I'm going to go
+[01:17:33] scan across the rows and for every
+[01:17:35] column tile of B,
+[01:17:38] I'm going to load the the corresponding
+[01:17:40] tile A and the corresponding, uh, so say
+[01:17:43] I'm here and the corresponding tile from
+[01:17:46] B into shared memory.
+[01:17:48] I'm going to multiply these two together
+[01:17:51] and
+[01:17:52] um, and that's going to be, you know,
+[01:17:55] uh,
+[01:17:55] you know, like the kind of the idealized
+[01:17:57] approach and I'm going to accumulate
+[01:17:59] that
+[01:18:00] um, in the partial sum and this is all
+[01:18:02] sitting in shared memory. And then after
+[01:18:04] I finish all the the sweep of the row
+[01:18:07] and the column here, then I can finally
+[01:18:09] write this output tile to HBM.
+[01:18:15] Okay? So, that's,
+[01:18:17] you know, the conceptually what's
+[01:18:18] happening.
+[01:18:19] Um, and then the arithmetic intensity
+[01:18:21] here now goes up to order tile size.
+[01:18:24] So, you can generally not reach order N
+[01:18:27] because that would require you to fit
+[01:18:29] everything into shared memory, but, you
+[01:18:31] know, if your tiles are big, then
+[01:18:33] that's, you know, still not too bad.
+[01:18:36] Okay, so just as kind of a bonus, um,
+[01:18:40] you know, while you're doing all writing
+[01:18:42] a kernel for this anyway,
+[01:18:44] um, sometimes if you want to apply an
+[01:18:46] element-wise activation function,
+[01:18:48] um, it's very easy to just like put it
+[01:18:50] on at the end. And this is, you know,
+[01:18:52] kernel fusion. Okay, so very quickly the
+[01:18:54] implementation here, um,
+[01:18:58] so
+[01:19:02] oops.
+[01:19:03] Okay, so, um, just as kind of a reminder
+[01:19:06] about strides since that's just going to
+[01:19:08] show up. So,
+[01:19:10] a tensor is, um, you know,
+[01:19:12] multi-dimensional array,
+[01:19:14] but in memory, it's linearized and
+[01:19:17] strides of a tensor tells you basically
+[01:19:19] how to map from a multi-dimensional
+[01:19:21] index such as a row uh, a comma column
+[01:19:25] into an actual index. And basically,
+[01:19:27] what you do is multiply the row by the
+[01:19:29] stride the plus the column by the stride
+[01:19:31] of the column.
+[01:19:33] Okay, so in this case,
+[01:19:35] um every time you go advance to the next
+[01:19:36] row, you go four positions in your
+[01:19:39] memory. And every time you advance a
+[01:19:41] column, you go one.
+[01:19:42] In the if it were a transpose, it would
+[01:19:44] be the flipped.
+[01:19:46] Okay, so what does this
+[01:19:48] a kernel uh look like here?
+[01:19:51] Um
+[01:19:52] So, there's um
+[01:19:54] Okay, so the launch is not interesting.
+[01:19:57] Um so, you wake up and you are on tile M
+[01:20:01] and N. So, it's like, "Okay, I'm
+[01:20:03] responsible for computing um the C
+[01:20:06] uh matrix, but for the M / uh comma N
+[01:20:10] tile."
+[01:20:11] Um there's a bunch of like index
+[01:20:12] manipulation, which um you can kind of
+[01:20:16] I'll just gloss through, but it's it's
+[01:20:19] it's straightforward, but a little bit.
+[01:20:20] Um
+[01:20:21] you know, just have to
+[01:20:22] track the the indices. So, this
+[01:20:25] basically tells you which rows
+[01:20:27] of A the matrix A I'm looking at, which
+[01:20:30] rows of uh oh sorry, which columns of B
+[01:20:33] I'm looking at, and then this is just
+[01:20:35] the numbers one through one through K.
+[01:20:37] Um then I going to get the the pointers
+[01:20:41] into A and B at my tile location.
+[01:20:45] Um and then I'm going to set up this
+[01:20:47] accumulator matrix. This is going to be
+[01:20:49] in shared memory.
+[01:20:50] Um this is M by N. And then this is
+[01:20:53] going to look kind of like the uh row
+[01:20:56] reduction, right? You have this
+[01:20:58] uh um sum over all of the the tiles, but
+[01:21:02] instead of just going across the the
+[01:21:03] tiles, I'm now going across the row
+[01:21:06] tiles and also simultaneously down the
+[01:21:08] column tiles of B.
+[01:21:10] I load A the small matrix, I load B the
+[01:21:12] small uh B tile, and then I perform this
+[01:21:15] dot. So, remember, whenever things are
+[01:21:17] in shared memory, things look like
+[01:21:18] PyTorch, and I can just say say "Matmul
+[01:21:21] it." And you know, it'll do the do the
+[01:21:23] thing.
+[01:21:23] And then
+[01:21:25] and then
+[01:21:26] uh and then I advance to the next row
+[01:21:28] tile of A and the next column tile of B.
+[01:21:31] Um and this is like you know, just
+[01:21:34] uh the bonus is that if I wanted to
+[01:21:36] apply element-wise non-linearity, I
+[01:21:39] might as well, you know, do that here.
+[01:21:42] Uh before I write it out to HBM, I can
+[01:21:45] do some any sort of operation on it. And
+[01:21:47] then the finally, I just write it out.
+[01:21:51] Okay.
+[01:21:52] So, there's some sort of indices that
+[01:21:53] you have to pay attention to, but
+[01:21:55] hopefully the um form of the algorithm
+[01:21:58] is is clear.
+[01:22:06] Okay.
+[01:22:07] Any questions about that?
+[01:22:12] All right, maybe I'll just summarize,
+[01:22:13] and you can ask me later. So,
+[01:22:16] today we talked about the there's a
+[01:22:18] programming model, which is you know,
+[01:22:20] you're talking about um either PyTorch
+[01:22:23] or Triton or PTX. Even this is um the
+[01:22:28] you know, what the kind of programmer
+[01:22:30] can control.
+[01:22:31] Right? And even PTX, you can write PTX,
+[01:22:34] and you can control every, you know,
+[01:22:35] specialize however you want.
+[01:22:37] Um but this is not the full picture,
+[01:22:40] because the reality is that your
+[01:22:43] code has to run on hardware, and there's
+[01:22:45] only a finite number of SMs, a finite
+[01:22:49] number of banks, and and you know,
+[01:22:52] sizing of memory and registers all are
+[01:22:54] finite. So, you come in with your big
+[01:22:56] matrix and transformer, and you want to
+[01:22:59] you it has to kind of fit in with the
+[01:23:01] constraints of um the the hardware.
+[01:23:04] Um so, that's why, you know,
+[01:23:06] benchmarking and profiling are really
+[01:23:08] important to understand how the
+[01:23:10] messiness of the hardware
+[01:23:12] um translates to, you know, performance.
+[01:23:15] Um we talked about Triton, which is I
+[01:23:18] think a pretty nice neat language to
+[01:23:21] think about uh thread blocks. Hopefully,
+[01:23:24] by now you can appreciate that um things
+[01:23:28] are easier to think about thread blocks
+[01:23:30] than individual threads, because you
+[01:23:32] don't have to think about explicitly
+[01:23:35] synchronizing threads or doing shared
+[01:23:37] memory.
+[01:23:38] And the way to think about it is that
+[01:23:40] you figure out you have your
+[01:23:41] computation, you break it down into
+[01:23:44] these thread blocks, where you just need
+[01:23:45] to read from shared memory, do some
+[01:23:47] stuff, and write it back into HBM.
+[01:23:50] And then we saw some examples of
+[01:23:51] increasing uh difficulty. Element-wise
+[01:23:53] is the easiest, and then reduction over
+[01:23:56] a row,
+[01:23:57] um reduction where the it doesn't uh fit
+[01:23:59] into a row, and that's sort of we
+[01:24:01] introduced kind of the baby tiling, and
+[01:24:04] then Matmul is the kind of the the the
+[01:24:06] canonical example, where you actually do
+[01:24:09] tiling.
+[01:24:11] Okay, so that's all I'm going to say
+[01:24:13] about how to program a single GPU. Next
+[01:24:15] time, we're going to go to more GPU and
+[01:24:17] talk about um multi-GPU programming. Um
+[01:24:21] yeah, question. Uh so, if I'm able to
+[01:24:23] write my own kernels, what are the
+[01:24:25] alternatives that I have to Triton, and
+[01:24:27] what are the range of my choices that I
+[01:24:29] have? Like how close can I get to the
+[01:24:31] optimal performance?
+[01:24:32] Uh so, the question is uh what are
+[01:24:35] alternatives to to Triton? Um
+[01:24:39] So,
+[01:24:40] you know, there's a trade-off between
+[01:24:42] every language has sort of inductive
+[01:24:45] bias, right? That makes certain things
+[01:24:47] easier and certain things harder.
+[01:24:50] So, most of what we do, Triton was
+[01:24:52] built, you know, by people who, you
+[01:24:54] know, train transformers. So,
+[01:24:57] anything involving uh transformers, I
+[01:24:59] think it's going to be relatively
+[01:25:01] um
+[01:25:02] you know, easy there. Um of course, in
+[01:25:05] the extreme, you can always go to PTX
+[01:25:06] and uh write that, but you know,
+[01:25:08] wouldn't advise that as a first step.
+[01:25:10] There are a bunch of other uh language
+[01:25:12] uh sort of libraries. There's you know,
+[01:25:14] ThunderKittens, there's uh you know,
+[01:25:16] cute you know, various DSLs that allow
+[01:25:19] you to give you
+[01:25:22] you know, they're not necessarily
+[01:25:23] necessarily comparable uh either up or
+[01:25:25] down the stack, they just give you
+[01:25:26] different um you know, characteristics.
+[01:25:30] Yeah. When you have a high-dimensional
+[01:25:32] tensor,
+[01:25:34] uh you know,
+[01:25:35] multiplications or a high-dimensional
+[01:25:37] tensor
+[01:25:38] processing,
+[01:25:39] uh what is the best approach? Is there
+[01:25:41] is there like what I'm thinking is can I
+[01:25:44] load
+[01:25:45] unload the whole tensor
+[01:25:49] both of the tensors on you know, bunch
+[01:25:51] of threads or thread blocks on my
+[01:25:54] GPU at the same time and compute them,
+[01:25:57] or would it be better to
+[01:25:59] sort of, you know, take each
+[01:26:02] element, just what we did here, right?
+[01:26:05] For the particular particular component
+[01:26:07] of of my tensor, then process it, and
+[01:26:10] then write it back into HBM?
+[01:26:12] Yeah, so the briefly the question, and
+[01:26:14] we should probably wrap up, is um
+[01:26:16] is it better to kind of read all at once
+[01:26:19] or maybe process individual elements at
+[01:26:22] um a time. Um I think it's hard to
+[01:26:25] answer this in the abstract. It kind of
+[01:26:26] depends on the nature of the
+[01:26:28] computation. Um
+[01:26:30] uh maybe I we can talk offline about
+[01:26:32] that.
+[01:26:33] Okay. All right, see you next time.

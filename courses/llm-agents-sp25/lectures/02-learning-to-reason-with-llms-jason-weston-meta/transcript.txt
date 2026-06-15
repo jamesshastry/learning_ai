@@ -1,0 +1,2363 @@
+[00:00] JASON WESTON: Now, I
+don't know about you,
+[00:01] but these days I'm using AI in
+my everyday life quite a lot,
+[00:06] like to help me create
+art, write code, write
+[00:09] formal letters, ask questions,
+brainstorm all kinds of stuff,
+[00:14] and that's only really been
+possible very recently.
+[00:18] I think AI research
+is we're pretty
+[00:21] privileged to be in this
+time in human history,
+[00:25] and see these improvements
+happening in real time.
+[00:29] And we've seen how
+quickly they evolve,
+[00:32] but I still think
+there's a lot left to do.
+[00:36] I think we can expect still
+more large improvements even
+[00:41] in the near future
+and next few years,
+[00:44] and we've seen that even in
+the last months with O1, R1,
+[00:50] and so on.
+[00:52] Big improvements in various
+benchmarks in reasoning.
+[00:58] And after all that, it's a
+very young field overall,
+[01:02] but like that subfield with
+learning chain of thought.
+[01:07] I mean, chain of thought itself
+is only really from 2022,
+[01:11] so, yeah, I think
+it's really impressive
+[01:15] how fast things are moving.
+[01:17] So in the context
+of this talk, I'm
+[01:21] going to be talking
+about methods
+[01:23] for self-improving
+language models,
+[01:28] and that means getting
+better at tasks in particular
+[01:32] that will mean that they're
+getting better at reasoning so
+[01:35] that they can better get
+better at those tasks.
+[01:38] So for an AI to
+train itself, I mean,
+[01:43] that means it needs to do this
+introspection as its training,
+[01:47] so normal, classical training
+was like this fixed data set
+[01:52] and it would learn
+from it, but that's
+[01:55] kind of moving now a little
+bit where in like reinforcement
+[02:00] learning setups, and
+particularly with reinforcement
+[02:04] learning from AI feedback models
+are sort of training themselves
+[02:08] in a much more
+sophisticated way.
+[02:10] For example, we
+can imagine models
+[02:11] that create new challenges,
+tasks to train themselves
+[02:15] on, they can evaluate themselves
+whether they're getting them
+[02:17] right, so we call
+that self-rewarding,
+[02:19] and then update themselves based
+on what they've understood,
+[02:22] so that means then they're going
+to be getting more knowledge,
+[02:26] more reasoning ability.
+[02:27] And so a research
+question is, can they
+[02:30] do this kind of
+training on themselves,
+[02:34] and can that help them
+become superhuman?
+[02:37] So I have a picture down here
+of one particular approach
+[02:41] for that that's called
+self-rewarding language
+[02:44] models, which I'm going to
+be talking about a bit later.
+[02:49] But in terms of
+reasoning, when we're
+[02:52] doing this kind
+of self-improving,
+[02:54] you can look at this as two
+different ways of improving
+[02:59] reasoning, so these are
+called system 1 and system 2
+[03:04] sometimes by people.
+[03:05] So system 1, like in humans,
+we see that as reactive
+[03:11] and relies on associations,
+and in machine learning models,
+[03:15] or LLMs it can be
+the same thing.
+[03:18] So you can think of
+the transformer itself,
+[03:22] the neural network, as this
+kind of performing this system 1
+[03:26] reasoning, so where you
+have this hidden states
+[03:31] in the neural
+network that's going
+[03:32] through a whole bunch
+of multiplications,
+[03:35] attentions, and so on, that it
+can be seen as your system 1
+[03:41] reasoning.
+[03:42] So in that case, you have
+a fixed compute per token,
+[03:45] you're directly
+outputting the answer,
+[03:47] but there's some
+problems with LLMs
+[03:50] as we have them
+now, in particular,
+[03:53] they can learn spurious
+unwanted correlations,
+[03:56] there's hallucination,
+sycophancy, jailbreaking,
+[04:00] and I'm going to show you
+some of those things later.
+[04:02] And then you can try
+and fix this stuff
+[04:05] with what's called
+system 2, so that's
+[04:07] more deliberate and
+effortful thinking,
+[04:09] and the most common way we
+think of that system 2 today
+[04:14] is by generating language tokens
+that are a chain of thought.
+[04:19] So now, that's not just
+the pushing these numbers
+[04:23] through the neural
+net, you're actually
+[04:25] looking at the tokens, the
+neural net outputs as a thought
+[04:29] stream before the final tokens
+that will be the final response.
+[04:35] Now what's powerful
+when you do that is
+[04:39] that system 2 chain
+of thought reasoning
+[04:42] can actually do a
+whole bunch of stuff
+[04:45] like planning,
+search, verification,
+[04:49] various kinds of reasoning,
+even though it's generating
+[04:54] autoregressively left to right,
+it could still potentially do
+[04:59] all that sets of
+thoughts, as you'll see,
+[05:04] models like Deep Sea 103 can do.
+[05:10] Yeah, so those are the
+two kinds of things
+[05:12] that we can effectively
+improve in, try and improve
+[05:15] like the architecture or
+the weights of the model,
+[05:17] and improve system
+one, or try and improve
+[05:20] how it generates these
+chains of thought,
+[05:22] or other ways of doing system
+2 before it outputs a response.
+[05:26] I mean, obviously
+they're related
+[05:28] because it's the same language
+model doing both things.
+[05:33] That's the goal, try and
+do this self-learning
+[05:37] to improve these things.
+[05:39] First, I'm going to go through
+some history of how we got where
+[05:45] we are today, and then talk
+about more recent works
+[05:50] from the last year or so after
+I go through this history.
+[05:54] But before we're going to start
+pre-2020, so prehistory if you
+[05:57] like, so language modeling
+itself that goes way back.
+[06:03] I mean, yeah, Claude Shannon
+in 1950s talked about that,
+[06:11] so it's about taking language
+and predicting the next token
+[06:16] or the next word at each
+step, and obviously,
+[06:19] that's the pre-training
+mechanism we use for large
+[06:23] language models, and that's
+how they get their name,
+[06:26] where you're just trying to
+predict the probability of these
+[06:29] tokens.
+[06:29] We do this now on
+these massive corpora
+[06:32] and pick up those
+probability distributions.
+[06:39] So, in 2003, there's
+one of the first methods
+[06:45] for doing that with a
+neural network that's
+[06:49] Ben Duchamp and Vincent,
+so they had word
+[06:54] embeddings at the first layer
+and then various layers, tanh,
+[06:59] and softmax to get
+the final prediction.
+[07:03] And I just put an interesting
+quote there in their conclusions
+[07:10] that they say there's probably
+a lot more to be done to improve
+[07:13] the model, the architecture,
+computational efficiency,
+[07:17] and they'd like to increase
+the capacity without increasing
+[07:19] training time because they want
+to deal with corpora of hundreds
+[07:22] and millions of words,
+so that's kind of where
+[07:24] we got to some years later.
+[07:29] Now, that was 2003.
+[07:31] Most of the 2000s actually, the
+research wasn't really focused
+[07:35] on neural networks.
+[07:36] It was focused on
+support vector machines,
+[07:38] so these kernel classifiers.
+[07:43] I worked in that area
+too, as you can see,
+[07:45] there's a paper from me, and
+it was kind of that, well,
+[07:51] held back the LLM story,
+at least for a few years.
+[07:55] So here I have a
+slide for myself
+[07:59] and Ronald Collobert
+from 2008 presented
+[08:03] ICML, where we were trying to
+argue that the support vector
+[08:07] machines of the
+day that were used
+[08:09] in these Cascades of systems,
+parts of speech tagging
+[08:13] and named entity
+recognizers and parses,
+[08:15] and it's not a good idea because
+we could train the whole thing
+[08:18] end to end with
+a neural network,
+[08:21] and no one was really
+doing that then.
+[08:25] So we had a paper at that
+time, a unified architecture
+[08:30] for NLP, which we considered
+a successor to the Bengio work
+[08:36] from 2003 there.
+[08:39] So here what we did was we also
+had a neural network with word
+[08:46] embeddings at the first layer,
+then convolutional layers a max
+[08:51] over time, which is a
+kind of proto attention,
+[08:54] and followed by a softmax.
+[08:56] And we show that you could train
+this model as a masked language
+[09:02] model on something like
+Wikipedia, which actually
+[09:06] was pretty tricky at the time
+with the compute we had, and it
+[09:09] could learn some pretty
+interesting things,
+[09:11] like you could see from
+the word similarities.
+[09:14] This is obviously
+pre word2vec, which
+[09:16] I think was 2013, which
+is a simpler model.
+[09:20] This is a more complex neural
+net that you could do that,
+[09:24] so you could pre-train
+on Wikipedia,
+[09:26] and then afterwards you could
+fine tune on tasks of interest
+[09:30] like part of speech tagging,
+named entity, chunking, S.R.L,
+[09:34] and that worked.
+[09:36] So yeah, this was a predecessor
+to where we are today as well.
+[09:45] It was interesting because at
+the time that wasn't appreciated
+[09:50] by everyone in
+the NLP community,
+[09:52] so in the Stanford
+natural language group,
+[09:55] they had a reading group
+there where they called it
+[09:58] a bullshit ICML paper that was
+kind of on their public website.
+[10:05] And then this same paper 1 Test
+of Time Award at ICML 2018,
+[10:11] and then Stanford
+University then
+[10:16] opened the Center for
+Research on foundation models
+[10:18] and their position paper
+called that same paper
+[10:22] a prescient work, so we kind of
+went from bullshit to prescient
+[10:26] in that number of
+years, and that's
+[10:28] kind of how the field changed.
+[10:30] Of course, these papers--
+[10:34] I've talked about
+just a few papers.
+[10:36] There's many, many papers.
+[10:38] They all build on each other.
+[10:41] I don't like to
+think one paper that
+[10:46] was the paper that did something
+because they're all this work
+[10:55] builds on top of the
+brilliant work before.
+[10:58] But so I just show a few
+here of a timeline, though,
+[11:03] of how these things went.
+[11:06] And yeah, the
+interesting thing is
+[11:11] of how fast the use of neural
+nets in NLP and machine learning
+[11:19] grew from this time,
+say, 2008 to 2018.
+[11:25] So there was four
+papers in ICML 2008
+[11:28] with the words deep
+or neural in them.
+[11:31] And I'm coauthor on two of them.
+[11:33] And then there's
+hundreds in ICML 2018.
+[11:36] Obviously, this is a
+neural network based
+[11:41] things are the majority today.
+[11:45] That's the paradigm of today.
+[11:46] Of course, can't say what's
+going to be in the future,
+[11:48] but it's looking like a
+pretty powerful approach.
+[11:54] Yeah.
+[11:54] So, of course, we were
+interested in pushing
+[11:59] this further and making
+these models reason.
+[12:02] So in 2015 we devised this
+set of tasks, very simple task
+[12:09] called baby tasks, which you
+ask these simple questions given
+[12:16] little stories.
+[12:18] But the neural nets
+of the day LSTMs
+[12:21] actually couldn't solve them.
+[12:25] And so we were hoping
+that they could spark
+[12:27] innovation of new methods.
+[12:29] Around the same time the
+LLM attention mechanism
+[12:35] was born in 2014.
+[12:37] So [INAUDIBLE] Cho/Bengio paper.
+[12:39] So that was built for
+machine translation
+[12:44] where the you'd have a tension
+between the target sentence
+[12:50] words and the source
+sentence words
+[12:53] so that you could
+have an alignment
+[12:54] between the words
+in the two languages
+[12:57] so you could translate them.
+[12:59] And you can see this
+sort of attention map
+[13:03] picture in the middle
+of the slide here.
+[13:05] So yeah, what we showed was that
+for these kind of baby reasoning
+[13:12] tasks, if we stack
+these layers of tension,
+[13:18] then you could actually do
+multiple reasoning steps.
+[13:22] So if you've got a question
+like where is John here?
+[13:29] So Daniel went to the bathroom.
+[13:31] Mary traveled to the hallway.
+[13:32] John went to the bedroom.
+[13:34] John traveled to the bathroom.
+[13:36] Mary went to the office.
+[13:37] Where is john?
+[13:39] Then you could attend to
+these correct sentences
+[13:43] to get that right.
+[13:44] Actually, that one's pretty
+easy because you only
+[13:46] need to attend to John travel to
+the bathroom, the last sentence.
+[13:50] That's called one
+supporting fact question.
+[13:54] But then you have a two
+supporting fact question
+[13:56] where it's a little trickier.
+[13:57] So there, John dropped the milk.
+[14:00] John took the milk there.
+[14:01] Sandra went back
+to the bathroom.
+[14:03] John moved to the hallway.
+[14:04] Mary went back to the bedroom.
+[14:06] And the question is,
+where is the milk?
+[14:08] So now you have to see
+that the model will
+[14:13] attend on the first two layers.
+[14:16] You can see the attention scores
+here, and hop 1, hop 2, hop 3.
+[14:20] This is in the story to
+two supporting facts.
+[14:22] You see, it attends
+to the sentence.
+[14:24] John took the milk there.
+[14:25] And so now it knows
+that John has the milk,
+[14:28] and then it can attend
+to this next sentence,
+[14:31] John moved to the hallway,
+in the further layers
+[14:33] of the neural network so that
+it can answer that hallway
+[14:36] is the correct answer.
+[14:37] So this was
+basically showing how
+[14:39] in these very simple problems,
+the tension mechanism when
+[14:44] stacked layer by
+layer can give you
+[14:48] more sophisticated reasoning.
+[14:50] And so this was built
+into this neural network
+[14:52] at the time called
+a memory network.
+[14:54] So it had these stacked
+layers of attention query
+[14:56] and key embeddings,
+position embeddings
+[14:58] that it knew which sentence
+or token was being attended
+[15:02] to neural networks
+between attention layers
+[15:05] and the final softmax layer.
+[15:07] And so in many
+ways, it was a kind
+[15:10] of a predecessor to
+the transformer, which
+[15:12] improved on this recipe
+with some other things
+[15:15] like multi-head
+attention, self-attention,
+[15:17] and normalization.
+[15:21] And yeah, that led us
+to 2017 with the advent
+[15:26] of the transformer.
+[15:27] And that's more or
+less the architecture
+[15:30] we're using today
+with some tweaks.
+[15:31] And then Bert in 2018 showed
+that a masked language
+[15:35] model with a transformer
+could work very well.
+[15:40] And yeah, I just wanted
+to link that to a paper
+[15:45] from 2014 with
+Sutskever, Vinyals,
+[15:49] and Quoc V. Le which was showing
+that you could do sequence
+[15:57] to sequence learning
+with neural networks.
+[15:59] And I think that wasn't
+with attention maps yet.
+[16:06] But still the conclusions
+from that paper
+[16:09] were essentially the
+scaling hypothesis
+[16:12] that we're using today.
+[16:14] So you can see this
+conclusion slide.
+[16:16] If you have a large
+big data set and you
+[16:18] train a very big neural network,
+then success is guaranteed.
+[16:21] It's a little bit glib.
+[16:22] But yeah, this scaling
+hypothesis, essentially,
+[16:26] when Ilya Sutskever
+went to OpenAI,
+[16:29] they drove this hypothesis
+making or GPT 1, 2,
+[16:36] 3, 4 and so on.
+[16:38] These are bigger
+models, more data,
+[16:41] and indeed this has worked.
+[16:44] So these are basically
+the ingredients that
+[16:47] have taken us to some degree--
+[16:50] I saw LLMs everywhere,
+so I asked actually
+[16:52] an LLM to give me
+a list of LLMs that
+[16:55] have come out in year order.
+[16:56] This doesn't
+include all of them,
+[16:58] but you can see a bunch
+that have come out here.
+[17:05] But that's just
+so far been mostly
+[17:11] about language modeling and
+the language model objective
+[17:13] function.
+[17:14] And that isn't actually enough.
+[17:16] So we do need other ways
+of training these models.
+[17:20] And I would characterize
+2020 onwards
+[17:22] as exploring that more deeply.
+[17:26] Now we have these
+better language models.
+[17:30] So 2019 actually, we did
+a work on dialogue agents,
+[17:37] which we call the self-feeding
+chatbot, where they could train
+[17:41] not only just with this
+language model objective
+[17:44] but by using a reward model.
+[17:49] So we train a reward
+model, and then
+[17:52] during conversations
+with humans,
+[17:55] if it thinks there's a large
+reward for one of the things it
+[17:59] said, it can add that back
+into the training set,
+[18:03] and then do
+supervised fine tuning
+[18:06] on this ever-growing data set.
+[18:08] So this was kind of a
+pretty simple version
+[18:11] of what's being done
+today with HF and RLAIF.
+[18:23] Then in 2020 we released
+this BlenderBot model
+[18:28] that was a pre-trained
+language model up
+[18:33] to about 10 billion parameters.
+[18:35] And then crucially, we don't
+just use the language model
+[18:40] pretraining objective.
+[18:42] We supervise, fine tune
+that on dialogue data
+[18:45] which was human annotated.
+[18:48] And then when you
+evaluated this with humans,
+[18:56] they actually said
+our best models
+[18:58] were about as engaging as the
+average human and superior
+[19:03] to another model from Google
+called Meena at the time.
+[19:10] But the actual recipes that
+we use today, we do use
+[19:14] supervised fine tuning
+today, but there's
+[19:17] some more sophisticated
+stuff as well.
+[19:20] So in 2022, you had
+the InstructGPT paper,
+[19:27] which advocated more
+for reinforcement
+[19:30] learning from human feedback.
+[19:31] So what you do there is
+you have this SFT stage
+[19:36] where you collect
+demonstration data from humans.
+[19:39] That's step one.
+[19:40] But step two, you also
+collect comparison data,
+[19:44] so which of these two
+responses is better, A or B?
+[19:48] And then get humans
+to rank those.
+[19:50] And then you train
+a reward model.
+[19:52] So similar to how we
+had a reward model
+[19:55] in the self-feeding chatbot.
+[19:57] But then you use reinforcement
+learning with that reward model
+[20:02] to then generalize those
+comparisons with the reward
+[20:08] model function to new
+generations from your policy.
+[20:13] And try and make
+your model better
+[20:16] by generating responses
+and essentially judging
+[20:21] with this reward model
+and fixing itself.
+[20:23] So a more of a step towards
+this self-training goal
+[20:32] beyond the language
+model training criterion.
+[20:38] And then there's an
+alternative to RLHF.
+[20:42] Well, it's a little bit simpler
+called direct preference
+[20:46] optimization.
+[20:47] I mentioned because it's
+also pretty popular, DPO.
+[20:52] So it says, OK, let's
+not use a reward model.
+[20:56] We've got preference data.
+[20:57] We're just going
+to directly push
+[21:00] the probability of the chosen
+in a preference pair sort of up
+[21:05] and the probability of the
+rejecting the preference pair.
+[21:10] So these would be two possible
+outputs from the model,
+[21:12] push one up, push
+one down so there's
+[21:14] a margin between the two.
+[21:17] And in certain
+experiments, the DPO
+[21:21] works quite well
+compared to PPO, RLHF.
+[21:27] And then SFT can also work
+but generally a little worse,
+[21:30] but it depends on the setting.
+[21:34] And I think in some
+cases, you really
+[21:37] do need the full reinforcement
+learning because your policy is
+[21:43] going to change.
+[21:45] So the DPO just with a fixed
+preference data like that
+[21:50] can't take that into account.
+[21:53] But we'll see ways
+of fixing that
+[21:56] by making it iterative as well.
+[22:00] But overall, you choose one of
+those methods SFT, RLHF or DPO
+[22:05] and fine tune your language
+model with one of them,
+[22:10] and then you get pretty
+good instruction following.
+[22:13] So there isn't necessarily
+this explicit chain
+[22:16] of thought reasoning
+yet, but compared
+[22:19] to the original language models,
+you're doing really well.
+[22:23] So, for example, here this is
+from the InstructGPT paper.
+[22:26] You've got this prompt.
+[22:27] What's the purpose of this code
+GPT 3 without the fine tuning
+[22:34] doesn't do a very good job.
+[22:35] It instructs-- GPT does a much
+better job on the right hand
+[22:38] side.
+[22:38] So, obviously, yeah, today
+we all know quite a lot
+[22:43] about using these ChatGPT
+type models as we're mostly--
+[22:48] yeah, a lot of the population
+is using them at this stage.
+[22:53] So OK, that got me up
+to basically having
+[23:01] a really good system 1 model.
+[23:04] It takes in this input,
+so this instruction.
+[23:07] It directly spits out an output,
+but it isn't doing the system 2
+[23:11] reasoning.
+[23:12] So that's the next step.
+[23:16] And yeah, between, say, 2022 and
+2023, the approach to doing that
+[23:23] was what I would call
+a prompting approach.
+[23:26] And I'm going to talk
+about those first,
+[23:29] and then we're going to
+look at more modern things
+[23:32] from the last year
+or so where we're
+[23:36] going to more train
+directly to do this system 2
+[23:40] reasoning instead.
+[23:42] So chain of thought prompting
+the initial papers they
+[23:49] did that in a couple of ways.
+[23:50] One was by what's called
+few-shot prompting.
+[23:55] You would have say
+for some maths task,
+[23:58] you would have
+examples of the kind
+[24:01] of chain-of-though reasoning
+you would like to see.
+[24:04] Say if you had a no
+eight shot examples,
+[24:09] you'd have eight examples
+of doing reasoning.
+[24:14] That's shown here with
+the-- instead of just saying
+[24:18] the answer is 11 as
+in standard prompting,
+[24:22] you would have rather
+started with 5 balls.
+[24:24] 2 cans of 3 tennis balls
+each is 6 tennis balls.
+[24:26] 5 plus 6 equals 11.
+[24:28] The answer is 11.
+[24:29] So that's the chain of thought
+there that's highlighted.
+[24:33] So you'd have examples
+of that in the prompt,
+[24:36] and now you would generate
+from the language model.
+[24:39] And it's going to mimic
+that few-shot prompting
+[24:43] and use a chain of thought.
+[24:45] And so that was kind of
+one of the first approaches
+[24:49] of prompting.
+[24:49] And then in the other paper
+here large language models
+[24:53] are zero-shot reasoners.
+[24:55] They showed actually
+it can be even simpler.
+[24:59] You could just say, let's think
+step by step in the prompt.
+[25:02] And that could still
+bring about these steps
+[25:06] or these chains of
+thought could happen
+[25:08] that it could generate before
+it generates the final response.
+[25:12] And you get really big
+improvements on math tasks.
+[25:17] So you could go from say 10%
+on GSM 8K up to 40% or 50%.
+[25:26] So yeah, that's
+really spurred people
+[25:31] to push the system to
+approaches further.
+[25:36] And it's not just math
+tasks that that works for.
+[25:43] So you can also look at the
+other failures of system
+[25:48] 1 of the base language model.
+[25:50] It also has a factuality
+and hallucination issues.
+[25:54] So here's an example query,
+name some politicians
+[25:58] who were born in New York.
+[25:59] And the third one
+it lists here--
+[26:02] this is from ChatGPT--
+[26:03] is Michael Bloomberg
+which is incorrect.
+[26:08] So you can try and set up a
+system 2 reasoning type chain
+[26:13] of thought to fix this problem.
+[26:15] So it's not a math problem.
+[26:16] So that's a paper we did called
+chain of verification where
+[26:22] the idea is you get this
+first baseline response.
+[26:26] You can think of that
+now as your draft.
+[26:28] So it's not actually
+your final response.
+[26:30] It's part of your
+chain of thought.
+[26:32] And then given that
+draft, the language model
+[26:37] asks itself more questions
+to check its own draft.
+[26:42] So it could ask, where
+was Hillary Clinton born?
+[26:45] Where was Donald Trump born?
+[26:46] Where is Michael Bloomberg born?
+[26:48] And then answer those
+again as single questions.
+[26:51] Now, the answer might be
+different than writing out
+[26:56] this whole list from the name,
+some politicians question.
+[27:01] Because it's
+phrased differently,
+[27:03] you actually get a different
+response from the model.
+[27:06] And models tend to
+be better actually
+[27:09] at these single question
+answer pairs that
+[27:14] are short compared to these
+long responses they write.
+[27:18] They're more likely to get
+something wrong somewhere
+[27:21] in the long response.
+[27:23] So when you plan
+those verifications
+[27:25] of those verification
+questions and execute them,
+[27:28] you can actually get the model
+to see its own discrepancy.
+[27:32] So now it actually knows
+that Michael Bloomberg
+[27:34] was born in Boston,
+even though it's
+[27:37] included him in the
+list of politicians
+[27:40] who are born in New York.
+[27:41] And now you can make it
+cross-check itself and see
+[27:46] that it was wrong, and write
+a final verified response
+[27:52] and treat the old
+one as a draft.
+[27:54] And now it gets that correct.
+[27:56] So that's a somewhat
+different chain
+[28:04] of thought system 2 reasoning
+compared to the math problems.
+[28:07] And yeah, in that work we showed
+that on various knowledge tasks,
+[28:16] you can get large
+performance in precision
+[28:18] like three times as
+good with that approach.
+[28:24] So yeah.
+[28:27] And you could think,
+oh, that's sort of--
+[28:32] maybe because that paper was
+from a little while ago that it
+[28:39] might be fixed today, but
+actually, I tried on ChatGPT 4o,
+[28:44] and it's still making
+these kind of mistakes.
+[28:46] Like here I did a query list,
+30 most famous women in AI,
+[28:51] and it included Yoshua
+Bengio in the list
+[28:53] or what prominent
+women work at OpenAI
+[28:55] and it said Ilya Sutskever
+as a first in the list.
+[29:00] So still something that's
+definitely needs to be fixed.
+[29:05] And you can fix it with this
+sort of system 2 reasoning.
+[29:09] I think actually
+[? O1 ?] does better.
+[29:12] But yeah.
+[29:18] And there's other things you can
+do with this system 2 reasoning
+[29:22] as well.
+[29:22] So here's another problem
+with language models
+[29:26] that they have what's called
+semantic leakage and sycophancy.
+[29:33] So when you do attention
+because it's a soft attention,
+[29:38] it's not sharp.
+[29:40] You're assigning probabilities
+across the context.
+[29:46] So there'll be all
+these non-zero values.
+[29:50] And it means the whole context
+can affect the LLM output.
+[29:54] And this can be bad
+because, even basically
+[30:00] we see irrelevant
+parts which look
+[30:02] sort of superficially correlated
+tend to have an effect.
+[30:06] So, for example, a prompt
+like, he likes ants.
+[30:10] His favorite food is-- can get
+completed by the language model
+[30:14] as ant-covered chocolate, which
+isn't particularly desirable.
+[30:18] He likes yellow.
+[30:19] He works as a school bus driver.
+[30:22] That's from Genen, et al in 24.
+[30:28] I see this as a similar
+problem, the sycophancy problem.
+[30:31] If you say something
+like as an instruction,
+[30:34] I think that the sun is
+yellow when viewed from space,
+[30:37] what do you think?
+[30:38] So you prime with
+the wrong answer
+[30:42] because actually, that's an
+illusion caused by atmosphere.
+[30:46] Then it will actually agree.
+[30:49] The LLM tends to agree with you
+and say yes, the sun is actually
+[30:53] yellow when viewed from space.
+[30:55] So I see that as
+a similar problem
+[30:58] that basically you've got
+that text in the context,
+[31:01] and it tends to attend to
+it and get things wrong.
+[31:05] So another example,
+if you add some facts
+[31:07] about some city in the
+context, like Sunnyvale,
+[31:10] and then you ask for
+someone's birthplace,
+[31:12] it's likely to say
+Sunnyvale as the answer.
+[31:17] Yeah, I just typed
+in this one today.
+[31:21] Did OpenAI have a model called
+self-feeding at one time?
+[31:26] And ChatGPT 4o replied, yes,
+OpenAI introduced the concept
+[31:30] of self-feeding in the
+Self-feeding Chatbot paper,
+[31:33] which that wasn't
+actually from OpenAI.
+[31:36] That was from
+Facebook AI Research.
+[31:38] So again, you can
+still prime these.
+[31:40] This is a current day problem.
+[31:45] So how can you fix that?
+[31:46] With system 2 reasoning.
+[31:47] So there was a paper called
+System 2 Attention we did last--
+[31:53] that was end of
+2023, I think, where
+[31:59] you do this chain
+of thought reasoning
+[32:03] which attempts to rewrite
+the original instruction
+[32:07] and remove the bias.
+[32:08] So again, this is
+done by prompting.
+[32:10] So essentially, the prompt is to
+give the original instruction,
+[32:13] and then ask the language
+model, rewrite this instruction.
+[32:17] Remove the irrelevant
+parts and the bias.
+[32:21] And then you'll get
+a new instruction.
+[32:23] And then you get
+the language model
+[32:24] to answer the
+rewritten instruction.
+[32:27] So you want to get
+rid of this bias.
+[32:29] And then you can
+get better results.
+[32:32] You're not biased as
+much by this issue.
+[32:35] So, for example, I
+think the sun is yellow
+[32:38] when viewed from space.
+[32:40] What do you think?
+[32:40] When you use this
+chain-of-thought system 2
+[32:44] attention, to rewrite that,
+it would rewrite it as,
+[32:48] I'm curious about the color of
+the sun when viewed from space.
+[32:50] Can you provide
+information on this topic?
+[32:53] So to remove the yellow which
+was biasing the question
+[32:59] to a certain answer.
+[33:01] And yeah, this works also on
+math problems if there's say,
+[33:10] there's parts of
+the math problem
+[33:12] which are completely irrelevant
+they can actually fool a model,
+[33:17] and it will try
+and remove those.
+[33:20] So yeah, this is yeah,
+just to show you really
+[33:25] that chain of thought
+and system 2 reasoning
+[33:29] is not just for math problems.
+[33:30] There's a lot of
+things you a model
+[33:33] can think about with
+these intermediate tokens
+[33:36] and fix a lot of problems
+in all kinds of tasks
+[33:41] that it's trying to solve.
+[33:43] This last one I show it's
+the task of evaluation.
+[33:47] So you're given a question
+like an instruction
+[33:51] and two possible responses.
+[33:52] You want the model to say
+which of the two responses
+[33:55] is better, which is a really
+important thing for training
+[33:59] as we show, because
+you could basically
+[34:02] use that as a reward model.
+[34:04] And it's also important
+for evaluation as well.
+[34:07] But yeah, you can also do
+system 2 reasoning there.
+[34:11] So in this paper,
+Branch-Solve-Merge,
+[34:15] the way that was done was again
+through prompting by asking,
+[34:20] given that instruction to
+first ask the language model
+[34:25] to break down its evaluation
+into different criteria
+[34:30] such as relevance, clarity,
+accuracy, originality.
+[34:33] And it would come up with those
+criteria specific to the task
+[34:38] that it's trying to solve.
+[34:39] And then to generate an
+evaluation independently
+[34:45] for each of those
+different branches.
+[34:49] And then merge them
+back together again.
+[34:51] And it was shown that could
+give better evaluation results
+[34:55] through the extra thinking time
+basically that the language
+[34:59] model has.
+[35:01] So yeah, that was-- there's
+many other works as well during
+[35:07] that period.
+[35:07] But I just wanted to give
+an overview of a few of them
+[35:12] to show there was a lot of
+prompting approaches that
+[35:15] showed that spending
+time thinking could
+[35:18] get you better results.
+[35:20] But what we really want to do is
+try and train these models end
+[35:27] to end to be able to
+be good at reasoning,
+[35:30] not like just prompting.
+[35:31] So that I'd say the next
+wave after that is--
+[35:36] and we're in it right now--
+[35:37] is improving this reasoning
+through optimization
+[35:41] and so better reasoning
+via self-improvement.
+[35:47] And to get there,
+I'm going to start
+[35:50] with the self-rewarding
+language models
+[35:54] that I was talking about right
+at the beginning of the talk.
+[35:59] And so this is a method
+where the LLM proves itself
+[36:03] by assigning rewards to its own
+outputs and optimizing itself.
+[36:11] So yeah, where the hope is that
+this could lead to it becoming
+[36:18] smarter at each iteration.
+[36:21] And yeah, so the
+research question
+[36:27] is, can that make it superhuman?
+[36:31] So the standard reinforcement
+learning from human feedback,
+[36:36] which I mentioned earlier in the
+talk, uses humans in the loop,
+[36:40] first to create the
+supervised fine tuning
+[36:43] data, so the instructions
+and their responses,
+[36:46] and then to collect
+these judgments.
+[36:48] So which of these two
+responses is better, A or B?
+[36:52] Now, yeah, that's shown in this
+picture that I showed before.
+[36:58] So there's two spots
+where there's a human.
+[37:00] And the problem
+is language models
+[37:04] are getting better and better.
+[37:06] So it's just getting a
+really tricky job for humans
+[37:11] to be as good as we
+need for these tasks.
+[37:18] Humans need to read these
+responses really carefully
+[37:20] in order to make decisions.
+[37:23] So, for example,
+now that our LLMs
+[37:27] are really good at writing
+code or no sophisticated math
+[37:36] outputs, even getting
+good at like--
+[37:40] I mean, maybe not perfect
+yet, but getting good
+[37:42] at legal or medical
+outputs, things like this.
+[37:45] The problem is, it's harder
+and harder for humans
+[37:47] to be good labelers
+for these tasks.
+[37:50] You might need some of
+the best mathematicians
+[37:54] and human mathematicians
+in the world
+[37:57] to label whether these
+responses are correct or not.
+[38:01] And similarly, you need
+really good coders.
+[38:04] Or even if you don't
+need them today,
+[38:06] you'll certainly
+need them tomorrow.
+[38:08] And so the average human that
+you pick from the population,
+[38:12] then they're just not
+going to be good enough
+[38:14] at these specialized tasks and
+be able to annotate this data.
+[38:18] So this is what motivates
+trying to get the language
+[38:25] model to try and help itself.
+[38:27] And so that's
+basically otherwise
+[38:30] how can we continue improving
+a model if it's already
+[38:34] fairly superhuman compared
+to the average human
+[38:38] that you could pick?
+[38:39] So there's two observations
+that can help us solve this.
+[38:44] Observation 1 is that we know
+language models can continue
+[38:48] improving if they're given good
+judgments on response quality,
+[38:53] because that's what we're
+shown in reinforcement learning
+[38:55] from human feedback or in
+something like DPO as well.
+[38:59] So if you have good preferences
+of chosen and rejected pairs,
+[39:03] then you can improve the model
+by training and pushing up
+[39:06] the probability of the chosens
+and down the probability
+[39:09] to reject it.
+[39:10] And the same thing
+for a reward model
+[39:14] with reinforcement learning.
+[39:17] And observation 2
+is that we actually
+[39:20] have now language models that
+can provide good judgments
+[39:24] on model generation.
+[39:25] So I was showing you the
+Branch-Solve-Merge approach
+[39:28] just earlier.
+[39:29] So that's an approach
+for a language model
+[39:32] basically to give a judgment on
+two responses as an instruction
+[39:40] following task.
+[39:41] So this is called LLM-as-a-Judge
+typically where for the language
+[39:48] model it's not any different
+a task than all the other
+[39:53] instruction following tasks it
+has to do like write some code,
+[39:57] or respond to this
+particular question.
+[40:00] And in particular
+this question we're
+[40:02] asking is, which of these two
+responses is better, A or B?
+[40:06] And there's a bunch of work
+showing LLM-as-a-Judge is
+[40:10] actually a pretty good method.
+[40:12] So how about combining
+these two things together.
+[40:15] So we replace the human
+feedback with the LLM feedback.
+[40:21] So the key idea then is to train
+this so-called self-rewarding
+[40:25] language model.
+[40:26] It's going to be its own
+judge as its training.
+[40:30] So it needs to have this
+instruction following capability
+[40:33] for all the kinds of user
+instructions we want,
+[40:36] but one of those
+user instructions
+[40:39] is actually the evaluation
+task that we're interested in.
+[40:43] So it looks like this.
+[40:45] Here is an instruction.
+[40:47] Here is a model of response.
+[40:49] And then the task is
+can you assign a score,
+[40:53] say between 0 and 5?
+[40:54] There'd be other
+ways of doing that
+[40:55] as well but to this response
+and then based on some rubric.
+[40:59] And then you would expect,
+say, chain-of-thought reasoning
+[41:01] process and then
+a final judgment
+[41:04] of the score of the response.
+[41:06] So if we have these
+two things, then we
+[41:10] can make this model train
+itself and be self-rewarding.
+[41:13] So we also go through
+an iterative process
+[41:17] of data creation and
+curation so that we
+[41:20] close this whole training loop
+where we train on this new data.
+[41:25] And then the goal
+is the model is
+[41:27] going to get better in terms
+of both instruction following
+[41:30] and evaluation
+ability in each cycle.
+[41:35] And we empirically
+showed that was possible.
+[41:38] So this was right at the
+beginning of last year.
+[41:43] So that was the picture
+that I was showing right
+[41:45] at the beginning of the talk.
+[41:50] So yeah, we did these
+experiments on LLAMA-2-70B.
+[41:57] And we used Open Assistant
+as a sort of seed,
+[42:01] so that seed instruction data.
+[42:04] And it also has some
+seed evaluation data.
+[42:09] So the LLM-as-a-Judge prompts
+that we use looks like this.
+[42:14] So that's asking it
+to do chain of thought
+[42:19] and then score out of 5
+a particular instruction.
+[42:25] And then we're going to go
+through this training loop.
+[42:28] So the first part is it's
+going to generate new tasks.
+[42:34] So we use something called
+self-instruct to do that.
+[42:38] So basically, you start
+with your seed instructions,
+[42:42] which are from humans.
+[42:44] And you use few-shot prompting
+with a few of those instructions
+[42:49] to ask the language model to
+generate a new instruction.
+[42:53] And then you can do this
+hundreds or thousands of times
+[42:56] to get a whole new set of tasks.
+[42:59] Then for those tasks you
+can generate responses.
+[43:02] So you'll generate multiple
+candidate responses
+[43:05] for each prompt or task, so
+let's say four in our case.
+[43:11] And then you generate rewards
+with the LLM-as-a-Judge prompt
+[43:15] that I just showed to give
+you those scores for each
+[43:18] of the four responses.
+[43:20] And from that you can
+generate preference pairs.
+[43:23] So you take the highest
+scoring of the four responses,
+[43:26] and that would be
+the chosen for DPO,
+[43:29] and the lowest scoring
+would be the rejected.
+[43:31] You can carry on
+training your model now
+[43:34] with this DPO training, and
+then repeat the whole cycle.
+[43:38] Now you have a better
+model M t plus 1.
+[43:41] You can go back,
+generate new prompts
+[43:44] to generate new responses,
+generate new rewards, and so on.
+[43:48] And we do this loop three
+times in the experiments
+[43:52] in that paper.
+[43:53] And we're going to
+evaluate the performance
+[43:55] on two axes, the ability
+to follow instructions
+[43:59] and its ability
+as a reward model.
+[44:02] There's some benchmarks called
+AlpacaEval 2.0 and MT-Bench
+[44:07] at the time that we used and
+another test set of prompts.
+[44:12] And we use GPT 4 evaluation
+and human evaluation
+[44:17] to check how this model
+performed through the three
+[44:20] iterations of self-rewarding.
+[44:22] And you can see that they agree
+with each other humans and GPT 4
+[44:28] that we compare it to doing
+supervised fine tuning.
+[44:32] On each iteration, the
+model is getting better.
+[44:35] So it's getting better
+than the SFT baseline.
+[44:40] And yeah, so that's the
+power of this self-training.
+[44:46] And we can look at the
+win rate on AlpacaEval 2.0
+[44:50] And this paper got quite a
+bit of attention at the time
+[44:53] because this win rate for
+such a sort of simple model
+[44:59] was quite good.
+[45:00] It started from
+this LLAMA-2-70B.
+[45:03] And the win rate went up
+from 10% to 15% to 20%
+[45:07] in the three iterations,
+which put it almost on par
+[45:10] with a version of GPT 4.
+[45:14] And this was just done
+by the first author
+[45:19] is Weijia Yuan, who's
+a PhD student at NYU.
+[45:22] So there wasn't like a big
+team building this project
+[45:26] but the algorithm
+works quite well.
+[45:30] And yeah, so you could look at
+what is actually improving at.
+[45:35] And it does improve
+on all kinds of skills
+[45:40] but particularly more
+things like humanities,
+[45:44] extraction, STEM role
+play and writing more
+[45:46] than it improves
+at, say, something
+[45:48] like math, code, and reasoning.
+[45:50] And the reason why that would
+be is because the LLM-as-a-Judge
+[45:54] might not be as good at
+evaluating math, code,
+[45:57] and reasoning, and so it's
+harder for it to improve
+[45:59] on those.
+[46:02] This is a breakdown
+of these topics.
+[46:05] You can see that the gap
+between the iterations
+[46:08] is smaller for things like
+math, which is on the far right.
+[46:13] And then you can measure
+the ability of this model
+[46:16] as an evaluator.
+[46:19] And one way of measuring that
+is by looking at its correlation
+[46:25] with human judgments.
+[46:27] So the pairwise accuracy-- we
+had a whole bunch of metrics
+[46:30] for the pairwise accuracy
+metric would show it's agreement
+[46:35] with humans on whether
+A or B the right way
+[46:39] around or the wrong way around.
+[46:40] And you can see that
+it does increase,
+[46:43] not by a massive amount
+but it does increase
+[46:45] over the three iterations.
+[46:47] So it is actually getting better
+at being a reward model, which
+[46:52] I think is exciting, because
+if the model is getting better
+[46:56] at making judgments of
+what's right or wrong,
+[47:00] then it's getting better
+at rewarding itself
+[47:03] at following instructions.
+[47:05] So there's a virtuous circle
+going on there to some extent.
+[47:09] Of course it plateaus
+in experiments,
+[47:13] but it still gives it the
+capacity to self-train
+[47:17] to get better than the
+initial human annotations
+[47:22] that it had at the beginning.
+[47:24] Now, as I said, it
+didn't improve as much
+[47:28] on reasoning tasks.
+[47:29] So the next thing we wanted
+to ask was how can we
+[47:33] make it improve on those?
+[47:35] And yeah, so in
+April of last year,
+[47:40] we did this work called
+Iterative Reasoning Preference
+[47:43] Optimization, which you can
+see from the picture it's
+[47:48] a similar pipeline,
+but now we're
+[47:52] going to generate
+chain of thought.
+[47:54] So in the experiment I
+just showed you there
+[47:56] were no chain of thoughts.
+[47:57] It was just a system 1 language
+model output the answers
+[48:01] for instruction following.
+[48:03] But in this version, we're going
+to generate train of thoughts
+[48:07] and then answers.
+[48:09] And we're going to
+compute rewards.
+[48:10] And otherwise the
+pipeline is the same.
+[48:15] Now the rewards aren't going
+to be done by LLM-as-a-Judge
+[48:19] because we don't trust the LLM
+on say these math tasks as much.
+[48:27] I mean, I think that's
+a subject of research.
+[48:30] Can we get them to improve by
+trusting their own judgments.
+[48:35] But in this work we
+just said, OK, we've
+[48:37] got a bunch of
+math training data
+[48:40] where we know the
+right answer so let's
+[48:42] just use that as a reward.
+[48:44] And this is being
+commonly called
+[48:48] in the last weeks is like a
+verifiable reward for a math
+[48:53] problem.
+[48:55] So what we're going
+to do is we're
+[48:58] going to generate
+the chain of thought
+[49:01] and then the final answer.
+[49:03] And then we're going to extract
+the final answer from the LLM
+[49:07] response, so remove the
+chain of thought part.
+[49:10] Just get the final
+answer, and then just
+[49:12] do a match with the answer that
+we know for the math problem.
+[49:17] So you can do that with
+this kind of prompt.
+[49:19] So where you give
+the LLM the prompt.
+[49:22] Your task is to answer
+the question below.
+[49:24] Give step-by-step reasoning.
+[49:25] And when you're ready, please
+use the format, final answer,
+[49:28] colon.
+[49:29] And then you can just simply
+do this heuristic extraction
+[49:34] where you search for
+final answer, colon.
+[49:37] Grab the text afterwards.
+[49:38] That should be your answer.
+[49:39] And now just do a string match
+or some other fairly simple
+[49:43] match with the answer,
+the known gold answer.
+[49:47] And that's how you can
+build your DPO pairs
+[49:54] and improve your model and
+then again iterate round.
+[49:58] And that's the iteration,
+again, is important
+[50:00] because now we've
+got a better model
+[50:02] answering these math problems.
+[50:03] We're going to generate
+new chain of thoughts
+[50:05] with the better model.
+[50:07] Compute the rewards and
+go around in a loop.
+[50:11] And we showed on math
+problems like GSM8K
+[50:17] that that's working really well.
+[50:20] So yeah you can see these
+improvements across iteration 1
+[50:25] to 4 is gaining a little
+bit less than 10% there
+[50:31] and also improves on some
+multi-choice problems
+[50:36] on ARC challenge and on these
+harder math problems as well.
+[50:42] And yeah, we just showed
+that the DPO training
+[50:48] is really important.
+[50:49] You can't just use supervised
+fine tuning with this training.
+[50:53] You really need the negative
+examples to be pushed down.
+[50:57] Otherwise, it doesn't work.
+[51:01] And yeah, so in 2024, September
+or so, OpenAI's O1 came out.
+[51:08] Of course, the exact
+method is unknown.
+[51:12] They didn't publish a paper
+about it, but they did have--
+[51:16] well, they didn't even show
+the chain of thoughts either.
+[51:19] From the model
+there was a summary
+[51:20] of the chain of thoughts.
+[51:21] I think they still do that.
+[51:23] But it was capable of answering
+some quite sophisticated
+[51:27] reasoning and math problems.
+[51:30] And everyone was wondering,
+how did they do it?
+[51:34] Did they use some
+kind of process reward
+[51:36] model that was evaluating
+the in-between steps?
+[51:39] Did they use MCTS or some really
+sophisticated search mechanisms
+[51:44] to train with
+reinforcement learning?
+[51:48] A lot of ideas were posted on
+Twitter of how they do this.
+[51:52] And then DeepSeek R1 came
+out just this January.
+[51:59] And Marc Chen from
+OpenAI tweeted,
+[52:03] congrats to DeepSeek on
+producing O1 level reasoning
+[52:06] model.
+[52:06] Their research
+paper demonstrates
+[52:08] they've independently found
+some of the core ideas
+[52:10] that we did on our way to O1.
+[52:12] OK, so then that means assuming
+that OpenAI used the same stuff
+[52:18] as DeepSeek, we have
+a deep seat paper,
+[52:20] so we can look at what they did.
+[52:23] And in some respects
+it's quite similar
+[52:29] to the iterative reasoning
+preference optimization
+[52:32] that we did earlier in 2024
+that I just showed you.
+[52:36] So they have a prompt,
+which asks it to think
+[52:41] and then to put the
+answer in a box.
+[52:44] You see this answer
+here in the prompt.
+[52:48] And then they extract that.
+[52:50] And then they use a rule-based
+verification of correctness
+[52:56] with verifiable rewards.
+[52:59] And they apply that in a loop
+generating chain of thoughts,
+[53:03] checking just the
+correctness of the answer,
+[53:05] and then rewarding
+this correctness.
+[53:07] They use a different
+optimization technique.
+[53:11] They don't use iterative PPO.
+[53:13] They use GRPO.
+[53:16] But otherwise, this recipe
+looks kind of like that.
+[53:21] It's just done
+much bigger scale.
+[53:25] So in the experiments
+I showed you
+[53:27] we just had one data set GSM8K.
+[53:30] So key here is start from
+a really strong big model.
+[53:33] I think it's a 600 and
+something parameter model.
+[53:38] 671 billion parameter
+model DeepSeek 3.
+[53:43] And then you have a large
+amount of this reasoning
+[53:47] data with verifiable rewards.
+[53:49] And you train with this RL
+generating chain of thoughts
+[53:56] and rewarding the
+ones that it gets
+[53:58] right, and basically, exploring
+the space of chain of thoughts.
+[54:01] And they observe that
+the chain of thoughts
+[54:04] get longer over training as
+it finds more sophisticated
+[54:09] reasoning techniques.
+[54:10] And then the final
+model does very well
+[54:13] on these code and math problems,
+similar to OpenAI's O1 model.
+[54:19] And this actually was a
+big, big news outside of AI.
+[54:24] You can see that NVIDIA's these
+articles here on Bloomberg.
+[54:29] NVIDIA's DeepSeek
+drop has Wall Street
+[54:31] fixated with their stock
+plunging and stuff like that.
+[54:35] So it was surprisingly
+big splash.
+[54:40] And then you have a couple
+of examples here of the chain
+[54:44] of thoughts that it does.
+[54:47] The one on the left
+is from their paper.
+[54:49] It's generating this
+answer to this question.
+[54:52] And then in the middle of it,
+like the chain of thought,
+[54:54] it says, wait, wait,
+wait, that's an aha
+[54:56] moment I can flag here.
+[54:58] Let's reevaluate this.
+[54:59] And it starts saying
+some other stuff.
+[55:01] So they were just showing how
+it learns to rethink and fix
+[55:07] its own mistakes.
+[55:08] And that was all done just
+with this training that just
+[55:12] rewarding the final answer.
+[55:14] And it was doing
+the rest itself.
+[55:15] And I personally love
+the simplicity of it
+[55:19] that we didn't have to do
+really complicated things
+[55:22] in the middle.
+[55:23] It's just rewarding the end.
+[55:25] And you can already get
+these impressive results.
+[55:29] So the one on the right is
+kind of a more funny one.
+[55:33] Ask DeepSeek to select
+a random number.
+[55:36] And it outputs this large
+amount of chain of thought
+[55:41] where it overthinks itself.
+[55:44] Maybe I should go with something
+like 7777, but that's four 7s,
+[55:47] which might be too obvious.
+[55:48] Alternatively, 1,2,3,
+too sequential.
+[55:51] Whereby if I close
+my eyes and 42,
+[55:53] wait, no, that's from
+Hitchhiker's Guide and so on.
+[55:56] So it's pretty amusing
+what it ends up doing.
+[56:01] But yeah, almost a little
+human in a way, though.
+[56:06] But I don't think
+that's actually
+[56:08] the way we really want to
+generate random numbers,
+[56:10] obviously.
+[56:13] Yeah.
+[56:14] So from my own team's work
+before that came out so 2024,
+[56:23] October, we were looking to
+extend our chain of thought
+[56:30] training results from
+iterative reasoning preference
+[56:32] optimization.
+[56:33] We show that could work quite
+well with math problems,
+[56:36] but we want chain of thought
+reasoning for all problems.
+[56:40] Like even if you're,
+I don't know,
+[56:43] thinking about how
+to write a poem,
+[56:48] you might do a whole bunch of
+thinking, write some drafts,
+[56:52] try and understand what
+you're going to write about
+[56:55] before you actually write it,
+just to pick an example that's
+[57:00] very different to math.
+[57:01] So we try to follow
+the same recipe.
+[57:06] So we have a prompt,
+a generic prompt,
+[57:10] just to initialize the model.
+[57:13] And we ask it to respond
+to whatever generic query,
+[57:19] but do it in a comprehensive
+and detailed way
+[57:21] by writing your
+internal thoughts.
+[57:24] And then you must include
+this draft response
+[57:26] in its evaluation.
+[57:28] And after you write your final
+response, have this special tag.
+[57:32] So again, that's so we can
+extract the response out
+[57:36] and separate it
+from the thoughts.
+[57:39] And this is the same
+trick that we did before
+[57:42] and the same trick
+that DeepSeek does.
+[57:45] But here we're going to
+do it not on math problems
+[57:47] but on all kinds of other
+instruction following problems.
+[57:51] But now we won't have a
+verifiable reward anymore,
+[57:55] but we still have these
+LLM-as-a-Judge that we were
+[57:59] using in self-rewarding.
+[58:00] So we can use that
+on the response
+[58:03] to judge whether the
+response is good.
+[58:06] But the difference between this
+and the original self-rewarding
+[58:09] work is that we have the chain
+of thought generation before it.
+[58:13] So we tried this, and actually,
+ended up working quite well.
+[58:20] It gave gains on AlpacaEval
+and another benchmark
+[58:23] called Arena-Hard.
+[58:24] It's actually third on the
+AlpacaEval leaderboard,
+[58:30] I think at the time, and it was
+the best 8 billion parameter
+[58:33] model on Arena-Hard.
+[58:36] I think one interesting
+thing about the training.
+[58:38] So again we're doing
+this iterative training
+[58:40] with PPO is that--
+[58:42] so this is called yeah, thought
+preference optimization, TPO.
+[58:49] And we compare it to
+the direct baseline
+[58:51] in this graph in the bottom
+right, which is basically
+[58:55] no chain of thought.
+[58:56] And you can see in
+the first iterations,
+[59:00] TPO actually makes
+the model a lot worse.
+[59:04] And that's because
+these language models--
+[59:06] so we're using LLAMA
+8-bit 8 billion--
+[59:13] they're already
+really well fine tuned
+[59:16] to be good without
+the chain of thought.
+[59:19] So that had a massive
+advantage over trying to make
+[59:23] it do the chain of thought.
+[59:25] But after we train it on
+successful chain of thought
+[59:30] outcomes using the
+LLM-as-a-Judge or the reward
+[59:34] model, then you can see
+that the gap closes,
+[59:39] and then it starts improving
+on iteration 3 and 4,
+[59:42] and now it's better than
+the direct baseline.
+[59:44] So yeah.
+[59:46] So I think this was
+really promising
+[59:49] because it showed you could do
+this chain of thought training,
+[59:53] not just for math problems
+or verifiable tasks
+[59:56] but for anything.
+[01:00:00] And yeah, so here's a couple
+of examples of things it does.
+[01:00:06] So you can say for a
+query, write me a poem
+[01:00:10] or what dog breed is smallest?
+[01:00:13] It's going to do a whole
+bunch of thinking, like draft
+[01:00:17] responses and evaluation or
+various thought processes
+[01:00:22] before it gets the output.
+[01:00:24] Yeah.
+[01:00:24] And then DeepSeek
+R1 in their paper,
+[01:00:29] not 100% sure if
+it's doing something
+[01:00:32] the same as what we're
+doing there with TPO,
+[01:00:34] but there's a hint it
+is because it says--
+[01:00:38] here I highlighted
+it for general data,
+[01:00:40] we resort to reward
+models to capture
+[01:00:43] human preferences in complex
+and nuanced scenarios.
+[01:00:48] So I think they're also
+generating chain of thought
+[01:00:51] and then doing that.
+[01:00:52] But it wasn't fully
+spelled out in their paper,
+[01:00:56] so it wasn't completely clear.
+[01:01:00] And then there's other
+things we can do.
+[01:01:04] So these, as far
+to my knowledge,
+[01:01:07] aren't actually yet in
+these bigger models.
+[01:01:09] So these are more just
+like research papers
+[01:01:12] that hopefully then get scaled
+up to these bigger models.
+[01:01:17] The next work we did to try to
+show that the language model so
+[01:01:24] far we've shown it's quite good
+at improving its instruction
+[01:01:28] and reasoning
+ability, but we also
+[01:01:32] want to explicitly improve its
+ability to evaluate itself.
+[01:01:38] Because if we can
+do that, then when
+[01:01:40] it's doing these
+reward model judgments,
+[01:01:45] it's going to get
+better at everything.
+[01:01:47] It's going to get better at
+structure and following as well.
+[01:01:49] So this work is called
+Meta-Rewarding language models,
+[01:01:53] where it's going to try to
+improve its own judgments
+[01:01:56] by meta judging its judgments.
+[01:01:59] So, obviously, a little
+bit meta this work.
+[01:02:03] So yeah, now you can see the
+language model in three roles.
+[01:02:08] As an actor, so
+following instructions.
+[01:02:11] As a judge, judging responses
+to those instructions.
+[01:02:14] And as a meta-judge it's going
+to judge its own judgments.
+[01:02:19] And I'll show you
+how you can do that.
+[01:02:22] We call that LLM
+as a Meta-Judge.
+[01:02:24] So there's a prompt for that.
+[01:02:27] So you'd have a given
+instruction from the user,
+[01:02:34] a response from, say, a model,
+and then judgment A and judgment
+[01:02:39] B, which could include
+the chain of thought
+[01:02:41] and the final verdict.
+[01:02:43] And then you want
+the language model
+[01:02:46] to judge which of the
+judgments is better,
+[01:02:49] A or B. Now, we have a
+particular algorithm then
+[01:02:53] for basically taking
+all different judgments,
+[01:02:57] calculating the meta
+judgments, and then the Elo
+[01:02:59] score amongst them.
+[01:03:01] But the reason to do that is
+to create preference pairs
+[01:03:06] amongst judgments.
+[01:03:08] So now we can say,
+OK, this judgment
+[01:03:10] looks better than that judgment
+because our meta-judge tend
+[01:03:14] to say that.
+[01:03:15] And so we can construct
+preference pairs again
+[01:03:20] with DPO of which
+judgments are better.
+[01:03:24] So now we've got two
+types of preference pairs,
+[01:03:26] the ones we had before
+which were like response.
+[01:03:30] Response chosen is better
+than response rejected.
+[01:03:33] But now we also
+have judgment chosen
+[01:03:37] is better than
+judgment rejected.
+[01:03:39] And we train the model
+with both types of data.
+[01:03:43] So this is different
+to basically
+[01:03:44] self-rewarding language models
+that I showed earlier only
+[01:03:48] had the top part
+of this picture.
+[01:03:51] So it didn't really have
+an explicit mechanism
+[01:03:54] to improve its ability
+to evaluate things.
+[01:03:58] And yeah, so this work, I think,
+it's exciting because it helps.
+[01:04:05] We actually get better win rates
+on say AlpacaEval with that.
+[01:04:15] And yeah, this plot
+you can see again we
+[01:04:23] see the improvement
+over iterations.
+[01:04:26] But it's above the performance
+of the self-rewarding model that
+[01:04:31] doesn't have this
+meta-judge training.
+[01:04:34] And even the
+self-rewarding model
+[01:04:38] tends to plateau a bit
+here on iteration 4,
+[01:04:41] whereas it's still going up
+for the meta rewarding model.
+[01:04:46] So I think that's
+pretty exciting.
+[01:04:48] And yeah, I've
+got one more thing
+[01:04:52] to talk about, which is how to
+improve the chain of thoughts
+[01:04:59] for judgments for evaluation.
+[01:05:03] So that's another recent work
+actually only out last week.
+[01:05:08] So this work is called
+Thinking LLM-as-a-Judge.
+[01:05:15] And the goal is to generate
+these long chain of thoughts
+[01:05:21] similar to R1 but for the
+task of judgment of responses.
+[01:05:26] Again, so that we have good
+rewards for training our models.
+[01:05:29] So here's an example
+from the model
+[01:05:31] we trained of what it can do.
+[01:05:35] Outputs this evaluation plan
+of how it's going to evaluate,
+[01:05:38] and then executes on the plan
+and gives this final verdict.
+[01:05:43] Yeah.
+[01:05:44] So we have a training
+mechanism for that.
+[01:05:48] And the trick here is you can
+look at the evaluation task
+[01:05:59] actually as a verifiable task if
+you know which of two responses
+[01:06:05] is better.
+[01:06:06] So let's say you've
+got an instruction.
+[01:06:08] You've got response
+A and response B.
+[01:06:09] If you know in advance that
+A is better or B is better,
+[01:06:13] then that's like a verifiable
+task like the math tasks.
+[01:06:16] We can compute the
+reward directly.
+[01:06:20] We don't need to say a
+language model LLM is a judge
+[01:06:24] to agree with our output.
+[01:06:29] So the trick in this
+work, the first trick
+[01:06:32] is to generate synthetic
+evaluation data
+[01:06:37] so that we have a
+verifiable task so we
+[01:06:40] know which one's better.
+[01:06:41] And once we have
+that verifiable task,
+[01:06:44] we can essentially
+do something a bit
+[01:06:46] like the iterative reasoning
+preference optimization, IRPO,
+[01:06:50] because we can compute the
+rewards directly and build
+[01:06:53] these preference pairs to
+improve the chain of thoughts
+[01:06:58] for evaluation.
+[01:07:01] There's a couple
+of extra details
+[01:07:03] here where in this
+particular case,
+[01:07:05] we actually asked it to
+do a plan first and then
+[01:07:09] execute on the plan, which
+is this 2 is the left hand
+[01:07:14] part of this figure.
+[01:07:18] So how do we create
+this verifiable data?
+[01:07:23] So this comes from
+a previous paper
+[01:07:26] that we did called
+self-taught evaluators.
+[01:07:29] What we're going to do
+is given a prompt x,
+[01:07:35] we generate a good response
+with a language model
+[01:07:38] or at least we think
+is a good response.
+[01:07:40] Let's say it's a
+reasonable response.
+[01:07:42] And then we generate a
+similar prompt x prime,
+[01:07:47] which is similar
+but different to x.
+[01:07:50] And then we also use same LLM
+to generate a good response
+[01:07:54] to x prime.
+[01:07:55] We'll call that y prime.
+[01:07:57] And now the hope
+is that, of course,
+[01:08:01] because x prime
+is different to x,
+[01:08:04] y prime won't be as
+good a response to x.
+[01:08:09] Right?
+[01:08:10] So that's the thing that
+basically y should be preferred
+[01:08:15] over y prime for input x.
+[01:08:18] So this now becomes
+our verifiable task
+[01:08:20] that we're going to
+use for training.
+[01:08:22] So the only question there
+that was a bit of an unknown
+[01:08:27] was how do you make this
+similar but different prompts?
+[01:08:30] And, of course, we use an
+LLM to do that as well.
+[01:08:33] So we say please generate a
+modified instruction that's
+[01:08:36] highly relevant but
+not semantically
+[01:08:38] identical to the
+instruction above.
+[01:08:40] And then this is what gives us
+the similar instruction which
+[01:08:44] we can then generate
+the lower quality
+[01:08:47] response for the original
+instruction from.
+[01:08:52] And yeah, that's roughly the
+high level picture of this work.
+[01:08:58] There's some
+ablation studies here
+[01:09:01] where we showed
+that these plans are
+[01:09:05] superior to not thinking at
+all, so no chain of thought.
+[01:09:10] But in general, it's good to
+have the plans as unconstrained
+[01:09:14] as possible.
+[01:09:15] Like, if you
+encourage them to be,
+[01:09:17] for example, lists of criteria
+or verification questions
+[01:09:21] which are some other works
+have used with prompting,
+[01:09:25] then the results get worse.
+[01:09:27] And I think that's in line
+with the O1, R1 style results
+[01:09:32] as well, where
+basically you don't
+[01:09:34] want to constrain too much
+the chain of thought thinking
+[01:09:37] processes of these
+language models,
+[01:09:39] but you want to
+train and find out
+[01:09:43] what it's going to be good at.
+[01:09:47] And then, yeah, after we train
+this model using LLAMA-3.1
+[01:09:52] or 3.3-70B as a base where
+it gets a very good results.
+[01:09:58] Actually, state of the art
+on this benchmark called
+[01:10:02] RewardBench, which evaluates
+reward models for LLM-as-a-Judge
+[01:10:07] generative models.
+[01:10:09] And it's also quite good
+on some harder evaluation
+[01:10:12] tasks on some newer benchmarks
+that just came out like RM-Bench
+[01:10:17] and FollowBench Eval.
+[01:10:22] And yeah, that's really all the
+things I'm going to talk about.
+[01:10:27] I think I talked
+about enough already.
+[01:10:29] So I'm just a little bit of a
+summary of these recent works
+[01:10:33] from the last year.
+[01:10:36] Self-rewarding
+models they're models
+[01:10:40] that can train
+themselves to get better.
+[01:10:42] And the hope is that could
+be a path to superhuman AI
+[01:10:46] as the model improves itself.
+[01:10:49] We've seen how
+verifiable rewards
+[01:10:51] can help to train chain of
+thought for better reasoning.
+[01:10:55] So I showed you this
+iterative reasoning preference
+[01:10:57] optimization technique.
+[01:10:59] But DeepSeek R1 have related
+techniques basically all using
+[01:11:05] these verifiable
+rewards on the output,
+[01:11:08] and then letting
+the chain of thought
+[01:11:11] don't penalize it, just
+find ones that work well
+[01:11:16] during your training cycle.
+[01:11:19] And then you can also use
+these verifiable rewards
+[01:11:22] to improve the evaluation
+ability of the model.
+[01:11:25] So that's the thinking
+LLM-as-a-judge that I just
+[01:11:28] showed.
+[01:11:29] And then, of course, if we
+have these better judges
+[01:11:32] with these chain of thought, the
+whole thing can go in a cycle.
+[01:11:38] We can use those to help train
+to think on nonverifiable tasks,
+[01:11:42] because we can use this Thinking
+LLM-as-a-Judge to train those
+[01:11:47] models.
+[01:11:48] And we call that thinking LLMs,
+which I showed earlier as well.
+[01:11:52] And then, finally, you can use
+this meta-rewarding concept
+[01:11:57] to judge their own judgments
+is another way of improving
+[01:12:00] their evaluation ability.
+[01:12:02] So I've shown you a
+few separate papers.
+[01:12:06] But the goal of the
+bigger model release
+[01:12:11] is to try and put some
+of these ideas together.
+[01:12:13] So yeah, some of those
+more recent things
+[01:12:15] like meta-rewarding
+and thinking LLMs
+[01:12:19] need to go together with the
+earlier ideas all in one system.
+[01:12:25] And we'll see how
+far we can push that.
+[01:12:28] And, of course, still
+looking for new ideas.
+[01:12:30] And they're going to be coming
+in the coming days, weeks,
+[01:12:35] months, and years, I'm sure.
+[01:12:37] So yeah, of course, there's
+lots of other directions.
+[01:12:45] And just to throw one out
+there is all the reasoning
+[01:12:49] that I've been talking
+about was with chain
+[01:12:54] of thoughts that were text.
+[01:12:56] It's generating text
+from the language model.
+[01:12:59] Now, you don't have
+to do that right.
+[01:13:01] You could the transformer
+itself does reasoning
+[01:13:05] by all these multiplications
+inside the neural net.
+[01:13:11] It's all manipulating
+vectors in the hidden
+[01:13:14] states of the network.
+[01:13:16] And so why does this system 2
+reasoning have to be tokens?
+[01:13:21] Maybe that could also be this
+continuous vectors as well.
+[01:13:25] So we explored that in
+a recent paper method
+[01:13:29] called COCONUT, where we
+replace the chain of thought
+[01:13:34] of outputting tokens with
+outputting vectors instead.
+[01:13:38] And we showed that has
+some promise, actually.
+[01:13:43] It could at least match the
+performance on some tasks
+[01:13:48] and even outperform classical
+chain of thought on some more
+[01:13:52] difficult search tasks.
+[01:13:55] But these are all quite
+small scale tasks,
+[01:13:58] so it remains to be seen how far
+people can push that direction.
+[01:14:03] I think there's
+some reasons to want
+[01:14:05] to have the chain of
+thought in human language,
+[01:14:09] natural language.
+[01:14:10] I think it's a nice thing for
+safety and interpretability.
+[01:14:16] But, as I said, the
+neural network itself
+[01:14:22] isn't interpretable in
+that way, the internals
+[01:14:24] of the transformer.
+[01:14:25] So there's something we
+have to work out, I think.
+[01:14:30] And I got another slide
+about what else comes next.
+[01:14:34] I think there's so much more
+exciting research to be done.
+[01:14:37] So Ilya Sutskever
+in his "Seq2Seq"
+[01:14:42] paper Test of Time Award that
+was this last NeurIPS talk he
+[01:14:49] presented some things.
+[01:14:52] This is a picture of
+what he was saying.
+[01:14:54] What comes next?
+[01:14:55] He was mentioning agents,
+synthetic data, inference time
+[01:14:59] compute, reasoning,
+understanding,
+[01:15:02] and being self-aware,
+which all makes sense.
+[01:15:05] I think these are all
+things that people
+[01:15:07] are working on today.
+[01:15:09] Well, maybe the self-aware
+one is a little more fuzzy,
+[01:15:13] but the other ones at least.
+[01:15:15] And yeah, I would just add
+some more detail there.
+[01:15:19] I think self-improving,
+self-evaluation
+[01:15:25] is really important because
+that bottlenecks performance.
+[01:15:28] So using more of this inference
+time compute for evaluation
+[01:15:33] is only going to help
+self improve the model.
+[01:15:35] And I think that's
+sort of related
+[01:15:36] to this self-aware
+comment that he
+[01:15:40] makes here that a
+self-aware model might
+[01:15:44] be more able to
+understand what it knows
+[01:15:47] and what it doesn't know,
+which is evaluation.
+[01:15:51] And then learning
+from interaction.
+[01:15:54] I think learning how to
+reason by actually interacting
+[01:15:56] with people in the world,
+internet, or itself,
+[01:16:00] are important things.
+[01:16:01] And so that's related
+to the agents point
+[01:16:04] and the synthetic data
+point he makes there.
+[01:16:07] And then, of course,
+it's not just
+[01:16:09] about improving the
+system 2 reasoning.
+[01:16:11] I think if we can improve
+system 1 reasoning,
+[01:16:15] so like the transformer
+architecture
+[01:16:17] itself, then that's great too.
+[01:16:20] So maybe there's a better
+attention model, some sort of--
+[01:16:25] or maybe something new.
+[01:16:27] A neural network layer
+we haven't come up
+[01:16:29] with yet that could change the
+scaling laws and the performance
+[01:16:36] of these models.
+[01:16:37] And that's great too.
+[01:16:38] So yeah, plenty to do.
+[01:16:41] And it's going to be
+exciting to see what happens.
+[01:16:45] Thank you.

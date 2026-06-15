@@ -1,0 +1,2279 @@
+[00:00] SEAN WELLECK: Today,
+I'm excited to talk
+[00:01] about bridging informal and
+formal mathematical reasoning
+[00:04] with AI.
+[00:07] So probably throughout
+this course,
+[00:10] you've seen many
+different ways where
+[00:13] these AI agents can start
+to have a lot of impact
+[00:17] in different areas.
+[00:18] And so one interesting
+question is to what extent
+[00:22] can they impact
+more expert domains,
+[00:24] so, say, finance,
+science, medicine,
+[00:28] and the domain that
+I'll talk about today,
+[00:30] which is mathematics.
+[00:33] Now, with mathematics,
+there's a variety of things
+[00:37] that you could imagine doing
+with an agent or a language
+[00:40] model.
+[00:41] You could try to have
+an open-ended dialogue
+[00:43] with the model.
+[00:44] You could try to have it come
+up with counterexamples for you,
+[00:48] help you write proofs.
+[00:51] Your imagination is
+basically the limit.
+[00:55] And what I want
+to argue today is
+[00:56] that for math in
+particular, how you
+[00:59] represent the math is actually
+extremely important to think
+[01:03] about.
+[01:04] So one way to
+represent math is what
+[01:07] is called informal mathematics.
+[01:09] Here, math is
+represented as raw data.
+[01:13] So it could be text.
+[01:14] It could be an image.
+[01:16] It could be even audio,
+if you're talking
+[01:18] with someone about math.
+[01:20] And doing this is
+extremely flexible.
+[01:23] And in some sense, most of the
+math that you've encountered
+[01:27] or that you've used is probably
+in some kind of informal format.
+[01:33] So even something like a latex
+solution or an archive paper,
+[01:36] we would consider
+to be informal.
+[01:39] Now, when we think about using
+AI to generate or operate
+[01:44] in informal math, there is
+a really important problem,
+[01:49] which is that we don't have
+any guarantees that the math is
+[01:53] correct or not.
+[01:54] So here is an
+example of a language
+[01:57] model producing a solution.
+[02:00] And the answer at the
+end is actually correct.
+[02:02] But makes these subtle mistakes
+in the intermediate steps.
+[02:08] And so for really
+simple math, this
+[02:10] might not actually be an issue.
+[02:12] And the language model
+might still be useful.
+[02:14] But if we really want to
+trust it in, say, education,
+[02:18] or in research
+level math, then it
+[02:21] could get very tedious
+and very difficult
+[02:25] to know whether the
+outputs are correct or not.
+[02:30] So this motivates the other
+end of the spectrum, which
+[02:33] is called formal mathematics.
+[02:35] Here, math is written as source
+code in a programming language.
+[02:39] And basically, the
+way it works is
+[02:42] you can write a specification
+or a lemma or theorem, like,
+[02:46] 1 plus 1 equals 2, then
+you can write a proof.
+[02:50] And the really cool thing
+is that if all of the code
+[02:53] compiles, then you have a formal
+guarantee that the proof is
+[02:58] correct.
+[03:00] And so this is a lot different
+than the informal math
+[03:03] because now we
+can have certainty
+[03:05] if, say, a language model
+generates a proof, that it
+[03:09] is actually a reliable and
+correct proof of the theorem.
+[03:15] And there's been a variety
+of these theorem proving
+[03:17] languages developed.
+[03:19] I'll mostly focus on a
+language called Lean,
+[03:22] which recently is having
+a really exciting growth
+[03:27] and really exciting intersection
+with the mathematical community,
+[03:31] which I'll talk about in a bit.
+[03:33] And for one of the topics
+that I'll talk about,
+[03:36] I'll also mention this
+language called Isabelle
+[03:40] because it has
+some features that
+[03:42] make it kind of
+amenable to writing
+[03:44] different types of
+proofs with AI systems.
+[03:49] So if you haven't seen
+one of these before,
+[03:52] I wanted to actually show you
+what one of these formal proof
+[03:55] assistants looked like.
+[03:57] And so to do this, we'll try
+to prove this really simple
+[04:01] theorem, which is transitivity.
+[04:04] So if R is a subset of S
+and S is a subset of T,
+[04:08] then R is a subset of T.
+[04:11] So I'll actually show
+you this as a demo.
+[04:16] And so here what I've done
+is I've opened up VS Code.
+[04:20] And so as I mentioned, this
+is literally like programming,
+[04:25] like writing code.
+[04:27] And here you could see
+the theorem statement.
+[04:30] So if R is a subset of S
+and S is a subset of T,
+[04:34] then R is a subset of
+T. And these are often
+[04:39] called interactive
+proof assistants
+[04:42] because what happens is,
+as I go to write a proof,
+[04:46] it actually tells me
+over here, what is
+[04:49] the current state of the proof.
+[04:51] So the idea isn't to learn
+every bit of the formal system.
+[04:55] But I'm just showing you
+the important parts that
+[04:58] will be relevant for the talk.
+[04:59] So here we can see these
+different variables.
+[05:02] And we can see what we have
+remaining to prove over here.
+[05:07] Now the thing is that it takes
+some expertise to actually write
+[05:11] a proof in Lean.
+[05:13] So for example, if I know some
+Lean, then one thing I can do
+[05:17] is this command here.
+[05:20] And you can notice
+that it actually
+[05:22] changed the state of the proof.
+[05:23] So now I have these
+two variables up here.
+[05:27] And the goal has also changed.
+[05:30] Then again, if you
+have some expertise,
+[05:32] then you can actually know
+that this idea of transitivity
+[05:37] has already been
+programmed into Lean.
+[05:40] So here I wrote this
+transitivity rule here or lemma.
+[05:47] And now you can see
+up here that it says
+[05:49] that there's no goals left.
+[05:51] So I've completed the proof.
+[05:54] So we'll actually touch
+on a lot of things
+[05:56] that I've talked about
+here throughout the talk.
+[05:58] We'll talk about the fact that
+it requires some expertise
+[06:02] to actually write a proof in
+one of these proof assistants.
+[06:06] And if you look
+at this proof, it
+[06:08] might look a bit
+different than one
+[06:11] that you would see
+written down in a textbook
+[06:14] or something like that.
+[06:15] So we'll revisit these
+ideas throughout the talk.
+[06:20] So now, going back
+to the talk, we
+[06:25] could ask, like, OK, I showed
+you this very simple example.
+[06:28] But is this toy or is
+this actually useful
+[06:32] for more complex mathematics?
+[06:35] So a really exciting thing is
+that, increasingly, there's
+[06:39] a larger and larger intersection
+with the mathematical community.
+[06:43] So here's an example of the
+mathematician Terence Tao.
+[06:47] And he formalized, in Lean,
+the proof of a theorem from one
+[06:52] of his actual papers.
+[06:55] And a really exciting thing
+that's playing into this
+[06:59] is this project, which
+is called Mathlib.
+[07:02] So if you noticed, in the demo I
+gave, this idea of transitivity
+[07:07] was already kind
+of programmed in.
+[07:09] And that's the idea of Mathlib.
+[07:11] So lots of people are
+contributing and building up
+[07:15] foundations that
+other people can
+[07:17] use to make it easier to write
+more and more complex math.
+[07:25] And if you look at what
+mathematicians write or talk
+[07:29] to them and listen
+to what they say,
+[07:32] then these formal
+proof assistants
+[07:34] are exciting for a
+few different reasons.
+[07:37] So one is that they
+can potentially enable
+[07:40] a new form of collaboration.
+[07:43] So what you can do
+is you can break down
+[07:45] a big problem or big proof
+into multiple pieces.
+[07:51] And then anyone can
+go on and essentially
+[07:54] submit code to try to
+solve one of the pieces
+[07:57] to, say, prove one of the helper
+theorems or helper lemmas.
+[08:02] And then the cool thing
+is that we know for a fact
+[08:05] that we can trust the code
+since Lean will automatically
+[08:10] check it.
+[08:11] And so this is a lot
+different than the typical way
+[08:14] of collaborating on,
+say, a math paper,
+[08:18] where you have to
+trust the author
+[08:20] or read through their results.
+[08:23] It also gives you instant
+feedback, as we saw.
+[08:27] So this could be useful in
+a variety of ways, including
+[08:30] when trying to learn math.
+[08:32] And, of course, it has these
+guarantees on correctness.
+[08:38] So, hopefully,
+I've convinced you
+[08:39] that formal math is
+getting more and more
+[08:42] interesting for learning or
+for the actual mathematical
+[08:46] community.
+[08:47] But why is it actually
+important for AI?
+[08:50] Well, one thing is
+that, as we all know,
+[08:53] we are not able to
+automatically check or trust
+[08:57] the outputs of AI models.
+[09:00] And so what the
+formal system gives us
+[09:02] is some way of just
+preventing incorrect math.
+[09:07] Or it turns out, you can
+actually use this for code
+[09:10] as well.
+[09:12] Increasingly, we see more
+and more models trained
+[09:15] with reinforcement learning.
+[09:17] And I'll actually talk about
+one of those in the talk.
+[09:20] And what you can think of
+the formal system as being is
+[09:23] it gives you this
+perfect reward signal
+[09:26] of whether something is
+correct or not correct.
+[09:29] And this turns out to
+be very useful for then
+[09:32] improving machine
+learning models further.
+[09:36] It also gets at one of the
+hot topics in the field
+[09:40] right now, which is reasoning.
+[09:42] And it gives you
+this nice playground
+[09:43] where you can try even very
+easy reasoning problems to,
+[09:48] essentially, arbitrarily, hard
+ones within the domain of math.
+[09:54] And so if we look at the
+history of language models
+[09:57] in formal math, one of
+the pioneering works
+[10:01] happened in 2020 from these
+two authors from OpenAI.
+[10:05] And they developed a
+system called gpt-f.
+[10:09] And so it actually
+used a language model
+[10:11] to predict the next
+steps of these proofs.
+[10:16] And even back then, they got
+some pretty interesting results.
+[10:19] So what they did is they had
+the system generate a proof,
+[10:23] and then they submitted
+it as a pull request.
+[10:26] And here are some of the
+comments from the maintainers
+[10:29] of the formal proof library.
+[10:33] Even this model, back then,
+could produce shorter proofs.
+[10:36] And some of them were even
+philosophically more concise
+[10:40] than the human-written ones.
+[10:43] And then since then,
+we've seen rapid progress
+[10:47] in using methods based
+on language models
+[10:50] for formal theorem proving.
+[10:52] So here is showing
+the performance
+[10:54] on a really common benchmark.
+[10:57] These are based on math
+competition problems.
+[10:59] And I actually made this
+plot a few months ago.
+[11:02] But it's already out of date.
+[11:04] Actually, just
+this morning, there
+[11:06] was a model released that
+gets 80% on this benchmark.
+[11:12] And just to give you some
+flavor of what these look like,
+[11:15] again, you don't have to read
+through the details of this
+[11:17] or through most of the
+examples I show in this talk.
+[11:21] But here's an actual output from
+a model called DeepSeek Prover.
+[11:26] And it managed to produce
+this proof of an IMO problem.
+[11:32] And so, hopefully, it
+gives you some sense
+[11:34] that the outputs of
+these are starting
+[11:36] to get pretty non-trivial.
+[11:40] And Terence Tao, if
+we go back to members
+[11:44] of the mathematical
+community, wrote
+[11:46] that during his
+formalization project,
+[11:48] he was actually
+using GitHub Copilot,
+[11:51] and sometimes it was able to
+infer the directions he was
+[11:56] going in and things like that.
+[12:00] So with all this, with
+formal math being so exciting
+[12:03] for both mathematics and
+for AI, the question is,
+[12:08] why don't people in AI
+always use formal math?
+[12:11] What is the blocker
+to making this happen?
+[12:15] So I want to argue that the
+key challenge is that there's
+[12:20] this gap between how people
+are familiar with doing math
+[12:26] and the actual formal system.
+[12:28] In particular, there's just
+so many ideas and intuitions,
+[12:33] and even the way
+that we write proofs,
+[12:36] that are just difficult
+or very tedious to express
+[12:40] in the formal system.
+[12:42] In a formal system like
+Lean, each step of reasoning
+[12:45] needs to be explicitly
+spelled out in detail.
+[12:49] And as we saw even in that very
+simple example that I gave,
+[12:52] you often have to have a
+deep knowledge of the system,
+[12:56] like what things
+exist in the system,
+[12:58] and how to write
+the code, and so on.
+[13:01] And so the theme
+of this talk will
+[13:03] be steps towards bridging the
+gap between informal reasoning
+[13:08] and formal reasoning.
+[13:10] Can we use AI and
+language models
+[13:13] to get the best of
+both worlds, maintain
+[13:16] the flexibility of
+informal reasoning
+[13:18] while having all
+of these benefits
+[13:20] that I mentioned with
+operating in the formal system?
+[13:25] And so I'll talk about
+three different directions
+[13:28] that we and others in the
+community are pursuing.
+[13:32] First, I'll talk about
+incorporating informal thoughts
+[13:36] into the formal theorem
+proving procedure.
+[13:39] I'll talk about training
+models to think informally
+[13:43] with reinforcement learning, and
+in particular, our recent work,
+[13:47] which is called Lean-STaR.
+[13:50] Then I'll move to informal
+provers or informal proofs.
+[13:56] And I'll talk about
+how you can break down
+[13:58] the problem of writing
+one of these proofs
+[14:01] as first writing a sketch, and
+then filling in the lower level
+[14:05] gaps of the sketch.
+[14:07] So I'll talk about our work
+called Draft-Sketch-Prove,
+[14:12] and then our recent work, which
+is actually not even released
+[14:15] yet, of trying to
+enable tools that
+[14:18] let you fill in the gaps of
+these sketches in the Lean
+[14:22] Theorem Prover.
+[14:24] And then finally, at
+the end of the talk,
+[14:26] I will talk about more
+of a future direction
+[14:30] that we are taking
+initial steps towards,
+[14:32] which is, how do
+we actually make
+[14:34] these systems useful
+to mathematicians
+[14:37] doing research
+level mathematics.
+[14:40] So in particular, I'll
+talk about one way
+[14:43] in which the models could
+assist in these larger projects.
+[14:47] I'll talk about some tools
+that actually already exist.
+[14:49] And you can try, after
+the talk, if you want,
+[14:52] and a new benchmark that tries
+to further progress of building
+[14:58] these assistants for these
+complex, research level type
+[15:01] projects.
+[15:04] So with that, let me
+go to the first part
+[15:06] where I will talk about
+integrating informal thoughts
+[15:10] into formal theorem proving.
+[15:13] So here, this will
+largely be based
+[15:15] on our paper called
+Lean-STaR, which we'll
+[15:18] be presenting soon at ICLR.
+[15:21] And here, again,
+we're in the setting
+[15:24] of theorem proving in Lean.
+[15:27] So here we have the theorem that
+I showed you before at the top.
+[15:31] And then as I showed
+you in the demo,
+[15:34] you could think
+of this as a kind
+[15:35] of interactive
+step-by-step process.
+[15:38] So in particular, Lean will give
+you this state of the proof.
+[15:42] And then one thing
+that you could do
+[15:44] is you could send that
+state to a language model,
+[15:48] and it could try to generate
+the next step of the proof.
+[15:52] Then you can provide
+the next step to Lean.
+[15:55] And it can either tell you
+whether the proof is done,
+[15:59] whether there is an
+error, or, as we saw it,
+[16:02] it can give you the
+next state of the proof.
+[16:04] You could then continue this
+until you either give up
+[16:08] or you reach a complete proof.
+[16:11] And so in that sense, you
+can see one of these proofs
+[16:14] as being a sequence of
+states and next steps,
+[16:17] or they're called tactics.
+[16:21] So in a bit more detail,
+what we want to do
+[16:25] is train a model on some data
+set of inputs and outputs.
+[16:30] So an example is you could have
+the model take in the proof
+[16:33] state and output the next step.
+[16:36] And what you typically
+do is you extract
+[16:39] a lot of these state
+and next step examples
+[16:42] from some corpus of
+theorems and proofs.
+[16:46] So for example, you could use
+the entire Mathlib project
+[16:49] that I mentioned earlier.
+[16:51] Or you could even have a model
+generate its own theorems
+[16:54] and generate its own proofs.
+[16:56] And then, ultimately, you
+turn it into a data set.
+[17:00] Once you've trained
+a model, you then
+[17:03] want to use it to
+generate full proofs.
+[17:06] So the traditional
+way of doing this
+[17:08] is through this tree
+search procedure.
+[17:11] Here's an example tree search
+called best-first search.
+[17:15] And basically, the idea
+is you ask the model
+[17:18] to generate multiple
+candidates for the next step.
+[17:22] Then you somehow
+come up with a score
+[17:25] for each one of
+these candidates.
+[17:27] You choose the step
+with the highest score.
+[17:31] So for instance, first, we
+chose this intro h step.
+[17:37] Then you can expand
+those further.
+[17:39] Choose the next highest
+scoring sequence.
+[17:41] As you can see here,
+it kind of backtracked.
+[17:44] And then it took
+this green path,
+[17:45] which led to a correct proof.
+[17:49] So this is just one
+possible strategy
+[17:51] you could use for generating
+a full proof if your model can
+[17:56] only predict the next step.
+[17:59] So what we are
+interested in is, can we
+[18:03] go beyond just training
+the model on formal proofs,
+[18:07] and to generate formal
+proofs, and instead
+[18:10] train the model to think before
+each step of the formal proof?
+[18:14] So in particular, we
+want to train the model
+[18:17] to generate what's on the right,
+where before taking a step,
+[18:21] it outputs some reasoning.
+[18:23] And it's free to
+decide whatever it
+[18:26] wants to do with the reasoning.
+[18:27] It could break down the problem.
+[18:29] It could plan out the next step.
+[18:31] It could even solve
+some computation
+[18:34] that isn't really present
+in the formal proof.
+[18:37] So why would you
+want to do this?
+[18:39] Well, again, it
+could give the model
+[18:42] some room to plan out
+what it is about to do.
+[18:46] When you think about it, it can
+help diversify the search space,
+[18:50] since now the model is
+searching for proofs not
+[18:54] just in the formal space, but
+in the formal space augmented
+[18:58] with these thoughts.
+[19:00] And I won't go
+into details here.
+[19:02] But there's been a lot of cool
+work in the language model
+[19:05] community showing that adding
+in these chain of thought
+[19:09] in other domains can
+actually give a model which
+[19:13] is more expressive in terms
+of the kinds of problems
+[19:17] it can solve.
+[19:19] So we have a few good
+reasons to try this out.
+[19:23] Now, the key issue here is
+that nowhere on the internet
+[19:27] is there formal
+proofs written in Lean
+[19:30] that have these nice thoughts
+written out for them.
+[19:34] And so what we have to do is
+actually design an algorithm so
+[19:38] that a model learns on its own
+to produce these thoughts that
+[19:42] are useful for the proofs.
+[19:46] So the algorithm is
+called Lean-STaR.
+[19:49] And it adopts its name
+from this other work
+[19:51] called self-taught reasoner.
+[19:54] And the process basically
+has two different phases.
+[19:57] So the high-level
+idea is we want
+[19:59] to learn to generate these
+thoughts via reinforcement
+[20:02] learning.
+[20:03] So first, we have to initialize
+the model so that it can
+[20:07] produce some type of thoughts.
+[20:09] And then we want to train it
+further so that it gets better
+[20:12] at using the thoughts
+to prove theorems.
+[20:16] So in the first step we
+use this clever trick,
+[20:20] which is we can look at a
+state and the actual next step
+[20:24] of the proof, and then
+have a language model just
+[20:28] retrospectively come up
+with some thought that
+[20:32] describes the transition from
+the state to the next step.
+[20:36] So what we found is that if
+you don't give this step,
+[20:40] then the language
+model might just
+[20:42] output a meaningless
+or incorrect thought.
+[20:45] But they were good
+enough at coming up
+[20:48] with some thought which
+described this transition.
+[20:54] So then we can annotate
+a large set of proofs.
+[20:59] So here, for instance,
+we take all of Mathlib,
+[21:02] and we can get
+hundreds of thousands
+[21:04] of examples of state
+thought and next step.
+[21:10] Then we can use that
+to train a model.
+[21:13] And it doesn't necessarily have
+to use all 100,000, by the way,
+[21:17] for this initial step.
+[21:18] You want to just train
+some initial model that
+[21:21] knows to produce these
+thoughts prior to taking steps.
+[21:28] Then we want to take that model
+and put it into this loop.
+[21:31] So we have the model
+generate full proofs.
+[21:35] Then we ask Lean to tell us
+whether they are correct or not.
+[21:40] And then we use some type of
+reinforcement learning algorithm
+[21:43] to improve the model further.
+[21:46] So what we need is some
+method to generate proofs.
+[21:50] And we need to actually
+choose some algorithm
+[21:52] to implement this with.
+[21:55] So what we discovered is
+that this commonly used way
+[21:59] of using the tree search,
+or best first search,
+[22:02] was actually difficult
+to get to work when
+[22:04] we added in these thoughts.
+[22:06] I think one reason
+is that it gets
+[22:08] difficult to actually
+assign a really
+[22:11] good score to the thought.
+[22:13] And so as a result, the tree
+search didn't work as well.
+[22:20] So what we did is
+design a new method,
+[22:23] which is this simple
+idea of generating
+[22:26] multiple proofs in parallel.
+[22:29] So for a given trajectory,
+you generate a step.
+[22:33] If you get an error
+from Lean, you just
+[22:36] retry on that same path.
+[22:38] And then you keep going up
+to a maximum number of steps,
+[22:41] or you stop if you
+reach a complete proof.
+[22:48] Then for the algorithm, we
+actually just used the simplest
+[22:53] possible algorithm.
+[22:54] And so we, as well
+as other groups,
+[22:56] are now exploring
+better reinforcement
+[23:01] learning algorithms,
+like online algorithms.
+[23:04] But here we did
+something very simple,
+[23:06] which is you just collect
+the successful trajectories.
+[23:10] You add those to your data set.
+[23:13] And then you train a new model
+on this data set of states,
+[23:17] thoughts, and tactics.
+[23:19] So this algorithm
+goes by various names.
+[23:22] It's called expert iteration.
+[23:24] It's also called ReST-EM.
+[23:26] It's also called
+rejection fine-tuning.
+[23:29] But the idea is very simple.
+[23:33] So then, typically, the way
+that these models are evaluated
+[23:37] is on these math
+competition problems.
+[23:40] So although we train
+the model on Mathlib,
+[23:44] here's a common test
+data set which is used,
+[23:47] which is called miniF2F.
+[23:49] And here's an example problem
+from the International Math
+[23:52] Olympiad.
+[23:54] So here I've shown
+the informal version,
+[23:57] just to show you what
+the problem is like.
+[24:00] But then the model here
+only gets the formal version
+[24:04] and has to produce a proof.
+[24:08] So here are some results
+with an early model
+[24:11] that we tried in the project.
+[24:14] So in red, you can see the
+model that we started with.
+[24:18] And then in black, you
+could see the model
+[24:20] after we perform this
+initialization step.
+[24:24] Then in gray, we
+can see the model
+[24:26] after we perform the
+expert iteration.
+[24:29] And you can see that the
+Lean-STaR process basically took
+[24:31] it from being worse than
+this baseline model, which
+[24:35] was based on this GPT-4 agent,
+to being better than it.
+[24:42] Then at the end
+of the project, we
+[24:45] applied Lean-STaR to the
+best available base model
+[24:48] at the time for theorem proving.
+[24:51] And again, we saw
+these improvements
+[24:53] going from gray to black.
+[24:55] And at the time
+that we did this,
+[24:57] this was the state-of-the-art
+for this miniF2F data set.
+[25:04] One really interesting
+thing is that we
+[25:07] found that models
+with the thoughts
+[25:10] benefit more from scaling
+up the search budget,
+[25:14] or the inference budget.
+[25:16] So here we're seeing, as we
+sample more and more steps,
+[25:20] either with our sampling
+method, or as a baseline
+[25:23] with the best first search,
+how the performance looks.
+[25:28] And you can see that the gains
+we get from the green line,
+[25:31] which is Lean-STaR
+with the thoughts,
+[25:34] are more pronounced
+than the model that
+[25:37] doesn't have the thoughts.
+[25:39] And so this might be
+indicating the idea
+[25:42] that I mentioned before,
+that adding in these thoughts
+[25:45] helps to diversify
+the search space.
+[25:49] Here are some examples.
+[25:51] And again, you don't have
+to read through the details.
+[25:53] But if you're curious, you can
+take a look at the paper after.
+[25:56] One interesting thing
+here is that if you
+[25:59] look at the formal code, there's
+actually some steps of reasoning
+[26:03] that the model is doing in the
+informal thought, shown in gray,
+[26:07] that aren't really present
+in the formal code.
+[26:11] And here's a longer
+example, partly because it
+[26:15] looks impressive, but
+also to just show you
+[26:18] that when you add in
+these informal thoughts
+[26:20] with the formal ones,
+the output starts
+[26:23] to get fairly non-trivial.
+[26:29] So after Lean-STaR, the
+really exciting thing
+[26:33] is that this idea of
+augmenting models or reasoning
+[26:37] models with thoughts and
+training them with reinforcement
+[26:40] learning has been adopted in
+the theorem proving community.
+[26:46] So in particular, very
+rapidly, this idea
+[26:49] of incorporating
+thoughts became a part
+[26:52] of the state of the art systems.
+[26:53] So here's the example that
+I mentioned before called
+[26:57] DeepSeek Prover,
+where they incorporate
+[26:59] in the informal thoughts.
+[27:02] And then as I mentioned
+just this morning,
+[27:04] there was the state-of-the-art
+prover released by this startup.
+[27:11] And you can see that
+they have this idea
+[27:13] of alternating between informal
+reasoning and snippets of code.
+[27:20] And then more broadly,
+these reasoning models
+[27:23] that generate long
+chains of thought
+[27:26] and are trained with
+reinforcement learning
+[27:29] have really begun to
+revolutionize the LLM reasoning.
+[27:35] So I'm not going to go
+into the details here.
+[27:37] But you have probably heard
+of these models like OpenAI 01
+[27:41] and DeepSeek R1.
+[27:43] And so it seems like,
+at least currently,
+[27:47] having this kind of
+informal thinking
+[27:50] is a really key part of
+the reasoning procedure.
+[27:55] So to recap, Lean-STaR
+builds on this observation
+[27:59] that training only
+on the formal code
+[28:03] may be insufficient to learn the
+actual thought process that's
+[28:06] needed to produce the code.
+[28:08] And it gives a simple
+algorithm for learning
+[28:12] to generate the thoughts.
+[28:15] Now I'll move from
+informal thoughts
+[28:19] to informal provers
+and informal proofs,
+[28:23] and in particular, talk
+about methods that prove
+[28:26] theorems by producing
+this high-level sketch
+[28:29] and then filling in
+the gaps of the sketch.
+[28:34] So here, the motivation
+is to combine
+[28:38] the benefits of higher level
+reasoning and lower level
+[28:43] reasoning.
+[28:44] And one motivation
+for this is to think
+[28:48] about, how do we
+actually write one
+[28:50] of these formal proofs in the
+formal proof assistant-- sorry,
+[28:53] informal proofs in the
+formal proof assistant.
+[28:57] So again, you don't
+have to worry too much
+[28:59] about the details of this.
+[29:01] But here we're trying to prove
+the statement on the left.
+[29:04] And what is notable here
+is that we can somewhat
+[29:09] break this informal
+proof up into these three
+[29:12] different parts.
+[29:15] Then it turns out
+that we can write
+[29:18] this in the formal
+system using something
+[29:20] that is structured analogously
+to the informal proof.
+[29:25] So this is a system
+called Isabelle.
+[29:28] And it has this
+style where you can
+[29:30] write these intermediate
+claims or conjectures.
+[29:36] And if you look at
+it, they somewhat
+[29:38] line up with the
+different steps.
+[29:41] Here, you have 10
+times 280 divided
+[29:43] by 40, which shows up here.
+[29:46] And then this is a way
+of basically writing,
+[29:49] OK, let's complete the proof.
+[29:52] Now, the interesting thing
+here is that you still
+[29:55] need to produce a proof of one
+of each one of these higher
+[30:00] level steps.
+[30:01] So that is shown in green.
+[30:03] And so you can see here
+that to actually come up
+[30:06] with that proof,
+it doesn't really
+[30:07] look like natural
+language at all.
+[30:10] Here, it's actually
+calling this SMT solver
+[30:12] and feeding it some facts.
+[30:16] So interestingly, we have this
+decomposition between high-level
+[30:21] and these lower level things.
+[30:24] So let me actually say
+a bit more about how
+[30:27] you produce these
+lower level proofs
+[30:30] in a system like Isabelle.
+[30:33] So it turns out that there are
+these very powerful and very
+[30:36] useful automation
+tools called hammers,
+[30:40] or this one is
+called Sledgehammer.
+[30:42] And the basic idea
+is that as you're
+[30:44] writing a proof as
+a human, you could
+[30:48] write one of these
+conjectures, and then you
+[30:52] could call the Sledgehammer.
+[30:54] What it does under the
+covers is it calls out
+[30:58] to external automated
+provers, ones
+[31:01] that are based on first
+order logic or higher order
+[31:04] logic or SMT solvers.
+[31:07] And these turn out to
+be extremely effective
+[31:10] when you're using the
+system for filling
+[31:14] in these little
+gaps of the proof.
+[31:18] What these are not
+good at is, let's say
+[31:20] you want to solve
+an IMO problem,
+[31:23] then the Sledgehammer
+methods just won't succeed.
+[31:29] The technical reason is that
+based on how they're set up,
+[31:33] there is just such a large
+search space of possible proofs.
+[31:37] And in particular, if you
+think about this proof
+[31:40] as being structured as
+these have statements,
+[31:43] they don't really
+have the functionality
+[31:45] to produce statements like that.
+[31:48] So in practice, these
+are used interactively
+[31:51] as you're writing
+a proof as a human.
+[31:55] So here, the idea is
+we want to combine
+[31:57] some kind of high-level
+prover with a lower level
+[32:01] prover like the Sledgehammer.
+[32:03] And this leads to
+our method, which
+[32:07] is called
+Draft-Sketch-Prove, which
+[32:10] we presented in ICLR in 2023
+and developed and released
+[32:15] in late 2022.
+[32:19] So here, the idea is to come up
+with this three step procedure.
+[32:23] First, we're going to
+draft an informal proof.
+[32:27] Then we're going to translate
+it into this formal sketch.
+[32:31] And then we're going to use
+a low-level prover to fill
+[32:35] in the gaps of the sketch.
+[32:37] So to show you this
+in more detail,
+[32:40] let's walk through
+each one of these.
+[32:43] So first we start off
+with an informal theorem
+[32:47] and a formal theorem statement.
+[32:50] It's actually really important
+to provide the system
+[32:53] with the formal
+theorem statement
+[32:55] because when we start
+to translate things,
+[32:58] we want to make sure that
+the model's not cheating,
+[33:00] and it's actually proving the
+thing that we want it to prove.
+[33:05] Then in the first step,
+we have the system--
+[33:09] so it could be a human
+or it could be an LLM--
+[33:13] generate some informal proof.
+[33:17] Then in the next step we have an
+LLM translate the informal proof
+[33:21] into what's called
+a formal sketch.
+[33:24] It's essentially what I showed
+you before, except now, we
+[33:27] leave these gaps to be filled,
+which are the lower level
+[33:31] proofs.
+[33:33] Then in the final stage,
+we try to close the gap
+[33:36] with a lower level prover.
+[33:38] Here, we are actually
+using the Sledgehammer tool
+[33:41] that I told you about.
+[33:42] And if you're able to
+close all of the gaps,
+[33:46] then you're guaranteed
+to have a complete proof.
+[33:52] The interesting thing
+is that this actually
+[33:54] looks a lot different than
+what I was showing you before,
+[33:57] where we have this
+step-by-step proof search,
+[34:00] and maybe it's a tree search.
+[34:02] Now what we can do is we can
+diversify the search space
+[34:06] by just generating many possible
+informal proofs or drafts,
+[34:12] and/or generate many potential
+translations of those
+[34:15] into formal sketches.
+[34:17] And then we can just
+try to fill in the gaps.
+[34:19] And if the gaps are filled
+in any of the sketches,
+[34:23] then we have a formal proof
+that we could consider
+[34:27] as the output of the system.
+[34:30] So here's showing what
+happens as we scale up
+[34:34] the number of calls
+to the pipeline.
+[34:37] So here we're either generating
+many informal proof drafts,
+[34:42] or in the case of using a
+human written informal proof,
+[34:46] we're generating many
+possible translations
+[34:49] into the formal sketch.
+[34:51] You can see on the left-hand
+side that if we just call
+[34:54] the system once,
+then it actually--
+[34:57] I mean, it proves some things,
+but it's not very good.
+[35:00] And we really see the benefits
+as we scale up the amount
+[35:03] of proof search or sampling.
+[35:06] And up here, we're proving
+a large number of problems.
+[35:10] This is on the same
+miniF2F data set.
+[35:14] Now, this was in the days
+of Codex and Minerva,
+[35:17] if you remember those models.
+[35:19] And interestingly here,
+if you look on the very
+[35:21] right-hand side, if we actually
+sampled enough from the model,
+[35:27] then we were able
+to, right at the end,
+[35:30] surpass the performance of
+using a human-written proof.
+[35:34] And so this was
+kind of exciting.
+[35:36] And probably, now that language
+models are much better,
+[35:38] we would be able to make
+that transition even earlier.
+[35:45] So here's an example of proving
+an International Math Olympiad
+[35:49] problem.
+[35:50] So here the language model
+produces the informal proof,
+[35:54] shown in green.
+[35:55] Then the language model
+produces the formal sketch,
+[35:59] shown in blue.
+[36:00] You can see that here,
+we actually, back then,
+[36:03] even had these informal
+thoughts in as comments.
+[36:07] Or here, it's showing the
+informal version of the setup.
+[36:12] And then we have the
+Sledgehammer system fill
+[36:14] in the gaps, shown in purple.
+[36:17] And you can see that sometimes
+it's pretty non-trivial.
+[36:20] Here, again, it's
+calling this SMT solver
+[36:22] and feeding in a bunch of
+different facts or premises.
+[36:29] So since then, I've put together
+a tutorial for theorem proving.
+[36:36] So it goes over the
+step-by-step methods
+[36:38] that I mentioned
+in the first part,
+[36:41] and also has a notebook that
+shows you how to implement
+[36:45] this Draft-Sketch-Prove method.
+[36:47] And in particular, it just calls
+out to a language model API.
+[36:50] So you can try it out with any
+state-of-the-art model that you
+[36:55] want to, if you're
+curious to learn more.
+[37:01] So to recap, I talked
+about this method
+[37:04] called Draft-Sketch-Prove,
+which generates
+[37:07] these high-level sketches, and
+then tries to fill in the gaps.
+[37:10] And what this relied on is,
+in this language, Isabelle,
+[37:15] having this lower level
+prover called Sledgehammer.
+[37:19] So next, I'm going to talk about
+our very recent work on trying
+[37:24] to build one of these
+Sledgehammer provers
+[37:27] for Lean so that we
+could more easily write
+[37:30] these sketch-based
+proofs in Lean.
+[37:35] So this is based on a paper
+that is still not public,
+[37:40] which is called Premise
+Selection for a Lean Hammer,
+[37:44] where we build a system
+called Lean Hammer.
+[37:49] So what is a hammer?
+[37:51] So a hammer integrates,
+as I mentioned,
+[37:54] these external provers.
+[37:56] And there's a bit
+of terminology here
+[37:59] that is a bit tricky
+if you haven't
+[38:01] seen this distinction before.
+[38:04] Specifically, what it does is it
+integrates an automated theorem
+[38:08] prover into an interactive
+theorem prover.
+[38:12] So an interactive theorem
+prover is like the one
+[38:15] I showed you, like Lean.
+[38:17] And essentially, it's a
+programming language that
+[38:21] is able to check the proofs.
+[38:24] However, the
+language, on its own,
+[38:27] doesn't give you a way of
+automatically producing
+[38:30] the proofs.
+[38:30] You usually have to
+write them as a human.
+[38:34] An automated theorem
+prover is something
+[38:38] that tries to
+automatically find proofs.
+[38:41] And traditionally,
+these are based
+[38:43] on different kinds of logics.
+[38:46] So they might be based on higher
+order logic provers or things
+[38:50] like SMT solvers.
+[38:53] And so as I mentioned before,
+these automated theorem
+[38:58] provers really struggle
+with more complex proofs
+[39:03] due to this large search
+space in their formalism.
+[39:09] So what we can do to try
+to help with this problem
+[39:13] is to solve this really
+important problem, which
+[39:16] is called premise selection.
+[39:19] So basically, what you do is you
+provide the automated theorem
+[39:23] prover with many
+different facts.
+[39:26] So you can provide it with
+definitions, different theorems,
+[39:30] different lemmas.
+[39:31] And then it goes off and
+tries to prove the theorem
+[39:35] that you want.
+[39:37] And if we look at the
+number of premises
+[39:40] in, say, Lean's Mathlib,
+then it's extremely large.
+[39:44] So it's hundreds of
+thousands of premises.
+[39:48] And so if you just give all of
+those to the automated theorem
+[39:51] prover, it will really
+struggle because it has
+[39:57] this really large search space.
+[40:00] So the basic idea
+of premise selection
+[40:02] is to somehow cut down the
+number of premises that we give
+[40:07] and only provide it ones
+that are likely to be
+[40:09] useful for proving the theorem.
+[40:13] So then we can look at what is
+the typical hammer pipeline.
+[40:18] So here it is at a high level.
+[40:21] Let's say we're in Lean.
+[40:23] Then we start off with the thing
+we want to prove on the left.
+[40:27] Then we would pass it to some
+kind of premise selection
+[40:30] system.
+[40:32] Now, once we've selected
+premises like definitions
+[40:36] and theorems, we have to
+translate it from Lean
+[40:39] into the language of the
+automated theorem prover.
+[40:44] Let's say that the
+automated theorem
+[40:45] prover finds a complete proof.
+[40:48] Well, then we have to
+actually translate it back
+[40:50] into a Lean proof.
+[40:53] And so the way
+that that's done is
+[40:55] through the step, which is
+called proof reconstruction.
+[40:58] So it basically takes
+the output and tries
+[41:02] to produce a proof in Lean.
+[41:04] Then as our output, we would see
+this nice proof on the right.
+[41:08] Sorry.
+[41:11] So amazingly, there's been
+a lot of really cool work
+[41:17] in the community on
+these different parts.
+[41:21] Usually, they're developed
+somewhat independently
+[41:23] of each other, but we have
+this translation layer
+[41:28] called Lean-auto that
+can help translate
+[41:34] from Lean's
+dependent type theory
+[41:37] into the higher order logic.
+[41:40] An example automated
+theorem prover
+[41:41] is called zipper position.
+[41:44] And then for this
+proof reconstruction,
+[41:47] this was developed by Josh
+Clune and collaborators,
+[41:51] who's part of this
+Lean hammer project.
+[41:54] And there's a
+system called Duper.
+[41:58] So what we're interested in
+here is two different things.
+[42:03] First, we want to try to solve
+this premise selection problem.
+[42:07] And then second,
+we have to come up
+[42:09] with some way of actually
+combining these together.
+[42:13] When I show it on
+a slide it looks
+[42:15] simple to put them together.
+[42:17] But it's actually not clear
+what the best way to do this is.
+[42:20] And even more, we want to go
+beyond the standard pipeline,
+[42:25] which I'll talk about in a bit.
+[42:28] So first, let me talk about
+the premise selection.
+[42:31] What we do is to frame
+this as retrieval
+[42:34] with a neural language model.
+[42:37] So in particular, we have
+a standard retrieval setup.
+[42:42] Here, we embed our input.
+[42:44] So this will be the goal
+that we want to prove.
+[42:47] And we have a
+language model that
+[42:50] produces this embedding
+shown on the right.
+[42:54] Then we embed all of
+our potential premises.
+[42:58] So this will include
+theorems, definitions, lemmas.
+[43:02] And they could be from Mathlib.
+[43:04] They could also be local
+premises in your project
+[43:08] or in the hypotheses that
+you're going to prove.
+[43:13] And with that, we get
+this list of embeddings
+[43:17] shown on the right.
+[43:19] Then to select the premises,
+we take the dot product,
+[43:24] use cosine similarity to
+select the set of highest
+[43:29] ranked premises.
+[43:32] So here, we train with this
+contrastive loss that is often
+[43:36] used to train retrieval models.
+[43:39] So it boils down to collecting
+these inputs, the states,
+[43:43] as well as some positive
+premises and negative premises.
+[43:48] And it turns out that there's
+actually a lot of nuance in how
+[43:52] to do this properly, especially
+when the output is going to be
+[43:56] this Lean-auto--
+[43:58] sorry, when the interface is
+with this Lean-auto system
+[44:02] in the hammer pipeline.
+[44:05] So I won't go into
+all the details here.
+[44:07] And when we release the paper,
+it will have all the details.
+[44:11] But even things like how and
+whether you simplify terms,
+[44:17] how exactly you choose
+these positive premises
+[44:20] and negative premises,
+turn out to have
+[44:22] a large impact on the
+behavior of the retriever.
+[44:27] And so we'll show in the
+results in a second that
+[44:30] based on some previous
+retrievers that were trained,
+[44:33] our system that we trained does
+a lot better when we put it
+[44:37] into this hammer pipeline.
+[44:41] So then the question
+is, how do we combine
+[44:43] all of these different pieces?
+[44:45] And so what we did is not
+just have this linear picture
+[44:49] that I showed on
+the previous slide,
+[44:51] but we actually incorporate
+these components
+[44:54] into a tree search.
+[44:56] So there's a really
+cool tree search method.
+[44:59] And it's this symbolic
+tree search called Aesop.
+[45:04] It does this tree search over
+different tactics or steps
+[45:09] of the proof.
+[45:10] And so what we do
+is wire it up so
+[45:13] that it can use the
+selected premises
+[45:16] to call different
+tactics in Lean.
+[45:19] And it can, at any time, query
+this automated theorem prover
+[45:24] using the selected premises.
+[45:26] And so this step will
+involve the translation
+[45:29] that I mentioned, as well
+as the proof reconstruction.
+[45:34] So now with all of
+these different parts
+[45:37] that I've described,
+you could say,
+[45:41] how is this actually
+useful as a user?
+[45:44] Well, it turns out that we
+can wrap this all into one
+[45:50] simple command.
+[45:51] So at any step of a
+proof, you can just
+[45:55] call this hammer
+tactic, and then it'll
+[45:59] run this tree search
+that I mentioned,
+[46:01] call the external
+prover and all that.
+[46:03] And then if it succeeds, it
+will display the proof to you
+[46:08] on the right.
+[46:11] And what's cool about this
+is you could potentially
+[46:13] enable this kind of
+sketch-based proving
+[46:17] that I was talking about before.
+[46:19] So here, I want to show an
+actual demo of the system
+[46:23] where we took a human-written
+proof sketch from this textbook,
+[46:29] Mathematics and Lean.
+[46:30] And we want to try to fill in
+the gaps with the hammer system.
+[46:36] So this theorem is
+the irrationality
+[46:39] of the square root of two.
+[46:42] And yeah, sometimes
+in the formal system,
+[46:46] you'll write it in a
+slightly different way.
+[46:50] Yeah, the details are not
+too important for the demo.
+[46:54] But you can read through
+after if you want.
+[46:59] So here, we'll go
+back into VS Code.
+[47:04] And here is, first of
+all, the simple theorem
+[47:09] that I showed you before.
+[47:11] And so what we can do is
+we can call this hammer.
+[47:18] And the first time you run
+it should take a few seconds.
+[47:24] And so what it's done is
+it's selected the premises
+[47:27] and called the tree
+search and all that.
+[47:33] And now you can see
+that it came back
+[47:35] with this proof, this
+theorem, or lemma.
+[47:40] So this one just says
+that if two divides m
+[47:44] squared then two will divide m.
+[47:48] So it turns out that
+this one will actually
+[47:49] be useful in this
+irrationality proof below.
+[47:55] So now we can go
+step by step and try
+[47:57] to fill in the gaps
+with the hammer.
+[48:01] So here it got this one.
+[48:04] And we can just keep going.
+[48:08] And interestingly,
+up here, it actually
+[48:10] used the Lemma that
+we just proved.
+[48:13] So you can see two divide
+of two divide square.
+[48:20] And so here it succeeded again.
+[48:23] And I'll just keep
+going for fun.
+[48:33] So the idea here is
+that by doing this,
+[48:37] you don't necessarily
+have to worry
+[48:39] about these different details.
+[48:41] So here's a kind
+of interesting one
+[48:43] where it's actually calling
+the automated theorem prover.
+[48:47] So you can see all of
+the different facts that
+[48:49] are being passed to it.
+[48:50] And here, we could see the
+call, the actual call to Duper.
+[48:58] So Duper was this proof
+reconstruction method
+[49:01] that I mentioned before.
+[49:04] So if you want, you could
+treat this as the proof,
+[49:06] or you can just leave
+this one in there.
+[49:11] For this step,
+turns out you have
+[49:14] to do this one step of
+clearing out this hypothesis.
+[49:19] But then you can
+call the hammer.
+[49:22] And just for fun, I'll
+finish off this proof just
+[49:27] to show you that it's possible.
+[49:42] And then here's the last step.
+[49:44] And we can call the hammer.
+[49:49] OK, so now we have a complete
+proof of the theorem.
+[49:51] And we started off with
+these high-level steps
+[49:54] and were able to
+fill in the gaps.
+[49:59] So again, here's the summary.
+[50:05] Then what we could
+do is evaluate this
+[50:08] with different premise
+selectors swapped in.
+[50:12] So here's some
+results on theorems
+[50:16] that we held out from Mathlib
+as a test set And we just
+[50:21] run the hammer at the
+first step of the proof.
+[50:24] So on the left here,
+you can see what
+[50:26] happens if you don't have
+the premise selection.
+[50:30] Then here is using a retriever
+that was from prior work.
+[50:36] What we did is we retrained
+it on the exact same snapshot
+[50:42] of Mathlib so it
+had up-to-date data.
+[50:46] And it's partially showing that
+the specific decisions that we
+[50:50] make in training our retriever
+were really important
+[50:53] for performance.
+[50:55] Interestingly, there's a
+symbolic premise selection
+[50:58] system.
+[51:00] I believe it's based
+on the one that
+[51:02] was in Isabelle Sledgehammer.
+[51:05] So Kim Morrison from
+the Lean community
+[51:08] re-implemented it in Lean.
+[51:10] And you can see that it actually
+does pretty decently when
+[51:15] it's in our hammer pipeline.
+[51:17] Here is the Lean
+hammer retriever
+[51:20] as the fourth bar with
+the diagonal lines.
+[51:24] And then interestingly,
+it ends up
+[51:25] being complementary to the
+symbolic MePO retriever.
+[51:30] So you can see with
+these crosshatched lines,
+[51:34] you get a performance
+boost if you just
+[51:36] take the union of premises.
+[51:39] And then in absolute terms, it's
+starting to get pretty good.
+[51:42] So all the way on the
+right is the performance
+[51:45] that we get if we just use
+the ground truth premises that
+[51:50] occur in the human proof.
+[51:53] And you can see
+that the performance
+[51:54] is starting to approach
+the performance that we
+[51:58] get if we use those.
+[52:02] So to recap, I talked about
+two different approaches
+[52:06] for combining informal
+and formal provers or even
+[52:11] formal/informal proofs.
+[52:14] I talked about
+Draft-Sketch-Prove,
+[52:16] which involves drafting
+an informal proof,
+[52:19] generating a formal
+sketch, and then filling
+[52:22] in the low-level details.
+[52:25] And I talked about
+Lean hammer, which
+[52:27] is trying to bring this paradigm
+to Lean or make it easier.
+[52:32] So in particular, we try
+to build this hammer.
+[52:36] And it involves this neural
+premise selection and a tree
+[52:40] search and calling out to
+the automated theorem prover.
+[52:45] And one interesting
+takeaway from this is--
+[52:49] I didn't go into the detail
+of the model that we trained--
+[52:53] but the largest model that we
+trained was just a 100 million
+[52:57] parameter retriever,
+so very small.
+[53:00] And as you maybe
+saw in the demo,
+[53:02] you can get some pretty
+non-trivial behavior
+[53:06] or performance from
+integrating it in.
+[53:08] So it's kind of exciting
+because in these cases,
+[53:12] even these fairly small,
+by today's standards,
+[53:14] neural networks can
+be fairly powerful.
+[53:20] So in the last
+part of the talk, I
+[53:22] want to talk about trying to
+use AI or techniques that I've
+[53:27] talked about to actually assist
+in research-level mathematics.
+[53:32] So not just prove
+the IMO problems
+[53:36] but try to help out in
+these more complex projects
+[53:41] that mathematicians, or
+if you're a Lean hobbyist,
+[53:47] or interested in formalizing
+something difficult.
+[53:52] So what does it
+actually look like to
+[53:55] formalize research-level math?
+[53:58] Well, here we can look
+at this blog post that
+[54:00] was written by Terence Tao.
+[54:02] And he breaks down
+the steps that
+[54:05] were involved in formalizing
+a proof from this paper, which
+[54:10] is shown on the left.
+[54:12] So again, the goal was to
+take one of the main theorems
+[54:15] from the paper and then
+try to write it in Lean
+[54:18] and come up with a formal proof.
+[54:21] And the first step is to write
+what is called a blueprint.
+[54:26] So here you go step by
+step and think about
+[54:29] how would this proof decompose
+into different definitions,
+[54:35] into different lemmas.
+[54:37] And ultimately, we can come up
+with the kind of final theorem
+[54:41] and proof that we care about.
+[54:44] And as you can see
+here, on the top,
+[54:46] it's showing a dependency
+graph of all of these theorems
+[54:50] and all of these definitions.
+[54:52] So it gets fairly complex.
+[54:55] And at the very bottom,
+you have the final theorem
+[54:58] and final proof.
+[55:00] And so, interestingly
+here, everything
+[55:03] is still written in
+informal language.
+[55:07] So you could see here
+the theorem and the proof
+[55:11] just written in LaTeX.
+[55:13] And then you try
+to think about, OK,
+[55:15] how do we actually
+realize this in Lean.
+[55:20] And so what it comes
+down to is a large set
+[55:23] of these formal definitions
+and formal lemmas
+[55:26] and formal theorems.
+[55:28] And then ultimately, you're
+able to state your final theorem
+[55:32] and write the proof of it.
+[55:35] So at the end, you have
+this proof and this theorem
+[55:39] that are really dependent
+on this graph of things
+[55:42] that I showed you.
+[55:45] So a question is, at what point
+of this procedure could AI help?
+[55:51] So maybe, at least
+for now, we don't
+[55:55] have it do this whole
+pipeline end to end.
+[55:58] But we could think about,
+what is the simplest
+[56:01] thing that we could have it do
+and that we could have trust.
+[56:07] So one thing you could do is
+you could look at this blueprint
+[56:11] and look at just one of
+these theorems or lemmas that
+[56:15] is necessary for the proof,
+but is just one part of it.
+[56:21] So here's an example where
+we have this lemma, which
+[56:25] occurs somewhere in here.
+[56:26] And if we give this
+to a language model
+[56:29] and it produces a
+proof, then, again, we
+[56:32] can trust the output
+because Lean has checked it.
+[56:35] And in some sense, it's
+helped the development,
+[56:38] because then the human
+proof writer doesn't
+[56:41] have to go through this step.
+[56:45] So in order to do
+this, we really
+[56:48] have to overcome at least two
+different gaps that occur.
+[56:56] The first I'll call
+the accessibility gap.
+[56:59] And this is just the simple
+observation that a lot of times
+[57:04] these methods are
+developed, but then they're
+[57:07] actually hard to integrate
+into actual tools.
+[57:10] So for example, the system
+might be very capable,
+[57:14] but it might not be open source.
+[57:17] Or the results might
+be very impressive,
+[57:20] but then they're actually very
+expensive or costly to run.
+[57:24] And so when you think about
+this practical setting,
+[57:26] it adds constraints
+onto the methods
+[57:29] that you have to develop.
+[57:32] But luckily, we actually do have
+some tools already available
+[57:36] that could potentially be
+useful for these simple gaps.
+[57:42] So we developed one of
+them called LLM Lean.
+[57:45] You could go download it and
+use it right now if you want.
+[57:50] So the basic idea
+is to just create
+[57:52] this interface between Lean
+and some language model.
+[57:57] So what it does is it gives
+you these different commands
+[58:00] or tactics, like, this one
+queries a language model
+[58:05] to try to produce the
+next step of the proof.
+[58:08] And then we can actually check
+the outputs of the model.
+[58:12] So we could discard the
+incorrect ones and just
+[58:15] display ones that
+finish the proof.
+[58:18] Those are shown in green.
+[58:19] Or blue ones are ones
+that don't give an error,
+[58:23] but don't necessarily
+finish the proof.
+[58:27] And in particular, you
+can, even nowadays,
+[58:31] have a model running
+on your laptop.
+[58:34] So there's these
+different libraries
+[58:35] that have been developed
+like Ollama or LM Studio.
+[58:40] And you could basically host a
+language model on your laptop,
+[58:43] and then use LLM Lean
+to communicate with it.
+[58:47] Similarly, you can have it
+communicate with some API.
+[58:51] So it could be OpenAI, it could
+be Claude, Gemini, together.ai.
+[58:57] And so now you can
+actually try to use
+[58:59] these models to
+give you suggestions
+[59:02] that are checked in Lean.
+[59:05] So as the last demo, I
+wanted to just show you this.
+[59:12] And so let's look
+for the other window.
+[59:17] So let's go back to this
+really simple theorem
+[59:21] that I showed at the
+beginning of the talk.
+[59:24] And you might have noticed that
+I imported this LLM Lean here.
+[59:29] And so now we could call this
+LLM step command that I showed.
+[59:35] And actually, it comes up
+with this intro command
+[59:39] that I showed you at the
+beginning of the talk.
+[59:42] Then we could call it again.
+[59:46] And in this case, it was
+able to finish the proof.
+[59:53] So another thing
+you can do is you
+[59:57] could say, try to just
+do this exact command,
+[01:00:01] so try to prove it in one step.
+[01:00:03] It actually came up with this
+bit more clever, one-step proof.
+[01:00:11] There's another
+command that just
+[01:00:12] tries to prove it in
+end-to-end, like, fully
+[01:00:17] prove it instead of just
+predicting the next step.
+[01:00:22] So here, the model comes up
+with multiple potential proofs.
+[01:00:29] And you can see they're a
+bit different style, maybe,
+[01:00:33] a bit longer.
+[01:00:35] So you can also do other fun
+things like shorten this proof,
+[01:00:43] then put it as a comment
+and then call llmqed.
+[01:00:51] So let's see what it does.
+[01:00:52] And yeah, so now it gives us
+some options that are shorter.
+[01:00:57] Actually, this is pretty short.
+[01:00:58] You could just prove
+it in one call.
+[01:01:04] So yeah, this is a tool
+that you could use.
+[01:01:06] Today, you just need to
+have a language model API.
+[01:01:12] And then you can import
+it into a Lean project.
+[01:01:20] So interestingly,
+let's see here,
+[01:01:24] the methods are still
+bottlenecked, obviously,
+[01:01:27] by how good the model
+is at proving theorems.
+[01:01:32] But even now, I went through
+Terence Tao's project, this PFR
+[01:01:37] project, and just picked a file.
+[01:01:41] Yeah, this one was
+actually able to fill
+[01:01:43] in some of these small lemmas.
+[01:01:48] This was actually the
+example that I showed you
+[01:01:50] before on the previous slide.
+[01:01:55] So another thing is, I mentioned
+that the models right now are
+[01:02:01] the bottleneck.
+[01:02:02] We have the interface set up.
+[01:02:05] And so now it just comes
+down to whether the model can
+[01:02:08] complete theorems that occur
+in these kinds of projects.
+[01:02:14] So this leads to a second gap,
+which is the gap in the way
+[01:02:20] that we benchmark these
+theorem proving models.
+[01:02:23] So largely, these models are
+benchmarked on their ability
+[01:02:29] to prove these math
+competition problems,
+[01:02:31] like, ones from the IMO.
+[01:02:34] And what these problems have is
+they're fairly self-contained.
+[01:02:39] So you can usually
+state the problem
+[01:02:41] in just one line of code.
+[01:02:44] And then they're designed to
+somewhat use standard results.
+[01:02:50] So there's a standard set.
+[01:02:53] And a lot of them have been
+implemented in Mathlib.
+[01:02:57] And then constructing the
+proof is very difficult.
+[01:03:00] It requires a lot of creativity.
+[01:03:02] But it's relying on
+these standard results.
+[01:03:08] If we compare that
+to this project
+[01:03:10] that I've been
+telling you about,
+[01:03:12] these have these
+complex dependencies
+[01:03:14] from throughout the project.
+[01:03:17] So in particular, this theorem,
+to even state it or to prove it,
+[01:03:23] it might actually
+rely on these brand
+[01:03:25] new definitions and brand
+new lemmas that have
+[01:03:29] been created for the project.
+[01:03:31] And so unless we
+continually train the model
+[01:03:34] on all of the current
+projects, it really
+[01:03:37] has to learn to prove theorems
+in this context-dependent
+[01:03:42] setting that I'm
+showing on the right.
+[01:03:46] So this leads to our
+new benchmark called
+[01:03:50] miniCTX, or mini context.
+[01:03:53] And we'll also be
+presenting this at ICLR
+[01:03:56] as an oral presentation.
+[01:04:00] So here what we do is we made
+this observation that I just
+[01:04:04] told you about that when we
+look at these research-level or
+[01:04:10] actual formalizations
+that people do in Lean,
+[01:04:13] they are really in this
+context-dependent setting
+[01:04:16] where you want to
+prove a theorem,
+[01:04:19] and it depends on a
+whole repository of code,
+[01:04:23] new definitions, or
+new auxiliary lemmas.
+[01:04:27] So the idea of the
+benchmark is to test models
+[01:04:31] on actual real Lean projects.
+[01:04:34] So in particular, we
+choose some date cutoff.
+[01:04:38] And then we look at a
+project like Mathlib.
+[01:04:40] And we can take all
+of the theorems that
+[01:04:42] were developed after that date.
+[01:04:45] Similarly, we can look at
+when a project was created
+[01:04:48] and take theorems and contexts
+from those different projects.
+[01:04:55] So this PFR project by
+Terence Tao and collaborators
+[01:04:59] that I've been
+telling you about is
+[01:05:01] one of the projects that
+was in the first version
+[01:05:03] of this benchmark.
+[01:05:06] Then the idea is
+we also make tools
+[01:05:10] so that you can automatically
+extract benchmark problems
+[01:05:13] from these projects.
+[01:05:15] So what you can do is
+update the benchmark
+[01:05:18] to stay ahead of the training
+cutoffs for these language
+[01:05:22] models.
+[01:05:23] So we've actually already
+released a miniCTX version 2.
+[01:05:28] And it has more
+recent Lean projects
+[01:05:32] that have been developed in
+the past couple of months.
+[01:05:37] So here, we have two
+different types of contexts.
+[01:05:41] And these are basically
+what dependencies
+[01:05:45] are needed to prove a theorem.
+[01:05:48] And what we do is we build
+tooling to automatically extract
+[01:05:53] things like dependencies.
+[01:05:55] And we can look
+at, does a theorem
+[01:05:59] depend on things just
+in the current file
+[01:06:02] or does it depend on things
+across multiple files.
+[01:06:06] And then we can also
+get things like,
+[01:06:08] what are the set of
+available premises
+[01:06:12] when you're going to
+prove this theorem, so
+[01:06:15] a very realistic setting.
+[01:06:17] So in particular, let's look
+at two different settings.
+[01:06:20] One setting is where
+all of the dependencies
+[01:06:23] just appear in the current
+file, and then the other
+[01:06:27] is when the dependencies
+can span multiple files.
+[01:06:33] So the first thing we want
+to do is actually demonstrate
+[01:06:36] that this context
+actually matters.
+[01:06:39] So, again, I've told you
+about this really common way
+[01:06:43] of training theorem
+provers, which
+[01:06:46] is by just giving
+them the proof state
+[01:06:48] and then having them
+produce a next step,
+[01:06:52] or having them produce
+thoughts if you want.
+[01:06:55] So here what we did is develop
+this simple baseline method,
+[01:07:01] which additionally
+gives the model all
+[01:07:03] of the code in the file so far.
+[01:07:07] So this can include new
+definitions, new lemmas,
+[01:07:11] even new notation, or
+natural language comments.
+[01:07:14] And we want to see how this
+compared to just taking
+[01:07:18] in the proof state.
+[01:07:21] So interestingly, if you look at
+a competition problem data set,
+[01:07:25] like, miniF2F, it actually
+really doesn't matter.
+[01:07:29] You can do, pretty
+similarly, whether you
+[01:07:32] take in additional
+context, it would just
+[01:07:34] be the import
+statements for miniF2F,
+[01:07:37] or if you just take
+the proof state.
+[01:07:40] So this might be one reason why
+a lot of these state-of-the-art
+[01:07:43] theorem proving methods don't
+really deal with or support any
+[01:07:49] external context.
+[01:07:51] However, when we evaluate
+them on our benchmark,
+[01:07:55] miniCTX, which has the theorems
+from real-world projects,
+[01:08:00] we can see this dramatic
+gap in the performance.
+[01:08:03] And the reason is pretty obvious
+if you just look at a Lean file,
+[01:08:07] it's because in
+these real projects,
+[01:08:10] you're defining these new
+definitions and new lemmas
+[01:08:14] like I discussed.
+[01:08:17] Interestingly, you can also
+do this premise selection
+[01:08:22] and give the language
+model the premises.
+[01:08:26] And you can see variations based
+on whether the theorem requires
+[01:08:31] just in-file information
+or auto-file information.
+[01:08:36] So all the way on the
+left, we have theorems
+[01:08:38] with very low dependencies.
+[01:08:41] The first set of bar graphs
+shows high dependencies
+[01:08:45] on in-file premises.
+[01:08:47] And so here you could see
+that you do pretty well
+[01:08:50] by just giving the
+language model all
+[01:08:52] the code in the current file.
+[01:08:54] And then in the third
+set of bar graphs,
+[01:08:56] you see what
+happens when we have
+[01:08:58] these cross-file dependencies.
+[01:09:00] And you can see that adding
+in this premise selection
+[01:09:04] leads to some improvement.
+[01:09:06] So here, we're using an older
+premise selector system.
+[01:09:11] So we're excited about
+integrating our Lean hammer
+[01:09:15] into this for addressing
+the cross-file dependencies.
+[01:09:20] And in general,
+there's a wide space
+[01:09:22] of methods that could be
+developed for this setting.
+[01:09:29] So I should also mention that we
+provide the model with this file
+[01:09:34] tuning.
+[01:09:35] So it's trained to take in the
+file context through Ollama.
+[01:09:39] So you can download it,
+run it on your laptop,
+[01:09:42] and use it inside of Lean.
+[01:09:45] And then all of the
+methods that are
+[01:09:47] in LLM Lean that are calling
+the proprietary language
+[01:09:50] models, or the API-based
+ones, they'll actually
+[01:09:53] prompt the model with all of
+the code in the current file.
+[01:10:00] And then as I mentioned,
+everything from the project
+[01:10:03] is open source.
+[01:10:04] So the data, the models,
+our data extraction tool,
+[01:10:08] and even the
+evaluation code, which
+[01:10:12] is like a wrapper
+of the Lean ripple.
+[01:10:16] And so you can check out
+those resources online.
+[01:10:22] So as I mentioned
+in the third part,
+[01:10:24] if we look at these
+real Lean projects
+[01:10:28] or what it would take to
+formalize research-level math,
+[01:10:31] it opens up some
+unique challenges.
+[01:10:34] These aren't the only
+challenges, of course,
+[01:10:37] but two that are really
+present in the kind of research
+[01:10:41] community right now.
+[01:10:42] One is that we still have a
+gap between the AI advances
+[01:10:47] and tools that people can use.
+[01:10:50] And then second, the
+benchmarks don't always
+[01:10:53] reflect all of the
+capabilities that
+[01:10:55] are required to do this
+real-world formalization.
+[01:11:01] And so this is very much
+an open research direction.
+[01:11:04] And as I mentioned, this
+benchmark is the first step.
+[01:11:10] So in summary, in this
+talk, I talked about three
+[01:11:14] different ways to try to
+bridge informal and formal
+[01:11:17] mathematical reasoning.
+[01:11:19] I talked about incorporating
+informal thoughts by training
+[01:11:23] models to think informally.
+[01:11:25] I talked about incorporating
+informal provers
+[01:11:28] or informal proofs through
+methods like sketch proofs,
+[01:11:33] and try to fill in the gaps.
+[01:11:35] And then towards
+the end, I talked
+[01:11:36] about trying to take, say, a
+research paper and look at what
+[01:11:43] is involved in producing
+a formal version of it
+[01:11:46] and looking at what are
+some initial ways where
+[01:11:49] AI can help in the process.
+[01:11:52] And so with that, that is
+all I have for today's talk.
+[01:11:56] And I'd like to thank all
+of the amazing collaborators
+[01:12:00] on these various works.
+[01:12:02] They're listed here.
+[01:12:04] And again, my name is Sean.
+[01:12:07] And I have my
+email address here,
+[01:12:09] so please feel
+free to reach out.

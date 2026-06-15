@@ -1,0 +1,1644 @@
+[00:00] DAWN SONG: OK.
+[00:00] Thank you.
+[00:01] OK.
+[00:02] So I will first start
+with some introduction,
+[00:05] and then we'll get the actual
+contents of this class started.
+[00:12] OK.
+[00:13] So first, so my
+name is Dawn Song.
+[00:15] I'm a professor in computer
+science here at UC Berkeley
+[00:18] and also a co-director
+of a campus wide center
+[00:21] called the Center on Responsible
+Decentralized Intelligence.
+[00:26] So I'm the instructor
+for this class,
+[00:28] and also we have a guest
+CO-instructor, Xinyun Chen,
+[00:33] from Google, who is
+also a Berkeley alum.
+[00:35] Actually, my former student here
+teaching this class together.
+[00:39] And also we have our great TAs--
+[00:42] Alex and Sehoon.
+[00:44] And also we have
+our great readers--
+[00:46] Tara and Ashwin.
+[00:51] OK.
+[00:51] So this is the
+teaching staff, who
+[00:54] will be working together
+with you this semester.
+[01:00] OK, great.
+[01:00] So everyone's here.
+[01:02] Everyone has been seeing
+the exciting growth
+[01:07] of large language models.
+[01:09] The speed of advancements
+is just astonishing.
+[01:15] However, these large
+language models,
+[01:17] they operate in a
+fairly simple manner.
+[01:19] They take text inputs
+and produce text outputs.
+[01:24] So what we will cover in
+this message, in this class,
+[01:27] is the next frontier--
+large language model agents.
+[01:32] So instead of just
+taking texts as input
+[01:35] and produce text as
+outputs, here, we
+[01:37] use a large language
+model as the key brain
+[01:41] for reasoning and
+planning for the agents
+[01:44] and enable the
+agents to interact
+[01:46] with external environments,
+observe the environment,
+[01:52] and take actions in
+the environments.
+[01:54] And the agents will be using
+external tools and also
+[02:00] external database
+and knowledge base
+[02:03] and so on for retrieval to
+help the agents to perform
+[02:08] these tasks.
+[02:12] And the rich capabilities of
+these large language models
+[02:18] makes these agents
+very flexible,
+[02:22] and they can easily operate
+in diverse environments
+[02:28] without much
+particular training.
+[02:32] And these agents,
+they can interact
+[02:37] with different types of
+environments, including,
+[02:41] for example, surfing the web and
+through different APIs online.
+[02:47] And they can also
+be embodied even
+[02:50] in a robot and operating
+in a physical world.
+[02:54] And they can sense
+the environment
+[02:58] through different
+types of inputs,
+[03:01] even in the multimodal
+setting, even including
+[03:05] various sensory inputs
+and taking actions
+[03:09] in these various environments.
+[03:12] And through this interaction
+with the complex and diverse
+[03:16] environments, they can
+update their memory.
+[03:20] They can learn to use-- they
+can interact with humans,
+[03:25] and they obtain grounding
+through these interactions
+[03:30] as well.
+[03:33] And these agents not only just
+interact with the environment,
+[03:37] they can interact
+with other agents
+[03:39] through modeling agent
+interactions and collaboration,
+[03:43] including humans as well.
+[03:45] And these multi-agent
+collaboration
+[03:48] can help agents together to
+solve even more complex tasks.
+[03:56] So why is our agency,
+The Next Frontier--
+[03:59] why do we need to empower our
+arms with the agent framework?
+[04:03] For a number of reasons.
+[04:05] Solving real world tasks
+is never just in one
+[04:09] go with text input,
+produce text outputs.
+[04:12] Oftentimes, it involves a
+trial and error process,
+[04:16] and so leveraging external
+tools and the retrieval
+[04:19] from external knowledge can
+help expand capabilities.
+[04:24] And more importantly, this
+dynamic agentic flow--
+[04:31] this agent workflow can
+facilitate solving complex tasks
+[04:36] through enabling task
+decomposition, allocation
+[04:40] of subtasks to
+specialized modules,
+[04:43] division of labor for
+project collaboration.
+[04:46] And throughout the
+course, we also
+[04:48] see that multi-agent
+generation can
+[04:51] help inspire better responses.
+[04:57] Even though it has been a
+fairly recent development,
+[05:01] we have already
+seen agents helping
+[05:05] transform different application
+domains through wide ranging,
+[05:11] including education, law,
+finance, health care,
+[05:15] cyber security-- you name it.
+[05:18] And the development is really
+exciting and is fast improving.
+[05:23] There are many different
+leaderboards for different agent
+[05:27] benchmarks that
+you can see online,
+[05:29] and you can see the
+really fast improvements
+[05:31] on all these different
+agent frameworks.
+[05:35] So overall to better
+enable agent deployments,
+[05:40] there are a number
+of key challenges
+[05:42] that we still need to address.
+[05:44] So first, we need to improve
+the reasoning and planning
+[05:47] capabilities of agents.
+[05:49] Our agents tend to make mistakes
+when performing complex tasks
+[05:53] end to end, and it's important
+to improve the reasoning
+[05:57] and planning capabilities.
+[06:00] And also we need to
+improve embodiment
+[06:02] and learning from environmental
+feedback for these agents.
+[06:09] Agents are still not efficient
+at recovering from mistakes
+[06:14] for long horizon tasks.
+[06:16] We need to further develop
+methods and capabilities
+[06:20] for continuous learning
+and self-improvement
+[06:23] for these agents
+and also improve
+[06:26] multi-modal understanding,
+grounding, and water model
+[06:29] capabilities of these agents.
+[06:32] And also, as I
+mentioned, motivation
+[06:34] can really help agents
+to provide a better
+[06:39] solutions for tasks, and
+developing theory of mind
+[06:42] helps multi-agents to
+better develop as well.
+[06:47] And safety and privacy--
+[06:49] these issues are also
+very important for agents
+[06:54] and are susceptible to
+adversarial attacks,
+[06:56] can emit harmful messages
+on private data and so on.
+[07:01] Solving these
+challenges are also
+[07:03] really important for deploying
+agents safely in the real world.
+[07:09] And also enabling human
+interactions and ethics--
+[07:14] how to effectively
+control agent behaviors
+[07:17] and design interaction modes
+between humans and machines
+[07:21] to best enable our machines
+to serve human needs
+[07:25] is also really important.
+[07:30] So to help students
+learn and better develop
+[07:35] methods to address
+these challenges,
+[07:38] the course has been
+designed to cover
+[07:41] a broad spectrum of
+topics, actually,
+[07:45] throughout the different
+layers of the agent framework
+[07:51] and also the domains.
+[07:54] So first, in the class, we will
+cover key model capabilities,
+[08:01] including reasoning, planning,
+multi-modal understanding.
+[08:04] We are also covering popular
+real-world agent frameworks
+[08:10] to enable students to
+learn how to better design
+[08:14] agent applications and use
+various Atlantic flows easily,
+[08:19] and this will help
+students to also learn
+[08:23] to use our agent frameworks
+for workflow design
+[08:27] to use retrieval
+augmented generation
+[08:30] and multi-agent systems.
+[08:33] And we'll also cover a number
+of exciting application domains
+[08:37] using these agents,
+including software code
+[08:41] development,
+workflow automation,
+[08:44] multimodal applications,
+and enterprise applications.
+[08:49] And finally, we will also
+cover important topics--
+[08:53] our agents safety and ethics.
+[08:59] To cover this
+wide-ranging topics,
+[09:02] we have assembled
+an amazing team
+[09:04] of guest speakers
+and researchers
+[09:08] to cover these topics.
+[09:10] So the class will be
+led by me and Shereen,
+[09:13] and we have this amazing
+crew of guest speakers
+[09:19] to help cover these
+important topics in class.
+[09:26] DENNY ZHOU: We've
+got a park and want
+[09:29] to ask one question
+for everyone.
+[09:31] So what do you expect for AI?
+[09:35] You may take a few
+seconds to think about it.
+[09:45] So I can imagine many
+different answers--
+[09:48] like, solve the hardest math
+problems that humans cannot
+[09:53] solve.
+[09:54] For example, even type it
+out for yourself, right?
+[09:58] Or discover new scientific
+theory, or even solve AGI.
+[10:09] And my background is
+in machine learning.
+[10:13] I don't know in the context,
+you have many people
+[10:17] studying machine
+learning course or not
+[10:19] because it's like the
+former is all we need.
+[10:24] As a machine learning person,
+I have a little expectation
+[10:27] about--
+[10:29] AI should be able to learn
+from just few examples--
+[10:33] like what humans usually do.
+[10:41] In the past decades, the
+machine learning community
+[10:45] spent a great efforts to
+develop data-efficient methods,
+[10:52] like summaries of
+learning, active learning,
+[10:55] from [INAUDIBLE].
+[10:59] And if you look at newspapers
+in the past decade,
+[11:03] and the people always excited
+about one point or two point
+[11:06] games in the-- as
+all read paper.
+[11:10] So in practice--
+actually, I never
+[11:13] saw data-efficient approaches.
+[11:16] I would like to say
+it's mission failed.
+[11:21] Don't feel bad about it.
+[11:23] I'm the person that
+should feel bad, because I
+[11:25] started in almost 20 years ago.
+[11:27] AUDIENCE: [INAUDIBLE]
+[11:28] DENNY ZHOU: Oh,
+[INAUDIBLE] actually,
+[11:32] that motivated me to
+think a different problem.
+[11:38] What's missing in
+machine learning?
+[11:43] So I sort of trained
+them for years,
+[11:46] and finally, I found out
+the answer, reasoning.
+[11:53] In the current
+days, in particular,
+[11:55] for people in the
+course today, the idea
+[11:57] seems so obvious, right?
+[11:59] For this lecture
+about reasoning.
+[12:05] Humans can learn from
+just few examples
+[12:09] because humans can reason, not
+because of data statistics.
+[12:15] Sounds so straightforward.
+[12:21] Let's start from a toy problem.
+[12:24] In my research, I usually
+prefer a very simple problem,
+[12:29] but it contains all the details,
+all the challenging places.
+[12:34] So this quick problem is called
+a last letter concatenation.
+[12:38] If you are familiar with
+neurosymbolic literature,
+[12:42] you will find similar problems.
+[12:45] So for this problem, given
+a people name as input,
+[12:53] the output will be
+the concatenation
+[12:56] of the first-- of the last
+letter of the first name
+[13:01] and last name.
+[13:03] For example, like, Elon Musk,
+the last letter for Elon
+[13:08] is N. The last
+letter of Musk is k.
+[13:11] So the output is NK, right?
+[13:15] It's so simple.
+[13:19] And if you have this
+problem, few years ago,
+[13:23] you probably able
+to try to solve it
+[13:25] by a machine learning model.
+[13:27] For example, if we
+use transformer model,
+[13:31] because one is a decoder.
+[13:32] The other is an encoder.
+[13:33] One is an encoder.
+[13:34] The other is a decoder.
+[13:36] And then you will find
+that, OK, you will probably
+[13:40] need tons of labeled
+examples to train the model.
+[13:47] And finally, you can get
+an accuracy, like, 85%
+[13:52] or 90% or something.
+[13:56] Now, it's interesting to think
+about machine learning methods.
+[14:01] For such a simple task--
+[14:04] I mean, simple for humans, OK?
+[14:07] If the method requires a vast
+amount of labeled data to learn,
+[14:13] would you like to
+call it as AI node?
+[14:15] AI means Artificial
+Intelligence, right?
+[14:20] I suppose an
+intelligent model should
+[14:24] be able to learn this task
+just using one or two examples.
+[14:31] Now let's see how this
+problem can be solved
+[14:33] by using large language models.
+[14:41] I suppose most people know
+large language models,
+[14:45] but Professor [INAUDIBLE], she
+explain what are LLM about, OK?
+[14:52] LLMs is a transformer model
+trained to predict next word.
+[14:59] For example, given the text, "AI
+is the future," where "Musk,"
+[15:05] "future," just use AI
+and learn as the input.
+[15:10] Will that model predict
+what will be the next word?
+[15:15] If the next prediction
+is not the word "future,"
+[15:19] we need to adjust parameters.
+[15:23] Put this in practice.
+[15:26] In machine learning, that's
+called back propagation.
+[15:31] Of course, yeah, you can share
+your model with many sentences.
+[15:36] For example, you can use
+all texts from the internet.
+[15:45] If you don't want
+to go to details,
+[15:47] you can simply think of training
+LLMs as training parrots
+[15:52] to mimic human language.
+[15:56] Actually, I tweeted
+this sentence.
+[16:00] And the one guy replied to me.
+[16:02] It's like, he's very curious
+about training parrots.
+[16:07] That's what he do for a job.
+[16:13] Once we train this
+model, then we
+[16:17] can just mimic the
+process of the training.
+[16:21] Because the training is about
+creating the next token.
+[16:23] We can use whatever as input and
+to see what will be the output.
+[16:30] The model just
+predict next token
+[16:32] and then you can import
+the generated token.
+[16:36] As you can use the
+input generate token
+[16:38] and put it next to that token.
+[16:40] That's how to get
+answer from LLMs.
+[16:43] And for this problem, we
+can simply concatenate all
+[16:48] the examples we have had as the
+input and also concatenate with
+[16:54] the test example,
+"Barack Obama" here.
+[16:59] We can try this with any
+LLM and see what happened.
+[17:04] And probably, you can see,
+you can revise it here.
+[17:08] It's, of course, here.
+[17:09] Of course, it's
+not correct, right?
+[17:10] Because K is the last
+letter of "Barack,"
+[17:14] and A is the last
+letter of "Obama."
+[17:17] The output should be KA.
+[17:19] So it's wrong, right?
+[17:23] The product.
+[17:24] This is called a
+few shot prompting.
+[17:26] It's just a mimic of a
+machine learning process.
+[17:29] Instead of training a model, we
+just use the examples as input.
+[17:34] That's the only difference.
+[17:39] In the current days, we know
+how to fix this prompted idea.
+[17:47] We just need to add reasoning
+process before answer.
+[17:54] Like, we just add the
+explicit process here.
+[17:58] The last letter of "Elon" is
+N. The last of "Musk" is K,
+[18:02] concatenated NK.
+[18:04] It's called NK.
+[18:05] Like that.
+[18:06] It's called the
+reasoning process.
+[18:09] And similarly for "Bill Gates."
+[18:13] And now we use this
+as the new input.
+[18:16] And you see, OK, we'll
+get a perfect response
+[18:22] from the large language models.
+[18:30] So even like humans,
+one demonstration
+[18:34] is enough to get
+an accuracy 100%.
+[18:40] That's exactly
+what I looked for.
+[18:45] We cannot imagine any machine
+learning method can achieve this
+[18:50] perfect [INAUDIBLE].
+[18:52] There's no way.
+[18:56] But by the way,
+don't overrate what
+[18:58] I said about machine learning.
+[19:00] Machine learning is still super
+useful and important for doing
+[19:05] every research.
+[19:06] In the current days, I saw
+many of my naive mistakes
+[19:10] from social media, news,
+even from the papers
+[19:14] in the full conferences,
+ordinary mistakes
+[19:18] mostly from people who have no
+expertise on machine learning.
+[19:24] They just randomly
+try different ideas.
+[19:29] This intermediate--
+this kind of idea
+[19:32] of adding intermediate steps
+has been proposed many years
+[19:40] in the literature.
+[19:42] So this is the amazing paper by
+researchers at Google DeepMind
+[19:51] published in ACL, 2017.
+[19:56] So in their paper, they use
+natural language rationale
+[20:02] to solve math problems.
+[20:05] In the paper, they even wrote,
+"derive the final answer through
+[20:11] a series of small steps."
+[20:14] And then they trained a
+sequencing model from scratch.
+[20:22] If you know how
+channels work, you'll
+[20:25] see what's surprising
+about this paper, right?
+[20:30] They also suggest,
+like, time travelers.
+[20:35] They know how to make
+a different approach.
+[20:41] In 2021, a team in the OpenAI
+published an amazing data
+[20:49] set called GSM8K.
+[20:52] They followed the idea in
+DeepMind paper from 2017.
+[20:57] In this data set, every problem
+followed by intermediate steps
+[21:05] as solution and
+also final answer.
+[21:08] And this team created
+this amazing data set.
+[21:14] And they use that to
+fine tune GPT3 model.
+[21:19] They are greatly scale up the
+work by Google DeepMind in 2017.
+[21:28] Even in the same
+year, 2021, a group
+[21:32] of researchers in Google Brain,
+now part of Google DeepMind,
+[21:36] published the work
+like shown work,
+[21:38] scratchpads for
+intermediate computation
+[21:40] with language models.
+[21:42] They discovered the similar
+ideas independently,
+[21:47] but in the domain of
+program synthesis.
+[21:52] That's why they use abstract
+symbols here instead
+[21:57] of using natural language.
+[22:01] In the context probably
+many people know our work,
+[22:03] chain-of-thought prompting, and
+the chain of thought actually
+[22:06] liberates--
+[22:08] "chain of thought" is
+not a term we invented.
+[22:11] It's just common English phrase.
+[22:13] It means multi-step reasoning.
+[22:17] So in this work, we
+extensively evaluated prompts
+[22:22] with intermediate steps
+and showed amazing results
+[22:26] on almost every NLP task.
+[22:34] So that's-- other papers appear.
+[22:38] Then in 2017, Google DeepMind
+published a paper training
+[22:44] with intermediate steps.
+[22:47] In 2021, people publish
+papers, fine tune LLMs
+[22:55] with intermediate steps.
+[22:57] In 2021 and 2022, prompting
+with intermediate steps.
+[23:07] You say, OK, which
+part is more important?
+[23:11] You can see here,
+actually, it doesn't
+[23:15] matter if you are train for
+frontier or prompt model.
+[23:22] What really matters here--
+[23:25] intermediate steps.
+[23:30] That's the key.
+[23:35] So let me summarize here.
+[23:38] Regardless of training,
+fine tuning or prompting,
+[23:43] when provided with examples
+that include intermediate steps,
+[23:48] LLMs will generate
+responses that also
+[23:53] include intermediate steps.
+[24:01] OK.
+[24:03] Given intermediate steps,
+we must ask the question,
+[24:07] is it helpful to introduce
+reasoning strategies
+[24:11] in those examples?
+[24:13] For humans, when
+they solve a problem,
+[24:17] they could have a
+strategy for solving.
+[24:26] So here's a work from our team.
+[24:30] It's least-to-most prompting.
+[24:32] In this work, we enable
+easy-to-hard generalization
+[24:36] by decomposition.
+[24:40] Probably many people
+saw this famous book,
+[24:44] How to Solve It by Polya,
+a classical book for math
+[24:50] education.
+[24:51] So there's a chapter
+about decomposition.
+[24:55] So if you go to details, you
+may lose yourself in details.
+[25:03] Yeah.
+[25:07] Now, let's see what the
+difference by decomposition.
+[25:13] So given this math
+problem here--
+[25:19] so by the way, so in
+this talk, the math
+[25:24] is the elementary
+level, so every time
+[25:28] when I gave a talk,
+before, actually,
+[25:31] my daughter also
+attend that talk.
+[25:33] And you would know
+the red flags,
+[25:35] or maybe she could understand.
+[25:37] She's in the fifth grade now.
+[25:41] And it says, Elsa has 3 apples.
+[25:45] Anna has 2 more
+apples than Elsa.
+[25:48] How many apples do
+they have together?
+[25:51] OK, but we see the
+difference is that, OK,
+[25:55] we first [INAUDIBLE]
+models how to break down
+[25:58] this problem to solve problems
+and then solve them one by one.
+[26:05] And that's why I
+called these two models
+[26:07] from least-to-most
+complex problems.
+[26:15] It's very simple idea, but
+it's surprisingly awful.
+[26:21] But I suggest that humans know
+how to decompose complex tasks
+[26:24] into simpler tasks.
+[26:26] So this is a SCAN task for
+compositional generalization.
+[26:34] You can look at the examples
+here given natural language
+[26:38] command, and we
+need to translate
+[26:41] to a sequence of actions.
+[26:45] And that could be executed
+by robots or something that.
+[26:49] So if we use
+least-to-most prompting,
+[26:52] we can get accuracy 99.7%, so
+just use 0.1% demonstration
+[27:00] examples.
+[27:04] So wondering why
+I chose this task?
+[27:07] Actually, I knew this
+task from Xinyun.
+[27:11] She's here today.
+[27:13] And she invented a
+beautiful approach
+[27:15] to solve this task
+many years ago.
+[27:20] When I looked at this task,
+I was really surprised
+[27:23] because it looks so
+straightforward for humans.
+[27:27] Why it could be so
+difficult for machines?
+[27:31] Finally, we have
+made it by LLMs.
+[27:38] And this is another task called
+CFQ, text to code, and again
+[27:43] with a compositional
+generalization task.
+[27:46] I don't know if anyone
+knows the concept
+[27:50] compositional generalization?
+[27:52] Roughly speaking,
+the task examples
+[27:55] are more difficult than that--
+[27:59] than training examples
+or prompting examples.
+[28:04] So, for example, for the
+text-to-code problems, the task
+[28:11] problems, we need a
+longer code snippet.
+[28:19] Here, our operation is a little
+bit changed, a little bit.
+[28:22] It's called a dynamic
+least-to-most prompting.
+[28:24] And we'll just use 1% data
+and achieved great results,
+[28:29] way better than we saw
+results in the literature.
+[28:33] And the saw result,
+in addition, actually
+[28:35] are by specialized architectural
+design and training.
+[28:42] And they use, of course,
+all the training data set.
+[28:49] Yeah.
+[28:50] So far, any questions here?
+[28:53] Otherwise, I'll go
+to the next section.
+[28:59] No?
+[29:00] OK.
+[29:00] I suppose this part is
+quite familiar for everyone.
+[29:05] I have two kids.
+[29:07] My daughter is 10 years old
+and my son is seven years old.
+[29:14] Actually, when [INAUDIBLE]
+paper came out,
+[29:19] I heard a very
+interesting conversation
+[29:22] between my daughter and my son.
+[29:25] My daughter asked her little
+broader, so what's 11--
+[29:31] 17 times 3?
+[29:36] The little brother
+said, I don't know.
+[29:38] And then she asked,
+what's 10 times 3?
+[29:42] 13.
+[29:43] What's 7 times 3?
+[29:44] 21.
+[29:45] So what's the 17 times 3?
+[29:48] Oh, yeah, no, 31.
+[29:50] And the funny thing is my
+daughter shouted to me, Daddy,
+[29:54] chain-of-thought prompting
+also words in my little brother
+[29:57] brain.
+[30:04] OK.
+[30:06] Now-- OK.
+[30:08] One may say, OK, why
+intermediate steps are helpful?
+[30:13] So let me say, OK, that's
+so natural for humans.
+[30:17] But if we are doing research,
+we have to think deeper.
+[30:23] That's just something similar
+that our large language
+[30:26] models are just machine
+learning models.
+[30:28] Why don't you understand?
+[30:29] What happened?
+[30:33] And this year, we have work
+published at ICLR 2024.
+[30:36] And I collaborated with
+brilliant scientists
+[30:40] from Stanford.
+[30:42] And in that work, we give a
+rigorous mathematical analysis,
+[30:48] OK?
+[30:49] So here are the key results.
+[30:52] Transformer generating
+intermediate steps
+[30:55] can solve any inherently serial
+problem as long as it depths
+[31:01] exceeds a constant threshold,
+and emphasize it again,
+[31:08] constant.
+[31:09] That means independent
+of your input.
+[31:13] However, if your transformer
+generating direct answers,
+[31:19] either requires a huge depth to
+solve or cannot solve at all.
+[31:30] Yeah.
+[31:30] Please check the
+statements again.
+[31:33] Then I'll move on
+to the next slide.
+[31:39] Probably, you can see tons
+of practical applications
+[31:42] of this theory.
+[31:45] Yeah.
+[31:46] If you couldn't
+solve a problem, you
+[31:49] may think a lot of generating
+more intermediate steps.
+[31:55] And also, probably,
+you could call
+[32:01] some external
+tools, like search,
+[32:05] to help intermediate steps.
+[32:10] So as said in this
+LLM age, of course,
+[32:15] many people talk about
+how to use external tools.
+[32:19] And you've got to think
+about how to diagnose
+[32:21] LLM and limitations.
+[32:24] Yeah.
+[32:25] So I know one of my big
+fun is to find problems
+[32:32] my daughter can solve in
+seconds, but LLMs fail.
+[32:37] Yeah.
+[32:42] OK.
+[32:43] So far, we have talked
+about how to use
+[32:47] examples to trick LLMs to
+generate step-by-step reasoning.
+[32:56] So one, it is possible
+to trigger reasoning
+[33:00] without using examples.
+[33:04] Shh.
+[33:06] Here's an amazing work.
+[33:08] Actually, when this paper came
+out, I thought it was a joke.
+[33:14] It turned out not.
+[33:15] And then I was inspired
+a lot by this work.
+[33:18] It's called "Let's
+think step by step."
+[33:22] So given this question, OK,
+we don't need any examples.
+[33:26] We just need to say,
+let's think step by step.
+[33:30] And the model can
+generate reasoning steps.
+[33:41] Yeah, it's really
+cool, but usually,
+[33:44] the zero-shot approach--
+that means-- zero-shot
+[33:46] means there's no
+demonstration examples.
+[33:50] It's worse than few shot.
+[33:53] So one may wonder,
+OK, if we can have
+[33:57] an approach that's
+still zero shot
+[33:59] but can do much better work.
+[34:03] So this leads to our--
+another work is called "LLMs
+[34:07] as Analogical Reasoners."
+[34:15] So again, this beautiful book,
+How to Solve It by Polya.
+[34:23] So you're supposed to say, OK,
+how to work analogical reasoning
+[34:27] to solve math problems?
+[34:29] So we will see a new problem.
+[34:32] Your first ask your question.
+[34:34] Do you know a related problem
+or methods or strategies?
+[34:42] So ultimately,
+[INAUDIBLE] this book
+[34:46] read and provide another paper.
+[34:52] So this is very likely
+the code from Banach.
+[34:55] Yeah.
+[34:56] If you started font analysis,
+you will know Banach's face.
+[35:00] And I was really amazed
+by that last sentence.
+[35:05] The ultimate
+mathematician is one
+[35:08] who can see analogies
+between analogies.
+[35:14] Of course.
+[35:15] I should [INAUDIBLE]
+here, but how do
+[35:17] you know how far
+we are from AGI?
+[35:23] And so given this simple
+problem, OK, of course,
+[35:27] you can say, OK, let's
+think step by step,
+[35:29] but now we can see
+in a different way.
+[35:31] OK, we call a related
+problem, and then solve
+[35:35] the one-- solve this one, OK?
+[35:37] You can see that,
+actually, indeed,
+[35:40] of course relevant examples,
+and the knowledge is here.
+[35:45] But though the problem are
+exactly the same problem,
+[35:48] but they are useful.
+[35:49] That's amazing.
+[35:49] Yeah.
+[35:55] And we found out,
+actually-- which, of course,
+[35:58] we try benchmarks, and
+see, it works really well.
+[36:02] So you can see that the last
+row is from analogical reasoner
+[36:07] by prompt.
+[36:08] Of course, you can optimize
+the prompts by yourself,
+[36:11] get a better result. The
+most important thing here,
+[36:14] you see that it's much
+better than just the-- let's
+[36:18] think step by step.
+[36:20] Let's think step by step here
+means zero shot, CoT, yeah.
+[36:24] And even this approach
+outperforms many of our CoT
+[36:31] here.
+[36:34] I think the main reason is that
+when you use this approach,
+[36:37] the model automatically
+generates related equations
+[36:42] for each different problem.
+[36:47] This resource on BIG-bench.
+[36:53] It was a great performance.
+[36:56] And there is other [INAUDIBLE]
+competitive programming.
+[37:04] Yeah.
+[37:05] If you are interested in
+competitive programming,
+[37:08] you could try this approach.
+[37:09] So what we didn't look
+here is about scaling.
+[37:15] Here, you can search the web,
+found all the related problems,
+[37:17] knowledges, for the
+problem we will solve.
+[37:23] So the key idea here, adaptively
+generate relevant examples
+[37:28] and the knowledge for
+each given problem
+[37:32] instead of using a
+big set of examples
+[37:35] as in manual
+chain-of-thought prompting.
+[37:41] OK.
+[37:41] Now you can see that,
+OK, we can use a few shot
+[37:46] examples to show the model how
+to do step-by-step reasoning.
+[37:51] What can do zero shot,
+without using any examples?
+[37:55] Just see, let's
+think step by step.
+[38:00] Now, I could ask
+another question.
+[38:02] Is it possible to trigger a
+step-by-step reasoning, even
+[38:06] without using any prompt,
+let's think step by step?
+[38:13] You could say, OK, all the
+models are just like that,
+[38:17] right?
+[38:18] You're right.
+[38:19] The idea is fine
+tuning or something.
+[38:22] That means they've already
+used many examples in the data
+[38:28] mixture for training or tuning.
+[38:36] So yeah.
+[38:38] We found that the answer is yes.
+[38:40] This is in our recent work,
+"Chain-of-thought Reasoning
+[38:43] without Prompting."
+[38:46] Without prompting-- that
+means without seeing anything.
+[38:48] Just give the
+problem to the model,
+[38:51] even for [INAUDIBLE] LLMs.
+[38:55] What did he want?
+[38:57] So let's look at
+an example here.
+[39:05] I have 3 apples.
+[39:07] My dad has 2 more
+apples than me.
+[39:09] And how many apples
+do we have together?
+[39:12] For this example, we see
+the approach actually
+[39:18] is very simple.
+[39:21] Decoding, in the first step,
+we look at all possible tokens.
+[39:26] Here are listed
+five tokens here.
+[39:30] OK.
+[39:32] So we started the
+first top-5 tokens
+[39:35] and then continue
+greedy decoding.
+[39:39] OK.
+[39:41] So the first one is a 5 apples.
+[39:44] The first token is 5, and the
+next token was five apples.
+[39:48] And if you use
+top-2 tokens is I,
+[39:53] then the fourth generation
+will be I have 3 apples.
+[39:58] My dad has 2 more apples than
+me, and so he has 5 apples.
+[40:02] Yeah.
+[40:03] That's correct.
+[40:03] Yeah.
+[40:05] And I see that-- so that's
+very interesting, right?
+[40:09] So we didn't see anything
+about reasoning here,
+[40:14] but the model can
+do some reasoning
+[40:16] if we started from
+different tokens.
+[40:22] Here is another example.
+[40:24] It say, OK, was Nicolas Cage
+born in even or odd year?
+[40:32] The first one say, OK, Nicolas
+Cage was born in odd year.
+[40:35] That one, "Nicolas"
+was the first token.
+[40:37] And for the second one, it
+says "even" and then period.
+[40:41] And the third one is
+"odd," period, OK?
+[40:45] Now, I'll probably say, OK,
+if Nicolage Cage would know,
+[40:49] the model could have
+had chain-of-thought
+[40:53] in their response.
+[40:55] The problem is how to find it.
+[40:59] Obviously, OK, you can
+take longer sentences.
+[41:04] Longer sentence means the model
+could do some reasoning steps.
+[41:10] Actually, a surprising thing
+is to look at the probability
+[41:16] of the left took over--
+[41:17] on the token [INAUDIBLE].
+[41:22] If you look at the probability,
+on the first row here,
+[41:25] Nicolas Cage was
+born in odd year.
+[41:29] And the probability
+is quite low.
+[41:33] However, if you see--
+[41:35] if there's a reasoning
+path, like the last one,
+[41:38] Cage was born in
+1964, an even year.
+[41:43] There's a reasoning
+process here.
+[41:45] And then probability
+finally jump to 0.978.
+[41:52] That's amazing, right?
+[41:54] It said that the model
+is so well calibrated.
+[41:58] I was really surprised at
+the sentence probabilities.
+[42:05] See that?
+[42:05] For that 20
+straight, even or odd
+[42:09] the probabilities are very low.
+[42:14] So key observations.
+[42:17] And pre-trained LLMs
+have had responses
+[42:21] with step-by-step
+reasoning among generations
+[42:25] started with the top-k tokens.
+[42:29] We don't need to use
+any prompts here.
+[42:32] Not needed.
+[42:34] And higher confidence in
+decoding the final answer
+[42:38] on a step-by-step
+reasoning path is present.
+[42:48] So here is a comparison
+between greedy decoding
+[42:52] and the chain-of-thought
+decoding.
+[42:53] We see that the chain-of-thought
+decoding performs much better.
+[43:03] Yeah.
+[43:04] So far, any questions here?
+[43:06] Now let's move to
+the next topic.
+[43:10] Generating intermediate
+steps are helpful, even
+[43:14] really helpful, but--
+[43:20] any concern on generating
+intermediate steps instead
+[43:23] of direct answers?
+[43:26] Any concerns?
+[43:30] Yeah, yeah.
+[43:32] AUDIENCE: So does
+the operator-- does
+[43:34] the extension give
+the LLM more options
+[43:37] to choose from [INAUDIBLE]
+[43:42] DENNY ZHOU: So
+probably, honestly,
+[43:45] depends on your
+problem, your need.
+[43:47] Yeah.
+[43:52] So, actually, in
+the current days,
+[43:56] we need to always keep in mind
+that LLMs are probalistic models
+[44:05] of generating next tokens.
+[44:08] They are not humans.
+[44:12] No matter if I use
+key examples or not.
+[44:16] Keep this in mind.
+[44:21] So it's a probabilistic
+model, so thus,
+[44:25] what LLM does in decoding?
+[44:28] So it's actually argmax,
+probability of reasoning path
+[44:35] and the final answer
+given the problem.
+[44:42] However, what we want is
+argmax, probability final
+[44:48] answer given problem, right?
+[44:52] That's what we learned
+in machine learning.
+[44:56] This doesn't mean reasoning
+path is not important,
+[45:01] but just final answer--
+[45:02] we have to make sure
+final answer is correct
+[45:05] and then look at
+the reasoning path.
+[45:11] They are not aligned, right?
+[45:13] They're two
+different objectives.
+[45:20] OK.
+[45:22] Now let's look one step further.
+[45:27] The probability of final
+answer given the problem--
+[45:32] how to compute it?
+[45:34] We should sum over all
+possible reasoning paths.
+[45:41] Thus, the total probability
+is computed from our course,
+[45:48] what we learned, right?
+[45:50] So given a math
+problem, you could
+[45:52] have found different solutions
+which lead to the same answer
+[45:57] when you do the summation here.
+[46:03] And then, OK, how
+to compute the sum?
+[46:11] If you are studying
+machine learning,
+[46:12] you will know the answer.
+[46:13] Here, right?
+[46:15] Sampling.
+[46:16] So simple.
+[46:17] OK.
+[46:21] Now, this lead to our
+work, "Self-Consistency."
+[46:25] Probably many people
+have no self-constancy.
+[46:29] But my talk here
+is I really want
+[46:31] to let you see the underlying
+motivation, how we approach
+[46:36] this problem from the first
+principles in machine learning.
+[46:43] So let's look at
+the question here.
+[46:44] OK, given this math problem--
+[46:47] and this could sample the
+answer multiple times.
+[46:52] Yeah.
+[46:53] Again.
+[46:54] And finally, you say, OK, the
+most frequent answer is 18.
+[46:59] OK.
+[47:01] Well, we'll give a warning here.
+[47:03] It's not most frequently
+in reasoning path.
+[47:07] Will it choose most
+frequent answer?
+[47:11] That's a huge difference.
+[47:14] Reasoning path here
+is a latent variable.
+[47:22] This idea is so simple.
+[47:25] By using self-consistency, we
+simply crushed SOTA results
+[47:32] in the literature at that
+time and see that in employee
+[47:38] research, we don't need--
+[47:42] we can-- it's really
+just about your idea.
+[47:45] You don't have to
+know a lot of things.
+[47:54] And of course, given our
+explanation on self-consistency,
+[47:58] it's about probability.
+[47:59] It's about sampling.
+[48:00] So imagine that more
+consistent results, more likely
+[48:04] to be correct.
+[48:06] When you look the curves
+here, if the consistency is
+[48:09] more than 80%, then the
+accuracy is nearly 100%.
+[48:24] Here, a quiz question one, OK?
+[48:27] So when the LLM
+outputs a direct answer
+[48:33] without intermediate steps.
+[48:36] We use DS samples
+several times and then
+[48:40] choose the most common answer.
+[48:44] Anyone would like to
+give an answer here?
+[48:53] Yeah?
+[48:54] AUDIENCE: Even
+though [INAUDIBLE]
+[49:02] DENNY ZHOU: OK, great.
+[49:03] Yeah.
+[49:04] One token.
+[49:05] OK.
+[49:05] That's already the token
+with the maximum probability.
+[49:10] Yeah.
+[49:11] OK.
+[49:13] And for the second
+question, change
+[49:18] self-consistency by letting
+LLM generate multiple responses
+[49:25] instead of sampling market
+hands and then choosing
+[49:29] the most common answer.
+[49:32] Does this make sense?
+[49:35] Yeah?
+[49:36] AUDIENCE: No,
+because [INAUDIBLE]
+[49:40] DENNY ZHOU: Great.
+[49:40] Yeah.
+[49:41] The answer is no.
+[49:43] And for both
+answers, we just need
+[49:45] to follow this principle,
+argmax probability
+[49:49] of final answer given problem.
+[49:51] That's all you need to
+understand the self-consistency.
+[49:54] It's a very, very
+simple principle.
+[49:56] It's also one of the first
+principles in machine learning.
+[50:01] If we all know
+machine learning more,
+[50:03] probably you know,
+OK, this is called
+[50:05] maximum marginal inference.
+[50:12] OK.
+[50:13] So one more.
+[50:14] OK.
+[50:14] How about free-form answers?
+[50:18] This time it's "Universal
+Self-Consistency,"
+[50:24] language machine here.
+[50:27] So this idea is a little
+bit different, but related,
+[50:32] so I put here.
+[50:34] And given this problem, where
+do people drink less coffee
+[50:38] than they do in Mexico?
+[50:40] If you look at answers,
+and the initial answer
+[50:44] is different from others.
+[50:47] But the most common response
+is to here, Japan, China,
+[50:52] and India.
+[50:59] Any questions?
+[51:01] Otherwise, I'm going to
+move to the next section.
+[51:04] OK.
+[51:05] Now-- yeah.
+[51:06] AUDIENCE: If I want the
+self-consistency [INAUDIBLE]
+[51:13] DENNY ZHOU: Self-consistency?
+[51:14] AUDIENCE: Yeah.
+[51:15] DENNY ZHOU: Oh, sample
+your answer multiple times,
+[51:17] and then choose the most
+frequent answer as the output.
+[51:20] AUDIENCE: OK.
+[51:21] DENNY ZHOU: Yeah.
+[51:27] And next, I'm going to
+talk about limitations.
+[51:37] The first one I
+want to talk about--
+[51:39] "LLMs Can Be Easily Distracted
+by Irrelevant Context."
+[51:48] From psychology studies,
+irrelevant information
+[51:55] may significantly decrease
+some children, and even
+[51:59] adults, problem-solving
+accuracy.
+[52:02] So I want to check if this
+observation holds for LLMs.
+[52:10] So these are simple
+problems here.
+[52:15] The highlighted text
+is manually added,
+[52:19] so Maria's monthly rent is $10.
+[52:24] It's irrelevant to
+the original problem.
+[52:27] But you see after
+that, the model
+[52:32] made the wrong solution here.
+[52:38] So actually, the
+interesting is that, OK,
+[52:44] if we add a prompt like,
+ignore irrelevant context,
+[52:51] and the model
+immediately noticed that
+[52:55] and make a correction.
+[53:01] But it's still hard to take
+back if we make the problem--
+[53:05] make irrelevant context
+arbitrarily big.
+[53:08] So even-- we can simply just
+add irrelevant sentences like,
+[53:12] the sky is blue and the
+grass is green or something.
+[53:16] That's nonsense.
+[53:17] You can make this
+input arbitrarily long.
+[53:21] You will see a significant
+performance drop
+[53:25] across all LLMs.
+[53:32] The next limitation-- I'm
+going to talk about LLMs cannot
+[53:36] self-correct reasoning yet.
+[53:42] Let's start from a
+math problem again.
+[53:46] And actually, this problem
+is a little bit tricky
+[53:50] if you look at it.
+[53:52] And you see that the
+model gave a wrong answer.
+[53:59] And then we prompt
+the model with,
+[54:04] "Review your previous answer and
+find problems with your answer."
+[54:11] And then interestingly,
+after reviewing,
+[54:16] the model recognized the
+mistake and corrected itself.
+[54:24] This looks and sounds
+amazing, right?
+[54:27] You say-- and then we
+see another prompt.
+[54:29] So based on the problem you
+find, improve your answer.
+[54:35] And the final answer
+here is correct.
+[54:39] Yeah.
+[54:42] However, if the original
+answer is correct,
+[54:50] we do the same prompt, the
+model could make mistakes.
+[54:58] That's the problem.
+[55:01] So overall, while
+allowing LLMs to review
+[55:06] their generated response, can
+help correct inaccurate answers,
+[55:12] it will also risk
+changing correct answers
+[55:15] into incorrect ones.
+[55:20] We run extensive studies
+on some benchmarks,
+[55:26] like GSM8K, CommonSenseQA,
+and the HotpotQA.
+[55:31] And we didn't notice
+any improvements
+[55:34] from self-correction methods.
+[55:38] It just makes this worse.
+[55:46] Probably, you saw
+some improvements
+[55:47] from the literature.
+[55:50] They said improvements
+are reasoning.
+[55:54] And actually, they
+used oracle answers.
+[55:58] You can see the oracle here.
+[55:59] Oracle means you only prompt
+LLMs to correct the answer when
+[56:06] the answer is wrong.
+[56:07] The problem is that the model
+doesn't know if the answer is
+[56:11] correct or wrong.
+[56:12] You tell them, OK,
+the answer is wrong.
+[56:16] Please correct it.
+[56:21] And also, this ability
+to multi-LLM debate.
+[56:25] You could find using multiple
+LLMs debating each other
+[56:30] until it achieve
+agreement or consensus.
+[56:35] And also, we tried
+this approach.
+[56:37] No.
+[56:39] We find out, actually,
+the trick is how many
+[56:43] responses are generated.
+[56:46] For example, if we
+have three LLMs,
+[56:50] and if not everyone generated
+a response, that was three.
+[56:54] If we let them debate,
+then we [INAUDIBLE],
+[56:57] there will be nine
+responses to that.
+[56:59] So [INAUDIBLE] self-consistency
+with nine responses
+[57:03] and see what happens.
+[57:05] We find that those
+approaches cannot outperform
+[57:09] self-consistency.
+[57:10] Self-consistency
+is a much simpler.
+[57:12] We just sample multiple
+times and then take
+[57:15] the most frequent answer
+as the final prediction.
+[57:21] So the last thing
+we'll learn here
+[57:23] is oracle feedback is needed
+for LLM to self-correct.
+[57:29] If so, then we-- lead to
+our work as self-debug.
+[57:33] Self-debug naturally leverages
+unit tests as oracle.
+[57:38] It's a part of our
+coding problems.
+[57:39] Naturally have
+unit tests to try.
+[57:45] Actually, we started
+this work quite early,
+[57:48] and we didn't make
+a subsequent work.
+[57:51] And then finally, we
+moved to the [INAUDIBLE].
+[57:57] And the last case I
+want to talk about
+[58:00] is the premise order
+matters in LLM reasoning.
+[58:08] So in the context where every
+time we use [INAUDIBLE] problems
+[58:13] from arXiv or somewhere, then
+people will show rate results.
+[58:18] For example, recently, a
+model called reflection,
+[58:20] and it showed better
+results than GSM8K.
+[58:23] Actually, I have problems
+with trusting models.
+[58:29] In the current days, the model
+were trained with all data
+[58:31] from the internet.
+[58:32] They've got really
+some order problems.
+[58:35] So one of my team is to
+generate different eval tasks
+[58:43] to test the models.
+[58:46] So that's here.
+[58:48] Here, we just did
+a simple trick.
+[58:51] We are given this
+original GSM8K problem.
+[58:55] We reorder the
+sentence a little bit
+[59:02] and see if the model
+still can solve it.
+[59:05] So here, in the
+original problem,
+[59:09] he lost 10 bills
+while getting home.
+[59:13] And we could just move
+this sentence to the end
+[59:21] and then see what happened.
+[59:24] We just give some change
+for some GSM8K problems.
+[59:28] And we noticed that
+there are about 10 points
+[59:31] to drop on solving rates
+across all frontier LLMs.
+[59:40] So here are responses here.
+[59:42] You can do it compared
+with response,
+[59:45] but the problem-- for
+the original problem
+[59:47] and the reordered problem.
+[59:50] So you can see that the
+model actually just--
+[59:56] the model just know how to
+solve the problem sequentially.
+[01:00:01] They couldn't go back and forth.
+[01:00:10] And one could say,
+OK, that may be
+[01:00:12] related to some
+semantic understanding,
+[01:00:14] not just about reasoning.
+[01:00:15] Then we designed another task.
+[01:00:19] It's called a logical inference.
+[01:00:22] It's even more pure
+than the math problems.
+[01:00:26] [INAUDIBLE] Even if we
+don't use real words,
+[01:00:33] we just use random tokens here.
+[01:00:41] And given the
+rules and the facts
+[01:00:44] and then what model will give
+an inference, logical inference
+[01:00:48] in the query.
+[01:00:50] And the rules for the
+original problem--
+[01:00:54] the rules are ordered
+according to their use
+[01:00:57] in the inference process.
+[01:01:00] But I will point out,
+not all the rules
+[01:01:04] are necessary for a query.
+[01:01:11] And another way, we could just
+randomly order those rules.
+[01:01:18] OK.
+[01:01:18] I want to-- only random order
+rules relevant for query.
+[01:01:24] If not relevant for
+query, they just
+[01:01:27] keep their original positions.
+[01:01:32] And surprisingly, then we saw a
+30-plus points performance drop
+[01:01:39] across all frontier LLMs.
+[01:01:51] From my personal
+experience, I think
+[01:01:54] it's really important to design
+experiments when doing research.
+[01:02:02] So it's just like a department.
+[01:02:07] OK.
+[01:02:08] Now let me summarize
+the talk here.
+[01:02:12] So the first thing
+I'll talk about
+[01:02:15] is generating intermediate
+steps improves LLM's performance
+[01:02:21] by a lot.
+[01:02:23] I mean, you can do training,
+fine-tuning prompting
+[01:02:25] with intermediate steps,
+but you can do also
+[01:02:29] with zero-shot,
+analogical reasoning,
+[01:02:31] or some kind of a
+special decoding like 17
+[01:02:35] decoding I presented today.
+[01:02:39] And also, self-consistency
+greatly improves step-by-step
+[01:02:44] reasoning, no matter your--
+[01:02:47] from fine-tuned model
+or from fine-tuning.
+[01:02:52] And also, a lot of limitations.
+[01:02:54] Like, irrelevant context,
+self-correction, and the premise
+[01:02:58] order-- all those are matters
+for reasoning performance.
+[01:03:08] So when I give talk,
+what would be next?
+[01:03:10] What do we want to work on next?
+[01:03:17] I think the most
+impressive challenge here
+[01:03:19] is [INAUDIBLE] when you
+work on something we
+[01:03:23] couldn't see [INAUDIBLE]
+AGI, won't solve for AGI.
+[01:03:25] That's not a problem.
+[01:03:26] The problem is defining
+a right problem
+[01:03:29] to work on and solve it from the
+first principles, not just the
+[01:03:34] [INAUDIBLE] from principles.
+[01:03:37] The machine learning is
+still super important here.
+[01:03:42] And I actually currently am
+co-organizing a conference
+[01:03:45] called the Conference on
+Language Modeling which
+[01:03:48] a bunch of amazing people.
+[01:03:50] And it's the
+first-ever conference
+[01:03:52] dedicated to language modeling.
+[01:03:54] And welcome to it.
+[01:03:57] Yeah.
+[01:03:58] That's it.
+[01:03:58] Thanks.
+[01:03:59] [APPLAUSE]

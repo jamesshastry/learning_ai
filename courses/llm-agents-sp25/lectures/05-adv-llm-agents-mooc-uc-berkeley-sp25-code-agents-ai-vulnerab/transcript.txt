@@ -1,0 +1,2288 @@
+[00:00] the introduction um I'll let me start
+[00:02] just by um before I get into the
+[00:04] technical content uh let me say uh ah
+[00:09] good um let me I'll introduce myself um
+[00:14] because um so uh so my uh so my journey
+[00:18] is like hon said I did a postto at
+[00:20] Berkeley from 2007 to 2009 uh with with
+[00:23] Mike Jordan which was fantastic my um
+[00:27] back during my PhD what I worked on was
+[00:30] machine learning um uh deep learning
+[00:32] didn't exist then and uh for for natural
+[00:35] language uh processing so back when none
+[00:38] of this stuff really worked um and then
+[00:41] um around the time uh I kind of uh I
+[00:45] left Berkeley I started as a professor
+[00:47] at Edinburgh I started working on kind
+[00:49] of machine learning for program
+[00:50] synthesis kind of codenation and
+[00:52] software engineering problems uh these
+[00:54] were very exciting to us at the time but
+[00:56] you know this is when we were just
+[00:57] starting to get deep learning so kind of
+[00:59] none of this worked
+[01:00] um and then I moved to Google in 2018
+[01:03] and it's only kind of very recently and
+[01:05] kind of when I've been at Google I've
+[01:06] been working on machine learning for
+[01:07] code generation and then kind of very
+[01:09] recently like in the past year I've
+[01:11] started to get interested in AI for
+[01:13] security so why am I telling you this um
+[01:16] there's kind of three reasons um one is
+[01:19] I always like to begin a lecture by
+[01:21] professing my ignorance so uh so my
+[01:24] background is very much more on the Deep
+[01:26] learning side than on the computer
+[01:28] security side um so so you're very
+[01:30] welcome to ask me any questions you want
+[01:32] about computer security because
+[01:34] fortunately Don song is sitting in the
+[01:35] front row and uh we can get EX and you
+[01:37] know many of her my group as well so we
+[01:39] can get kind of expert answers to a lot
+[01:41] of these questions even if I don't know
+[01:42] them um and um the other thing is just
+[01:46] like I I like to give career advice I
+[01:47] have a Blog where I give people uh kind
+[01:50] of defunct career advice and research
+[01:52] and um because you know it's fun um and
+[01:55] um the one thing when I look back is
+[01:57] that you know I mean your career is very
+[01:59] long right if you see like in the past
+[02:01] couple of years like things are febrile
+[02:04] you know everything's changing every
+[02:05] three months um you know it's not the
+[02:08] technologies that are on top now you
+[02:11] know they're not going to be on top in
+[02:12] five years they might not be on top in
+[02:13] five weeks uh the way things are so like
+[02:16] having kind of just like change is
+[02:19] normal um Technologies change and you
+[02:21] want to learn how to change with them
+[02:23] and um the other thing that I think I uh
+[02:26] is
+[02:26] a a theme of this talk and something
+[02:30] that uh I liked the is kind of like
+[02:33] thinking across different uh different
+[02:35] disciplines right so if you are working
+[02:37] in machine learning um if you're working
+[02:41] sometimes of Applied research or product
+[02:42] driven research or in or if you're in
+[02:45] tech building products um a lot of
+[02:48] there's going to be the kind of machine
+[02:49] learning Tech and there's also going to
+[02:50] be the problem that you're trying to
+[02:52] solve and if you if you know only the
+[02:55] machine learning part of it and you
+[02:56] don't think about oh kind of deeply
+[02:58] about what problem you're trying to see
+[03:00] you're kind of missing a trick like the
+[03:02] more you understand the kind of AI for
+[03:04] computer security the more you
+[03:06] understand about computer security or if
+[03:07] you're building a product the more you
+[03:08] understand about where your customers
+[03:09] want it'll help you to do better
+[03:11] technical work um okay so that's the end
+[03:14] of my sermon and um now I will start
+[03:16] actually talking about um kind of coding
+[03:18] agents um so there's going to be three
+[03:20] parts I'll say a little bit kind of in
+[03:21] general about kind of uh agents for code
+[03:24] like swe s Ben s agent type things
+[03:26] that'll be the first part of the talk um
+[03:28] then I'll start talking about Ai and
+[03:31] agents for computer security and then at
+[03:34] the end I'll talk a little bit about a
+[03:36] project uh that Dawn mentioned that I uh
+[03:39] I'm part of with a with a number of
+[03:40] other people to do LL agents for finding
+[03:43] security bugs and um so but I'm going to
+[03:46] start off with um uh so I'm going to
+[03:49] start off with being um maybe a little
+[03:51] bit philosophical about what llm agents
+[03:54] are since you're already partway through
+[03:55] the t uh class and you've already seen a
+[03:57] number of examples of Agents I wanted to
+[04:00] give like llm agent is a bit of a
+[04:02] buzzword so um so I wanted to give kind
+[04:04] of my perspective on kind of what that
+[04:06] buzzword means um other people would say
+[04:09] potentially different things and that's
+[04:10] okay um but this is kind of what I would
+[04:12] emphasize in terms of what seems kind of
+[04:15] fundamental um so I would say um the um
+[04:20] so kind of this slide's a little bit
+[04:22] abstract I'll talk talk start I'll start
+[04:24] talking about actual stuff in a few
+[04:27] minutes in one more slide um but but for
+[04:30] me uh if you ask me to Define what an LM
+[04:32] agent is without the kind of buzzword or
+[04:35] whatever um I would say look
+[04:38] it's a multi- turn llm with tool right
+[04:40] theal thing is kind of this react Loop
+[04:42] uh that we're going to talk about and
+[04:45] why what makes this fundamental like why
+[04:47] is this good um one is that you get
+[04:49] Dynamic computation time so the point of
+[04:53] like if you just give if you just prompt
+[04:55] an llm question answer it has to start
+[04:57] generating the answer right away and
+[04:59] it's maybe some of the earlier tokens
+[05:01] kind of commit the llm to an answer that
+[05:03] it then has to like that it doesn't want
+[05:05] to contradict whereas if you give it
+[05:08] kind of dynamic computation if you give
+[05:09] it if if the L LM can generate a thought
+[05:12] uh whether it's kind of a reasoning
+[05:13] model or whether it's just prompted that
+[05:15] gives uh more computation time uh for
+[05:18] harder uh problems the other thing which
+[05:21] we're going to talk a lot about is kind
+[05:23] of information from external tools um so
+[05:26] and that's kind of another part of the
+[05:27] point of Agents is that you can actually
+[05:30] oh I'm going to oh is that for example
+[05:31] in coding agents you actually run the
+[05:33] code see what happens and then um and
+[05:36] then write different code based on the
+[05:37] output and it turns out that's
+[05:39] incredibly powerful uh for kind of more
+[05:42] complex uh code generation tasks and
+[05:45] we'll see examples of lots of other
+[05:46] things you'd want to use external tools
+[05:48] for in a in kind of code generation
+[05:51] software engineering uh type scenarios
+[05:54] um the other thing that's maybe more
+[05:56] from the um uh um more from the kind of
+[06:01] cognitive perspective of what's
+[06:02] interesting about tool use is that tools
+[06:05] give the agent the ability to test
+[06:07] hypothesis right so the agent can like
+[06:09] in the thinking part of a loop uh say oh
+[06:12] I think that when I run this code uh on
+[06:14] this input it will break at line 13 and
+[06:17] they can actually do it see if it was
+[06:18] right and then kind of revise in later
+[06:20] turns like say something different if it
+[06:22] turns out that this hypothesis was wrong
+[06:24] and then the and I think that's
+[06:26] something we're kind of uh for some of
+[06:28] these simpler tasks you might not need
+[06:31] that level of um experimentation in the
+[06:34] agent but I think for more complex tasks
+[06:36] you will and then the final thing this
+[06:38] gives you which I think is really good
+[06:39] is like if you want the element to
+[06:40] actually do anything right then it needs
+[06:42] to uh interact with the external world
+[06:44] that's in one sense that's what a tool
+[06:45] is giving you so the um I guess um so
+[06:50] the main thing um maybe I disagree with
+[06:52] what I wrote on the slides next um like
+[06:54] uh so you could think of when people
+[06:56] talk about planning or Chain of Thought
+[06:57] you can view these as like special cases
+[06:59] of dynamic dynamic computation type
+[07:01] right these are ways to use the extra
+[07:03] computation that you get from having
+[07:05] thinking tokens uh this deemphasizes
+[07:07] multi-agent a little bit that's you know
+[07:09] maybe that'll turn out to be really
+[07:10] important to have different interacting
+[07:12] agents with different prompts but I
+[07:13] think the uh um you know uh my sense is
+[07:16] that that that's still emerging the jury
+[07:18] is still out on
+[07:19] that okay so that is um okay so that's
+[07:23] the um that's going to be the end of the
+[07:25] philosophy for now I'll intersperse
+[07:27] philosophy maybe uh in into the uh the
+[07:31] rest of the of the lecture um I'm going
+[07:33] to start by not talking about agents
+[07:35] though I guess I've already started by
+[07:36] not talking about agents I'm going to
+[07:38] continue starting the agents lecture by
+[07:40] not talking about agents and the next
+[07:42] thing that's not agents that I'm going
+[07:43] to talk about is
+[07:45] evaluation so um so the the reason that
+[07:48] I'm the reason that I'm doing that will
+[07:50] become kind of I'll talk about that in a
+[07:53] minute um so before um uh when we first
+[07:58] started to see big but I want to talk a
+[08:01] little bit first about say the
+[08:02] prehistory of evaluating uh code uh
+[08:05] generation in llms so um the when we
+[08:10] start um there um there was a big uh
+[08:14] kind of moment in I guess four years ago
+[08:16] now it doesn't feel that long but it was
+[08:19] uh when we kind of saw a step change in
+[08:21] the ability of llms to do code
+[08:23] completion and codenation tasks this was
+[08:26] about the time the open AI codex model
+[08:28] uh came out kind of the gpt3 kind of
+[08:30] iterations and at that time there were a
+[08:33] couple kind of evaluations of kind of
+[08:35] code uh generation capabilities that
+[08:37] people were doing at the time and BPP
+[08:40] that we were we did at Google and kind
+[08:42] of human eval uh from open Ai and these
+[08:44] are kind of broadly similar uh things
+[08:47] and what these are is basically natural
+[08:48] language to code so uh these would each
+[08:51] of these data sets would have you know
+[08:53] order several hundred examples where you
+[08:56] would generate a small Python program
+[08:58] maybe five or 10 lines of code and you
+[09:01] wanted to do that given like a one or
+[09:02] two sentence prompt that says uh what
+[09:05] the code is supposed to do and a series
+[09:07] of
+[09:08] assertions and um at the time this was
+[09:12] uh you know at the time that this came
+[09:13] out like um well say later um uh and
+[09:17] these were both uh kind of generated by
+[09:19] people so we uh there were kind of human
+[09:21] annotators kind of wrote the programs
+[09:24] and the uh the problem descriptions so
+[09:27] um I I don't recommend using these
+[09:29] evaluations anymore uh they're kind of
+[09:31] more like amist um but I think they're
+[09:34] they let me talk about a couple of
+[09:36] points that's why why I'm starting with
+[09:38] this um one and at the time that these
+[09:41] came out it was kind of amazing that a
+[09:42] language model could generate you know
+[09:44] an entire function of 10 lines of code
+[09:46] right uh that's not amazing anymore um
+[09:49] the um so one thing that's interesting
+[09:51] about this I'll come back to later is I
+[09:53] want to talk about uh kind of um both
+[09:56] how you would use these to do
+[09:57] evaluations and why you don't use them
+[09:58] anymore
+[09:59] so um we talk about how you use them to
+[10:02] do evaluations the um so what we would
+[10:05] do for for these data sets is we measure
+[10:07] pass at K so how often given the kind of
+[10:10] natural language prompt do we get a
+[10:13] correct answer in K samples so if you go
+[10:16] um um if I uh so if you take if you like
+[10:19] my uh fancy AI generated uh graphic
+[10:22] there if you take a prompt and get say
+[10:24] Cas samples from the model and just say
+[10:26] kind of run them all on those uh a set
+[10:28] of assertion that maybe the model the
+[10:30] model ones that model did see maybe a
+[10:32] few hidden ones the model didn't see and
+[10:34] then say okay how often does the program
+[10:36] pass those assertions and then if any of
+[10:39] them pass you get a score of one for
+[10:41] pass at k for this example um so the
+[10:44] reason I'm telling you is this is
+[10:45] there's some principles of this that
+[10:46] even though we don't use MPP human eval
+[10:49] anymore we probably shouldn't um uh
+[10:52] there's some principles of this that you
+[10:53] do want to use when you divine evals one
+[10:56] is that this requires an automated
+[10:58] correctness check to work having that it
+[11:01] if you if if it's all possible for you
+[11:03] to have that when you're defining an
+[11:04] eval you want to have that um the other
+[11:07] thing that's kind of nice about this you
+[11:09] don't see this as much in agents because
+[11:11] it's so much more expensive to run is
+[11:13] that you get to measure kind of explore
+[11:15] exploit Behavior if you can afford to do
+[11:18] a pass a k evalve right so if you had a
+[11:21] model that like always produced the
+[11:23] correct answer uh it was either always
+[11:25] right or always wrong and there was no
+[11:27] diversity in its output it's kind of
+[11:29] pass it one would be the same as pass at
+[11:31] K whereas like you know if pass at K
+[11:34] kind of goes up sharply that's telling
+[11:35] you well maybe the model's first
+[11:36] solution is always correct but it's
+[11:38] giving you more diversity that's kind of
+[11:40] interesting um the other thing to point
+[11:42] out here is kind of an interesting
+[11:43] question like does pass at K match what
+[11:46] you want when you deploy the model and
+[11:49] the answer is sometimes yes and
+[11:50] sometimes no um if you are doing code
+[11:53] completion you probably don't care as
+[11:55] much about pass it K because I'm not
+[11:58] going to show every time I hit the
+[11:59] completion button you get to see 10
+[12:01] examples and pick the one that's right
+[12:02] that's probably not so good um whereas
+[12:05] if you're doing something more agentic
+[12:07] it might be use it might be fine it
+[12:08] might be perfectly fair to say I mean it
+[12:10] is perfectly fair to say oh in
+[12:12] production I'm going to generate case
+[12:13] samples keep the ones that pass the test
+[12:16] cases and only show say a highly ranked
+[12:18] one of them uh to the user so sometimes
+[12:20] this is a um this is kind of reasonable
+[12:23] sometimes it's a good metric sometimes
+[12:24] it's not so it's always interesting to
+[12:25] think about for this particular way in
+[12:28] which I'm uh evaluating a coding tool
+[12:31] does it match uh what the way I'm
+[12:33] actually going to use it in
+[12:35] production okay this is um maybe not I
+[12:38] just putting this because I think it's
+[12:40] cool it's a little statistical aside uh
+[12:42] which you may may or may not know and
+[12:44] since like machine learning used to be
+[12:45] based on statistics uh you see less of
+[12:47] that work anymore I find it kind of
+[12:49] interesting um so um if you are um so
+[12:54] how do you want to compute like say I
+[12:55] care about P 10 right how am I going to
+[12:57] compute that um well the naive thing you
+[13:00] could do is I could say well take 100
+[13:01] samples from the model and say okay how
+[13:04] what percentage of them actually passed
+[13:06] so maybe it's 20% and then what I want
+[13:08] to know is if I take 10 samples from
+[13:10] this uh how much does it uh um um How
+[13:14] likely I'm going to get it and so you
+[13:15] could take 20% and plug it into that um
+[13:17] it turns out that's bad uh that's a
+[13:19] really noisy statistical estimate so the
+[13:22] um so it turns out it's much better to
+[13:25] say take those 10 samples and then say
+[13:27] if I take those 100 samples and say if I
+[13:29] take a Sub sub sample 10 without
+[13:32] replacement right um how um um how often
+[13:37] do I get at least one success and that's
+[13:39] uh that's the estimator that's proposed
+[13:41] in the Codex paper where they talk about
+[13:43] human evil I don't know I just think
+[13:45] that's cool okay so now let me so I've
+[13:47] gone through this at length and the
+[13:49] reason that I've gone through this is to
+[13:50] get to this slide um which is like what
+[13:52] is the design of a good evaluation for
+[13:55] coding agents or for agents in general
+[13:57] and um in 2020 I think these were
+[13:59] probably reasonable evals at the time um
+[14:02] and there were kind of three uh and the
+[14:04] reason is that they could drive model
+[14:06] development uh the reason is um the the
+[14:08] reason they could is that they were kind
+[14:09] of just hard enough um if uh so they're
+[14:12] not floor and they're not at ceiling so
+[14:14] that when you improve the base model you
+[14:16] would actually see a difference uh in
+[14:18] these numbers and then at the time they
+[14:20] kind of weren't leaked right so they
+[14:21] weren't already on the internet um now
+[14:24] uh probably not right uh kind of too
+[14:26] easy it's kind of too easy to over you
+[14:28] could over fit to the assertions uh and
+[14:30] they're certainly leaked uh so these are
+[14:32] probably more like the mnist of code
+[14:34] evals now uh but the reason I go through
+[14:36] this is when we look at other evals we
+[14:37] can ask kind of the same uh same
+[14:39] question so the um uh probably most
+[14:43] influential so far kind of so let's now
+[14:46] move to evaluations kind of used for
+[14:48] agents so the most influential um
+[14:52] evaluation has been swe bench so let me
+[14:54] kind of talk uh which I didn't maybe I
+[14:57] have the citation on a different slide
+[14:58] but it's easy easy to find um is um so
+[15:02] what sweet bench is a way of kind of
+[15:04] generate it's a data set of real world
+[15:06] coding problems that have been um
+[15:09] collected from python repositories on
+[15:11] GitHub so one example of a um uh an
+[15:16] example from the data set is here so the
+[15:18] idea is that um they would um I talk
+[15:22] about filterings on the next step so um
+[15:25] so the idea is you would have a problem
+[15:27] statement which is actually from kind of
+[15:29] the a statement from the GitHub issue
+[15:30] tracker um this is um one thing I point
+[15:33] out here is just kind of the that they
+[15:35] the issue issues will often contain kind
+[15:37] of poins to a part of the code or um
+[15:40] that uh that you want to modify and um
+[15:43] all of these um examples have uh have
+[15:47] test cases that were part of the patch
+[15:50] and there test cases for which before
+[15:52] the patch the test case fails and after
+[15:54] the Patch the test case succeeds so you
+[15:57] have um for each of these you have kind
+[15:59] of a a test case uh you have an issue
+[16:02] description you have a change to the
+[16:04] tests and um and you have a patch and so
+[16:07] the uh the goal of the uh of s bench is
+[16:10] generate the patch from the generate the
+[16:13] generate the patch from the
+[16:15] description and um these are um okay so
+[16:19] I've talked about so there's some steps
+[16:20] of filtering you do like this fail to
+[16:22] pass filtering and um also the fact that
+[16:25] you can actually install and run the
+[16:27] projects um
+[16:29] and I wanted to show um in terms of U
+[16:33] looking at the Domain so so this has
+[16:35] been um kind of very influential because
+[16:38] at the time that it was introduced it
+[16:40] was kind of at the Goldilocks level that
+[16:43] um the kind of Baseline LMS were getting
+[16:45] like two or three% um and then as soon
+[16:48] as we switched to agents we got kind of
+[16:50] non- trivial boost so this was kind of
+[16:52] introduced it's kind of an it was a
+[16:53] interesting uh subset of real world
+[16:56] tasks that was introduced just at the
+[16:58] right time where this could drive model
+[17:00] development and so it's kind of been
+[17:02] very influential and a lot of people
+[17:03] have used it um the what I would point
+[17:06] out from the things in the bottom is on
+[17:08] the left is a kind of a pie chart of
+[17:11] which 12 uh projects these came from and
+[17:13] you can see there's kind of like it's
+[17:15] kind of a small set of domains right
+[17:17] these are python packages that are kind
+[17:19] of you know mathematical data analysis
+[17:22] you know web right so there's kind of a
+[17:24] um it's not covering the full range of
+[17:27] software engineering tasks but it is
+[17:29] covering tasks that are
+[17:31] interesting and look at you know the set
+[17:34] of files edit it the set of functions
+[17:36] edit it it's kind of a big step above
+[17:38] previous evals but there's a lot again
+[17:39] that it's not
+[17:40] covering um the um so there there's also
+[17:45] and then there's also uh a kind of a
+[17:47] small so one thing that's both uh kind
+[17:49] of nice and um not nice about this is
+[17:53] that you have the issue descriptions
+[17:55] that are um uh that are coming the issue
+[17:58] descriptions are the ones coming coming
+[17:59] from GitHub um so that means that you
+[18:02] know sometimes these are Under
+[18:03] specified or uh they test cases that are
+[18:06] just somebody was uh they're Tangled
+[18:08] somebody was fixing something in the
+[18:09] code they wrote some more tests but it
+[18:11] doesn't actually test the problem so
+[18:12] there's a subset where these have been
+[18:15] um uh where these have been removed so
+[18:18] now let me pop up and say okay now let's
+[18:21] ask the same question that we asked of
+[18:22] the previous slide which is are these EV
+[18:24] vals good and um the answer is well yes
+[18:27] yes and no right so as we said this is a
+[18:30] significant Step Up in realism and it's
+[18:32] came at the right time to drive the
+[18:33] field so that's great um what's wrong
+[18:36] with it uh well there are lots of things
+[18:37] that are wrong with it that's okay there
+[18:39] are lots of things that are wrong with
+[18:40] everything um so what's wrong what's
+[18:43] wrong here is that you know you can
+[18:44] overfit to the test right um the tests
+[18:47] aren't an exact uh verifier so you can
+[18:49] produce a patch that makes the test pass
+[18:52] uh but isn't actually correct um maybe
+[18:55] even something uh worries me a little
+[18:57] bit more is the natural language is out
+[18:58] of domain
+[18:59] in the sense that if you are interacting
+[19:02] with an agent in your IDE and you want
+[19:05] to tell it to make a change you're
+[19:06] probably not going to use the same types
+[19:08] of natural language as you would in a
+[19:10] GitHub issue description right like
+[19:12] maybe you've um um diagnosed the problem
+[19:15] a little bit more if you're going to
+[19:16] share it with other people than if
+[19:17] you're just asking an AI in your IDE
+[19:20] please fix this um and there might and
+[19:22] some issues might contain things about
+[19:24] the solution right about what part of
+[19:25] the code uh the issue should be fixed
+[19:27] sometimes you know that sometimes you
+[19:28] not and so um we've talked about
+[19:32] coverage a bit already um and we've Talk
+[19:34] data leakage is um you know when this
+[19:37] data set came out a lot of people were
+[19:39] kind of worried about oh these are all
+[19:41] from GitHub uh this is in the training
+[19:43] set of all the large models uh should we
+[19:45] be worried about that and I think the
+[19:47] answer is when systems are getting 2% on
+[19:49] sweet bench no we should not be worried
+[19:51] about that uh when systems are getting
+[19:52] you know 50% we probably should um and
+[19:55] then the other thing whenever you do
+[19:57] these kinds of historical data sets
+[19:59] uh I think something that people um uh
+[20:01] often don't realize is these commits are
+[20:03] Tangled uh it's kind of often the case
+[20:05] and there on open source repositories
+[20:07] that um a commit will not just fix the
+[20:11] one issue that it claims to fix but
+[20:12] it'll do some other things like maybe it
+[20:14] fixes another issue maybe it does some
+[20:16] other cleanup right so that kind of
+[20:17] affects the quality of of it certainly
+[20:20] affects the test cases but it also
+[20:22] affects like if you were going to do
+[20:23] supervised fine tuning on patches uh
+[20:25] that might not be uh might not be such
+[20:28] there's problems with
+[20:29] that okay so um the reason I'm going
+[20:33] through this at such length is that I
+[20:36] think in large part the quality of
+[20:40] either the base llm or the agent that
+[20:42] you develop is going to be driven by the
+[20:44] quality of the evaluation and um the
+[20:46] reason for this is um I don't know
+[20:49] sometimes I like making analogies to
+[20:51] statistical machine learning methods um
+[20:53] any kind of organization that builds
+[20:56] either llms or LM applications it's just
+[20:58] doing uh giant combinatorial
+[21:00] optimization right so you have you have
+[21:03] a design space you have a bunch of knobs
+[21:05] like uh we'll talk about the knobs for
+[21:06] agents in a minute um is um and you are
+[21:11] um um and you say okay what if I said
+[21:13] what if I set this knob this way what if
+[21:15] I add this tool what if I change the
+[21:16] system instruction this way what if I
+[21:18] clean up um you know this part of the
+[21:20] post training mixture and then you try
+[21:22] it and you see how the numbers change so
+[21:24] if your um if your numbers aren't good
+[21:26] you're hill climbing on the wrong thing
+[21:28] and I think that has a direct impact on
+[21:30] how whether the the quality of your
+[21:32] evaluations has a direct impact on the
+[21:35] final system whether it does what you
+[21:37] want um and so the things you want to
+[21:39] think about are like you know some
+[21:41] obvious like uh I think the main one the
+[21:43] level of difficulty you have to be in
+[21:45] The Sweet Spot also you want things that
+[21:46] are realistic that test what you care
+[21:48] about and that aren't leaked to be
+[21:51] leaked um and the other thing like all
+[21:54] evaluations have a shelf life right like
+[21:56] once they start out you're kind of they
+[21:58] start out like with say mbpp human eval
+[22:01] they start out being kind of hard and
+[22:02] unleaked and then like a couple years
+[22:04] later they're easy and leaked so it's
+[22:06] just like you have to keep making new
+[22:07] ones
+[22:09] continuously okay so um I uh hopefully
+[22:13] I've spent enough time um so I'm kind of
+[22:16] going into kind of you know technically
+[22:17] simple stuff at length um but I think it
+[22:20] is important to actually building these
+[22:21] things um so now I can actually kind of
+[22:24] talk about a code agent um which is um
+[22:28] um kind of a good good thing to do in
+[22:29] electure EN coding
+[22:31] agents and um you know one that I
+[22:35] thought was kind of kind of a particular
+[22:36] Milestone was um s agent so this was
+[22:41] kind of one of the early ones that was
+[22:43] kind of specifically designed for sweet
+[22:45] bench style tasks um in some sense um in
+[22:51] some sense this talk is going to be very
+[22:53] repetitive um because I think that we're
+[22:56] all working with the same set of three
+[22:57] or four it is right in the kind of the
+[23:00] base models or in the kind of you know
+[23:03] application layer on top of it which an
+[23:05] agent is an example of this like crank
+[23:08] and there's a certain thing like if you
+[23:10] want to do an agent for I don't know um
+[23:12] you know fixing AV issues vers as an
+[23:14] agent for kind of making patches to
+[23:17] repositories it's going to be a lot of
+[23:18] the same types of engineering that you
+[23:20] do first thing you're going to do is
+[23:21] Define find an eval the second thing
+[23:23] you're going to do is kind of create
+[23:24] something that looks like sweet agent um
+[23:27] so what um Su agent is it combines like
+[23:30] a bunch of different things that uh kind
+[23:32] of you know people had all done kind of
+[23:34] before but it's kind of a powerful
+[23:36] combination um so uh one is that it's
+[23:39] going to give you um that we're we're
+[23:42] going to instruct the model in such a
+[23:43] way that it does kind of Chain of
+[23:44] Thought in the sense that it explains uh
+[23:46] what it's going to do uh before it does
+[23:48] it uh there's going to be a set of tools
+[23:50] that are specific software develop and
+[23:53] the agent is going to get execution
+[23:54] feedback uh so that way like I've said
+[23:57] before if uh if you have if you um you
+[24:01] can get information about uh what
+[24:03] happens so the the main Loop um which is
+[24:07] um is going to be kind of what I call
+[24:09] the react Loop and I put those emoji on
+[24:12] there for a reason uh react loop from
+[24:14] from the rack paper a couple years ago
+[24:16] oh because I I think this kind of loop
+[24:17] is a kind of at the heart of what it was
+[24:19] saying about agents of kind of this idea
+[24:22] of kind of uh uh Chain of Thought Plus
+[24:24] tool use so um all you're doing is
+[24:27] basically it's basically like a very
+[24:29] simple um Loop where you say you at
+[24:32] every point you have a what we call a
+[24:34] trajectory right some text that the LM
+[24:36] has generated so far at every step we
+[24:38] ask the LM to generate more text um and
+[24:41] then that text will end in a tool call
+[24:43] um in whatever format that you like and
+[24:46] then you get the tool call you actually
+[24:48] run it um every tool is basically to a
+[24:51] first approximation a python function
+[24:53] that outputs more text like I'm not
+[24:55] going to talk about multimodal agents
+[24:56] because we don't really need them for
+[24:58] there's been less work on multimol
+[25:00] agents for code so far um um and then
+[25:04] whatever the output is you just have
+[25:05] pend it to trajectory and then you
+[25:07] repeat right and that's that's that's it
+[25:10] um so the um and this this kind of loop
+[25:14] we'll talk about alternatives to this
+[25:16] kind of control flow as well but that
+[25:18] Loop alone is kind of very powerful to
+[25:20] the heart of a lot of what these things
+[25:21] are doing and um in principle the llm
+[25:24] can generate whatever text that it wants
+[25:27] right we would hope that it it's
+[25:28] something that actually helps it decide
+[25:30] what tool call to use and so we instruct
+[25:33] it you know it's a system instruction in
+[25:35] the beginning uh I guess I I should have
+[25:36] initialized this with what we call like
+[25:38] a system instruction and that's going to
+[25:40] tell you that says it please explain
+[25:42] what you're doing and so then it
+[25:44] will so the one of the main design
+[25:47] decisions here is like well what tools
+[25:48] do you want to use um one option uh that
+[25:51] you could imagine is okay we'll just
+[25:53] give the agent access to a Linux shell
+[25:55] and an
+[25:56] IDE then a person can do
+[25:58] on that on that machine it can write
+[26:00] whatever code it wants um this seems I'm
+[26:03] not saying this will be true forever uh
+[26:05] right now this still feels a little bit
+[26:07] futuristic right um you know two weeks
+[26:10] from now who knows right but um there
+[26:13] and this is kind of another theme uh
+[26:15] when we talk about the design of Agents
+[26:17] maybe this is one of the things I forgot
+[26:18] to write on the slides um is that the
+[26:22] design of the agent harness and the
+[26:24] tools you have to co-design it with
+[26:26] whatever the model can do
+[26:28] right so when you're doing if you're
+[26:30] doing prompt optimization to try to
+[26:32] decide okay how do I summarize the
+[26:34] output of this tool well probably the
+[26:35] way you're doing it is you're adapting
+[26:37] either knowingly or if you're part of
+[26:39] the uh or unknowingly you're adapting to
+[26:41] whatever the model is seen in
+[26:43] posttraining data right because the more
+[26:45] the closer um like you want whatever
+[26:48] format to use to be things the model's
+[26:50] familiar with so where we are now is
+[26:53] like okay maybe right now option one is
+[26:55] a bit ambitious um the so let's do
+[26:59] something different let's make things
+[27:00] easier for the model so what we'll do is
+[27:03] we'll say We'll design tools in such a
+[27:04] way that there's going to be a small
+[27:06] number of them that are kind of spec
+[27:08] that are kind of good for this task and
+[27:10] they'll have out inputs and outputs that
+[27:11] are friendly to the agent and um there's
+[27:15] kind of a really uh catchy term they use
+[27:17] in the S agent paper it's like an agent
+[27:19] computer interface instead of a user
+[27:21] interface uh so instead of HCI there
+[27:23] could be a science of ACI um that might
+[27:25] be going a bit far but there are design
+[27:27] principles here so um so what are they
+[27:30] doing Inu agent uh oh okay yeah before I
+[27:33] get to that um what so like I said a
+[27:35] tool is just a python function or or a
+[27:38] code uh that the agent can call and to
+[27:41] get a string from the context um what do
+[27:43] you want um what do you want these
+[27:46] things to do is um when you're thinking
+[27:48] about them well they should be easy to
+[27:50] describe to the agent right so um the um
+[27:54] you don't want to like make up technical
+[27:56] terms right that uh like if you're
+[27:58] writing when you're designing a piece of
+[27:59] software you you can invent
+[28:02] vocabulary right um different objects in
+[28:05] the thing here like you want like the
+[28:07] closer um you um I've heard this I think
+[28:11] the some of the the guys uh I think I
+[28:14] heard this from um some of the people
+[28:15] who um um developed co-pilot is uh so
+[28:18] there's a lot in the initial probably
+[28:20] still but certainly the initial version
+[28:22] of co-pilot there's some really clever
+[28:24] prompt engineering uh to make things
+[28:25] work with the LM of that time I'm sure
+[28:27] there still is and um one thing they
+[28:29] talked about they call it like the
+[28:30] Little Red Riding Hood principle right
+[28:32] that when you're doing prompt
+[28:33] engineering you want the you want to
+[28:35] kind of lead the model down familiar
+[28:38] path from post training data and um I
+[28:41] think that's uh I think that's true here
+[28:43] as well that you want kind of uh to be
+[28:45] able to describe what the tool does in a
+[28:46] way that the agent will have understood
+[28:48] that like there are plenty of web pages
+[28:51] that talk about um Co talk about goat
+[28:54] jump to this line of code right so
+[28:56] that's something that's natural the
+[28:58] other thing is you want the the agent
+[29:00] you want the actions to be compact right
+[29:03] like you don't want something where the
+[29:05] agent has to call four or five tools to
+[29:07] do one logical thing um the other thing
+[29:11] is you you design the output of the
+[29:13] tools right so you might say you know it
+[29:16] might make a difference oh how do you
+[29:18] handle trailing new lines in the output
+[29:20] of some tool or if the output if if
+[29:22] you're doing a code browser tool and
+[29:24] there are many many um results like how
+[29:26] do you summarize that like there's
+[29:27] different those different options and um
+[29:31] and the other thing you want to think
+[29:32] about is a guard rails is like State uh
+[29:35] so like if you're talking about code
+[29:37] editing right then um you know you could
+[29:40] imagine something where it say the agent
+[29:43] adds it the first thing the agent does
+[29:44] is add a stupid syntax error to some
+[29:46] file and it doesn't realize it and so
+[29:49] then the rest of the trajectory the
+[29:50] agent is just messed up because no
+[29:51] matter what it does it it hasn't fixed a
+[29:54] syntax error right so you want to kind
+[29:56] of try to to have some error checking to
+[29:59] avoid uh especially for like stateful
+[30:01] tools like code editing uh getting the
+[30:03] agent into a state bad State that's easy
+[30:05] to get out
+[30:06] of okay so um so what what tools do they
+[30:10] have in umu agent one is well they I
+[30:12] think they did they did have a Linux
+[30:14] shell but that's uh um uh maybe
+[30:17] sometimes useful but not so useful uh
+[30:19] but um but often like uh these tools are
+[30:21] helpful um I would say there's like
+[30:23] three types of tools you could think
+[30:25] about um in kind of AG in this style
+[30:28] agent um one would be kind of
+[30:30] information gathering so um that doesn't
+[30:33] doesn't help the agent solve the it
+[30:35] gathers information right so um in the
+[30:37] case of um um in the case of code these
+[30:41] would be um uh kind of doing code search
+[30:44] and uh kind of viewing code files um so
+[30:48] you can um so this would be and so you
+[30:51] see some of the design like uh like this
+[30:53] would be things like oh find this term
+[30:55] in this file find this term in any file
+[30:58] in this directory um you notice that
+[31:00] it's kind of a nice shortcut right you
+[31:01] could imagine having just doing LS in
+[31:03] the Linux shell and then doing uh then
+[31:05] the agent could do search file in any of
+[31:07] these uh that seems cumbersome right um
+[31:11] and then you know how do you deal with
+[31:13] files that are too long for context here
+[31:15] what you could do is call the open F
+[31:16] open to see part of a file and then have
+[31:18] a specific kind of scroll
+[31:20] commands um the um so the second kind of
+[31:23] thing you do is acting right which is
+[31:25] just in this case you know make edits or
+[31:27] create new files and then you can get
+[31:29] feedback by saying okay I'm done please
+[31:31] submit this
+[31:32] patch so and I think in general if you
+[31:34] want more complex tools I think most
+[31:37] tools will kind of fit in uh to some
+[31:40] kind of to to fit into this um you know
+[31:43] there are guard rails here that like you
+[31:44] know if you make a dumb edit that kind
+[31:47] of tax error lender error it just gets
+[31:49] rolled back for you uh so then you can
+[31:51] do there things like
+[31:52] this so I mean give you a sense of kind
+[31:55] of what the I couldn't f a full I will
+[31:59] show some trajectories throughout this I
+[32:01] couldn't fit a full s agent trajectory
+[32:03] um on here um the um but here's kind of
+[32:07] an example of the kind of explanations
+[32:09] you might get right that you say okay oh
+[32:12] now I know what to do we need to add a
+[32:13] check to ensure that all of these things
+[32:15] are the same let's edit the code and so
+[32:17] it says oh replace these lines of code
+[32:18] with this um the um or if you want to do
+[32:23] like a kind of file search you might
+[32:25] perhaps you want to uh uh you know you
+[32:28] might like elad the lines you might
+[32:29] provide line numbers like these are kind
+[32:31] of like you need the line numers so you
+[32:33] can use them in a in a subsequent
+[32:35] command um so you can design the tools
+[32:37] to kind of fit together in this way um
+[32:39] typically what you will see uh for for
+[32:42] this agent you would typically see um um
+[32:47] the um the tools are called in the order
+[32:49] that you would expect like if there's
+[32:51] some identifiers used in the issue
+[32:53] description then um the agent can call
+[32:56] the code browser tools to to find uh
+[32:58] kind of code that's relevant to it at
+[33:00] some point one of these thoughts will
+[33:02] say oh let me make this change and you
+[33:04] see edits and then you might see like
+[33:06] kind of multiple edits and then a
+[33:08] submit um but the agent isn't restricted
+[33:10] to do that right this is just the it has
+[33:13] far has the model is concerned there is
+[33:15] just a string and the model is
+[33:17] continually appending to the
+[33:19] string um so okay so let me say I'll say
+[33:23] a little bit about the results and the
+[33:24] sweet bench data so the first thing is I
+[33:27] did kind of set it up and say well sweet
+[33:29] bench was really hard uh when it came
+[33:31] out and so if you look at you know
+[33:33] whatever the uh state-of-the-art llms at
+[33:36] that time and say what percentage of the
+[33:38] I think couple thousand issues in sbench
+[33:41] were resolved by the model it's like one
+[33:42] or three% and um I can do tell a kind of
+[33:46] fun I don't know if it's fun for me I
+[33:47] don't know if it's fun for you a story
+[33:50] there which is that when s bench first
+[33:54] came out um you know I I thought it was
+[33:57] kind of thought it was a pointless
+[33:58] evaluation um because it was just too
+[34:00] hard right like how do you he'll climb
+[34:02] on a Model when you're getting one or
+[34:03] three% um so it turns out I was wrong
+[34:07] and um the reason that I was wrong about
+[34:08] that is because it turn because agents
+[34:10] are actually really good um so like when
+[34:13] you put an agent loop on top of the bace
+[34:14] models you go from like 1% to 12% right
+[34:17] and I think now um uh now the state
+[34:20] of-the-art in full sweep inch is is
+[34:22] quite a bit higher than that um so it
+[34:25] was um so this so it's like the fact
+[34:28] agents came out sbench came out as part
+[34:30] of the reason they they the kind of part
+[34:31] of the Cod development uh that happened
+[34:34] um the um the one thing to point out is
+[34:38] um you might uh one thing I can kind of
+[34:41] experimentally criticize here although I
+[34:43] think the this a good paper the results
+[34:44] are good um is the um you know an agent
+[34:49] is going to have to generate more tokens
+[34:51] right to get this kind of same level of
+[34:53] performance uh so you see that uh as
+[34:55] represented uh the dollar average cost
+[34:58] uh per successful trajectory in the
+[35:00] second column the um so the fact you
+[35:03] know you would like to know uh you would
+[35:06] like to see computation normalized
+[35:07] results um like it would be interesting
+[35:09] like if I ran 10 times as much do I
+[35:12] expect to If I Ran 10 times as many um
+[35:15] if I generate the same number of tokens
+[35:16] on average from both you know here I
+[35:18] think like you know a agents work it's
+[35:20] fine but I think when you're comparing
+[35:22] other changes to the agent um you might
+[35:25] say well there might be some changes to
+[35:26] the agent that look really good but it
+[35:29] turns out what you're doing is getting
+[35:30] higher um is getting um like maybe you
+[35:34] add I don't know some kind of grep tool
+[35:36] that puts lots of tokens in the
+[35:37] environment and if it helps that's great
+[35:40] but it might be that oh it's helping
+[35:42] because it's adding more tokens to the
+[35:43] average trajectory and if you didn't
+[35:45] have the tool and just generated more
+[35:47] trajectories you could get the same the
+[35:50] same point on the kind of cost uh
+[35:53] performance curve so it's something you
+[35:55] know you want to think about that when
+[35:56] you're running these comp comparisons um
+[36:00] there was something that I wanted to say
+[36:02] about the shell only agent which I don't
+[36:05] remember oh well okay uh maybe we'll
+[36:07] come back later um okay so that's um so
+[36:11] that's uh so that's kind of maybe the
+[36:13] kind of the first kind of uh very
+[36:15] Dynamic react style agent so now I want
+[36:18] to talk about a different kind of agent
+[36:21] design and um that's kind of The Other
+[36:25] Extreme uh which is called Agent less um
+[36:28] you know it's kind of like yeah you um
+[36:29] so so this was kind of like in terms of
+[36:32] like where does this is the Other
+[36:33] Extreme in terms of how much control
+[36:36] flow do you handr write so the I so what
+[36:39] we've talked about is kind of dynamic
+[36:40] where the control flow is I'm appending
+[36:42] to a string everything else the llm
+[36:44] decides um the llm could in principle
+[36:46] Implement whatever algorithm it wants on
+[36:48] top of on top of these tools um The
+[36:51] Other Extreme is just procedural so um
+[36:54] basically I will write some say python
+[36:57] code that does something natural for uh
+[37:01] solving program repair tasks and um
+[37:04] every time where it's kind of like where
+[37:06] I might say oh okay so first I'm going
+[37:09] to iterate through every file in the
+[37:12] project and then I'm going
+[37:15] to uh whether that file is relevant to
+[37:18] the um uh to the issue description or
+[37:20] whatever and so whenever you get to
+[37:22] point in the algorithm where you need to
+[37:23] say quote unquote magic happens you call
+[37:26] the LOL and so so this basically like
+[37:29] you have code you have the Logics and
+[37:31] code but then you're asking the Alm to
+[37:33] make the U to to make certain decisions
+[37:35] in the middle of the control flow so
+[37:37] that's basically what a agent list is
+[37:38] doing so um so there's kind of three I
+[37:43] say hardcoded I don't mean that in a
+[37:45] pejorative way uh kind of three steps
+[37:47] one is like you know figure out what you
+[37:49] want to edit uh then generate a patch
+[37:51] and then validate St the patch and um I
+[37:55] will give you a colorful diagram that
+[37:56] says the same thing
+[37:58] um um so um so what you're going to do
+[38:01] is you'll have uh uh is that you'll have
+[38:03] this workflow where at various points
+[38:05] you call an llm uh so you'll start by
+[38:07] saying okay you have some codebase you
+[38:09] textify the structure of the repository
+[38:12] you prompt the model to say oh which
+[38:13] file should I look at um so then you get
+[38:17] the model will give you a list of kind
+[38:19] of topend files and then each of those
+[38:22] you could say okay here is a um here is
+[38:25] a skeleton of the kind of methods and
+[38:29] classes within each of those files then
+[38:31] you call the LM again to say oh where
+[38:33] does it look like I should edit and then
+[38:35] you can do that one more time to get a
+[38:37] set of lines uh that you might want to
+[38:38] edit so at each one you're kind so at
+[38:41] every point you have kind of a an nbest
+[38:43] list of potential things that you might
+[38:45] want to edit and then you go through and
+[38:47] say okay now for each one of these let
+[38:49] me independently give this to an LM and
+[38:51] say hey um here's a description of the
+[38:53] issue generate a patch and then what you
+[38:55] can do is and then once you you have
+[38:57] that you apply the pat a let me see
+[39:00] which one's pissed now one thing that's
+[39:03] kind of important about s agent is you
+[39:05] don't know what the test cases are right
+[39:07] so um the agent itself um has to come up
+[39:11] with its own test that hopefully
+[39:12] describe the issue all the agent has is
+[39:14] it has the previous tests which might
+[39:16] not which probably don't test the the
+[39:18] bug it's trying to fix because if they
+[39:20] did the test would fail and the bug
+[39:21] wouldn't be there um so the um so the
+[39:25] agent's GNA have to generate gonna have
+[39:27] to propos its own tests and then run the
+[39:29] test in the proposed patches and so that
+[39:31] gives you a
+[39:33] um um so that gives you a a set of
+[39:37] patches that are kind of plausible that
+[39:39] in in the sense it's a technical term if
+[39:41] means that they pass the agent generated
+[39:43] test case and um the um and then we kind
+[39:47] of rank them and then one of them we
+[39:48] submit so
+[39:50] the um okay so there's a very big table
+[39:55] so um at them that uh um I'm not going
+[39:58] to read the entire table to you this is
+[40:01] a subset of the sweet bench leaderboard
+[40:03] uh at the time that the paper came out
+[40:05] um the order is now changed um um
+[40:08] changed but at the time that this came
+[40:10] out uh this was and this was one of the
+[40:13] best open source uh agents and it it
+[40:15] still is the the the order is slightly
+[40:17] different but it's still kind of near
+[40:18] near the top um the um so what I want to
+[40:23] um so the thing I want to take away from
+[40:26] this
+[40:29] is what are the advantages and
+[40:30] disadvantages of different agent designs
+[40:32] um so under one on the more Dynamic s
+[40:35] agent type approach the llm gets to
+[40:37] choose what problem solving strategy
+[40:39] it's using so you know if the llm if um
+[40:44] if the if the model produces a patch
+[40:46] that's nearly right and then there is a
+[40:49] whatever one of the tests fail then the
+[40:52] model then you can extend that
+[40:53] trajectory the model can decide oh do I
+[40:55] need to do some more code search in
+[40:57] order to figure out oh that this thing
+[40:59] has failed why I wasn't able to get the
+[41:01] the patch right or maybe I just want to
+[41:03] make a a small change to the patch
+[41:05] that's going to make it correct right
+[41:07] the model has this um um has the
+[41:09] flexibility to decide what strategy it's
+[41:12] going to do um whereas for for whereas
+[41:14] on the other side for the more
+[41:15] procedural one um if you have a case
+[41:18] where you know the problem can be solved
+[41:20] uh with the simple workflow then why
+[41:23] make the llm figure out what the
+[41:24] workflow is right and uh
+[41:27] the let the let the model spend more
+[41:29] time actually trying to solve the
+[41:30] problem and you kind of avoid tool use
+[41:33] errors because the tool use is happening
+[41:34] on top of the LM rather than within the
+[41:36] llm and you know you can avoid things
+[41:39] where the llm makes some initial mistake
+[41:40] and then the whole trajectory uh goes
+[41:42] off the
+[41:43] rails so the um um what was it I missed
+[41:48] one thing there okay yeah um so of these
+[41:52] come down to how do you want to budget
+[41:56] the set of comput amount of compute that
+[41:58] you have at test time like if you
+[41:59] imagine that I have one kind of partial
+[42:02] patch where it's failed is it a better
+[42:04] idea to kind of extend that trajectory
+[42:06] and try to fix that patch or is it a
+[42:08] better idea to throw it away and
+[42:09] generate a new one right um agent list
+[42:11] is more going to be like generating test
+[42:13] whereas um um where Dynamic could choose
+[42:17] um and the second part of this is that
+[42:21] um this may be a case where the kind of
+[42:24] winner between the the two of these
+[42:27] depends on what type of um um what's the
+[42:32] word um depends on what type of problem
+[42:34] you're considering right so for simpler
+[42:36] Pro for simpler smaller patches
+[42:38] generating text test might be better uh
+[42:40] kind of I'm speculating here but the um
+[42:44] um perhaps for longer more complex
+[42:46] changes we will start to see as we move
+[42:48] to that we will start to see more
+[42:50] advantages to having more flexibility in
+[42:52] the problem solving sty um so that's the
+[42:56] so you think there's kind of Continuum
+[42:57] in terms of we we've actually talked
+[42:59] about three different coding agents so
+[43:01] far uh one which I didn't talk much
+[43:03] about was just give the agent a Linux
+[43:04] prompt uh so that's kind of all there's
+[43:06] almost all the controllers in the model
+[43:08] then or you could do something like s
+[43:09] agent or agent list and there's kind of
+[43:10] a Continuum here and um it may be that
+[43:13] has the base model capability changes
+[43:16] has the um amount of um um and has the
+[43:22] complexity of the task changes the
+[43:24] design Point here uh that you do might
+[43:26] want to change
+[43:28] okay so there are I think three more uh
+[43:31] kind of coding agents I wanted to talk
+[43:33] about um but these kind of go faster and
+[43:36] faster because they are kind of more
+[43:38] similar to each other um so um another
+[43:42] one of the kind of highest performing o
+[43:44] Open Source agents right now is this one
+[43:46] uh auto code Rover uh which is from um
+[43:50] this um um university of Singapore um
+[43:54] there's a it's I think the last time
+[43:57] checked I think it was open hands was
+[43:58] the biggest um um um was the highest
+[44:03] highest on the sweep bench leaderboard
+[44:05] that might have changed um but I think
+[44:07] there's a lecture from last semester on
+[44:08] that so I won't go into it um so for
+[44:12] autoc code Rover the two things I wanted
+[44:14] to talk about here are the first one is
+[44:17] that it has a different set of search
+[44:18] tools so it's um that um rather than
+[44:22] being oh let me find this string in a
+[44:24] set of files um it's actually indexing
+[44:27] the um the a the methods and classes in
+[44:32] the files in the same way that an ID
+[44:34] would so you can have the the search
+[44:36] tools are things like you know find a
+[44:39] class with this name find a method with
+[44:41] this name in this class CL so that kind
+[44:43] of changes the type of code browsing
+[44:45] Behavior you see it can do kind of more
+[44:47] explicit command click um I also wanted
+[44:49] to talk about the um um uh the the kind
+[44:54] of control uh uh loop here which is that
+[44:59] it's sort of a concatenation of dynamic
+[45:02] agents so there's kind of there two
+[45:05] phases to this one is kind of try to
+[45:08] collect uh kind of uh kind of
+[45:10] information gathering try to do Code
+[45:12] retrieval and then the second part of it
+[45:14] is actually generate the patch and each
+[45:17] one of these a separate trajectory with
+[45:19] a different system instruction kind of
+[45:20] different set of tools and um then you
+[45:24] um and then you run them one the other
+[45:27] so it is kind of like a kind of a it's
+[45:29] kind of a an in between point between
+[45:32] agent list and S agent with kind of some
+[45:34] procedural control uh some that's more
+[45:36] Dynamic and um and the other thing that
+[45:39] you get from having these two um agent
+[45:41] Loops is kind of information hiding like
+[45:44] if there were particular if in like one
+[45:46] and for code search this probably
+[45:47] doesn't matter so much but there might
+[45:49] be other other types of Agents you
+[45:50] design where you care about this um
+[45:53] which is that if you have a uh you might
+[45:57] want one of these kind of agent Loops to
+[45:59] come up with an answer and then you want
+[46:01] to throw away the intermediate reasoning
+[46:03] just get the answer that it came up with
+[46:04] and give that to another agent that's
+[46:06] something you could because you're
+[46:08] worried that if you keep irrelevant
+[46:09] things in the context it will confuse
+[46:12] things um so let me um then the I think
+[46:16] I have two so I oh I didn't want okay
+[46:19] that's fine um so the other no I'm going
+[46:22] to do things out of order um the one I
+[46:24] will come back to those don't um so you
+[46:26] can can take this um you could take this
+[46:29] kind of procedural control to another
+[46:33] extreme to filtering you can have a
+[46:35] state machine so this uh so repair agent
+[46:38] is another uh kind of recent one where
+[46:42] um the it's you know it's a similar the
+[46:46] way it so this is these are four kind of
+[46:47] program repair tasks a different data
+[46:49] set it's not sweep bench but that's not
+[46:51] so important the kind of main thing is
+[46:54] for doing program fixing is the design
+[46:57] of the agent is given by the state
+[46:58] machine so where you know we kind of
+[47:00] design the what are the steps that we
+[47:03] think you do when you investigate and
+[47:04] repair a bug um each state is you know
+[47:08] has a a kind of specific system
+[47:10] instruction that says please try to do
+[47:12] please try to understand the bug if
+[47:14] you're in this
+[47:15] state and um depending on which tool the
+[47:18] model does next uh at the end so this
+[47:21] and then the model's then given the
+[47:23] system instruction the model is going to
+[47:24] do some thinking output a tool call
+[47:26] depending on which tool call is um um is
+[47:29] chosen you move to a different state of
+[47:30] the state machine so if you're currently
+[47:32] in the collect information State then um
+[47:35] when you do a code search you stay in
+[47:37] that state and you can do more code
+[47:38] searching if you call the kind of a
+[47:41] right fix that's a tool that moves you
+[47:42] into a different state and changes your
+[47:44] system instruction so that's kind of a
+[47:46] different way to get Dynamic control
+[47:47] with more information
+[47:49] hiding okay so the the final thing I
+[47:53] wanted to talk about which is you know
+[47:55] try uh uh there is although there are um
+[47:59] so what I've been talking about are more
+[48:00] kind of uh kind of academic agents there
+[48:03] although there are a lot of industrial
+[48:05] coding agents there's less technical
+[48:07] detail about them so this is one of the
+[48:10] of the ones that I know that's kind of
+[48:12] like a research agent moving towards uh
+[48:14] being used in industry so this is a kind
+[48:17] of a research agent at Google called
+[48:19] pasarin and uh these are kind of several
+[48:22] of so I'm not involved in this work uh
+[48:24] several of my friends in the kind of uh
+[48:27] developer tools org uh built this and um
+[48:30] so this is an agent that is designed to
+[48:33] solve kind of internal kind of coding
+[48:36] issues that Google developers have and
+[48:38] um the uh what makes the Google code
+[48:42] base kind of different and it's is that
+[48:45] um everything is in a monor repo um so
+[48:48] this thing is rather gigantic and
+[48:50] therefore we have kind of special the
+[48:52] build system is to take into effect
+[48:54] account the fact that there's a monor
+[48:55] repo that's so big that we can't kind of
+[48:57] store all of Google's code on our
+[48:58] laptops for example um so um so there
+[49:03] was I've talked I've talked about agents
+[49:05] so the first thing you have to do is
+[49:06] kind of make an evaluation if you want
+[49:07] to have this kind of thing so what uh
+[49:10] what they did is there's kind of a a
+[49:11] sweep bench like Loop where instead of
+[49:13] using GitHub uh uh pull requests uh we
+[49:18] use kind of internal bugs and fixes from
+[49:21] our issue tracker system so we'll take
+[49:23] cases where there are bugs that were
+[49:25] fixed and kind of some heris that these
+[49:27] are kind of reasonable things that we
+[49:29] want to use for an agent like uh like
+[49:32] there's a change in test in tests and
+[49:34] the um the kind of size of the patch and
+[49:36] so on and then we do a list of filtering
+[49:38] to have kind of a curated uh test set
+[49:40] both of two different kinds of bugs one
+[49:43] is um ones where the bug report was
+[49:46] written by a person um uh but it had a
+[49:49] kind of a small enough patch size and so
+[49:51] on and the other one is kind of
+[49:52] automatically generated bugs so these
+[49:54] are things that I'm going to talk about
+[49:56] this a bit more in the computer security
+[49:58] part of the lecture is that um the um
+[50:04] that when when for when we're doing
+[50:06] testing of Google code sometimes we will
+[50:09] run sanitizers so these are kind of
+[50:12] dynamic analyzers that kind of sit
+[50:14] underneath the code that's running and
+[50:15] check that certain bad things aren't
+[50:17] happening so one bad thing that could
+[50:18] happen is a buffer overflow so there's a
+[50:20] particular sanitizer called a dress
+[50:22] sanitizer um which you can use it well
+[50:25] at you can use at home as well um where
+[50:27] you know it it tries to detect at
+[50:29] runtime whether your executable is
+[50:32] reading or writing out of bounds and if
+[50:33] it does it causes a crash so you know
+[50:36] internally when these kinds of bugs
+[50:37] happen the um it creates automatically
+[50:40] report in RSU tracking system so we have
+[50:43] a number of reports like this and um so
+[50:47] they so this this this research agent is
+[50:49] kind of react style Dynamic agent like
+[50:51] swe bench uh s agent the um the
+[50:54] difference is the tools are actually our
+[50:56] Google development tools so the there's
+[50:59] an API to kind of Google code search our
+[51:01] build system which is called Basel and
+[51:04] is kind of um and um and you can kind of
+[51:07] view and edit
+[51:08] files so um so that is uh so that's kind
+[51:12] of that's kind of pass R and one thing I
+[51:15] wanted to point out since I've talked
+[51:16] about evals is what are the differences
+[51:19] between this curated um evaluation set
+[51:23] and um you know sayu uh s bench so um
+[51:27] these top three plots are kind of uh
+[51:30] different um um they are cumulative
+[51:34] distribution functions of different
+[51:36] statistics of sweet bench versus the our
+[51:39] internal evaluation for Pine and the um
+[51:43] so sweet bench is the blue one and then
+[51:46] the other two are kind of the machine or
+[51:47] human subset so generally what it is
+[51:51] especially the so this one is like how
+[51:54] many identifiers are in the patch how
+[51:56] many files how many lines and so for
+[51:59] example the um the especially the human
+[52:02] Patches from this uh from this data set
+[52:06] kind of are larger affect more files
+[52:08] kind of have more identifiers than the
+[52:11] um what we see on swe bench um sweet
+[52:13] bench is more similar to these kind of
+[52:17] sanitizer
+[52:18] reports um so the um uh and then you
+[52:23] know there's uh there's also uh maybe I
+[52:25] won't get into
+[52:27] so reports about The you can look into
+[52:30] how this agent
+[52:31] performs okay so um so that is um so
+[52:35] that's going to be so this is maybe a
+[52:37] good place to um um to stop for the
+[52:41] coding agents part of it so I'll get
+[52:43] into AI for security next uh but the the
+[52:47] main thing to so I've talked about how
+[52:49] agents uh Drive um um uh the design of
+[52:53] these systems evaluations Drive the
+[52:55] design of these systems um the other
+[52:57] thing is like we're it's so all of these
+[52:59] are kind of more similar than they are
+[53:00] different I think we're all working on
+[53:02] the same three ideas uh right now so the
+[53:06] um and the other thing about these is um
+[53:10] the ideas I mean I don't mean this
+[53:12] disparagingly the ideas behind all of
+[53:14] these agents are are fairly simple it's
+[53:16] just the design space is large so
+[53:18] there's kind of a large set of hill
+[53:20] climbing uh that you do when you have
+[53:22] this so we talk about so what is the
+[53:25] design space so one is okay tools do you
+[53:29] want we've kind of we've talked seen
+[53:30] different examples of that how do you
+[53:32] handle control flow is it Dynamic is
+[53:34] there a state machine uh do you kind of
+[53:37] recursively call an agent within a lower
+[53:38] level agent like you know whatever right
+[53:40] do you just write the control flow and
+[53:41] code um and then there is kind of the
+[53:44] design of the text like what do you
+[53:45] write in the system instruction um you
+[53:48] can do kind of the general things you do
+[53:49] for prompt tuning you can tell the agent
+[53:52] in kind of stronger or less strong
+[53:54] language how you want it to solve the
+[53:55] problem what order you want it to call
+[53:57] the
+[53:58] tools how you describe the tools how you
+[54:01] summarize tool outputs and uh and and so
+[54:04] on um all of these things have to have
+[54:07] sandboxes right because you're running
+[54:09] model generated code so uh I guess there
+[54:12] kind of a right way to do that but
+[54:13] that's something you have to deal with
+[54:15] if you want to have an agent that is
+[54:16] communicating with external surfaces
+[54:18] right all of these are hermetic right if
+[54:21] you were doing something like to prage
+[54:23] the uh the next set of the talk like
+[54:25] penetration testing um as an agent then
+[54:27] you need to figure out oh this is
+[54:28] actually communicating with external or
+[54:30] if you wanted an agent to manage your
+[54:31] email right like how would you you have
+[54:34] to think about okay how do you even kind
+[54:36] of prototype that uh when you have to
+[54:37] communicate with external surfaces and
+[54:39] one thing we haven't talked about
+[54:41] because these are research agents is you
+[54:43] know what do we do how would you involve
+[54:44] a human in the loop like when when do
+[54:46] you ask for clarification questions when
+[54:48] do you ask for
+[54:50] approval okay so I think and I think I I
+[54:53] already talked about this so um that is
+[54:56] kind of what I wanted to say about kind
+[54:59] of General coding agents so the next
+[55:01] part of the lecture is going to be more
+[55:03] kind of AI for computer security and
+[55:05] then some of our own work in AI security
+[55:07] so let so now I want to kind of finish
+[55:09] by talking a little bit about uh AI for
+[55:12] computer security which is kind of like
+[55:14] maybe a more emerging area than um AI
+[55:17] for uh code Generation Um why did oh was
+[55:21] this oh no I didn't that sorry I'm
+[55:23] confusing myself um so um let me start
+[55:26] um I I'm just I'm going to kind of dive
+[55:29] in and talk about yeah I'll talk about
+[55:31] evaluations but uh particular um uh I
+[55:35] want to start like one type of work that
+[55:38] I want to start by talking about is um
+[55:41] uh is kind of Capture the Flag
+[55:42] competition so that's one so if you say
+[55:45] oh I want to do AI for SEC Nah if you
+[55:48] start by saying Hey I want to do AI for
+[55:51] computer security questions are okay
+[55:53] what problem do you want to try to solve
+[55:55] within that and um how do you um so
+[55:59] there is a um particular type of
+[56:02] competition that people have like at
+[56:03] schools and and um um security
+[56:06] conferences things like that uh which
+[56:08] are called capture the flag what I like
+[56:11] I mean what I like about these at least
+[56:13] as a stepping stone is that it gives
+[56:16] some idea of the breadth of the type of
+[56:18] real problems that you'd like to solve
+[56:21] in in AIA for security that's why uh so
+[56:24] that's why uh I think it's interesting
+[56:25] that talk about um um there's different
+[56:29] kinds of CTF uh competitions um and I am
+[56:33] probably going to kind of butcher uh
+[56:36] this description a little bit so I would
+[56:39] feel free if you are a computer security
+[56:41] expert in the audience um but um the the
+[56:45] idea is there are different types of
+[56:48] tasks that are like toy versions of
+[56:50] something that you might do as a
+[56:51] professional researcher and that the the
+[56:54] task is set up in such a way
+[56:56] that uh for this particular typee of
+[56:58] Jeopardy task where uh there's there's a
+[57:01] special message which I call a flag and
+[57:03] if if you do the task for a while you
+[57:05] will see something where you're like oh
+[57:06] yeah that's the flag like hey I'm the
+[57:09] flag or whatever um maybe it's not that
+[57:11] but um and so and then then you know you
+[57:14] solve the task and you can submit it so
+[57:17] like one example would be like there are
+[57:19] kinds that are like digital frics where
+[57:21] they might say okay here's a file system
+[57:23] you know find uh find the hidden message
+[57:25] or they might give you more ins about
+[57:26] what it is and then you have to know
+[57:28] okay how do I kind of look through this
+[57:30] file system do clever searches you know
+[57:32] maybe uh more complex ones I might need
+[57:34] to use stenography or I might need to
+[57:36] like find a QR code or or whatever um so
+[57:40] this would be more like kind of modeling
+[57:42] digital investigations um you know then
+[57:44] there's like uh the ones that are just
+[57:46] cryptography where you have an encrypted
+[57:48] message you want to decrypt it um there
+[57:50] are ones where uh you want to uh kind of
+[57:53] P pone challenges you want to exploit
+[57:55] kind of memory vulnerabilities you might
+[57:57] want to kind of find find a
+[57:58] vulnerability and get a ccus um there
+[58:02] are ones where you want to kind of
+[58:04] identify a vulnerabilities or one or the
+[58:06] web ones where you want to do kind of
+[58:08] injection or or kind of cross site
+[58:10] scripting attacks and the the reason I
+[58:13] like to go through this is two one is
+[58:15] you can kind of see how these map even
+[58:18] though these are kind of games in some
+[58:19] sense you can see how they map to kind
+[58:21] of real world tasks that you might want
+[58:23] an agent to do and the other thing
+[58:25] that's nice is I think you if you've
+[58:28] been sitting in this class or even just
+[58:29] in this lecture by the end of this I
+[58:31] think if I just took one of those and
+[58:33] gave like a random one of these to like
+[58:35] any of you and said design an LM agent
+[58:38] for this you know you could do it right
+[58:40] it's pretty obvious why you would want
+[58:41] an agent to do any one of these
+[58:43] tasks um so I mean again like like we
+[58:47] were saying for coding like a kind of
+[58:48] toy game Benchmark isn't the same it's
+[58:50] not as complex has a real world task but
+[58:53] I think if you can't do these you're
+[58:54] probably not going to be able to do the
+[58:55] real world tasks either so and I think
+[58:58] we're we're currently at the stage of uh
+[59:00] agent development where uh kind of CDF
+[59:02] tasks are still a challenge so there are
+[59:05] kind of uh several different data sets
+[59:07] like some of them are kind of recent
+[59:09] with kind of C uh historical CTF
+[59:12] competitions of different
+[59:14] difficulties so like uh this top one the
+[59:16] NYU one is maybe the most recent one uh
+[59:19] there's also one with from uh kind of
+[59:21] high school level uh competitions and
+[59:24] know each one of these will contain kind
+[59:25] of the task description uh kind of
+[59:27] sandboxing environment and um a way a
+[59:31] raidar that will automatically check
+[59:33] like whether whether you found the flag
+[59:34] or not um so that gives you something
+[59:37] you to start with um and I want to go
+[59:39] through kind of one recent uh uh paper
+[59:42] to show okay how would you use an agent
+[59:45] uh for one of these tasks um so this
+[59:48] this one called Enigma it's going to be
+[59:50] the last maybe the second to last agent
+[59:53] I'm going to show you um uh they do all
+[59:55] run together after a while um so uh so
+[59:59] what this is uh so this is an agent to
+[01:00:02] solve these type of these Capture the
+[01:00:04] Flag uh competitions so the it is a um
+[01:00:09] it is a react style Loop so here's an
+[01:00:11] example and the um do I see on the next
+[01:00:13] slide yes I do so this is just an
+[01:00:15] example of uh running some of the tools
+[01:00:17] like you can do you can edit files and
+[01:00:19] so on um so the um so the types of tools
+[01:00:24] that you have there are the kind of the
+[01:00:27] general um um site agent Suite so you
+[01:00:30] can do file search you can edit code you
+[01:00:32] can do think you can have a command line
+[01:00:34] um but there's a few one of the things I
+[01:00:36] liked about this a few kind of
+[01:00:38] interactive tools uh that the agent can
+[01:00:40] call which you probably want for
+[01:00:42] security scenarios one of which is
+[01:00:44] having a debugger so um there are just
+[01:00:47] different tools that are like debug kind
+[01:00:49] of stateful tools uh as the way this is
+[01:00:51] designed I'll show you a different
+[01:00:52] debugger design in a minute um where um
+[01:00:56] the the debugger says there's a command
+[01:00:57] debugger start debugger stop debugger
+[01:00:59] step and those are just different top
+[01:01:01] level commands that the agent can use
+[01:01:04] and also there tools for connecting to
+[01:01:06] servers and again these are implemented
+[01:01:08] as three different stool tools that
+[01:01:09] change the trajectory state so the agent
+[01:01:12] can ask to start a connection stop a
+[01:01:14] connection or or send a line and um the
+[01:01:17] other thing that um is uh it kind of
+[01:01:21] does a kind of a natural idea they don't
+[01:01:23] see very much is a lot of these like if
+[01:01:25] you need need to like examine a binary
+[01:01:27] file as part of digital forensics like
+[01:01:30] you're going to um uh run up your
+[01:01:32] context length very quickly so there is
+[01:01:35] one like for long tool outputs there is
+[01:01:37] this kind of natural thing where oh let
+[01:01:39] me just ask an llm to summarize this
+[01:01:41] long output um so the um and then there
+[01:01:46] are um um one thing which is kind of
+[01:01:49] like a useful trick for when you're
+[01:01:50] designing your own agents is well the
+[01:01:52] first thing is um always look at the
+[01:01:54] trajectories right uh it's just like
+[01:01:56] when you're doing regular uh supervised
+[01:01:58] learning always or evaluation always
+[01:02:00] look at the data always look at the data
+[01:02:01] right so here it's like always look at
+[01:02:03] the trajectories right you want to see
+[01:02:05] what mistakes the agent's making and use
+[01:02:06] that to design the harness so like you
+[01:02:09] know one thing that's here is like there
+[01:02:10] are kind of bullet points in the system
+[01:02:12] instruction that says oh yeah I noticed
+[01:02:14] the agent screwed up on this let me add
+[01:02:16] a bullet point that says please don't
+[01:02:17] screw up in this way and then it makes
+[01:02:19] that error less often um okay so um this
+[01:02:24] had uh where okay let me
+[01:02:26] um so this is so this is then kind of
+[01:02:29] agent kind of versus on the left uh
+[01:02:31] versus no agent on the right and we see
+[01:02:34] overall you kind of a similar set of
+[01:02:36] increase that you saw from like the
+[01:02:38] initial S agent results like going from
+[01:02:40] basically nothing is Sol like three to
+[01:02:42] four perent to like double digit uh
+[01:02:44] percentage so it's kind of nice when you
+[01:02:47] see the so it seems like maybe this is
+[01:02:50] the same thing as a s b uh swe bench
+[01:02:53] kind of leaderboard but at a different
+[01:02:55] uh point in the
+[01:02:56] curve okay so that's basically what I
+[01:03:00] wanted to say about more General Capture
+[01:03:02] the Flag challenges so I I find I wanted
+[01:03:04] to talk End by talking about a kind of
+[01:03:07] specific security task which is kind of
+[01:03:09] vulnerability detection so um um so
+[01:03:14] these would be like you know if you want
+[01:03:15] to exploit a computer system to get you
+[01:03:18] know unauthorized access or something
+[01:03:20] like that um one one way you could do
+[01:03:22] this is by targeting bugs right in this
+[01:03:25] kind of software Hardware Network layer
+[01:03:27] whatever so I so I'm going to talk
+[01:03:29] specifically about uh so a vulnerability
+[01:03:31] is basically a bug in the system that
+[01:03:33] has security implications so I'm going
+[01:03:35] to talk specifically about software
+[01:03:36] vulnerabilities both because I'm talking
+[01:03:38] about coding agents and because um
+[01:03:41] that's I think where most of the most of
+[01:03:44] the work has happened so far so some
+[01:03:46] examples like you know reading out of
+[01:03:48] bounds or kind of cross-site scripting
+[01:03:49] or something like that with this kind of
+[01:03:51] it could be a potentially a small bug in
+[01:03:53] the program that the the attacker can
+[01:03:55] use to to do bad things so um so let me
+[01:03:59] take let me take an example of like an
+[01:04:01] outof bounds right uh which is kind of a
+[01:04:04] particular bad could have so there is a
+[01:04:08] kind of taxonomy of these different kind
+[01:04:10] of software bugs that you can go to and
+[01:04:12] if you go to the taxonomy and say okay
+[01:04:14] what kind of bug is it out of bounds
+[01:04:16] right um it'll show you C code that
+[01:04:18] looks like the the code on the right
+[01:04:20] where it says oh okay like one kind of
+[01:04:22] Illustrated version of this bug is oh if
+[01:04:25] you have a function that returns
+[01:04:26] negative one on error and then I use
+[01:04:28] that as an index well the negative one
+[01:04:30] is going to get cast to it could get
+[01:04:31] cast to something unsigned which is now
+[01:04:33] going to point someplace way off into
+[01:04:35] Oblivion and then you'll kind of write
+[01:04:37] something to memory you didn't want want
+[01:04:39] to and then when you look at that it
+[01:04:41] really seems like detecting
+[01:04:42] vulnerability should be pretty easy
+[01:04:44] right because you just want to kind of
+[01:04:45] find the statea flow and find things
+[01:04:47] that aren't within the bounds um so
+[01:04:50] here's another example of an of an out
+[01:04:52] of bounds right um so this is an example
+[01:04:55] of a a kind of function from the Linux
+[01:04:57] kernel um I mean I know the first
+[01:04:59] example was probably relatively simple
+[01:05:01] you might have seen the bug right away
+[01:05:02] uh know do you see the bug in this one
+[01:05:05] that's a
+[01:05:07] joke so um so what this is is I mean
+[01:05:10] actually this it's not like I mean it's
+[01:05:12] too small for you to see but the this
+[01:05:14] this part of it isn't like if you kind
+[01:05:15] of make reasonable assumptions about
+[01:05:17] Linux kernel macros uh this part of this
+[01:05:19] code is not that difficult uh to
+[01:05:21] understand so um what's happening here
+[01:05:24] here is uh
+[01:05:26] this function is copying some data from
+[01:05:28] a network packet if you look at the two
+[01:05:30] arguments to I don't know what I guess
+[01:05:32] RCV stands for receive but um the the
+[01:05:35] first argument is the actual packet the
+[01:05:37] second argument is a header and what it
+[01:05:39] is doing is on I just I have it in my
+[01:05:42] notes um this line here it's doing a
+[01:05:44] malic uh the size is this thing's size
+[01:05:47] which it's pulling from the header and
+[01:05:49] then on line uh let me see it's 40 oh
+[01:05:53] yeah 44 I think uh uh it's like it's
+[01:05:56] doing a mem copy uh from something in
+[01:05:59] the packet to this thing that's
+[01:06:00] allocated based on the size um so what
+[01:06:03] you can see here is that um both of
+[01:06:06] these things were read from the network
+[01:06:08] and there hasn't been checking done of
+[01:06:09] the size so that means that oh you could
+[01:06:12] actually um there's no um the actual
+[01:06:15] payload might not match the size in the
+[01:06:17] header and so if it doesn't then the
+[01:06:19] buffer this allocated will be too small
+[01:06:21] and who knows how much you're going to
+[01:06:22] be writing um so the reason that so so
+[01:06:26] that's so this is actually kind of a a
+[01:06:28] kind of a real vulnerability in the Cor
+[01:06:30] in the kernel and the two things that I
+[01:06:32] wanted to point out why this is hard um
+[01:06:35] one is a bit of a needle and a hyack
+[01:06:37] right um there's could be lots of
+[01:06:38] functions like this in the Linux kernel
+[01:06:40] and it could be kind of difficult to
+[01:06:42] craft inputs that reach them I have to
+[01:06:43] know which network protocol uh this
+[01:06:45] thing is handling and so on and so this
+[01:06:48] kind of you know identifying the the
+[01:06:49] actual data flow um that breaks is
+[01:06:52] fairly simple but kind of identifying it
+[01:06:54] from a lot of things that look similar
+[01:06:55] but are perfectly safe is very difficult
+[01:06:58] and the second thing is this function on
+[01:07:00] its own it's not vulnerable or
+[01:07:01] non-vulnerable that's not even a
+[01:07:03] well-defined question to say is this
+[01:07:05] function vulnerable because if the
+[01:07:07] caller checked did the balance checking
+[01:07:10] this function would be fine right so you
+[01:07:12] actually can't understand whether this
+[01:07:14] function is vulnerable or not without
+[01:07:16] kind of knowing globally uh what what's
+[01:07:18] going
+[01:07:19] on okay so that's why AI for
+[01:07:21] vulnerability detection is hard um in
+[01:07:24] fact uh in fact this slide is basically
+[01:07:26] a criticism of the next slide so um the
+[01:07:29] next slide is so we have this really
+[01:07:31] nice source of data uh which is the kind
+[01:07:33] of vulnerability database so there is a
+[01:07:35] place where if you have public software
+[01:07:38] and you discover a vulnerability you can
+[01:07:39] kind of get a unique trafficking number
+[01:07:41] write a description and um you know give
+[01:07:44] links to the patch any other information
+[01:07:46] about the advisories and there are kind
+[01:07:48] of thousands of these uh of these
+[01:07:50] collected so this seems like great for
+[01:07:53] machine learning right because all I
+[01:07:54] need to do is is say um oh let me kind
+[01:07:57] of download all these vulnerabilities
+[01:07:59] and I'll um uh kind of the patches and
+[01:08:02] I'll try to have some classifier that
+[01:08:04] says whether things are vulnerable or
+[01:08:05] not so this very so I'm I'm exaggerating
+[01:08:09] my criticism of this but it's a very
+[01:08:10] natural thing to do right the first
+[01:08:12] thing you see a big data you see a big
+[01:08:13] data set on the web is let's download
+[01:08:15] and use it it's what you should do um
+[01:08:17] and so there's a bunch of authors who
+[01:08:18] have done this and kind of created data
+[01:08:20] sets that say oh that the idea is that
+[01:08:24] I'll take examples of code where we
+[01:08:26] found a vulnerability we've not found a
+[01:08:28] vulnerability and you know try to have
+[01:08:30] you can measure kind of detection or
+[01:08:32] patching uh kind of based on this um
+[01:08:35] seems like a natural thing to do uh
+[01:08:37] unfortunately you know it's it's what I
+[01:08:39] would have done too uh I got started and
+[01:08:42] the problems with it uh the main the
+[01:08:44] first problem is like how much of the
+[01:08:46] code you put in the input right like we
+[01:08:48] saw in the previous slide if I just look
+[01:08:50] at one function that's been patched um
+[01:08:52] you know that might not be where um I
+[01:08:55] might not know just looking at that
+[01:08:56] function whether there's a problem or
+[01:08:57] not um or just because if I take a
+[01:09:00] function in the patch that might not be
+[01:09:02] what does it mean for a line of code to
+[01:09:03] be vulnerable right um there's a line of
+[01:09:06] code where an incorrect memory access
+[01:09:08] happens sure but that that line of code
+[01:09:11] might be correct right the part that's
+[01:09:13] incorrect might be something Upstream
+[01:09:14] did something wrong um so the patch
+[01:09:17] might be very far from the line of code
+[01:09:19] that crashed so the idea even of a line
+[01:09:21] of code or a function being vulnerable
+[01:09:23] something I'd argue it's not a
+[01:09:25] meaningful concept um then the other
+[01:09:28] thing like if you want to so there is a
+[01:09:30] question of like how much context do you
+[01:09:31] want to give and I I'm not it's a very
+[01:09:33] difficult question to answer or another
+[01:09:35] question how do you handle Tangled
+[01:09:36] commits so I kind of mentioned this a
+[01:09:38] little bit in swe bench like if you want
+[01:09:40] to use this as a patching data set well
+[01:09:43] lots of times the a patch will do more
+[01:09:46] than just fix the vulnerability that's a
+[01:09:47] very common case so kind of learning
+[01:09:51] kind of difficult um the other thing is
+[01:09:54] like maybe this is easier like kind of
+[01:09:56] judging correctness of patches is kind
+[01:09:58] of tricky is like if you can run the
+[01:10:00] code you could probably judge
+[01:10:02] correctness if you're trying to do it
+[01:10:04] statically um then that's difficult
+[01:10:06] right because there are many ways to
+[01:10:08] patch a vulnerability um and the fact um
+[01:10:10] I gave you this example of um um of a
+[01:10:14] vulnerability description like these are
+[01:10:16] vague um that they will give you some
+[01:10:19] information about where to start uh they
+[01:10:21] might they'll be vague they'll be noisy
+[01:10:23] sometimes just because people are busy
+[01:10:25] they make mistakes sometimes because you
+[01:10:27] don't want to give out too much
+[01:10:28] information about a security
+[01:10:30] vulnerability so I think these are
+[01:10:32] really difficult issues it's really
+[01:10:34] difficult to come up with a static
+[01:10:35] evaluation of vulnerability detection in
+[01:10:37] this way and um and I think these issues
+[01:10:39] are fundamental um I think people have
+[01:10:41] done a lot of great work trying to get
+[01:10:42] around them to make the data sets
+[01:10:43] cleaner and cleaner but I think I think
+[01:10:45] these data sets are really hard to use
+[01:10:47] um so what I would um um so I would
+[01:10:52] recommend instead for working on this
+[01:10:54] kind of problem is is do something
+[01:10:56] Dynamic so you need something like a
+[01:10:57] sweet bench eval where you can actually
+[01:10:59] run the the code on an input that
+[01:11:02] exposes the vulnerability um so there um
+[01:11:06] um so there are kind of there are some
+[01:11:08] data sets I left one out that's one of
+[01:11:10] the things you're supposed to ask me
+[01:11:11] about um so I'll just tell you about it
+[01:11:13] now um so there is um so there is like a
+[01:11:17] a DARPA sponsored competition going on
+[01:11:19] now uh the finals are later this year
+[01:11:22] for like AI based vulnerability
+[01:11:24] detection um there was uh kind of an
+[01:11:27] older one um 2016 it's also kind of
+[01:11:30] interesting both because you can get the
+[01:11:32] kind of programs and also I think the
+[01:11:34] story of it is interesting if you want
+[01:11:35] to look it up uh there is a more recent
+[01:11:38] security evaluation from meta that
+[01:11:40] contains some um it tests various parts
+[01:11:44] of security for AI and AI for security
+[01:11:46] but there is like a a memory
+[01:11:48] vulnerability thing there is a more
+[01:11:50] recent thing that I like uh which I
+[01:11:52] forgot to put on the slide uh which is
+[01:11:54] arv arvo it's a um it's for some past
+[01:11:59] vulnerabilities that been found by
+[01:12:00] fuzzers containerized so that you can
+[01:12:02] run them so you can act checking of
+[01:12:04] whether you found or fix
+[01:12:07] fixed um so there is uh I'm about to uh
+[01:12:11] I'm about to talk about one more agent I
+[01:12:13] promise uh but um there is a lot of a
+[01:12:16] huge amount of research on automated
+[01:12:18] techniques for vulnerability detection
+[01:12:19] like uh both some AI but also kind of
+[01:12:22] non- AI so probably the most a commonly
+[01:12:25] used technique for automatically finding
+[01:12:28] vulnerabilities is called fuzzing so
+[01:12:30] that is like you run the programs on
+[01:12:33] many many random inputs uh you can
+[01:12:35] choose them like a genetic algorithm
+[01:12:37] type search so you can flip bits in the
+[01:12:39] inputs you can mix and match them and so
+[01:12:41] you try to find an input that causes
+[01:12:43] like uh vulnerability to happen like an
+[01:12:45] outof bounds right um those are like
+[01:12:48] those are really important in practice
+[01:12:50] like uh security critical uh software is
+[01:12:53] uh commonly is fuzzed uh extensively um
+[01:12:56] so and so this is uh this is kind of
+[01:12:59] important technology but it's also it
+[01:13:02] also ASM tootes like if you run a fuzzer
+[01:13:04] for long enough on a um on a software
+[01:13:08] package like it will you don't like
+[01:13:10] continually find bugs even if they they
+[01:13:12] exist and there are kind of famous
+[01:13:14] examples of bugs where they've been
+[01:13:16] found exploited in the wild these are
+[01:13:17] packages that are commonly fuzzed but it
+[01:13:19] was a difficult part of the code for the
+[01:13:21] fuzzer to reach um there's a lot of work
+[01:13:24] on so I think there's an opportunity for
+[01:13:26] AI to try to uh well keep fuzzing things
+[01:13:30] but trying to find deeper bugs maybe
+[01:13:32] that require um kind of complex
+[01:13:34] invariance that fuzzers can't reach um
+[01:13:37] people work on static analysis for
+[01:13:39] vulnerabilities for vulnerability
+[01:13:41] detection um that's um you know it's
+[01:13:44] kind of there's a lot of interesting
+[01:13:45] work that's been done in that space uh
+[01:13:47] the downside is kind of combinatorial
+[01:13:49] explosion and the false positive rate
+[01:13:51] it's kind of very it's very difficult to
+[01:13:53] Define um uh it's kind of a very very
+[01:13:56] difficult business to be in um and then
+[01:13:59] like on some of these other data sets
+[01:14:00] I've talked about like you know once you
+[01:14:02] collect the vulnerability data sets on
+[01:14:03] the previous Slide the ones that I don't
+[01:14:05] like you can try find who an LM on them
+[01:14:08] and so a lot of papers the papers that I
+[01:14:10] cite it will show you some results for
+[01:14:12] that um but um you know we wanted to do
+[01:14:15] something different so uh we thought
+[01:14:18] there was kind of an opportunity to try
+[01:14:19] to use um the um uh to try to kind of
+[01:14:24] you know leverage AI in a more
+[01:14:25] interesting way and so that's this
+[01:14:27] project that I'm involved in which
+[01:14:28] called the Big Sleep um one thing I've
+[01:14:31] noticed having named a project this is
+[01:14:32] that most people do not have the same
+[01:14:35] knowledge of Classic Cinema as I do so
+[01:14:37] the big sleep is kind of a it's a it's a
+[01:14:40] famous movie from the 40s but starring
+[01:14:42] Humphrey bogar and if you like old
+[01:14:44] movies I recommend it um the um there's
+[01:14:47] a story about why this is named that
+[01:14:49] that I won't get into so um so this is a
+[01:14:52] collaboration between some of us in
+[01:14:53] Google Deep Mind and some um Security
+[01:14:56] Experts from Google project zero so
+[01:14:58] these uh which you know this is a kind
+[01:15:00] of a really um uh a nice Security Group
+[01:15:03] within Google that tries to find
+[01:15:06] vulnerabilities it tries it does they
+[01:15:08] they also they try they also succeed in
+[01:15:10] kind of finding vulnerabilities in open
+[01:15:12] source projects and um if you look at
+[01:15:14] other things on their blog you can see
+[01:15:16] kind of how intense uh some of the
+[01:15:17] vulnerabilities that they find are so
+[01:15:20] with this kind of group of collaborators
+[01:15:21] we've been kind of creating this this
+[01:15:23] agent and and um the thing that
+[01:15:26] motivated us about this was thinking
+[01:15:28] about um or one way to motivate this is
+[01:15:30] by thinking about kind of the experience
+[01:15:32] of our collaborators in Project zero as
+[01:15:35] a human security researcher auditing
+[01:15:37] code to try to find a vulnerability um
+[01:15:40] they don't think of it like a classifier
+[01:15:42] right you don't just read some code as a
+[01:15:43] person then say yes no I think it's
+[01:15:45] vulnerable right so instead what you do
+[01:15:48] is you going to read the code try to
+[01:15:49] understand it you have some hypothesis
+[01:15:51] about what would be going wrong and then
+[01:15:53] you try to run the code in a or
+[01:15:55] something gain some information about
+[01:15:57] whether your hypothesis is correct and
+[01:15:59] um and we and we wanted to see and we
+[01:16:02] think that if an AI is going to be
+[01:16:03] successful that it should do that too so
+[01:16:06] and this kind of naturally suggested NH
+[01:16:08] entic approach uh where you'd have kind
+[01:16:10] of a code browser that and a debuger so
+[01:16:13] one way you can think about this is
+[01:16:15] analysis versus static um if you are if
+[01:16:19] you're trying to train just an llm you
+[01:16:21] know maybe with some um maybe some
+[01:16:23] reasoning tokens or whatever to examine
+[01:16:25] code uh do some reasoning come up with
+[01:16:27] the vulnerability that's kind of like
+[01:16:29] static analysis you haven't run the code
+[01:16:31] whereas if you do an agentic approach
+[01:16:32] that's more like running a fuzzer it's
+[01:16:34] more like Dynamic
+[01:16:35] analysis so um what the we're focusing
+[01:16:39] on a particular type of security issue
+[01:16:42] um in in the big sleep and that we're
+[01:16:44] focusing on memory safety of
+[01:16:46] vulnerabilities and the idea is kind of
+[01:16:49] uh given a given a code base the goal of
+[01:16:52] the agent is going to be like a fuzzer
+[01:16:54] to generate an input that when it's run
+[01:16:57] on this program under test causes bad
+[01:17:00] memory Behavior like an out-of-bounds
+[01:17:01] read or something and um what um some of
+[01:17:05] this is so you get some of the
+[01:17:07] advantages of a react style Loop but the
+[01:17:09] other Advantage compared to static
+[01:17:10] analysis approaches and even compared to
+[01:17:13] say something like code editing is in
+[01:17:16] some ways this is a simpler problem than
+[01:17:18] code editing and the reason is we have
+[01:17:20] an oracle so if we can so I mentioned um
+[01:17:25] sanitizers to you earlier in the lecture
+[01:17:27] so when we are running the program in
+[01:17:30] this agent we are going to run it um in
+[01:17:33] a sanitizer in a debugger so the goal of
+[01:17:35] the agent is to actually generate an
+[01:17:37] input that causes the program to crash
+[01:17:40] and when it crashes we know you found a
+[01:17:41] security bug so um you know whereas uh
+[01:17:45] if you're doing code generation you
+[01:17:46] don't know what the real you don't know
+[01:17:47] what the true true tests are so you have
+[01:17:49] some part at the end where you have to
+[01:17:50] figure out oh which patch do I choose um
+[01:17:53] here it's like if you find a bug you
+[01:17:55] find a bug and one thing that's nice
+[01:17:57] about well let me actually say the agent
+[01:17:59] before I start telling you about how
+[01:18:01] good it is so um so what we're going to
+[01:18:03] do in big sleep it's going to be a react
+[01:18:05] style agent the goal of the agent is to
+[01:18:07] generate an input that triggers a
+[01:18:09] sanitizer crash um we have access to
+[01:18:12] three different types of tools so one is
+[01:18:15] like a code browser tool so this would
+[01:18:17] be kind of similar to what I said about
+[01:18:19] auto code Ro Rover that we actually
+[01:18:21] index uh the program we know what all
+[01:18:23] the identifiers are so our tools are
+[01:18:25] like the type of tools you do in ide
+[01:18:28] navigation so like given the name of a
+[01:18:30] method jump to definition or we can also
+[01:18:32] follow cross
+[01:18:33] references um then in order to generate
+[01:18:36] inputs we do that using a we don't
+[01:18:38] actually ask the agent to generate text
+[01:18:40] directly uh we ask the agent to rate a
+[01:18:43] Python program that generates the input
+[01:18:46] and the reason we do that is like if you
+[01:18:48] want to do a buffer overrun or something
+[01:18:50] you know we don't want the agent have to
+[01:18:51] generate 20 48 A's we'd rather generate
+[01:18:54] a python program this is a * right it's
+[01:18:57] just simple so we we tell the agent
+[01:18:59] please generate a Python program that
+[01:19:01] sends a writes a string to a particular
+[01:19:03] variable we send that string to standard
+[01:19:05] in and then we can run the target
+[01:19:07] program in a debugger so we've talked
+[01:19:10] about the the Enigma agent also had a
+[01:19:12] debugger the design of this tool is
+[01:19:14] similar but a little bit different um so
+[01:19:17] in our tool right now the agent doesn't
+[01:19:19] call the debugger interactively um what
+[01:19:21] it does is it can say you know it first
+[01:19:24] it calls the python interpreter to set
+[01:19:25] up an input and then when it calls the
+[01:19:27] debugger it it just runs the whole
+[01:19:29] program and it can optionally specify a
+[01:19:31] list of quote unquote uh breakpoints so
+[01:19:34] a breakpoint is a a file line number and
+[01:19:37] an expression optionally and what it
+[01:19:39] does is we we tell the agent their break
+[01:19:41] points but they're really watch points
+[01:19:42] so we'll run the whole program without
+[01:19:44] stopping I mean they break wait uh we'll
+[01:19:46] run the whole program without stopping
+[01:19:47] and at the end we tell the agent here
+[01:19:49] are the break points that were hit and
+[01:19:51] here's the value of the Expressions you
+[01:19:52] asked me for so this way this gives the
+[01:19:54] agent another way to check whether when
+[01:19:56] it generates an input whether it's doing
+[01:19:58] what it expects whether it's having the
+[01:19:59] control flow that the agent expects from
+[01:20:01] the
+[01:20:02] input okay so let me show you an example
+[01:20:04] of a trajectory so um I don't know what
+[01:20:08] that meant um so this is a um let me see
+[01:20:12] this is an example of a program from The
+[01:20:15] Meta cyers SEC eval Benchmark that I
+[01:20:18] kind of briefly mentioned in the
+[01:20:19] previous slide uh so there is a system
+[01:20:21] instruction that I haven't told you that
+[01:20:23] kind of explains the task to the agent
+[01:20:25] describes the tools and um um get
+[01:20:28] presents a problem solving strategy and
+[01:20:29] some guidelines uh to the agent so the
+[01:20:32] first thing agent's going to do is say
+[01:20:33] okay please show me the main method um
+[01:20:36] so here all of the the as I said the
+[01:20:39] control flow is completely Dynamic like
+[01:20:40] react style and there's no um the agent
+[01:20:43] has to use the Cod browser tools to see
+[01:20:45] the code so then it gets a thing of the
+[01:20:47] main method and typically what the agent
+[01:20:49] does is it summarizes the code sometimes
+[01:20:51] longer sometimes less whenever it sees
+[01:20:53] it and then it'll decide okay I see an
+[01:20:55] identifier there okay you can't see
+[01:20:57] there's a reader class because I snipped
+[01:20:58] it out but somewhere in this there's a
+[01:21:00] class called reader so the agent says
+[01:21:02] okay let me look at the reader class and
+[01:21:04] so it says okay let me look it so it
+[01:21:06] looks at this and it'll do a bunch of
+[01:21:07] turns of code
+[01:21:09] browsing and um after a while the agent
+[01:21:11] gets tired of code browsing and it
+[01:21:13] decides okay I think I found a
+[01:21:15] vulnerability now so what it does then
+[01:21:17] what we've instructed it to do is to
+[01:21:19] write a report that explains what the
+[01:21:22] vulnerability is and uh what happen
+[01:21:25] uh how to exploit it so the agent will
+[01:21:27] generate this text after it's seen
+[01:21:28] enough code where it says oh on line 70
+[01:21:31] you use string copy but you didn't use
+[01:21:32] bound checking so if I create an input
+[01:21:35] of this type then um then this is it
+[01:21:37] loves saying a typical buffer overflow
+[01:21:39] or a classic buffer overflow really
+[01:21:40] likes that um the so this this could
+[01:21:43] this this could be exploited in this way
+[01:21:45] here's my report now let me generate an
+[01:21:47] input and so the input is going to
+[01:21:50] python now this is a python code here's
+[01:21:53] an example of like what I said where you
+[01:21:54] can construct a long input um the um the
+[01:21:58] agent can you know it can um it's
+[01:22:01] helpful to have access to the library
+[01:22:03] because you know if you want to um if
+[01:22:07] you want to kind of generate uh uh sorry
+[01:22:10] I'm having English if you wanted to
+[01:22:11] agent to generate binary strings for
+[01:22:13] example um You can call you know number
+[01:22:16] to bytes it can um it can also if it
+[01:22:19] knows things about particular input
+[01:22:21] formats so if you have a um
+[01:22:25] a program that takes Json or images has
+[01:22:27] input then the Python program can
+[01:22:29] generate that so in this case after
+[01:22:31] generate some python input it calls the
+[01:22:33] debugger function it says oh the these
+[01:22:36] were like ters that it thought was
+[01:22:38] related to the vulnerable code path so
+[01:22:40] it says oh yeah please show me those and
+[01:22:43] um so now we run the program in the
+[01:22:44] debugger and um the agent is sad because
+[01:22:47] the program exited without crashing um
+[01:22:49] generally that's what you want but not
+[01:22:51] if you're doing a security audit so um
+[01:22:53] so now the agent's like okay it didn't
+[01:22:55] trigger the bug that it thought it did
+[01:22:57] so it can um let's let's keep iterating
+[01:23:00] and so so then it write some things
+[01:23:02] about why why it messed up um so so here
+[01:23:07] it says oh the program failed ear than
+[01:23:08] anticipate it because I forgot to do
+[01:23:10] such and such and so let me update the
+[01:23:13] input so that I don't make this mistake
+[01:23:15] and it might iterate through do that
+[01:23:16] multiple times and then and run the
+[01:23:18] debugger again after each one and then
+[01:23:21] at some point it says Ah the program
+[01:23:22] crashes uh yay it crashed
+[01:23:25] um so um and then it gives some
+[01:23:27] information and then that means the
+[01:23:28] agent has
+[01:23:29] succeeded so uh so where are we where
+[01:23:33] where are we right now so I'd say the
+[01:23:35] current kind of state of the agent is
+[01:23:37] like we have kind of ways of testing it
+[01:23:38] on kind of Capture the Flag challenges
+[01:23:40] like uh like for example this open uh2
+[01:23:44] Benchmark and um and there it's kind of
+[01:23:48] reasonably effective there's still a lot
+[01:23:49] that we need to do to scale it up um and
+[01:23:52] we have found uh one real world of
+[01:23:55] vulnerability that we've disclosed and
+[01:23:57] um that is uh kind of in SQL light um so
+[01:24:02] um one thing about this it's kind of one
+[01:24:03] of the advantages of agents for this
+[01:24:06] type of security task is you can put any
+[01:24:08] information that you have in the context
+[01:24:10] so in this case we did a type of variant
+[01:24:12] analysis so um so it turns out that when
+[01:24:15] you find a a security bug a
+[01:24:18] vulnerability in a project there are
+[01:24:20] often many similar vulnerabilities at
+[01:24:23] different places in the same project
+[01:24:24] project so those are called variants and
+[01:24:26] some like a very large number of
+[01:24:29] vulnerabilities that we see exploited in
+[01:24:31] the wild are variants of bugs that have
+[01:24:33] already been fixed so what we did here
+[01:24:36] is we took kind of a recent uh bug that
+[01:24:38] had been fixed in SQL light and we added
+[01:24:41] the information about it into the
+[01:24:42] context and then said I don't know try
+[01:24:44] to find something similar and um and you
+[01:24:47] know eventually and it did um one thing
+[01:24:50] I want to comment on this is one thing
+[01:24:51] that was kind of working in our favor
+[01:24:53] this is maybe like best case in some
+[01:24:55] sense because in I I mentioned the kind
+[01:24:58] of Little Red Riding Hood principle um
+[01:25:01] the agent has seen a lot of SQL queries
+[01:25:03] right in the pre-training data so if it
+[01:25:05] sees kind of one SQL query that used to
+[01:25:08] that used to break the system it's kind
+[01:25:09] of easy for it it's kind of reasonable
+[01:25:12] that the that llm could generate similar
+[01:25:14] queries um and the other thing I
+[01:25:16] mentioned fuzzing it turns out we did go
+[01:25:18] back with general purpose fuzzers and
+[01:25:20] try to see okay now that we know where
+[01:25:22] the bug is can I get a kind of state of
+[01:25:24] the art general purpose fuzzer to find
+[01:25:26] it and in some reason it was and it was
+[01:25:27] pretty hard to find like after 150 hours
+[01:25:30] we weren't able to find it so um yeah so
+[01:25:33] that's uh that's kind of our our status
+[01:25:35] so far so finally let me pop up and say
+[01:25:41] uh so I had to summ summarize just the
+[01:25:42] security part of the lecture so I think
+[01:25:44] this is kind of a wide open area uh
+[01:25:46] we're just getting started there's a lot
+[01:25:47] to be done um I think it's an exciting
+[01:25:50] application area for AI because agentic
+[01:25:53] techniques seem really natural here you
+[01:25:55] need to interact with servers you need
+[01:25:56] to run debuggers um and it's also um and
+[01:26:00] it's also kind of a really nice um test
+[01:26:03] bed for code understanding methods right
+[01:26:07] that to find a security issue and to say
+[01:26:09] oh yeah this is a software vulnerability
+[01:26:11] you've got to think really carefully
+[01:26:13] about the corner cases that the
+[01:26:14] developer maybe didn't think of or or
+[01:26:17] and you have to track kind of data
+[01:26:19] flow along stretches of the program so
+[01:26:21] it kind of and or and if you're doing
+[01:26:23] Network or system security you have to
+[01:26:25] do that across multiple interacting um
+[01:26:27] um Parts uh programs in a system so it
+[01:26:30] really does require you to kind of
+[01:26:31] understand that a deep level what
+[01:26:33] programs are doing which makes it kind
+[01:26:34] of an interesting challenge model
+[01:26:36] challenge task for llms and you know
+[01:26:39] I've talked you know in depth about some
+[01:26:41] Capture the Flag stuff and some
+[01:26:43] vulnerabilities but there's kind of a
+[01:26:44] huge space here that we're kind of only
+[01:26:46] starting to get into and there's a lot
+[01:26:49] of real T and kind of and this is the
+[01:26:51] time we're starting to scale it up so
+[01:26:52] it's kind of an exciting time to be part
+[01:26:55] of this area Okay so this is that's kind
+[01:26:58] of all I have to say I'm kind of happy
+[01:27:00] to take some more questions thank you

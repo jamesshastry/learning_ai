@@ -1,0 +1,2745 @@
+[00:00] SWARAT CHAUDHURI:
+In this course.
+[00:01] You have seen a lot of
+different kinds of uses of LLMs.
+[00:06] And today, I'm going to
+emphasize the use of LLMs
+[00:11] as a tool of scientific
+and mathematical discovery.
+[00:15] And in particular,
+there's going to be
+[00:18] an emphasis on the
+ability of LLMs
+[00:21] to discover abstract concepts
+and how this can accelerate
+[00:26] these discovery processes.
+[00:28] OK, so let us dive in.
+[00:31] Let us start with the problem
+of mathematical discovery.
+[00:36] This is, of course, one
+of the grandest challenges
+[00:40] known to humanity.
+[00:43] Now, how does the process
+of mathematical discovery
+[00:48] look like?
+[00:49] There is the-- first,
+the process of modeling
+[00:53] where you are, getting
+inspired by some sort
+[00:56] of a real-world
+phenomenon, and then
+[00:59] modeling it in terms of
+a variety of definitions
+[01:03] and concepts.
+[01:06] Now, once you have a set of
+definitions, at that point,
+[01:10] you may want to conjecture
+various properties
+[01:14] of these definitions.
+[01:16] And then these are potentially
+candidate theorems and lemmas.
+[01:22] And then there is this
+process of rigorous reasoning
+[01:26] where you are actually
+proving these statements.
+[01:29] And this process is, for
+human mathematicians,
+[01:33] intrinsically social.
+[01:35] You are convincing each
+other about the rigor
+[01:39] of your reasoning and the
+value of your conjectures.
+[01:42] But this process just
+continues in this sort
+[01:45] of an iterative loop.
+[01:46] So you may see proofs
+and counterexamples,
+[01:50] and these may influence
+your models as well as
+[01:53] your conjectures.
+[01:54] And this process
+just goes on, right?
+[01:58] That the history of mathematics.
+[02:01] Now, the dream of the
+field of AI for math
+[02:04] is that you want to
+automate substantial pieces
+[02:08] of this process,
+and as a result,
+[02:11] you want to accelerate
+this process even more.
+[02:13] You want to be able to
+discover new kinds of math.
+[02:16] And this includes
+settling known conjectures
+[02:24] but also potentially coming
+up with new conjectures.
+[02:28] And then there is the
+setting of natural sciences,
+[02:33] that is also going
+to be something
+[02:35] I'll cover in this lecture.
+[02:38] And here, unlike
+in math, you are
+[02:41] engaging with the real world.
+[02:44] There is this process
+of theory building
+[02:46] where you're coming up with
+hypotheses about the universe,
+[02:51] and then you are
+using these hypotheses
+[02:56] to design experiments, and
+then you are experimentally
+[02:59] validating them, right?
+[03:00] And this experimental validation
+process creates new data.
+[03:05] And then this data leads
+to new kinds of theories,
+[03:10] for example, by refinement
+of the existing hypothesis.
+[03:13] Or in some cases, you
+may want to just come up
+[03:16] with entirely new concepts
+and new predictions.
+[03:21] So the ambition of the
+area of AI for science
+[03:25] is to automate hypothesis
+generation and experiment
+[03:29] design.
+[03:31] Now, the key ideas in
+the areas of AI for math
+[03:38] and AI for science at this
+point are that, number 1, search
+[03:42] is a really powerful concept.
+[03:44] And so, we want to imagine
+these spaces of hypothesis,
+[03:49] conjectures, and proofs and
+systematically search them.
+[03:54] Now, this is, of course,
+a very massive space.
+[03:58] There are all these
+potential statements
+[04:03] about various
+mathematical objects,
+[04:05] and there are all
+these hypotheses that
+[04:07] are possible in the universe.
+[04:08] And this space is
+clearly infinite.
+[04:12] Now, how do you explore this
+space in a tractable way?
+[04:17] Well, you use prior knowledge to
+prioritize directions of search.
+[04:21] And that's also
+how humans proceed.
+[04:23] We don't just do
+discovery in a vacuum.
+[04:26] We read existing papers, and
+sometimes we incrementally
+[04:32] advance on them.
+[04:33] And sometimes we
+make a big leap.
+[04:34] But that prior knowledge
+is always of value.
+[04:39] But then also we
+learn from experience
+[04:42] how and how not to do
+this sort of exploration.
+[04:46] You find out that you made
+certain choices while building
+[04:51] your theory, and then
+you find that this just
+[04:53] didn't work, right?
+[04:54] And that's experience for you.
+[04:56] And then you use this
+experience to potentially take
+[05:01] completely new directions.
+[05:04] And then another piece
+that is very important--
+[05:07] has been very important to the
+history of math and science,
+[05:11] has been to discover
+abstract concepts and tools.
+[05:15] So, for example, the
+idea of calculus,
+[05:19] that really sped up the
+progress of science after it
+[05:24] was invented.
+[05:25] Similarly with
+algebra and, really,
+[05:29] all major branches of
+mathematics, came from the need
+[05:33] to abstract some sort
+of real-world process.
+[05:38] And then, the value
+of these abstractions
+[05:40] is that they speed up both
+this process of exploration
+[05:44] and also this learning process
+that I previously mentioned.
+[05:48] Now, if you think of
+it, LLMs bring something
+[05:53] to the table regarding
+each of these criteria.
+[05:57] So, for example,
+if you are doing
+[06:00] a search in a very large
+space of potential scientific
+[06:06] hypotheses, and LLM has
+inside it a lot of knowledge
+[06:11] about what sort of
+hypotheses have historically
+[06:16] tended to work in science.
+[06:18] And so, this knowledge
+can potentially
+[06:22] help you direct
+the search process.
+[06:27] And then, also in
+this course, you
+[06:32] have seen examples
+of LLM agents.
+[06:35] And in this class, you are
+going to see more of this.
+[06:38] So these are
+systems that contain
+[06:40] inside them LLMs as modules.
+[06:42] But they are also
+interacting with the world,
+[06:44] and they are learning
+from experience.
+[06:46] And this experience
+is gathered as data
+[06:50] and then often stuck
+into the prompt.
+[06:54] But sometimes you can even
+do reinforcement learning
+[06:57] or other kinds of modification
+of the LLM's weights.
+[07:01] But the point is that there
+are all these established
+[07:03] methods for doing
+learning combined
+[07:06] with the use of language
+models, and that
+[07:08] is something that we can
+exploit here as well.
+[07:12] Now the use of LLMs
+for abstraction,
+[07:16] this is something that's
+not well explored yet.
+[07:20] This is a really
+new idea, but I'm
+[07:23] going to give you some evidence
+as to why there might be
+[07:28] a lot of things going on here.
+[07:31] And there is
+certainly a lot more
+[07:34] to be done about the use
+of LLMs in constructing
+[07:37] new concepts and new tools.
+[07:40] So I think that LLM agents have
+tremendous, endless promise
+[07:48] in mathematical and
+scientific discovery.
+[07:51] And the reason is that, so
+far as all of these ideas go,
+[07:59] LLMs have a potential to
+contribute with regards to each.
+[08:08] So this may all seem
+somewhat abstract.
+[08:10] So I'm going to now jump
+into some concrete results.
+[08:14] And this lecture is
+divided into two pieces.
+[08:18] In the first part, we are
+going to talk about AI
+[08:20] for mathematical discovery.
+[08:22] And then in the
+second part, we are
+[08:24] going to talk about AI
+for scientific discovery.
+[08:27] And in each of these
+cases, I'm going
+[08:29] to show you some LLM
+agents built using
+[08:36] quite different algorithms.
+[08:38] But we'll see that these agents
+realize many of these ideas
+[08:46] that we talked about
+in the previous slide.
+[08:49] OK, so let's talk
+about AI for math.
+[08:53] Over the last few years,
+there's been tremendous interest
+[08:58] in this field.
+[08:59] Here's Terry Tao
+from 2023, talking
+[09:02] about how AI from
+that year can already
+[09:06] generate suggestive
+hints and help
+[09:10] with the mathematical process.
+[09:11] And he predicted
+that by 2026, AI
+[09:15] can become a
+trustworthy co-author
+[09:18] in math research papers and
+in other fields as well.
+[09:23] Now, 2026 is not yet
+here, but I would
+[09:27] say that this prediction seems
+very plausible as of now.
+[09:34] Now, in terms of
+concrete systems,
+[09:38] o1, when it was introduced,
+one of the highlights
+[09:43] was that it did really well in
+various competition mathematics
+[09:48] problems.
+[09:49] So here is a plot.
+[09:52] It shows how o1 does
+compare to GPT-4o.
+[09:55] And as you see, accuracy in
+this particular competition,
+[09:58] AIME 2024, has gone
+up very substantially.
+[10:05] And then, of course,
+last year, my colleagues
+[10:08] at Google DeepMind,
+they built this system
+[10:11] that achieved silver medal-level
+performance at the IMO.
+[10:16] And you've already heard a
+talk about that in this course.
+[10:20] So I'm not going to go
+into further detail--
+[10:23] or to much more detail
+about that in this talk,
+[10:26] but you know that
+it's impressive,
+[10:30] and it uses a lot of very
+impressive machinery.
+[10:36] Now, one question that I
+think is important to ask
+[10:42] is that is it all going
+to be done just with LLMs?
+[10:49] In other words, do you need any
+sort of additional machinery
+[10:55] that combines LLMs with,
+for example, actions?
+[10:59] This is really
+the characteristic
+[11:02] that distinguishes LLM
+agents from just basic LLMs.
+[11:07] And so, I would say that there
+are certainly still believers
+[11:14] in the potential
+of just LLMs alone
+[11:18] to do everything after
+being trained on language.
+[11:23] But I am personally a
+little bit skeptical
+[11:26] about that possibility.
+[11:28] Now, that said, one must admit
+that over the last couple
+[11:33] of years, just LLMs
+have come a long way.
+[11:36] So here is the picture of
+how you train an LLM on--
+[11:43] for these sorts of
+mathematical settings.
+[11:45] So you're going to start
+with a pre-trained LLM.
+[11:48] Then you're going to train it on
+math-related web docs and then
+[11:52] problems with step-by-step
+solutions, problems
+[11:56] with tool-integrated solutions,
+and so on and so forth.
+[11:58] And then, ultimately, you
+have this LLM that can use,
+[12:02] for example, Python APIs and
+that can solve math problems.
+[12:07] And this has, again, as
+I said, come a long way.
+[12:12] So, for example, here is a
+problem from the Putnam Math
+[12:16] Competition from last year.
+[12:18] And o1's response
+on this problem
+[12:22] is actually very reasonable.
+[12:24] And as these systems are
+getting better and better,
+[12:30] it seems like they're solving
+more and more problems that
+[12:34] are of this nature that are
+similarly hard-- or harder.
+[12:39] But that said, there are
+some fundamental weaknesses
+[12:44] of this neural-only
+approach that you'd
+[12:47] get with just a basic LLM.
+[12:50] And the reason is that--
+[12:53] or one fundamental
+reason is that there
+[12:55] is this issue of data scarcity.
+[12:59] In order to do rigorous
+mathematical reasoning, not just
+[13:04] computing answers to
+well-posed questions,
+[13:07] you need to have a lot
+of high-quality traces
+[13:12] of mathematical reasoning.
+[13:15] Or, alternatively, you would
+need high-quality reward
+[13:17] functions.
+[13:18] And this is difficult to get
+just with human-produced data
+[13:23] beyond high school or
+competition settings.
+[13:27] And then a second
+reason, fundamentally,
+[13:29] is that natural language
+reasoning is hard to verify.
+[13:33] And this is something that
+is a fundamental weakness
+[13:38] of these language-only models.
+[13:42] And there are even
+settings where
+[13:44] you can apply this sort
+of mathematical reasoning
+[13:47] where, for example,
+when you are doing
+[13:48] mathematical reasoning
+about real-world systems
+[13:53] and the behaviors of these
+systems have real consequences,
+[14:00] so edge cases are
+really critical.
+[14:02] So in these cases you want
+your mathematical reasoning
+[14:04] to be really robust
+and rigorous.
+[14:07] And unfortunately,
+language-based, purely neural
+[14:13] mathematical reasoning
+tends to not be this way.
+[14:18] And so, it is entirely
+possible that scaling is going
+[14:22] to solve all of these problems.
+[14:24] But as I said, I'm a little
+bit skeptical about this.
+[14:28] So in this talk, I'm
+going to demonstrate
+[14:32] an alternative strategy,
+which is similar in many ways
+[14:37] to AlphaProof, which
+you saw previously,
+[14:41] but which is more of
+an LLM agent approach
+[14:44] that is an alternative to this
+sort of purely neural, purely
+[14:51] language-driven kind of model.
+[14:56] So this alternative involves
+formal representations, just
+[15:01] like in AlphaProof.
+[15:03] So there's an entire
+literature that
+[15:06] is building up that follows
+this kind of strategy.
+[15:11] And so here, what you do is
+that rather than just operating
+[15:16] in this space of
+informal problem
+[15:17] statements and informal
+solutions, you would be,
+[15:21] first, doing what is
+called autoformalization.
+[15:25] So you're going to go from
+the informal statement
+[15:27] to a formal statement in a
+language, like Lean or Coq,
+[15:32] or Isabelle.
+[15:34] And lean, in particular, is
+what is used for AlphaProof.
+[15:38] But there are other
+frameworks like this as well
+[15:41] that have a very long history.
+[15:46] Now, the appeal of these
+sorts of formal frameworks
+[15:50] is that a proof can be
+written in a step-by-step way,
+[15:55] just like code.
+[15:56] And not only that, a
+proof can be checked.
+[15:59] You can check if a proof
+that you have written
+[16:03] in this formal language actually
+implies a certain property
+[16:09] that you started out
+with, so this theorem
+[16:12] that you started out with.
+[16:14] And so, the idea is that you
+would then, in the second phase,
+[16:18] take this formal
+problem statement,
+[16:20] and then you would be feeding
+it to a neural prover, which
+[16:23] is going to come up with
+this sequence of steps,
+[16:25] which are also called tactics,
+these rules that you apply.
+[16:30] So these are tactics, and
+you apply them one by one.
+[16:35] And then at the end, you
+get to this QED stage,
+[16:40] where you have
+nothing left to prove.
+[16:45] And so that's how this
+process would work.
+[16:48] And the advantage here is that
+if you think of the verification
+[16:53] challenge that I
+mentioned earlier,
+[16:55] where you want to check whether
+a claimed proof is actually
+[17:00] a proof, this is
+something that you
+[17:02] can establish relatively easily
+using a proof assistant, right?
+[17:08] And in terms of the data
+issues, so the appeal
+[17:12] of this kind of verifiability
+is that during training time,
+[17:16] you can synthetically generate
+a very, very large number
+[17:21] of candidate proofs.
+[17:24] And then you can immediately
+get feedback on whether or not
+[17:27] these proofs are correct.
+[17:29] So this turns this
+difficult problem of proof
+[17:34] into this kind of a
+game-playing task, which
+[17:38] you can approach with really
+a version of reinforcement
+[17:41] learning.
+[17:41] And this is what, for
+example, AlphaProof did.
+[17:44] Although I'll show
+here that you can also
+[17:47] take a more LLM-based
+approach to this problem.
+[17:53] And in fact, you can build up
+on these pre-trained language
+[17:59] models and only have a pretty
+thin layer on top of that.
+[18:02] And that still does
+quite interestingly well.
+[18:07] OK.
+[18:08] So just to go into a
+little bit more detail
+[18:12] about these formal
+representations,
+[18:13] even though you may have seen
+this in the AlphaProof lecture,
+[18:19] I'll just quickly recap--
+[18:23] recapitulate this.
+[18:24] So here is a theorem
+that we are--
+[18:29] let's say, we are
+trying to prove.
+[18:30] And what this says
+is that if x is even,
+[18:33] then x square is even as well.
+[18:36] So the theorem
+statement over here
+[18:38] says that x is a natural number.
+[18:41] And then it says that x
+being even implies x square
+[18:47] is also even.
+[18:48] So modulo 2, it's--
+[18:50] the remainder is zero.
+[18:53] So now, in order
+to prove this, you
+[18:55] are going to apply this
+sequence of tactics,
+[18:59] as I said previously.
+[19:00] Now, it's important to note
+that the system, that the proof
+[19:08] assistant, it has a
+certain state that
+[19:13] depends on what the
+original theorem is
+[19:15] and which tactics you
+have applied so far.
+[19:19] So, for example,
+in the beginning,
+[19:21] you would have a state
+that looks like this.
+[19:25] Now, just to spell this
+out, what this means,
+[19:28] it says that there is one
+goal that you currently
+[19:31] need to prove, and that goal is
+that under this context, which
+[19:36] is that x is a natural number,
+this is the variable that you're
+[19:41] allowed to use.
+[19:42] And then this symbol,
+turnstile, means that this
+[19:45] is what you need to prove.
+[19:46] So this is basically the theorem
+that you're starting out with
+[19:51] before you have
+applied that tactic.
+[19:53] Now, you have this
+state, and then
+[19:56] you apply the tactic, which is,
+you can think of it if you're
+[19:59] thinking of this as a
+reinforcement learning setup,
+[20:03] you are applying an action.
+[20:05] And so, you apply that action,
+and that leads to a new state.
+[20:09] And then this state
+here looks like this.
+[20:12] So this intro
+tactic, what it does
+[20:14] is that it introduces
+this new hypothesis, which
+[20:19] over here now says
+that, OK, let us assume
+[20:23] that x is even along with--
+[20:26] sorry.
+[20:26] Yeah x is even along with
+x being a natural number.
+[20:29] And this property
+that x is even,
+[20:32] we are going to
+give it a name, h.
+[20:33] And then under this context,
+which is really like,
+[20:38] you have now declared
+a new variable
+[20:40] which has a certain
+type attached to it.
+[20:43] So now you are trying to show
+that this x squared is even
+[20:46] as well.
+[20:48] And then you apply
+this next tactic,
+[20:51] which leads to another state.
+[20:54] So these tactics are
+written by humans
+[20:56] and they encode various rules of
+simplification in mathematics.
+[21:03] And so what you
+are really doing is
+[21:05] that for each of these rewrite
+rules that you are applying,
+[21:08] the state is changing.
+[21:10] So, for example, now
+the state has changed
+[21:12] to you showing that if--
+[21:16] so this x modulo 2 times x
+modulo 2, the whole thing modulo
+[21:21] 2, that is equal to zero.
+[21:23] And then the next rewrite
+is going to simplify this.
+[21:27] And then, finally,
+you will end up
+[21:29] with zero equals zero basically.
+[21:33] And at that point,
+you're going to hit QED
+[21:36] because your goal will
+just disappear, right?
+[21:39] So each of these
+rules you can think
+[21:40] of as simplifying the state.
+[21:41] And then at the end, ideally
+you want to end up in this state
+[21:45] where there are no open goals.
+[21:47] And at that point,
+you can end the proof.
+[21:51] So that's what these formal
+proof assistants look like.
+[21:55] Really, they're state machines
+where you have the proof state.
+[21:59] And then these actions,
+which are these tactics.
+[22:01] And then they lead
+to a new proof state.
+[22:03] And your goal really is to
+find a sequence of tactics
+[22:08] that take you from this initial
+state of the prover to this QED
+[22:14] state, where there are no
+more goals to be discharged.
+[22:20] OK, so now let's talk
+about the two phases
+[22:26] that I mentioned previously.
+[22:28] The autoformalization phase
+is something like this.
+[22:32] You are starting with this
+informal math statement.
+[22:34] There exists an infinite
+number of primes.
+[22:36] And then there is this
+proof of this as well in
+[22:40] natural language.
+[22:41] And now you are applying
+your autoformalization model.
+[22:45] And later I'll talk a little bit
+about how this could be done.
+[22:48] But the version 0
+of this would be
+[22:51] that you throw a language model
+at this informal statement,
+[22:55] and then out comes this
+formal theorem, right?
+[22:58] And so this one is in Lean.
+[23:01] Now what this says is that--
+[23:05] well, I won't read
+this thing in detail,
+[23:09] but maybe I can read
+the theorem statement.
+[23:13] It says that, so for
+all n there exists
+[23:16] a p such that p is bigger than--
+greater than or equal to n,
+[23:20] and then p is also
+a prime, right?
+[23:22] So that's how you
+establish that there's
+[23:23] an infinite number of primes.
+[23:25] And then the rest
+of it is the proof.
+[23:31] So then, let's
+assume that you have
+[23:33] done this sort of
+formalization, you
+[23:34] have a formal
+statement of a theorem,
+[23:37] and now you're
+trying to prove it.
+[23:39] So previously, I showed you
+that there are these tactics,
+[23:43] these simplification rules
+that you could apply.
+[23:45] But now you can imagine a search
+problem where at each state
+[23:49] there is a set of potential
+tactics that you could apply.
+[23:53] And this leads to the
+creation of a search tree.
+[23:56] And then your goal
+is to basically find
+[23:58] a path in this tree
+that ends up at QED.
+[24:03] Now, of course, the complexity
+of here is that at each point
+[24:07] you can have a very, very large
+number of potential branches
+[24:11] in this tree.
+[24:12] And then, also, this tree
+can be quite deep, right?
+[24:15] Because if you're talking
+about really advanced
+[24:17] mathematical theorems,
+you could end up
+[24:21] with proofs that are thousands
+and thousands of lines long.
+[24:24] And so, this is a
+far harder problem
+[24:27] than any game-playing
+problem that we
+[24:29] have been able to solve so far.
+[24:33] So it's remarkable to see
+the kind of progress that
+[24:36] has already happened in this
+task over the last few years.
+[24:42] Now, AlphaProof, of course,
+you have already seen.
+[24:45] You've seen this picture.
+[24:47] There's this formalizer network
+that does this formalization
+[24:50] into formal problems.
+[24:52] And then the solver
+network, it tries
+[24:54] to generate these formal proofs.
+[24:56] One big insight was that
+even more formalized problems
+[25:00] are still helpful for learning.
+[25:02] And this sort of proof
+the solver network this
+[25:06] is being trained with RL.
+[25:07] And then, one big insight was
+that you could complement RL
+[25:11] training with test-time RL when
+you're actually doing the IMO
+[25:13] or any other-- solving any other
+math problem you could would
+[25:18] generate--
+[25:19] you could basically do this
+sort of test-time RL on that.
+[25:25] But again, you have
+seen all of this.
+[25:27] So I'll move on.
+[25:29] The approach that I'm
+going to talk about today,
+[25:32] this is called COPRA.
+[25:34] This was published in a paper
+at the Conference of Language
+[25:39] Models last year.
+[25:41] And this is led
+by my PhD student
+[25:43] at UT Austin, Amitayush Thakur.
+[25:47] Now, this is the overall
+picture of COPRA.
+[25:53] It still has this view of
+interaction between an LLM
+[26:00] that is predicting
+the proof steps
+[26:04] and the actual prover
+that is executing
+[26:08] the step that is
+proposed by the LLM
+[26:12] and then giving you a new state.
+[26:16] However, the difference
+is that while AlphaProof
+[26:19] does this sort of advanced
+reinforcement learning
+[26:24] for training.
+[26:24] So here, you're just taking
+this sort of an LLM agent
+[26:27] approach, where you
+have a frontier LLM,
+[26:32] and the frontier LLM is
+being provided the proof
+[26:35] state and some information
+from the history of the search
+[26:40] so far.
+[26:41] And then it is
+making a prediction
+[26:45] as to what's the next
+step that you should take.
+[26:48] And then you are taking that
+step, and you are executing it,
+[26:51] and then you are getting back
+a new state of the proof.
+[26:55] And then this process
+is continuing, right?
+[26:58] Now one important
+thing is that there
+[27:00] is an external search that is
+going on, a depth-first search.
+[27:03] And then inside the depth-first
+search, you are doing all this,
+[27:07] right?
+[27:07] But it is fundamentally
+different in the sense
+[27:10] that everything is in context.
+[27:12] There is no actual adjustment
+to the weights happening.
+[27:17] But what is interesting
+is that even
+[27:19] with a relatively small
+amount of compute,
+[27:21] this approach was still
+able to do quite well.
+[27:24] And so, I think
+that this strategy
+[27:26] has a lot of long-term promise.
+[27:29] For one, because it immediately
+leverages advances in LLMs,
+[27:34] as, for example, you go
+from GPT-4 to o1 to o3
+[27:40] and to maybe someday
+GPT-5, then you're
+[27:44] going to immediately leverage
+those advantages-- advances.
+[27:49] And it also has this ability
+to integrate natural language
+[27:54] and formal language reasoning,
+because ultimately, you
+[27:58] are just using an
+LLM to generate
+[28:01] the proofs in the formal--
+[28:05] as formal language,
+but at the same time,
+[28:08] the LLM has the ability to
+do natural language as well.
+[28:11] So this is something
+you can benefit from.
+[28:14] And I'm going to show
+concrete examples of this
+[28:17] in a little bit.
+[28:19] Another thing is
+that it's also--
+[28:21] this strategy is also
+applicable even if there is
+[28:24] no corpus of training problems.
+[28:26] Now, one of the challenges
+in doing AI for math,
+[28:30] once you go outside of settings
+such as math competitions,
+[28:34] is that you're really trying
+to solve a new problem, right?
+[28:37] So if you're a math
+researcher, you're
+[28:39] trying to solve a new problem
+that, by design, is quite
+[28:43] different from the problems
+that a lot of other people
+[28:46] have solved previously.
+[28:48] So in such a situation,
+it's a bit challenging
+[28:52] to create a corpus
+of training problems
+[28:58] and then do training
+of an RL agent.
+[29:03] However, with an
+in-context learning agent,
+[29:07] the appeal is that
+you can still use it.
+[29:12] The LLM has inside it a
+ton of prior knowledge,
+[29:16] and that knowledge is something
+that you could benefit from,
+[29:19] right?
+[29:20] And the LLM can, for
+example, bring in knowledge
+[29:22] about related problems,
+even though it's not
+[29:26] been explicitly trained on them
+beyond the pre-training stage.
+[29:31] And in the longer run, of
+course, the two approaches
+[29:36] of in-context learning
+and explicit training,
+[29:41] these are not incompatible.
+[29:43] So you could imagine the
+in-context learning agent being
+[29:46] used to generate a lot
+of different traces
+[29:51] by interaction with
+the proof assistant,
+[29:53] and then you could use
+them for doing fine-tuning.
+[29:57] Now, one question that
+you may have over here
+[30:00] is that, well, so
+do I really need
+[30:04] to even have Lean in that case?
+[30:06] Couldn't I just rely
+on the LLM alone?
+[30:10] And I would say that
+the difference here
+[30:12] is that this interaction
+with the proof assistant
+[30:16] is still providing a very
+strong form of grounding.
+[30:21] So, for example, if you take
+a step predicted by the LLM
+[30:25] and then you find that this
+is actually an invalid step,
+[30:28] you're going to get
+that feedback right away
+[30:30] from the proof assistant.
+[30:32] And you can take that feedback,
+and you can then stick it back
+[30:35] into the prompt of the LLM.
+[30:37] And then you can
+ask it to continue.
+[30:42] And then, hopefully, it
+will learn from its mistake
+[30:44] and carry on, right?
+[30:45] So in the long
+run, it's possible
+[30:48] that once you have generated a
+very, very, very large number
+[30:51] of traces via interaction
+with the prover,
+[30:55] maybe you have fine-tuned your
+LLM on this-- all this data,
+[30:58] and then the LLM
+is progressively
+[31:00] getting better and better.
+[31:01] And there is a point
+beyond which it just
+[31:06] doesn't make any mistakes
+with this kind of proof.
+[31:09] Maybe we'll get there someday,
+but we are still pretty far away
+[31:14] from that possibility.
+[31:16] So at least, as of now, I think
+that this sort of interaction
+[31:22] between LLM and proof assistant
+is still extremely valuable.
+[31:28] OK, so here is this COPRA system
+in a little bit more detail.
+[31:32] So what is going
+on here is that you
+[31:33] are starting with
+a formal theorem,
+[31:36] but you could also have
+some informal hints.
+[31:38] You could imagine bringing
+autoformalization into this
+[31:42] picture as well, but we didn't.
+[31:44] And so, the first
+step is that you
+[31:47] create a prompt based on the
+statement of the theorem.
+[31:51] And then you feed it
+to a frontier LLM,
+[31:58] and you just ask it to generate
+some potential tactics that
+[32:04] would be of interest.
+[32:05] And now you do
+the, your model has
+[32:12] predicted a set of one of
+the actions, or tactics,
+[32:18] in this case.
+[32:19] And then you parse
+that tactic because it
+[32:21] will be in the form of text.
+[32:22] So now you parse it into
+a structured format.
+[32:25] And then you just execute it
+via the proof environment.
+[32:31] And this could be Lean
+or Coq or Isabelle.
+[32:35] And then after you do
+that, in the lucky case,
+[32:39] you already hit QED,
+and this is all done.
+[32:42] But if you fail, if
+this tactic is invalid,
+[32:49] or there are still some
+open goals that you still
+[32:53] need to resolve, in that
+case, you get some feedback,
+[32:57] and then you augment the prompt
+and then backtrack if needed.
+[33:03] And then, we also have
+this retrieval phase
+[33:07] over here, which seem to add to
+the performance of the system.
+[33:13] And here, you are also able
+to query a lemma database
+[33:17] and bring in some
+relevant lemmas
+[33:19] and then add it
+back to the prompt.
+[33:21] And this process just
+continues over and over
+[33:24] and over again until you have
+resolved the original theorem,
+[33:29] or alternatively,
+you have timed out.
+[33:33] So here's the prompt of the
+system in a little bit more
+[33:36] detail.
+[33:37] So here, as you see, there is
+the serialized proof state.
+[33:42] And here, you have
+what is the goal
+[33:46] that you still have to prove.
+[33:47] And what are the hypotheses
+that are being made.
+[33:52] So over here, for example,
+the hypothesis include--
+[33:55] these are the assumptions
+you're making, right?
+[33:57] So this includes x being of
+type NAT, natural numbers.
+[34:01] And then, also, x being even.
+[34:05] And then you have
+the goal, which
+[34:07] is x square modulo
+2 is equal to 0.
+[34:11] We also have this information
+about the last step.
+[34:15] So the way to read this is
+that from left to right,
+[34:18] you are looking at successive
+queries to the LLM.
+[34:21] So the first column
+over here, this
+[34:24] includes information about
+what is the first query
+[34:27] that you are making.
+[34:28] So the first thing
+that you have done.
+[34:30] So let's say that
+you already have
+[34:32] made this decision that you
+are going to have this intro h
+[34:38] tactic, right?
+[34:38] So that's what created
+that hypothesis, x squared
+[34:41] modulo 2 equals 0.
+[34:43] So then this is the last step.
+[34:45] This is stored in a stack and
+fed as part of the prompt.
+[34:52] Now then, at this point
+there has been no error.
+[34:57] So then, you get this
+response from this LLM
+[35:02] after you feed this information
+that the next thing that you
+[35:06] should do is RWH.
+[35:08] And then, now, if you
+try to execute it,
+[35:11] you might get an error message
+because the rewrite tactic
+[35:15] failed.
+[35:16] And then this information,
+this error feedback,
+[35:21] you send it back to
+the LLM, and then
+[35:23] that's the next You say
+that, try again LLM.
+[35:27] And then the LLM says
+that, OK, let's try apply
+[35:30] nat.mul_mod_right.
+[35:33] Now the details of this
+tactic doesn't matter,
+[35:35] it's something involving
+modular multiplication.
+[35:38] But the point is
+this is also wrong.
+[35:40] So then, again,
+at the next step,
+[35:42] you get an error feedback--
+[35:44] error message.
+[35:45] And this is something you
+stick back into the prompt.
+[35:48] And then you make a query again.
+[35:50] And now it says, oh, let's try
+this rewrite with nat.mul_mod.
+[35:56] And, yay, this time it works.
+[35:58] So now you see that the
+interaction result doesn't
+[36:01] have any error message in it.
+[36:03] It's a success.
+[36:04] And so, this is now
+put into the stack.
+[36:08] And so the last step,
+as you see, has changed.
+[36:11] It's now rw nat.mul_mod.
+[36:14] So now you're going to try
+to generate the next step.
+[36:18] And then this time it-- the
+LLM generates this rw h, right.
+[36:24] And so this is how this
+process is going to continue.
+[36:26] In a nutshell, you may query
+the LLM, get some error message,
+[36:34] and then stick it
+back into the prompt,
+[36:36] and then continue, right?
+[36:38] And this process
+would just go on.
+[36:42] OK.
+[36:44] So this evaluation was done
+in 2024, actually late 2023.
+[36:51] So the world has
+changed since then.
+[36:53] But at least at that point,
+we compared with GPT-4
+[36:56] and found that GPT-4 frequently
+gave incorrect errors,
+[37:01] incorrect proofs.
+[37:04] And by contrast, this feedback
+with the proof environment,
+[37:11] Lean in this case,
+really helped for COPRA.
+[37:15] And so, even though it was
+using the same underlying model,
+[37:19] the interaction allowed it
+to create a correct proof
+[37:22] in this case.
+[37:25] Here are some
+experimental results.
+[37:27] You can see the
+details in the paper.
+[37:30] But in this picture,
+on the x-axis,
+[37:33] you see the number of queries.
+[37:34] And on the y-axis, you see
+the number of theorems proved.
+[37:38] So what we saw over here is
+that, pretty quickly, the COPRA
+[37:43] approach was able to
+prove a lot of theorems
+[37:46] with a relatively small
+number of queries.
+[37:48] Whereas the other approaches,
+that didn't get that far.
+[37:57] And here is an evaluation
+on miniF2F test.
+[38:01] So the absolute
+numbers are not great.
+[38:04] But then the amount
+of compute we
+[38:06] provided COPRA was
+also relatively small.
+[38:09] We just allowed 60
+queries per proof attempt.
+[38:14] Now what we saw here was
+that we got quite reasonable
+[38:21] performance, comparable with
+the state-of-the-art methods.
+[38:26] Now, of course,
+since then, the state
+[38:31] of the art on this benchmark
+has moved quite a bit.
+[38:34] So miniF2F, for those of you
+who don't know, is, by the way,
+[38:36] it's a compilation of
+computation mathematics
+[38:41] problems, mostly at
+the high school level.
+[38:44] And so it's of the form
+that here is a theorem
+[38:51] and come up with a lean proof.
+[38:53] So here, what we
+see is that there
+[38:55] was this around 29% or
+30% success rate, which
+[39:02] is behind the current SOTA.
+[39:05] But I think one
+question would be that
+[39:06] if you take this approach
+and scale it up, then
+[39:08] where would you end up?
+[39:10] And there are no public
+results on that yet.
+[39:16] So in this talk,
+though, I'm going
+[39:18] to go beyond the method
+that we just presented,
+[39:26] which is the basic COPRA, and
+talk about some results that we
+[39:32] just recently developed.
+[39:33] This is not published yet.
+[39:35] And here, we are leveraging
+the ability of LLMs
+[39:42] to abstract and also to use
+natural language reasoning,
+[39:49] because I think
+that this is really
+[39:50] where the sort of approach
+that we just presented.
+[39:55] This shines because of
+the tremendous amount
+[39:58] of world knowledge that
+is stored inside LLMs.
+[40:00] We can really use them in a
+lot more powerful capacity
+[40:07] than just as a predictor
+of the next tactic.
+[40:12] And so, here's a sample problem.
+[40:16] This is from IMO.
+[40:17] And this is saying that,
+prove that this fraction is
+[40:21] irreducible for every
+natural number n.
+[40:24] So what we'll see is
+that the COPRA approach
+[40:32] can be extended a little
+bit to, in fact, come up
+[40:37] with a hierarchical
+solution to this problem.
+[40:42] And so, this will involve
+breaking down the problem
+[40:45] into subproblems and then
+solving hierarchically.
+[40:48] OK, so how do we do this?
+[40:50] Well, first what
+we do is that we
+[40:52] ask the LLM to come up
+with an informal solution
+[40:57] to this problem.
+[40:59] And so, I don't know if this
+font is too small to read,
+[41:04] but basically what is going on
+here is that this was fed to 03,
+[41:08] a reasoning model, and so, it
+was able to come up with this
+[41:12] step-by-step plan.
+[41:14] So, for example, you
+first define the GCD
+[41:17] and then subtract to simplify.
+[41:21] Then you apply the
+Euclidean algorithm.
+[41:23] And then you conclude
+something about the GCD.
+[41:25] And then you have
+the final conclusion.
+[41:29] So then, we say
+that, OK, so let's
+[41:33] take this informal decomposition
+and put it in the context.
+[41:39] Now, let's say
+that it's our goal
+[41:43] to prove this lemma
+in Lean 4, right?
+[41:47] So this is the formal
+statement of the same problem.
+[41:50] And we are just
+saying that, don't
+[41:52] try to write the proof, OK?
+[41:54] So let's just write the subgoals
+that are needed to prove this.
+[41:59] But we are doing
+this conditioned
+[42:01] on the informal proof
+that we just generated.
+[42:06] And so, here is the proof of--
+[42:10] or here is the
+decomposition of this lemma.
+[42:14] So what you see is that it comes
+up with these three subgoals.
+[42:21] So first, you show that
+this GCD step 1 is true.
+[42:29] And it's basically saying that
+this GCD of 21n plus 4 times 14n
+[42:33] plus 3 is the same
+as the GCD of this.
+[42:36] 14n plus 3 times 7n plus 1.
+[42:42] So then there is the second
+one, and there's the third one,
+[42:48] and so on and so forth.
+[42:50] And then, finally, you
+have the main theorem
+[42:52] that combines all of the above.
+[42:55] So the appeal of this
+sort of decomposition
+[42:58] is that now this
+very complex problem
+[43:02] has been simplified into
+these three subproblems, which
+[43:07] are a lot more tractable.
+[43:09] So then in the
+next step, we then
+[43:12] ask COPRA to solve the
+subproblems one by one.
+[43:17] And what we see is
+that COPRA is, in fact,
+[43:22] able to come up with these
+proofs of the subproblems.
+[43:26] And here we are.
+[43:29] Here are the proofs.
+[43:30] Again, I'm not going to go
+into the details of the proofs.
+[43:33] This is something that you have
+to stare at for a little bit.
+[43:37] And it's not actually
+especially complicated.
+[43:42] But then, once you have
+proven these lemmas,
+[43:48] then you just put them
+all in the context,
+[43:53] and then you also put
+in the informal proof,
+[43:56] and then you ask Copra to
+prove the full theorem.
+[44:03] And it is able to do that.
+[44:06] But COPRA is not
+able to prove this
+[44:08] if you were giving it just this
+entire theorem all as one block
+[44:15] and just asked it to solve.
+[44:18] So what we did here
+is really something
+[44:23] that is a highly powerful
+design pattern in LLM agents.
+[44:32] LLM agents are
+extraordinarily flexible.
+[44:35] So with just some variations
+on the ways you do prompting,
+[44:41] you are able to make it
+do very, very different
+[44:44] things, things that would take
+a tremendous amount of training
+[44:47] if you weren't using
+these pre-trained models.
+[44:50] And so what we did
+over here is that we
+[44:53] started with a
+system that was just
+[44:56] designed to be a step-by-step
+predictor of a low-level proof.
+[45:02] And then we made it do
+high-level reasoning
+[45:05] at this more abstract
+level, right,
+[45:07] because if you can
+think of these subgoals
+[45:11] as basically being
+abstractions of subproblems.
+[45:15] And so the LLM is able to
+create these abstractions.
+[45:20] And once you have created--
+[45:22] made use of these abstractions,
+your proof process
+[45:26] becomes a lot simpler,
+because now you're
+[45:28] able to go hierarchically.
+[45:31] And all of this
+was doable without
+[45:35] any substantial training.
+[45:37] You were just using
+the power of prompting.
+[45:43] And to me, this is
+a huge revelation,
+[45:47] the idea that you can use
+the power of language,
+[45:52] the power of all of the
+stored knowledge inside LLMs,
+[45:55] and then combine
+that with this sort
+[45:57] of higher-level algorithmics
+where you just put together
+[46:02] the informal and formal
+reasoning steps in various ways
+[46:05] and change the
+prompting strategy,
+[46:07] and you get something
+that is qualitatively
+[46:10] different in capability.
+[46:16] And now it turns out that
+the Lean feedback here
+[46:19] was also really important
+because at least
+[46:22] with o3-mini, what we found is
+that there were hallucinated
+[46:25] lemmas and so on.
+[46:26] And the grounding that was
+provided by the Lean theorem
+[46:30] prover was absolutely critical
+to solve this problem.
+[46:37] So now I want to
+talk a little bit
+[46:40] about a different
+application of the same idea.
+[46:44] This is in the context of formal
+system verification, which
+[46:47] is one of the most
+practical applications
+[46:51] of rigorous
+mathematical reasoning.
+[46:54] And so, what you're doing
+in formal verification
+[46:56] is that you are mathematically
+modeling a real-world system
+[47:00] as a set of definitions,
+and then you
+[47:04] are modeling system
+properties as theorems
+[47:07] involving these definitions.
+[47:08] And then you're
+proving these theorems.
+[47:11] These methods have led to
+extremely rigorous systems,
+[47:17] systems that are
+very difficult to--
+[47:19] or almost impossible to hack.
+[47:21] For example, there was this
+time in a program organized
+[47:25] by the US Department
+of Defense, they
+[47:31] used this formally verified
+Linux kernel called seL4 to--
+[47:39] and they put this on a drone.
+[47:41] And then they got
+a red team to try
+[47:45] to attack this drone for
+a period of six weeks,
+[47:50] and they failed because
+the rigor provided
+[47:53] by formal verification
+was just so much.
+[47:57] Now, historically,
+formal verification
+[47:59] has been extremely expensive,
+and as a result, it's costs--
+[48:05] it's not really
+been widely deployed
+[48:08] because the costs are not
+justifiable except in the most
+[48:12] safety-critical scenarios.
+[48:15] However, with the rise of
+AI, especially AI for math,
+[48:19] the cost-benefit equation
+changes quite drastically.
+[48:23] And now, you can imagine
+doing not only proofs of math,
+[48:29] but proofs of
+real-world systems of,
+[48:32] for example, correctness,
+security, performance, and so
+[48:35] on, using this growing
+generation of AI tools.
+[48:41] So here, I'm going to show you
+a basic example of this idea.
+[48:48] This can be scaled
+up substantially
+[48:50] with more powerful
+models and more compute.
+[48:56] But here, what we
+are going to do
+[48:59] is to give you a very,
+very basic compiler
+[49:02] and then show how to formally
+verify its correctness.
+[49:07] Now this is so
+simple, the compiler,
+[49:09] that it's almost a joke.
+[49:11] But trust me, when you go to
+more advanced compiler design,
+[49:17] the fundamentals don't change.
+[49:18] It's really the
+same sort of idea,
+[49:21] it's just that there
+is more complexity.
+[49:26] Now, OK, to do
+compiler verification,
+[49:29] you would need the
+following pieces.
+[49:31] So first of all, you would need
+to have a notion of a language.
+[49:38] And a language consists
+of a syntax and semantics.
+[49:42] So syntax is a
+grammar that defines
+[49:44] the form of the programs.
+[49:46] And then semantics are
+the rules that define
+[49:49] the executions of programs.
+[49:51] And then a compiler
+is basically a set
+[49:53] of rules that translate programs
+from one language to another.
+[49:57] And then verifications
+is that you
+[49:59] prove that the rules
+preserve semantics.
+[50:04] So here, we are going to talk
+about a very basic expression
+[50:09] language in which you are
+allowed to do addition
+[50:14] and multiplication.
+[50:15] So this is just basic
+arithmetic expressions.
+[50:17] And the syntax that
+you see over here,
+[50:20] this is in a
+language called Coq.
+[50:23] And here it looks
+a lot like Lean.
+[50:27] It's similar, dependently typed,
+functional programming language.
+[50:33] And so, what you're
+doing over here
+[50:35] is that you're defining
+this binary operator.
+[50:37] This can be either
+plus or times.
+[50:39] You're defining this
+notion of an expression.
+[50:41] And this is saying that it
+can be either a constant
+[50:45] or a binary operation.
+[50:47] And then, there
+are some rules that
+[50:50] tell you how to actually
+evaluate these expressions.
+[50:57] If you're given an
+expression, what
+[50:59] will be the result
+when you evaluate it?
+[51:01] And I'm not going to go
+into the rules in detail,
+[51:04] I'll share the slides.
+[51:05] And if you are
+interested, you can--
+[51:10] well, you can look up
+many resources on the web.
+[51:14] But also, I'm happy to answer
+questions over email offline
+[51:20] or, actually, after this talk.
+[51:22] OK, so then you define
+the source language.
+[51:25] So here, what you see is
+that you can define the rules
+[51:28] that we saw previously.
+[51:30] They allow you to
+define the semantics
+[51:34] of quite complex expression.
+[51:36] So here, what you're saying
+is that you have a Const 2,
+[51:39] so an expression can be a
+constant or a binary operation
+[51:44] or the result of a
+binary operation.
+[51:46] And you see that
+this is the result
+[51:48] of applying a binary
+operation to two expressions.
+[51:51] And so, this is a recursive
+definition, really.
+[51:54] And then you are getting
+an expression as output.
+[51:59] So here what you are
+saying is that you
+[52:02] can evaluate various complicated
+expressions in this way.
+[52:08] And so, now you have to define
+the target language, right?
+[52:11] So this is the--
+[52:12] a compiler is a mapping from
+a source language to a target
+[52:14] language.
+[52:15] So now you have to define
+the target language.
+[52:17] And so, what you
+did over here is
+[52:19] that you are defining
+the target language
+[52:22] as a list of instructions.
+[52:25] So a program is a
+list of instructions.
+[52:27] And an instruction
+is either this sort
+[52:30] of a constant expression or a
+binary operation expression.
+[52:34] So one way to see it is that
+while the original expression
+[52:39] in the source language was
+defined in this recursive way,
+[52:45] in the target language, when
+you are interpreting it,
+[52:50] you are doing it using a stack.
+[52:53] So this is a well-known idea
+in programming languages
+[52:56] that if you have a
+recursive expression,
+[53:00] let's say an
+arithmetic expression,
+[53:03] then the way you can execute
+it is by maintaining a stack.
+[53:06] And you can keep pushing
+the current instruction
+[53:09] on the stack.
+[53:10] And you can basically do
+this kind of a low-level--
+[53:14] build up a low-level
+machine, a stack machine.
+[53:17] Actually, a lot
+of early computers
+[53:19] were based on this idea.
+[53:20] And then the stack basically
+keeps pushing new things on it.
+[53:24] And then you pop,
+and then you read
+[53:27] the value that was just popped.
+[53:30] So, while very basic,
+it still captures
+[53:36] a lot of important
+programming language concepts.
+[53:40] Now, the point is
+that I want to believe
+[53:45] that the mapping that I
+would do between these two
+[53:48] representations is
+actually correct.
+[53:50] But, of course, first I
+have to define the compiler.
+[53:54] And so, this is the compiler.
+[53:56] So what this says
+is that I am going
+[53:58] to take my input expression
+in the source language.
+[54:02] And then I'm going to
+do a pattern matching.
+[54:04] I'm going to consider these
+two cases, either when
+[54:07] it's a constant or when
+it's a binary operation.
+[54:10] And in each of these
+cases, I'm going
+[54:12] to generate a target
+language program.
+[54:16] So in the target
+language program,
+[54:18] the entire sequence
+of instructions
+[54:20] is just written down as a list.
+[54:22] Now, it's when you are
+executing the program that you
+[54:24] are maintaining a stack, right?
+[54:25] That's when you are doing
+all of the, kind of,
+[54:29] modeling the recursion.
+[54:31] But in the program itself, you
+are just doing this kind of a--
+[54:36] you are generating the
+instructions from E2.
+[54:38] You are generating the
+instructions from E1,
+[54:40] and then you are
+sticking this b.
+[54:41] And then you are just
+building up a stack with--
+[54:45] or a sequence of instructions
+with all of this.
+[54:51] So, for example, if you
+started with this expression
+[54:54] Binop plus Const 2 Const 3.
+[54:57] So this is 2 plus 3 is,
+that's really the expression.
+[55:00] And so then, in the
+lower level language,
+[55:04] it's going to look like this.
+[55:07] So then, you have to define
+this correctness theorem, which
+[55:10] says that for all e in the--
+[55:14] all expressions e in
+the source language,
+[55:17] upon compiling this
+expression, you
+[55:19] get something that,
+when you execute it
+[55:22] in the programming
+language's semantics,
+[55:24] you get the same thing
+as if you evaluated
+[55:29] the original expression in the
+source language's semantics.
+[55:33] So these two are the same.
+[55:37] Now, it turns out that COPRA
+cannot prove this theorem just
+[55:42] in one shot.
+[55:43] So what you do instead
+is that you ask the LLM.
+[55:48] Again, think of the IMO
+example that I showed,
+[55:52] this is quite similar.
+[55:54] So you ask the LLM to invent
+a lemma, an intermediate goal.
+[55:58] So the LLM goes ahead
+and thinks for a while.
+[56:04] And this is o1 here.
+[56:05] And it comes up with
+this intermediate lemma,
+[56:08] which basically says
+that, rather than trying
+[56:12] to prove the entire compiler
+correct, what you instead do
+[56:18] is that you just show
+one step of compilation,
+[56:24] like for one subexpression,
+that's going to be correct.
+[56:30] So basically, that's
+the target theorem.
+[56:34] The auxiliary lemma is saying
+that you can compile one
+[56:37] instruction correctly first.
+[56:39] And so this is really just
+simplifying the problem,
+[56:43] breaking it down in
+a step-by-step way.
+[56:46] And then we ask COPRA to come
+up with a proof of this one
+[56:50] instruction.
+[56:51] And it's able to,
+which is fantastic.
+[56:55] But then, what we
+can do is, just
+[56:58] in the way we did previously,
+we stick this back.
+[57:03] We take this proof, give
+it to the COPRA agent,
+[57:08] put it in the
+prompt, and then ask
+[57:09] it to prove the entire
+theorem correct.
+[57:12] And it's now able to do this.
+[57:16] So, that's what I have
+on this particular topic.
+[57:23] In summary, I would say that
+mathematical discovery with LLM
+[57:26] agents is extremely promising.
+[57:30] I think that you can go a
+very long distance with just
+[57:35] in-context learning.
+[57:38] But you want to have
+the proof assistant
+[57:40] feedback for proper grounding.
+[57:42] And there is a lot of
+higher-level agent design
+[57:46] that you can do where you
+can combine agents that
+[57:51] are doing, for example,
+formalization with agents that
+[57:54] are doing hierarchical
+planning with agents
+[57:57] that are doing low-level stuff,
+low-level proof generation.
+[58:02] And this is a very new space.
+[58:04] There is a lot to
+be done over here.
+[58:07] Now, one question,
+again, going back
+[58:10] to something we
+asked previously.
+[58:12] Can you get rid of
+this interaction
+[58:14] by just pushing the
+whole thing to training?
+[58:17] Maybe you generate a lot of
+training data in this way
+[58:22] by interaction with
+the prover, and then
+[58:24] you just continue training
+the LLM with those tracers.
+[58:29] And then at some point, the
+LLM just gets good enough.
+[58:33] We are not there yet.
+[58:35] But maybe this is a world
+that we can get to someday.
+[58:38] But currently, we have
+to have these sorts
+[58:42] of agent architectures.
+[58:45] Now there's this paper
+several of us recently wrote.
+[58:51] And you may have seen a
+reference to this paper
+[58:53] previously.
+[58:55] Kaiyu is the lead
+author of this,
+[58:58] and Dawn was the leader
+of the overall effort.
+[59:03] But if you are curious
+about this area,
+[59:06] you want to know more about
+specific challenges, roadmaps,
+[59:10] then I would recommend that
+you go and look at this paper.
+[59:17] I had a few things to say
+about open challenges,
+[59:19] but I'm going to skip those
+in the interest of time.
+[59:22] And I'm going to move on
+to the next topic, which
+[59:27] is AI for scientific discovery,
+because I want to emphasize
+[59:36] that this idea of LLM agents,
+this has a lot of value
+[59:40] in this sort of
+deductive mathematics,
+[59:42] where you are starting
+with a set of principles,
+[59:45] a set of axioms,
+definitions, and then you
+[59:47] are proving statements
+in a step-by-step way.
+[59:50] But it also has
+tremendous potential
+[59:52] in empirical discovery,
+which is what happens
+[59:54] in most of the natural sciences,
+where you are starting with data
+[59:59] and then you are trying
+to fit some hypotheses
+[01:00:05] or some experimental claim, yes,
+or some claims to this data.
+[01:00:12] Now, we'll see that this is also
+a place where the abstraction
+[01:00:15] abilities of LLMs play
+a potentially very
+[01:00:18] interesting role.
+[01:00:21] OK.
+[01:00:22] So very quickly, this is
+what a natural science
+[01:00:27] process looks like.
+[01:00:28] You choose a research question.
+[01:00:30] You generate some hypotheses.
+[01:00:32] You do an experimental
+setup, you collect some data,
+[01:00:36] you do some analysis of the
+data, you interpret the data.
+[01:00:39] And then you report
+to the community.
+[01:00:44] And so, just as an
+example of this,
+[01:00:48] if you think of the world of
+astronomy, back in the day,
+[01:00:53] there was this problem
+that was observed,
+[01:00:57] which is that people
+believed that the Earth was
+[01:01:02] the center of the solar system.
+[01:01:04] But then some of the planets
+appeared to move backward,
+[01:01:09] and so this led to this
+creation of this new hypothesis
+[01:01:12] that, in fact, we have
+a heliocentric model.
+[01:01:15] And then this led
+to the creation--
+[01:01:17] the collection of more data.
+[01:01:19] Tycho Brahe, in particular,
+observed Mars and then came up
+[01:01:24] with a whole bunch of precise
+measurements of the planet's
+[01:01:27] positions.
+[01:01:29] And then, Kepler chose
+to analyze this data
+[01:01:34] and then fit a wide variety of
+geometric shapes to this data.
+[01:01:37] And then he came up with
+this, Kepler's third law.
+[01:01:41] And then, this eventually led
+to Newton's law of gravitation.
+[01:01:47] So there was this
+process that happened
+[01:01:49] in science, which involved
+trading in abstractions.
+[01:01:55] Seeing some data
+and then coming up
+[01:01:59] with this law in terms
+of abstract principles,
+[01:02:03] but then further generalizing
+it into a law that
+[01:02:06] was even more explanatory.
+[01:02:10] So I think that LLM agents
+have tremendous potential
+[01:02:15] in automating a lot of
+pieces of this pipeline.
+[01:02:18] And in particular
+here, we are going
+[01:02:20] to focus on the problem of
+symbolic regression, which
+[01:02:25] is the task of coming
+up with equations based
+[01:02:30] on empirical observations.
+[01:02:33] So, for example,
+an instance of that
+[01:02:36] would be that if you were given
+these measurements of planet
+[01:02:39] Mars and then you wanted
+to discover Kepler's law,
+[01:02:45] how do you do that
+from the data?
+[01:02:49] Now, one would think
+that LLMs would not
+[01:02:52] be a great fit for this problem
+because the data is just
+[01:02:56] really low level, right?
+[01:02:57] This is just a bunch of numbers.
+[01:03:01] However, it turns out that LLMs
+do have a tremendous potential
+[01:03:06] over here in the
+sense that they can
+[01:03:10] bring in prior scientific
+knowledge into the picture.
+[01:03:14] What you have to do,
+though, is that you
+[01:03:15] have to complement
+the use of LLMs
+[01:03:18] with the use of other machinery
+that is able to, for example,
+[01:03:23] evaluate hypotheses on the data
+and give you some notion of how
+[01:03:30] well it performed.
+[01:03:32] So once you have that kind
+of a mechanism for evaluating
+[01:03:36] LLM-generated hypotheses, you
+can create an agentic loop
+[01:03:40] where you have more and more
+feedback going to the LLM.
+[01:03:44] And then this process
+of hypothesis generation
+[01:03:49] is left to the LLM.
+[01:03:51] Whereas hypothesis evaluation
+is done by some other entity.
+[01:03:57] And if you think of it,
+it's not fundamentally
+[01:03:59] different from the
+way we use Lean
+[01:04:00] or the proof assistant in the
+previous part of the lecture.
+[01:04:07] So one of the most
+established approaches
+[01:04:12] to symbolic regression
+is genetic programming.
+[01:04:16] And here are some visualizations
+from a system called PySR, which
+[01:04:20] is quite popular in this space.
+[01:04:23] And so, what's going
+on here is that you
+[01:04:26] have a pool of candidate
+expressions, candidate
+[01:04:30] equations being maintained.
+[01:04:31] And then you have mutation
+and crossover operations
+[01:04:36] being applied to those.
+[01:04:37] And then, you are generating--
+[01:04:41] you're updating this pool of
+expressions using feedback
+[01:04:45] from a separate machinery that
+is evaluating these expressions
+[01:04:49] and telling you, how
+good is the loss?
+[01:04:52] How well does this
+match the reality
+[01:04:55] that is there in the data?
+[01:04:59] So this has had a lot of impact.
+[01:05:03] There are applications in
+physics and other areas as well.
+[01:05:08] And so, here are
+some example papers.
+[01:05:14] So one thing that's
+interesting is that if you just
+[01:05:18] imagine how does this process
+of genetic programming go on.
+[01:05:24] So there is this
+pool of expressions
+[01:05:28] that is being evolved.
+[01:05:29] And so, what you see
+is that there are
+[01:05:32] these islands of expressions.
+[01:05:34] So these clusters which contain
+expressions that are of--
+[01:05:40] that have something in
+common between them.
+[01:05:45] So one way to think about
+how LLMs are relevant
+[01:05:50] is that these clusters or
+islands of expressions, these
+[01:05:55] capture various kinds of--
+various classes of functions.
+[01:05:58] So, for example, in
+this red one over here,
+[01:06:01] you may have
+exponential functions.
+[01:06:03] In this case, you may have
+trigonometric functions
+[01:06:07] where you have the cosines.
+[01:06:09] And so one way to
+imagine this is
+[01:06:13] that an LLM looking at these
+expressions, because LLMs
+[01:06:18] are good at coding
+and associating code
+[01:06:20] with natural language,
+could perhaps
+[01:06:22] come up with some
+explanation of what
+[01:06:25] this piece of code, this
+expression, is actually doing.
+[01:06:29] And that's the
+idea of abstraction
+[01:06:31] that we are going to use.
+[01:06:33] So this paper was
+at NeurIPS last year
+[01:06:37] and co-led by Aria
+Grayeli, who was
+[01:06:40] an undergrad at UT, and
+Atharva Sehgal, who's
+[01:06:43] a PhD student at UT.
+[01:06:46] And so, the starting
+point here is
+[01:06:51] that we want to do this
+kind of concept abstraction.
+[01:06:54] And so, what we want
+to be able to do
+[01:06:58] is that we want to look at these
+variety of laws, which come
+[01:07:03] from very different contexts.
+[01:07:05] But then we should be
+able to look at this
+[01:07:08] and kind of tell that
+what's going on here
+[01:07:11] is that you have this power
+law thing going on, right?
+[01:07:16] And so, the other
+thing we want to do
+[01:07:20] is that we want to use
+background knowledge that
+[01:07:23] was created by a physicist or
+that's there inside an LLM.
+[01:07:29] So, for example,
+here, you have an LLM,
+[01:07:32] a concept that
+has been produced,
+[01:07:35] which is that wave
+strain diminishes
+[01:07:37] as distance increases.
+[01:07:38] This is, let's say, a
+property of black holes.
+[01:07:43] And so, you want to
+be able to associate
+[01:07:46] this kind of
+information, this is
+[01:07:50] a piece of common sense,
+knowledge to equations.
+[01:07:54] So this equation, for example,
+satisfies these properties.
+[01:07:59] But this is-- you want to create
+a mapping between these two
+[01:08:03] things.
+[01:08:04] And because, if you imagine
+how the scientific process is
+[01:08:07] ongoing, so let's say you
+have an AI that is predicting
+[01:08:10] equations based
+on data, you also
+[01:08:11] want it to be
+conditioned on this sort
+[01:08:13] of high-level knowledge that is
+being given by a human expert,
+[01:08:17] right?
+[01:08:18] And so, you want to have this
+association between code,
+[01:08:23] that is these
+equations and language.
+[01:08:30] So the way we set up this
+symbolic regression problem
+[01:08:37] using LLMs is something like
+this, that we imagine that--
+[01:08:44] and actually, here,
+it's not just LLMs.
+[01:08:47] It's more like a
+combination of LLMs
+[01:08:49] and this sort of abstraction
+into high-level concepts.
+[01:08:54] And so, we imagine that
+there is this universe
+[01:08:56] of high-level concepts.
+[01:08:58] So, for example, wave
+strain diminishes
+[01:09:00] as distance increases or power
+laws or sinusoidal functions.
+[01:09:03] These are sort of high-level
+ideas that we have in our head.
+[01:09:08] And there is a notion of a data
+set, which is the concrete data
+[01:09:12] that you want to fit.
+[01:09:13] And then you have a space
+of programmatic hypotheses.
+[01:09:16] This is, for example, the
+landscape of equation--
+[01:09:21] or the set of equations
+expressible in Python
+[01:09:24] or in some restricted
+DSL inside Python.
+[01:09:29] And then, what you're
+saying is that you
+[01:09:31] want to jointly
+infer, given the data,
+[01:09:35] this distribution over
+pi, which is likely
+[01:09:39] hypothesis and likely concepts.
+[01:09:42] So you don't want to just
+get likely programs, given
+[01:09:45] the data, which
+would be the goal
+[01:09:47] of traditional
+symbolic regression.
+[01:09:49] You want to get both
+the programs and also
+[01:09:53] the kinds of concepts
+that they represent.
+[01:09:55] Because ultimately, you want
+to explain these programs
+[01:09:57] to a human scientist.
+[01:10:00] Or alternatively, maybe
+this joint distribution
+[01:10:03] gives you more information
+than if you just
+[01:10:06] operated in the program space.
+[01:10:08] And so, this you can
+factorize in this way.
+[01:10:11] And then it turns out that
+the way to think about it
+[01:10:17] is that p of D given
+pi, is basically
+[01:10:20] saying that if I have a
+particular program pi, what
+[01:10:25] is the likelihood of the data?
+[01:10:28] So how well does the
+program explain the data.
+[01:10:31] In order to find this, you just
+execute the program, right?
+[01:10:34] And see what kinds
+of results come out.
+[01:10:37] And what the likelihood
+of the data set is.
+[01:10:40] And p of pi given C is
+basically telling you
+[01:10:45] that, OK, here are these--
+[01:10:50] here is the concept that I have.
+[01:10:51] So let's say I'm thinking
+about power laws, OK?
+[01:10:54] So conditioned on
+this concept that I'm
+[01:10:56] thinking about power laws,
+what is the probability
+[01:10:58] of this program that this
+piece of code, right?
+[01:11:02] To what extent does this piece
+of code represent a power law?
+[01:11:06] And this is something that an
+LLM has background knowledge
+[01:11:10] inside it to do.
+[01:11:11] And then, finally,
+I have this p of C,
+[01:11:14] which is a prior over concepts.
+[01:11:16] And this is also
+something that an LLM
+[01:11:18] knows that I have seen the
+literature of, let's say,
+[01:11:22] physics until this point.
+[01:11:23] So what is the likelihood
+of this concept?
+[01:11:29] So all of this together
+gives you, ultimately,
+[01:11:35] the ability to infer both a
+distribution over both programs
+[01:11:42] and concepts.
+[01:11:44] Now, in order to
+really implement this--
+[01:11:47] this is the loop
+that we came up with.
+[01:11:51] So this follows
+the basic structure
+[01:11:53] of an evolutionary algorithm.
+[01:11:55] But it does this sort of
+Bayesian concept learning thing
+[01:11:59] guided by LLMs on top of that.
+[01:12:03] And so, operationally,
+the way to think about it
+[01:12:05] is that you have, like in
+any evolutionary algorithm,
+[01:12:09] you're maintaining a population
+of hypotheses or programs.
+[01:12:13] And then, at this
+point, you have a choice
+[01:12:16] of doing evolution,
+either guided
+[01:12:19] by the classical
+symbolic method where
+[01:12:22] you're doing some random
+tweaks to the abstract syntax
+[01:12:24] tree of the program.
+[01:12:25] Or alternatively, you are doing
+this LLM-guided evolution, where
+[01:12:29] you are saying that
+here is a concept,
+[01:12:31] here is a program
+that I have, and I
+[01:12:33] want to generate a new program.
+[01:12:35] And when you are
+doing that, you are
+[01:12:36] being guided by this concept
+library, which tells you
+[01:12:39] that, these are the
+concepts that I'm
+[01:12:41] thinking about right now.
+[01:12:42] So power laws seem really
+good, really well-suited
+[01:12:46] to this condition-- this
+concept or this setting.
+[01:12:51] Or maybe trigonometric
+functions seem
+[01:12:55] especially well-suited to
+this setting, and so on.
+[01:12:57] So you are feeding all of that
+to this LLM-guided evolution
+[01:13:01] process, and that allows
+you to basically mutate
+[01:13:04] the current programs
+into new programs.
+[01:13:11] And then, after you
+do that, you are, like
+[01:13:13] in the usual
+evolutionary way, you
+[01:13:15] are identifying the best
+candidates in this population.
+[01:13:21] And so, this is where you use
+the fitness function, which
+[01:13:24] is how well does your hypothesis
+pool explain the data that you
+[01:13:32] have?
+[01:13:33] And this is where that p of
+D given pi that comes in.
+[01:13:39] And so, this is a
+little bit more detail
+[01:13:40] about how the hypothesis
+evolution works.
+[01:13:44] So you start with this
+initialization, initial program
+[01:13:48] population, and then
+you're evaluating.
+[01:13:49] You're getting the best program.
+[01:13:51] You're mutating
+or crossing over.
+[01:13:53] And then you're replacing
+the oldest program.
+[01:13:59] And then this process just
+carries on for a while.
+[01:14:04] So the important
+thing over here is
+[01:14:06] that you are using the LLM
+for implementing this mutation
+[01:14:09] and crossover operations.
+[01:14:11] So, in particular,
+rather than in
+[01:14:15] a classical genetic algorithm,
+what's going to happen
+[01:14:17] is that you're given
+the AST and you're
+[01:14:19] going to say that, OK,
+swap out this subtree
+[01:14:21] by a different subtree.
+[01:14:22] Now you're going to say that I'm
+going to ask the LLM to rewrite
+[01:14:26] the program into something.
+[01:14:27] And this idea was also
+used in the FunSearch paper
+[01:14:33] from DeepMind last year.
+[01:14:35] And FunSearch has
+been very successful.
+[01:14:41] The way in which this LaSR
+work differs from FunSearch
+[01:14:44] is fundamentally in its use
+of this concept library.
+[01:14:48] But a lot of the other
+ideas are closely related.
+[01:14:53] So this is just to
+highlight the difference
+[01:14:55] between the symbolic crossover
+versus the LLM crossover.
+[01:14:59] So in this case, the LLM is
+basically doing all this.
+[01:15:02] It's being given
+a crossover prompt
+[01:15:04] and then it's given some
+formatting instructions,
+[01:15:06] and then it's generating
+the new expression.
+[01:15:09] So after you do this,
+there is the-- so
+[01:15:12] you have evolved
+your hypothesis.
+[01:15:14] So now you have this new pool.
+[01:15:15] And now you also evolve
+your concept library.
+[01:15:18] And so the concept library,
+this evolution process
+[01:15:23] has these two stages.
+[01:15:24] So first, you take
+your new programs
+[01:15:26] that you have created,
+your new program pool,
+[01:15:29] and now you're asking
+the LLM to abstract this
+[01:15:32] into these natural language
+high-level descriptions.
+[01:15:35] So, for example, here,
+the LLM is telling you
+[01:15:38] that, Oh, this equation
+represents exponential growth
+[01:15:41] or decay.
+[01:15:43] And then, the LLM--
+[01:15:46] the concept evolution
+process is just
+[01:15:48] like the hypothesis or
+program evolution process,
+[01:15:52] except it now uses this--
+[01:15:55] an LLM to basically combine,
+mash up these different concepts
+[01:16:02] into a new concept.
+[01:16:03] So, for example, here, you see
+that exponential growth decay,
+[01:16:06] this is one concept.
+[01:16:08] Another concept says
+depends on temperature.
+[01:16:11] And our LLM, because it
+has all this knowledge
+[01:16:14] about all sorts of concepts
+relevant in physics,
+[01:16:16] it comes up with
+this idea that, oh,
+[01:16:18] this should be a
+Boltzmann distribution.
+[01:16:21] This is a useful
+concept to have.
+[01:16:23] And then this is
+going to influence
+[01:16:25] the hypothesis evolution, which
+is going to influence concept
+[01:16:28] abstraction and evolution.
+[01:16:30] And this loop will continue.
+[01:16:33] So one way to visualize this is
+that after the first phase, when
+[01:16:39] you have done this
+hypothesis evolution,
+[01:16:41] you may have these islands of
+different kinds of expressions.
+[01:16:44] Now, in the concept generation
+process, concept discovery
+[01:16:52] process, you're going to
+get these natural language
+[01:16:56] descriptions of these
+different islands.
+[01:16:59] So this is sinusoidal trends,
+this is power law trends,
+[01:17:02] this is linear trends, this is
+exponential trends, and so on.
+[01:17:05] And then, what we
+found is that the use
+[01:17:12] of this sort of a
+high-level concept library
+[01:17:14] helped us in this equation
+discovery process.
+[01:17:18] So we evaluated this on this
+task of equation discovery--
+[01:17:22] or discovering Feynman
+equations, just given
+[01:17:25] the prompt that--
+[01:17:30] so there was the
+data, but then there
+[01:17:31] was a prompt that told
+you which chapter you
+[01:17:35] were looking at, and so on.
+[01:17:37] And so what we found
+is that this approach
+[01:17:41] proved more effective than a
+version where you were just
+[01:17:45] using, either pure
+genetic programming or one
+[01:17:48] where you were not using any
+kind of concept learning.
+[01:17:52] And so it turns out that even
+with local language models, when
+[01:18:00] we didn't use a
+frontier model, we
+[01:18:02] were still able to outperform
+this genetic programming
+[01:18:07] approach.
+[01:18:08] And the overall
+finding was that--
+[01:18:13] and you can find more
+details in the paper--
+[01:18:15] is that the use of this
+sort of high-level concepts
+[01:18:18] generated by the LLM, it
+accelerates discovery.
+[01:18:22] Now, one appeal of this
+sort of LLM-based approach
+[01:18:29] is that it can very naturally
+take in user-provided hints.
+[01:18:34] So, in this case, we
+gave the algorithm
+[01:18:41] some hints, which was this
+is the kind of equation you
+[01:18:45] are looking at.
+[01:18:47] So in the previous experiments
+actually, we did not have hints.
+[01:18:51] So this was just
+purely based on data.
+[01:18:54] But then, in this
+case, we had hints,
+[01:18:56] and then we found that hints
+actually provided some benefits.
+[01:19:01] So on the x-axis here, you
+have the number of iterations.
+[01:19:04] On the y-axis, you have the
+fraction of equations solved.
+[01:19:08] And then we found that
+the use of the hints, It
+[01:19:10] provided a modest benefit at
+least earlier on in the process.
+[01:19:16] So here is an example
+of this in action.
+[01:19:21] So here, this is the
+classic Coulomb's law.
+[01:19:25] And then PySR is this
+genetic programming approach,
+[01:19:29] and it gave this very unwieldy
+kind of expression that,
+[01:19:37] it turns out, is equivalent
+to the ground truth expression
+[01:19:41] but it required a lot of
+simplification for you to-- it
+[01:19:44] would require a lot
+of simplification
+[01:19:46] for you to go from here
+to the ground truth.
+[01:19:48] Whereas the LaSR approach
+is able to basically--
+[01:19:55] because of some of the knowledge
+that is there in the LLM,
+[01:20:01] it's able to reduce to
+ground truth after four
+[01:20:04] steps of simplification.
+[01:20:05] Now you could say, wait a
+second, isn't the LLM cheating?
+[01:20:08] Because it already has
+Coulomb's law in its mind.
+[01:20:10] So how do you know that
+this is not just leakage?
+[01:20:15] And, of course, in this case,
+there is that possibility.
+[01:20:19] But that said, I would say
+that the attraction here
+[01:20:22] is that the input to the system
+is just this data, right?
+[01:20:27] It's just the
+input-output values for--
+[01:20:30] that would result
+from Coulomb's law.
+[01:20:32] And it's a very
+low-level kind of input.
+[01:20:34] The fact that it was able
+to fit this to Coulomb's law
+[01:20:38] is kind of interesting.
+[01:20:40] But that said, we also did other
+experiments on synthetic data
+[01:20:45] where you just manufactured
+a completely weird equation
+[01:20:49] and a weird data set
+coming from that equation,
+[01:20:53] and then ask the system
+to regenerate this.
+[01:20:57] And we found that there were
+substantial benefits even
+[01:20:59] in that case.
+[01:21:01] So here is some information
+about some of the concepts
+[01:21:05] that you ended up
+getting from LaSR.
+[01:21:09] So you see there is stuff like,
+good mathematical expressions,
+[01:21:13] exhibit symmetry or regularity.
+[01:21:15] But that said, there were
+also some expressions
+[01:21:17] that were really--
+[01:21:19] that didn't really
+seem to mean anything.
+[01:21:23] But at the same time,
+there is no guarantee
+[01:21:26] about the quality
+of the concepts.
+[01:21:28] This is all natural
+language at this point.
+[01:21:30] An interesting
+possibility is to use
+[01:21:32] some kind of a formal
+language to describe
+[01:21:34] the high-level concepts.
+[01:21:37] Now we also use this in
+a new discovery problem,
+[01:21:41] because we were also worried
+about the possibility of this
+[01:21:46] being an artifact of leakage
+in case of standard benchmarks
+[01:21:49] like discovering
+Feynman equations.
+[01:21:52] And so, we used this method
+to come up with a new scaling
+[01:21:57] law for LLMs.
+[01:21:59] And so, here, what you see is
+the so-called chinchilla law.
+[01:22:06] So this is a law that was
+postulated in a DeepMind paper
+[01:22:10] from a few years back.
+[01:22:11] And so here, basically
+what you're trying to do
+[01:22:13] is to predict the
+loss of the LLM
+[01:22:16] based on these various
+hyperparameters.
+[01:22:20] And so, this was the law.
+[01:22:22] So you postulate a scaling
+law, you measure model loss
+[01:22:25] with respect to
+hyperparameters, and then you
+[01:22:27] fit scaling law to data set.
+[01:22:28] And in order to do
+this, of course,
+[01:22:30] you would need to
+have a data set
+[01:22:31] where you have a lot of values
+of these hyperparameters
+[01:22:34] and corresponding accuracy
+values for the LLM.
+[01:22:39] Now, we did the same
+thing with LaSR.
+[01:22:43] Rather than fitting
+a hand-fitted law,
+[01:22:45] which was done in
+the Chinchilla paper.
+[01:22:48] So they basically
+postulated a law like this,
+[01:22:51] and then they fit
+the parameters.
+[01:22:53] But by contrast, what
+we did is that we just
+[01:22:57] asked LaSR to go find it.
+[01:22:59] And LaSR was able to come up
+with this sort of a law, where
+[01:23:05] we also had this parameter
+called number of shots, which
+[01:23:08] is that, if you are
+doing prediction,
+[01:23:10] what is the number of
+examples that you're
+[01:23:13] giving it in context.
+[01:23:15] And this parameter is available
+in some of these data sets.
+[01:23:21] And so what we found is that
+there was this interesting kind
+[01:23:25] of law that came up.
+[01:23:27] Now, this is just one example.
+[01:23:30] It's not really very
+comprehensive yet,
+[01:23:33] but this just shows
+that you can make
+[01:23:35] these kinds of new
+discoveries using this law.
+[01:23:39] And so, basically, if
+you interpret this,
+[01:23:42] the way to think about it is
+that a large number of shots
+[01:23:45] gives poor results for
+low capability models,
+[01:23:48] but then, once the models pass
+a capability threshold, then
+[01:23:52] having more shots helps, right?
+[01:23:54] And this is sort of a common
+sense linguistic interpretation
+[01:23:56] of the law that came out.
+[01:24:00] So you can also do
+something after this.
+[01:24:07] So if you're thinking about--
+[01:24:08] thinking of yourself as
+an LLM scaling law person,
+[01:24:11] you start with the Chinchilla
+law from the previous paper,
+[01:24:14] and then you say,
+OK, maybe I should
+[01:24:17] bring in this insight about
+shots into the Chinchilla law.
+[01:24:22] Combine the old chinchilla law
+with this new discovery that
+[01:24:25] was made by LaSR, and then
+you find that this modified
+[01:24:29] chinchilla actually
+is able to do
+[01:24:33] better than both the old
+chinchilla and also the LaSR
+[01:24:39] itself.
+[01:24:40] And so, this is kind
+of interesting that--
+[01:24:44] and shows that this discovery
+process using LLM agents--
+[01:24:47] and this is very
+much an agent, right?
+[01:24:49] This is not just a one-shot LLM.
+[01:24:51] You're using an LLM combined
+with this various other tools.
+[01:24:55] And so, what you are
+getting out of this is
+[01:24:59] can influence human
+discovery as well
+[01:25:02] and lead to something
+that is greater
+[01:25:04] than the sum of the parts.
+[01:25:07] So in the interest of time, I'm
+going to skip this next bit.
+[01:25:11] But what I said there is
+that these ideas can also
+[01:25:15] be applied to settings
+where you have
+[01:25:17] visual high-dimensional
+inputs, because now we have
+[01:25:20] visual language models as well.
+[01:25:22] So you can go crazy
+and build these kinds
+[01:25:26] of evolution-based agents,
+where you have VLMS
+[01:25:29] as part of the story.
+[01:25:30] And I'm extremely optimistic
+about this direction.
+[01:25:35] So, in summary, I would say
+that LLM-directed evolution
+[01:25:38] is a powerful tool
+for empirical science.
+[01:25:40] And this point has already been
+made previously by FunSearch,
+[01:25:45] but now we see that we
+can make it even more
+[01:25:48] powerful with these
+ideas of abstraction
+[01:25:53] that LLMs can give you
+basically for free.
+[01:25:56] And even this can
+be even extended
+[01:25:59] to visual settings where you
+have to use now visual language
+[01:26:04] models.
+[01:26:04] But hey, they're coming a long
+way-- they have come a long way.
+[01:26:07] And importantly, the
+abstraction abilities of LLMs
+[01:26:10] can also be really helpful here.
+[01:26:13] Open challenges, verification
+of hypothesis and concepts,
+[01:26:18] concept representations that
+go beyond natural language,
+[01:26:22] scaling to larger search
+spaces, input dimensions,
+[01:26:25] and then even going beyond
+hypothesis generation
+[01:26:28] to other parts of the
+scientific discovery process.
+[01:26:31] But at the end, though,
+I am very optimistic that
+[01:26:37] LLM agents, not just LLMs, but
+these kinds of agentic workflows
+[01:26:41] where you have
+combinations of LLM queries
+[01:26:45] as well as other
+kinds of machinery,
+[01:26:49] they can be extremely powerful
+in scientific discovery.
+[01:26:53] They can help you come up with
+new scientific hypotheses,
+[01:26:57] and even do experiment design.
+[01:27:00] And also, as we saw, in
+mathematical discovery,
+[01:27:03] they can be supremely powerful.
+[01:27:05] And again, we are just
+in the early stages
+[01:27:08] of what I think this
+research-- line of research
+[01:27:12] will end up being.
+[01:27:15] And this can have applications
+in math, in science,
+[01:27:19] in engineering, as you saw the
+formal verification application,
+[01:27:23] building rigorous systems.
+[01:27:26] So the future is very bright.
+[01:27:29] And with that, I'll end.
+[01:27:31] I want to thank all my
+collaborators and funders.
+[01:27:35] And I'm happy to take questions.

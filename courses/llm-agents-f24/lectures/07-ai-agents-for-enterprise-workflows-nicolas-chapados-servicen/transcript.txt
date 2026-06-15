@@ -1,0 +1,2419 @@
+[00:00] NICOLAS CHAPADOS: We're both
+very thrilled to be here.
+[00:02] Super happy.
+[00:02] Thanks for the invitation.
+[00:04] Again, it's already
+the midpoint.
+[00:07] Lecture 7, the midpoint in
+this amazing series of lecture.
+[00:10] So, so far, all of you
+have had the opportunity
+[00:14] to learn a bit about
+the building blocks
+[00:16] for agent systems, things like
+how we do reasoning or tool
+[00:21] use with AI agents.
+[00:24] Today, we want to frame
+agents a little bit about how
+[00:29] they can be used in
+an enterprise context
+[00:33] in the context of people
+trying to get actual work done
+[00:38] with agents.
+[00:40] And the focus will be
+really about understanding
+[00:44] what are the use cases, who
+are the users, the human users
+[00:48] for those agents, what role do
+they have, what kind of work
+[00:52] are they trying
+to do, and what is
+[00:54] the context in which these
+agents should be deployed
+[00:59] to help the human users in
+the context of their work
+[01:03] activities.
+[01:05] For context, both
+Alex and I work
+[01:07] at a company called ServiceNow.
+[01:09] You may or may not
+have heard of it.
+[01:11] It's a global company,
+25,000 employees.
+[01:14] The headquarters are just
+down the Bay in Santa Clara.
+[01:18] And really, workflows
+are the bread and butter
+[01:21] of what ServiceNow does.
+[01:23] We build a platform to
+automate enterprise workflows.
+[01:27] We have products in areas
+like IT, service management,
+[01:31] human resources,
+customer support.
+[01:34] And ServiceNow is also
+a developer platform
+[01:37] to help both professional
+developers and line
+[01:39] of business regular people
+build new workflows.
+[01:43] And to give a sense of how
+this platform is used today
+[01:49] and the same for all
+enterprise workflows platform,
+[01:53] one way to think about how these
+platforms work is that they
+[01:58] bring together people
+who need to get work done
+[02:02] in the context of
+their daily activities
+[02:04] with people who are
+doing the actual work.
+[02:08] Suppose, for example,
+that you had a bad morning
+[02:11] and you spilled
+coffee on your laptop,
+[02:13] your laptop is no longer
+working, what do you do?
+[02:16] Well, if you're at
+a modern workplace,
+[02:19] you may hop onto
+your mobile phone
+[02:21] and open a ticket
+for your IT help desk
+[02:25] and request a new laptop
+to be shipped to you.
+[02:29] Today, this ticket is going to
+be processed by a human user,
+[02:35] by a human agent who
+will read the step,
+[02:38] follow instructions to get
+the new laptop shipped to you.
+[02:42] There's a lot of
+manual steps that
+[02:45] are involved in this
+process, this resolution
+[02:49] of everyday issues that people
+in the workplace experience.
+[02:56] And what we will
+see is that there
+[02:58] are huge opportunities for
+AI agents to help automate
+[03:03] partly some of this work.
+[03:08] So before we go
+further, both Alex and I
+[03:12] work for ServiceNow Research.
+[03:14] And of course, our team
+works a lot on agents
+[03:19] and we have multiple
+sub teams that
+[03:21] work on various aspects
+of agent development.
+[03:24] But we also think about all
+the other layers of the stack.
+[03:28] So for example, we have a
+team that trains and fine
+[03:31] tune foundation models.
+[03:33] This is the team that worked
+with Hugging Face for example,
+[03:36] to release the StarCoder
+model that some of you
+[03:38] may have heard about.
+[03:39] And at the other
+end of the stack,
+[03:41] we have a lot of people
+that worry about things
+[03:45] like AI trustworthiness,
+governance, safety, security,
+[03:49] and the kind of
+practical concerns
+[03:51] that we will touch
+on a little bit
+[03:54] today in the context
+of agents, but that
+[03:56] are absolutely necessary if you
+want to deploy AI successfully.
+[04:02] And before moving into
+the topic for today,
+[04:06] our friendly legal team asked
+us to display this disclaimer.
+[04:09] Here you go.
+[04:12] And a quick note of about
+the agenda, what we're
+[04:16] going to be covering today.
+[04:18] We're going to start with
+a few words of background.
+[04:21] Of course, this is
+not the first lecture.
+[04:23] You have heard many, many
+things about AI agents.
+[04:26] I will not give any
+kind of explanation
+[04:30] again, but just
+explain the vocabulary
+[04:36] and make sure that we
+agree on the terminology.
+[04:39] And I want to
+discuss a little bit
+[04:41] what's the matter with
+enterprise workflows
+[04:43] and how a lot of work is
+happening in businesses today.
+[04:47] Then we're going to be talking
+a bit more about API agents,
+[04:51] somewhat about architectures,
+but more deeply
+[04:55] about a new framework
+that we released
+[04:57] as open source just
+a couple of days
+[04:59] ago called TapeAgents
+that offered
+[05:01] a very principled way to develop
+agents and optimize them.
+[05:08] We're very excited about
+this new piece of work.
+[05:11] Then I will pass
+the baton to Alex,
+[05:14] who will talk to us
+about web agents,
+[05:18] how we can develop them, showing
+that building a simple web agent
+[05:23] is actually pretty simple to do
+if you know what you're doing.
+[05:26] But measuring their performance
+and making them better
+[05:30] is actually much harder.
+[05:32] How can we do that in
+a more principled way?
+[05:36] And what does the tooling
+to build, develop,
+[05:41] optimize web agents look like?
+[05:43] Then I will conclude by talking
+a little bit about the potential
+[05:48] for agents in the workplace
+and the kind of large scale
+[05:54] transformations that AI agents
+could bring to us in the future.
+[06:02] Let's start with a
+quick definition.
+[06:05] Again, this is a class
+about LLM-powered agents.
+[06:11] We assume that this is clear.
+[06:13] And just a couple
+words of definition.
+[06:16] We assume that those agents
+have a degree of autonomy
+[06:20] that they can plan.
+[06:23] They can take action
+in an environment.
+[06:25] They can receive feedback
+from the environment,
+[06:28] and they can execute goals
+that are given by a human user.
+[06:33] And usually, this
+process happens
+[06:36] over multiple iterations.
+[06:39] You have certainly
+heard the variants
+[06:43] of that definition earlier
+in this series of lectures.
+[06:47] Now, maybe to make things a
+bit more crisp and a bit more
+[06:51] precise, LLM agents,
+we really need
+[06:53] to distinguish them from what if
+you come from a machine learning
+[06:57] background is an earlier
+generation of agents,
+[07:01] agents that are a bit more
+narrow in scope, more restricted
+[07:04] architectures typically
+that typically have a fairly
+[07:09] restricted action space
+that could be trained
+[07:12] using techniques like
+reinforcement learning,
+[07:15] and that would be very good
+at playing games, for example.
+[07:18] Sometimes that
+superhuman performance.
+[07:20] We're not going to be
+talking about that today.
+[07:22] Those agents, although they
+are really, really good
+[07:24] at playing Minecraft,
+for example,
+[07:26] your game playing agent
+would be terrible at writing
+[07:29] an email to your boss.
+[07:31] And in contrast, the LLM agents,
+what is really nice about them
+[07:37] is that the large language model
+at the core of those agents
+[07:42] has been trained on a large
+fraction of the internet.
+[07:48] And in doing that it has
+seen a lot of instructions
+[07:52] about common software
+that people use every day.
+[07:55] There is a lot of
+web pages that talk
+[07:57] about how to use PowerPoint,
+how to use Excel, and even
+[08:01] business software like
+Salesforce, SAP, and even
+[08:04] ServiceNow.
+[08:04] There's a lot of
+documentation and newsgroup
+[08:07] posts about these things.
+[08:09] Those LLMs already
+have a good sense
+[08:11] of how to use software
+that people use every day.
+[08:16] And the goal of an LLM
+agent to a big extent
+[08:19] will be to leverage
+this kind of knowledge
+[08:24] to execute tasks that
+people want to get done.
+[08:29] And within LLM agents, we're
+going to further distinguish
+[08:34] two types of agents.
+[08:37] One is an API calling agent.
+[08:40] It has a tool set
+that can be described
+[08:44] using a somewhat
+formal specification,
+[08:47] let's say the
+formal specification
+[08:49] of a set of APIs or endpoints.
+[08:52] And those would be primarily
+exchanging textual information.
+[08:56] And on the other hand, we will
+also talk about web agents
+[09:01] and those are able to use
+the web pretty much like you
+[09:06] and I would by
+pointing and clicking
+[09:10] on buttons, on web pages,
+by filling out forms,
+[09:14] by navigating from page to
+page to gather information,
+[09:17] to memorize little
+pieces of information
+[09:19] that you can reuse elsewhere in
+the task that you need to do.
+[09:24] Of course, each of
+those has pros and cons.
+[09:26] We will touch upon
+on both today.
+[09:31] And to frame this within
+the context of a work
+[09:36] that folks need to get done
+in their daily activities
+[09:41] as employees of big
+companies, imagine
+[09:45] that we're facing an issue
+where a user called Jon is not
+[09:50] able to access a
+particular knowledge base
+[09:53] article on the company intranet.
+[09:56] Jon is a good employee.
+[09:58] He will file a ticket
+with his IT help desk
+[10:02] and this ticket gets
+assigned to Sandy.
+[10:04] And Sandy looks at
+the ticket and tries
+[10:07] to solve the issue for Jon.
+[10:09] So what does Sandy do?
+[10:11] Well, she first start
+by seeing if there
+[10:16] is an existing knowledge
+base article that shows
+[10:18] how to resolve this issue.
+[10:20] Maybe she doesn't find any.
+[10:23] She looks to see if there
+are earlier incidents that
+[10:27] looked a little bit
+like this problem
+[10:29] that she's trying to solve.
+[10:30] Maybe she finds one.
+[10:32] And in it she sees that she
+needs to check the access
+[10:35] control that Jon has.
+[10:38] And she will change
+the access control
+[10:42] to give the right permissions.
+[10:43] Because Jon didn't have
+the right controls,
+[10:46] she changes the permissions.
+[10:48] And finally, she
+resolves the case.
+[10:51] And since Sandy is working
+in a very advanced workplace,
+[10:57] she has a brand
+new generative AI
+[11:00] capability that just got
+deployed in the last year.
+[11:03] And Lo and behold, the
+generative AI capability
+[11:07] is able to do the incident
+summarization for her,
+[11:14] write resolution notes,
+and finally close the case.
+[11:19] So as you can see,
+there are many,
+[11:22] many manual steps,
+even if you're
+[11:24] helped with some
+generative AI capabilities,
+[11:26] there are many,
+many manual steps
+[11:28] that remain in
+solving everyday work
+[11:32] items that people need to do in
+the course of their daily work.
+[11:37] And this kind of incident is
+replicated millions and millions
+[11:43] and millions of times a day
+across all the companies
+[11:46] in the world.
+[11:49] And to give a sense of how
+the landscape of enterprise
+[11:56] automation has
+evolved, what we see
+[12:00] is that there has been a
+progression in the past couple
+[12:04] of years going from systems
+that are very scripted,
+[12:08] that are very manually
+programmed with a very
+[12:13] low degree of automation.
+[12:15] Things like either manual
+scripting or robotic process
+[12:18] automation.
+[12:19] And gradually, we have seen
+increased degree of automation
+[12:23] that require increased
+degree of intelligence going
+[12:26] with classical AI workflows.
+[12:29] Think about recommender
+systems, for example.
+[12:31] Conversational
+workflows that have
+[12:34] become more prevalent in the
+past couple of years, especially
+[12:36] with generative AI, and
+today, agentic workflow
+[12:40] that require the most
+intelligence, but also
+[12:43] have the most promise
+for automation.
+[12:47] And what's the promise for
+agents in the workplace
+[12:52] or in enterprise automation
+is that they really
+[12:56] have a unique
+opportunity to automate
+[13:00] the masses of low-volume,
+low-value tasks
+[13:04] that people encounter every day.
+[13:07] So what are those you may ask.
+[13:08] Well, let's start by
+looking at what are not
+[13:11] low-value, low-volume, the big
+rocks of enterprise automation,
+[13:16] things that have a lot of
+value or that occur very,
+[13:19] very often those
+probably have already
+[13:22] been solved because
+people find it
+[13:25] valuable to sit down
+and figure out how
+[13:28] to program and automation
+for those use cases.
+[13:32] Things like employee onboarding,
+workflows, for example,
+[13:36] and things that occur quite
+often that are predictable,
+[13:41] replicable, a good chance
+that there is existing
+[13:46] low code, no code environment
+or robotic process automation
+[13:51] processes that have been put
+in place to automate those.
+[13:54] But again, think about
+everything you do every day.
+[13:57] All the little
+grains of sand that
+[14:00] are too unique to be
+scripted or to be automated,
+[14:04] they never occur twice
+in exactly the same way.
+[14:08] So it's very, very
+hard to say, I'm
+[14:10] going to automate scheduling my
+tweets or answering my emails
+[14:15] or filling out updating customer
+relationship management system
+[14:20] or even organizing a meeting
+for 15 people across four
+[14:24] different companies.
+[14:25] Those things are
+very hard to automate
+[14:28] using classical
+technologies, and this
+[14:30] is where agents
+have the potential
+[14:33] to really shine and help
+do a much better job at all
+[14:38] those little grains of sand
+that individually, each of them
+[14:42] is tiny, but in
+aggregate, they represent
+[14:45] a massive amount
+of work that people
+[14:47] need to get done every day.
+[14:51] Let's take a look at a
+simple example of a web agent
+[14:55] that we will be developing
+and expanding on a little bit
+[14:58] later today.
+[15:00] A couple of months
+ago, we were invited
+[15:02] to give a presentation at
+the big conference at NVIDIA,
+[15:05] puts together the GPU
+technology conference, GTC,
+[15:08] and of course, we did not
+know how to get there.
+[15:11] We asked our web agent for help.
+[15:13] And the web agent
+that you're going
+[15:16] to see on the left
+side of the screen
+[15:19] is the interaction
+that me as a human,
+[15:23] I was having with the web
+agent and on the right
+[15:26] is everything that the web
+agent is doing automatically
+[15:30] through a Chrome
+like web browser.
+[15:33] So let's get this rolling.
+[15:36] So I'm asking the web agent,
+hey, I'm attending GTC 2024,
+[15:41] how can I get there from
+the NVIDIA headquarters.
+[15:43] So the agent goes off and.
+[15:46] OK, well, it's
+starting with Google.
+[15:47] It's asking Google
+how to get there.
+[15:50] Good progress.
+[15:51] It's getting to Maps,
+and Google Maps says,
+[15:55] hey, I don't know
+anything about GTC.
+[15:58] It's not an item on the map.
+[16:01] We're going back to so
+the agent is asking me,
+[16:05] hey, can you give me a bit
+more instructions there.
+[16:08] And I tell it, I want to attend
+actually the GTC conference.
+[16:14] So the agent now has
+done some replanning.
+[16:17] It's using Google to figure out
+the location of the conference.
+[16:21] It's finding it as the
+San Jose Convention Center
+[16:25] and this is what it is
+entering into Google Maps
+[16:29] now to figure out the way to
+get from the NVIDIA headquarters
+[16:33] to the San Jose
+convention center.
+[16:36] This is an example of
+the kind of interaction
+[16:38] that we soon will be
+getting or that we
+[16:41] hope we should be
+getting with our agents
+[16:44] as systems that are allowed to
+ask more questions to humans
+[16:50] but that have some smarts in
+terms of planning and replanning
+[16:53] of their own.
+[16:57] Let's shift gears now and talk
+a little bit about API agents.
+[17:05] The typical
+architecture, this slide
+[17:07] is probably going to be a
+repeat of some of the work that
+[17:11] was covered earlier.
+[17:12] But again, just to set our
+minds in the right state.
+[17:21] We start with an LLM agent that
+is able to emit some actions,
+[17:28] and those actions are
+sent to an environment
+[17:30] and the environment sends
+back observations back
+[17:33] to the LLM agent.
+[17:36] The agent has access to
+some short-term memory.
+[17:39] So what have been the
+past actions taken
+[17:42] and the past responses
+from the environment.
+[17:44] It also has access to
+some planning processes,
+[17:49] so things like react and so on.
+[17:51] There are many
+different strategies
+[17:53] that have been proposed.
+[17:55] We're not going to get
+too much into those today.
+[17:58] And of course, for
+agents to be useful,
+[18:00] it has to access some
+tools and the tool there
+[18:04] can be quite varied,
+including simple calculations,
+[18:08] running code, accessing
+the web and so on.
+[18:11] And some more
+advanced agents also
+[18:13] have the ability to
+synthesize new tools
+[18:17] and those can be stored in
+some kind of long-term memory.
+[18:22] But beyond those
+basic concepts, we
+[18:25] want to have the right
+software framework
+[18:28] to help us build agents.
+[18:31] Just like it would be
+crazy for anyone today
+[18:35] to try to program machine
+learning algorithms
+[18:37] from scratch.
+[18:38] Everybody uses PyTorch
+because it's so much faster.
+[18:41] It's so much easier.
+[18:43] We want to have the right
+framework to build agents.
+[18:46] And I want to talk about a new
+framework for holistic agent
+[18:50] development.
+[18:51] So both the tooling
+to help build
+[18:54] and debug agents, but also
+the tooling to optimize agents
+[18:59] from optimization traces.
+[19:01] We introduce this
+framework called TapeAgents
+[19:03] just a couple days ago.
+[19:05] In fact, the QR code is
+the link to the resources.
+[19:10] All of that will be given
+again at the end, don't worry.
+[19:13] And what we're trying to
+accomplish with tape agents
+[19:16] that is to get a little bit
+of the best of both worlds.
+[19:20] On the one hand,
+we have frameworks
+[19:22] that really address the need
+for the software engineering
+[19:26] part of agents.
+[19:27] We want to be able to specify
+those agents to a very
+[19:30] fine degree of granularity,
+to have pre-made components,
+[19:33] to have facilities like
+concurrency and streaming
+[19:38] from the LLM.
+[19:39] And you you've heard before
+about frameworks like LangGraph,
+[19:46] AutoGen, and so on.
+[19:50] This is great for
+developing agent.
+[19:52] And on the other hand, we have
+a need to optimize agents.
+[19:57] Those agents, they all are the
+result of prompting an LLM.
+[20:02] Whoever says prompting
+says prompt optimization,
+[20:06] prompt engineering.
+[20:08] Some of it is done
+by hand, but you
+[20:10] can do a much better job
+if the machine can do it
+[20:13] on your behalf.
+[20:14] And in some contexts,
+you may even
+[20:17] want to optimize the LLM itself
+to make it a really good agent
+[20:21] LLM.
+[20:22] So we have frameworks
+like DSPy that
+[20:25] is very, very nice for doing
+this kind of optimization work.
+[20:29] But until TapeAgents,
+there was no framework
+[20:33] that was really good at doing
+those two things together.
+[20:35] So really what we hope to
+accomplish with type agent
+[20:38] is this best of both
+worlds type of situation
+[20:41] where we have great tools
+to build and engineer
+[20:45] and debug agents while at the
+same time getting the primitives
+[20:50] and the right
+concepts in place that
+[20:52] enable both prompt
+optimization and fine
+[20:56] tuning of the underlying LLM.
+[21:01] As a framework
+TapeAgents agent itself
+[21:04] builds on a single
+unifying abstraction
+[21:08] that we call the tape.
+[21:10] What is a tape?
+[21:11] It is simply a log, a recording
+of all the thoughts and actions
+[21:17] that all agents in the system--
+[21:20] we assume we can have
+more than one agent.
+[21:23] So all the agents of the
+system store their thoughts
+[21:27] and their actions to the tape.
+[21:29] And whenever the
+environment is called
+[21:33] and we place an action in
+the environment, whatever
+[21:37] results from the environment
+is also added to the tape.
+[21:41] We have this single unifying
+log and record of things.
+[21:47] And you can say, OK, well,
+it's just a dumb log.
+[21:49] What is so special about it?
+[21:51] Well, first, it's
+not a dumb log.
+[21:54] It has quite a lot of structure.
+[21:56] And importantly, it is
+a piece of data itself.
+[22:01] And we can have agents that
+take as input the tapes that
+[22:06] result from the
+execution of other agents
+[22:09] for further processing.
+[22:12] Introducing this
+notion of having a tape
+[22:14] as a full blown
+data structure that
+[22:16] is very, very rich in the
+content of its metadata
+[22:20] and can be processed by
+further downstream algorithms,
+[22:23] is really where the power
+of this framework lies.
+[22:27] In terms of just
+the execution model,
+[22:29] to set things
+clearly in your mind,
+[22:32] bring your attention to the
+agent on the right Agent B.
+[22:36] And this one gets a read of
+the entire history of the tape
+[22:42] so far.
+[22:43] And the agent select which
+of its internal nodes
+[22:46] it's going to execute at a
+particular point in time.
+[22:49] And the nodes, again, just from
+an abstraction perspective,
+[22:53] they are the little pieces that
+decide how to prompt an LLM.
+[22:57] An agent can have as many nodes
+or as few nodes as you wish.
+[23:01] It's really up to you
+as an agent developer
+[23:04] to decide on the internal
+structure of those agents.
+[23:07] But the nodes, then
+call the LLM to LLM
+[23:10] either suggests a few
+prompts, sorry, a few thoughts
+[23:14] or a few actions don't
+get added to the tape
+[23:18] and we have an
+orchestrator that can then
+[23:21] go call the environment
+for executing
+[23:24] any unprocessed actions, get the
+replies from the environment,
+[23:30] and the loop continues.
+[23:32] It's a fairly straightforward
+execution model,
+[23:35] but in that you will notice
+that we have the ability
+[23:38] to have multiple
+agents and each agent
+[23:42] can delegate work to
+some sub agents as well.
+[23:46] It's very modular.
+[23:47] It leads to a very flexible
+structure of agent.
+[23:52] And furthermore, we can
+have very, very nice things
+[23:56] that result from this
+tape as data idea.
+[23:59] Of course, we have full
+blown auditing and debugging
+[24:03] capabilities that are
+very, very obvious.
+[24:06] And we can have some algorithms
+that take the tape as input
+[24:09] and do cycles of
+prompt optimization
+[24:13] to it to get better prompts.
+[24:14] And we can have also agents that
+distill the work of some fairly
+[24:21] complicated feature agents and
+enable building much more cost
+[24:28] effective student
+agent as a result,
+[24:31] so we can have an
+optimization of the underlying
+[24:33] LLM as a result of that.
+[24:36] We'll see in a minute
+what this looks like.
+[24:41] A very simple example of that
+loop that I talked about.
+[24:44] There is a full
+technical report.
+[24:47] The link was provided in the
+pre-read to this lecture.
+[24:54] I will not get too
+deeply into the details,
+[24:57] but this is more to give a
+flavor of what's going on here.
+[25:01] Assume you have a
+simple two-agent system.
+[25:05] A very straightforward
+question, answering assistant
+[25:09] about the financial status
+of companies, for example.
+[25:12] So we have the assistant itself
+that talks to human users.
+[25:17] And this agent is able to
+rely on a subagent that will
+[25:22] perform web searches for it.
+[25:25] This simple two-agent
+setup here, we
+[25:27] combine it with this quite
+straightforward execution loop
+[25:31] that we described
+earlier, and this
+[25:35] gives rise in this very
+detailed, granular tape,
+[25:39] recording of the interactions
+between all the agents,
+[25:46] their internal monologue,
+their internal reasoning traces
+[25:51] the action they take and how
+the environment responds.
+[25:55] And of course, the tapes in
+practice are quite involved.
+[26:00] You can reproduce
+this example, through
+[26:02] the introductory notebook that
+you can run on your laptop.
+[26:06] This is super easy to run.
+[26:07] And what this all
+gives us though,
+[26:11] is the ability for agents to
+process tapes in a way that
+[26:23] enables easy optimization.
+[26:27] We don't have time
+today to go deeply
+[26:31] into the details
+of this example.
+[26:36] But at a high
+level, what we want
+[26:39] to do is to provide
+agents that have
+[26:47] a high degree of sophistication
+that can provide very, very
+[26:51] high quality user
+interaction, but that
+[26:55] are also quite cheap to run.
+[26:59] We run a case study
+where we built
+[27:03] on the notion of having an
+assistant that helps you fill
+[27:10] out complex forms
+to request work
+[27:14] to be done in the context
+of your daily work activity.
+[27:18] And this process is about
+enabling a very complex agent
+[27:25] to be distilled down
+into a simple agent.
+[27:31] What this lets us do is to
+create very cost-effective,
+[27:36] GREADTH conversational agents.
+[27:39] And GREADTH of course, I did
+not misspell it on purpose.
+[27:43] It stands for the
+attributes that we
+[27:48] want to monitor in the
+agents that we build.
+[27:51] And we selected really
+these attributes
+[27:56] as covering all the quality
+attributes that would make
+[28:01] great conversational agents.
+[28:04] Things like we want the
+agent to be grounded,
+[28:06] to never hallucinate, to
+always tell the truth.
+[28:10] We want the agent
+to be responsive,
+[28:12] to be accurate, to be
+disciplined, transparent,
+[28:15] and helpful.
+[28:16] And all those attributes can
+be measured independently
+[28:19] and we can optimize for
+all of those together.
+[28:24] In a case study that we run
+that is very, very much detailed
+[28:28] in the technical report,
+we built a set of agents
+[28:34] to fulfill a task which is
+helping human users fill out
+[28:39] those very complex forms
+that they sometimes encounter
+[28:45] in the context of their work and
+making it a lot easier to fill
+[28:49] out the forms.
+[28:51] And what we want to do is to
+build a fantastic conversational
+[28:56] experience.
+[28:57] Think about GPT-4 level quality
+or better, but much, much more
+[29:02] deeply.
+[29:04] And we ran a case study by
+inventing fictitious companies,
+[29:09] having a few companies to train
+the model and a few companies
+[29:12] to test for out of distribution
+effectiveness of the model.
+[29:19] And the methodology
+that we followed
+[29:23] there is to have a very
+complicated, very high parameter
+[29:29] count agent that is running
+on LLAMA 3.5, 3.14 and 5
+[29:34] billion parameter models.
+[29:36] So very costly to
+execute, generate a lot
+[29:39] of data that is recorded in the
+form of these discrete tapes,
+[29:46] these discrete execution traces.
+[29:49] And using this data, we
+fine tune a LLAMA 8 billion
+[29:54] parameter model to
+recover the performance
+[29:58] of the much, much
+bigger parent that
+[30:01] was used as a starting point.
+[30:04] And I will go straight
+to the graph there.
+[30:10] We achieve substantial
+success in doing that.
+[30:16] What we see on the chart
+there is on the x-axis
+[30:19] how much it costs to run
+a million conversation
+[30:23] turns with those agents.
+[30:26] And on the y-axis
+is this measure
+[30:28] of quality, this great score
+that we introduced previously.
+[30:32] And that can be computed quite--
+[30:37] that can be computed
+quite crisply.
+[30:42] And with no surprise on
+the upper right-hand side,
+[30:48] we have the largest
+agents available.
+[30:51] We have a LLAMA 4 or 5
+billion parameter model
+[30:56] that is having a great score and
+a Zero-Shot GPT-4o model that
+[31:01] is also having a great score.
+[31:03] But both of those are
+very expensive to run.
+[31:07] We're talking about 30,000 to
+40,000-ish dollars per million
+[31:15] conversation turns.
+[31:16] So those are very
+expensive agents.
+[31:18] But by using the
+methodology that
+[31:20] is enabled by this
+concept of saving tapes
+[31:23] and treating them as data
+to generate fine tuning
+[31:26] data for a simpler
+agent, we see that we're
+[31:30] able to fine tune an $8
+billion parameter model that
+[31:34] has the same performance
+as the much larger model
+[31:38] but is more than 300
+times cheaper to run.
+[31:44] A huge gain in
+performance there.
+[31:48] And if you're familiar with
+other agentic framework,
+[31:51] we also have a
+quick table, but I
+[31:54] will go quickly over
+that comparing TapeAgents
+[31:57] to other frameworks.
+[32:00] Now time is flying.
+[32:01] I will pass it to Alex who
+we'll shift gears and tell us
+[32:06] about web agents.
+[32:07] ALEXANDRE DROUIN: Great
+Thank you, Nicolas.
+[32:09] Hi, everyone.
+[32:12] Nicolas just told
+us about API agents.
+[32:14] Those are great when
+you have APIs available,
+[32:16] when you have tools that can do
+some of the execution for you.
+[32:20] But now I'm going to talk about
+another kind of agent that
+[32:23] promises to be more
+general than that.
+[32:25] And this is web agents.
+[32:27] And basically, this
+is a great improviser.
+[32:31] When there's no
+APIs available, you
+[32:34] could expect an agent to be
+able to interact with the user
+[32:37] interface just like
+you and me would
+[32:38] do when using some software.
+[32:42] Oops, that doesn't work.
+[32:43] OK, so what's a web agent?
+[32:46] To be original, I'll
+show you an agent loop
+[32:48] that I'm sure you've seen
+many times right now.
+[32:52] Except it's going to be style
+transfer for web agents.
+[32:55] Suppose you have a user
+with a goal in mind,
+[32:58] and then the web
+agent is just a policy
+[33:01] that perceives an
+environment which in our case
+[33:04] is a web browser and
+perceives observations
+[33:08] from the environment and then
+decides which actions to make.
+[33:11] It's a simple agentic loop where
+the web agent here in our case
+[33:15] will be an LLM who is
+choosing to do an action based
+[33:18] on whatever observation
+comes from the browser.
+[33:23] This is actually
+quite challenging
+[33:25] because, first of all, you
+need to understand the goal.
+[33:28] You need to understand
+what the human wants.
+[33:30] You need to understand the--
+[33:32] Situational awareness.
+[33:33] Basically, you
+need to understand
+[33:34] what you're seeing in
+the browser, what's
+[33:36] the user interface showing.
+[33:37] And long-term planning is
+really challenging here
+[33:40] because most of the
+time what you want,
+[33:42] the end result is not
+on the current page.
+[33:44] You need to transition,
+navigate some menus
+[33:47] and then ultimately you'll
+end up on the right page.
+[33:49] But this is not necessarily
+perceivable from the current set
+[33:53] of observations that are
+available to the agent.
+[33:57] And then once you've
+made a plan and you
+[33:59] know what you want
+to do, you still
+[34:00] have to execute the
+actions correctly.
+[34:02] And as we'll see in
+the following slides,
+[34:05] even this is quite challenging
+for current agents.
+[34:09] So how do you make
+a basic web agent?
+[34:11] OK, this is the most
+basic thing you can do.
+[34:14] Suppose you have a human
+who's asking for something.
+[34:16] Fly me to Yellowstone
+for the next long weekend
+[34:19] and there's a browser.
+[34:20] Now what you could do
+is take your favorite
+[34:23] and build a prompt.
+[34:24] And in this prompt you could
+put the task description
+[34:27] so you can put the goal.
+[34:29] You can put the observation,
+which here would be,
+[34:31] for example, the
+HTML of a web page.
+[34:34] You could put the HTML directly
+in the prompt if you have
+[34:37] a long enough context window.
+[34:39] And then you can define
+what the action space is.
+[34:42] Is the agent allowed
+to click on controls?
+[34:44] Is it allowed to fill
+some forms, for example.
+[34:47] And then you could
+give this to an LLM
+[34:49] and then ask for the
+actions it wants to make
+[34:51] based on the observation.
+[34:53] And then you want to actually go
+and apply those in the browser.
+[34:57] So often what people
+use is a combination
+[34:59] of Python and Playwright, which
+is a browser automation library.
+[35:04] You also have Selenium
+that can do similar things.
+[35:07] That's a very basic web agent.
+[35:09] And concretely, what
+you could do here
+[35:13] is an example from
+the mini web data set.
+[35:16] I could build this
+prompt like that.
+[35:18] I could say the task is to
+enter Enola in the text box
+[35:22] and then press Submit.
+[35:23] So I would put the content of
+the page there in the prompt.
+[35:27] I would say the action space,
+what you're allowed to do here
+[35:30] is fill a field with its ID, so
+you would say fill ID number 1
+[35:34] and it would fill that field,
+move the mouse and so on.
+[35:38] And then I would ask the LLM
+what do you want to do now.
+[35:41] I'll put your actions
+between those brackets here.
+[35:44] And the LLM would
+potentially answer with this.
+[35:47] Fill the field with
+Enola and then click.
+[35:49] So here you can see
+a GPT-4-based agent
+[35:53] that's actually doing
+that when prompted
+[35:55] with this kind of prompt.
+[35:58] This seems very simple, but it's
+actually already quite powerful,
+[36:04] surprisingly.
+[36:05] What you're seeing here
+is a very basic agent
+[36:09] done pretty much like
+what I just showed you,
+[36:12] and it's based on GPT-4
+and React-style prompting.
+[36:16] We're asking the agent to output
+its thoughts and then actions
+[36:19] it wants to make.
+[36:20] You can see that at the top.
+[36:21] And it's actually filling out
+the expense reports of Nikola
+[36:25] when he traveled to a
+conference recently.
+[36:28] Here, you can see it actually
+filling out the form.
+[36:31] This is GPT-4 that's acting
+with the very simple prompt
+[36:34] that I just showed you.
+[36:36] So you can see how this
+already makes, at least for me,
+[36:40] it makes me dream.
+[36:41] You can say like,
+wow, this is great.
+[36:42] We, we could imagine
+having assistants
+[36:44] like that will automate
+tasks for us in the browser.
+[36:47] This is the next evolution
+of user interfaces and so on.
+[36:52] We're quite excited
+when we saw that.
+[36:56] The truth is that
+this is very brittle.
+[37:00] This is a prompt.
+[37:01] It works right now.
+[37:03] If we have some great
+anecdotic examples
+[37:06] like that where it
+works really well,
+[37:07] but we needed-- for this
+to be adopted in practice,
+[37:10] it needs to work robustly.
+[37:12] It needs to work
+most of the time we
+[37:14] need to be able to
+ensure that it's not
+[37:16] going to be
+jailbroken or hijacked
+[37:19] by injections in the web pages.
+[37:22] This needs to be reliable.
+[37:25] By the way, one other limitation
+of this kind of agent right
+[37:28] now is that it's quite slow.
+[37:30] So here the video I just showed
+you was sped up by eight times.
+[37:34] In practice, you really need to
+wait 15 seconds for the mouse
+[37:38] to move from one point to
+the other, which is not yet
+[37:41] what we want for a
+smooth user interface,
+[37:43] but you can see
+it has potential.
+[37:48] Given the fact that we need
+this to be very robust for it
+[37:51] to be actually
+applicable in practice,
+[37:53] there's been a lot of effort
+on building benchmarks.
+[37:56] So you may have seen some.
+[37:57] I'm going to outline a
+few recent benchmarks,
+[37:59] but this has been mostly because
+we want to beyond anecdotes how
+[38:03] those work in practice.
+[38:05] Here, you are
+seeing the mini data
+[38:07] set, which are very simple web
+tasks like filling a field,
+[38:12] clicking Submit,
+or just dragging
+[38:14] a box from one side of
+the screen to the other.
+[38:17] This is great.
+[38:18] It's a good start, but
+it's not realistic.
+[38:21] People have started
+to propose benchmarks
+[38:23] based on real world websites.
+[38:26] A first kind of benchmark
+or trace based benchmarks.
+[38:29] And these are mostly
+based on traces
+[38:32] of actions that have been
+performed by human annotators.
+[38:35] They receive a goal
+and they have a website
+[38:37] and then their
+actions are recorded.
+[38:40] They click on that, they
+fill this field, and so on.
+[38:44] So this is nice.
+[38:46] It's more realistic.
+[38:47] But the evaluation here is
+mostly based on gold traces.
+[38:51] These are gold standard traces.
+[38:53] Basically, you check if the
+agent is doing similar actions
+[38:56] to what the human did.
+[38:59] A limitation of that is that it
+does not account for the fact
+[39:03] that there may exist alternative
+solutions to a problem.
+[39:05] And also, when you store
+those traces on the internet,
+[39:08] there's a risk that
+they will be memorized
+[39:10] by LLMs that are trained
+by crawling, for example.
+[39:15] One exception here
+is a brand new kind
+[39:19] of benchmark by Murthy et al.
+[39:21] where an LLM is used
+to generate traces.
+[39:25] Basically, it's dropped randomly
+on the internet at some point,
+[39:29] acts by performing
+random actions,
+[39:31] and then retrospectively
+annotates
+[39:34] what a goal could have been
+that would have led them there.
+[39:37] It's a way to generate
+thousands of those traces
+[39:39] without having to rely
+on human annotators.
+[39:42] I thought that was
+pretty interesting idea.
+[39:43] And you can use
+that for evaluation,
+[39:45] but you can also use
+it for fine tuning.
+[39:47] We'll get back to that later.
+[39:50] Great.
+[39:50] So beyond trace based
+data sets, there's
+[39:53] been a trend on making
+live benchmarks.
+[39:57] Instead of evaluating
+based on traces of actions,
+[39:59] you evaluate based
+on the end result.
+[40:01] For example, you
+could say, well,
+[40:03] I expect that if this
+task is solved correctly,
+[40:06] the database will be
+in a certain state.
+[40:08] And then instead of checking
+the trace of actions,
+[40:10] you actually just
+check if the database
+[40:12] is in the correct state.
+[40:13] Some other benchmarks
+rely on question answering
+[40:15] and they check if you return
+the correct answer instead
+[40:18] of checking the set
+of steps that you
+[40:20] took to get to that answer.
+[40:22] This is nice because it allows
+for alternate solutions.
+[40:26] There's a lower chance
+of memorization,
+[40:28] because the traces are not
+stored in a public repository.
+[40:32] Two good examples of that are
+the WebArena and the Visual
+[40:35] WebArena benchmarks.
+[40:38] WebArena is actually a set of
+tasks where you receive a goal
+[40:42] and you need to perform
+some actions in software
+[40:46] like Reddit or GitLab.
+[40:47] And there's certain
+terminal conditions
+[40:50] that are checked to see if
+the agent was able to solve
+[40:52] the task correctly.
+[40:54] These are actually great
+because the way you
+[40:58] benchmark on this
+kind of benchmark
+[40:59] is that you run a local server.
+[41:02] And then everything
+is served locally.
+[41:05] It's great if you want to
+do parallel experiments.
+[41:07] You don't have bandwidth issues.
+[41:09] It's really nice.
+[41:10] The only issue here is that it's
+limited to open source software
+[41:13] and you need some
+complex installation.
+[41:15] You need to set up your
+own server locally.
+[41:17] Another kind of benchmark
+are based on remote servers
+[41:21] and these are really
+on the open web.
+[41:23] They're more realistic
+because there's
+[41:25] latency, which is
+the reality when
+[41:28] you go over the real internet.
+[41:31] And it's also nice
+because you can
+[41:32] support websites that are
+not necessarily open source.
+[41:35] You don't have to
+host them locally.
+[41:37] The downside of that is
+that they can be unreliable.
+[41:41] There can be network issues.
+[41:43] You need an internet connection
+to be able to benchmark.
+[41:47] The different kinds
+of benchmarks here.
+[41:50] WorkArena is a benchmark
+that we proposed.
+[41:52] It's based on the actual
+ServiceNow product.
+[41:55] I'm going to dig a
+bit deeper in that.
+[41:57] But WorkArena is a
+remote-hosted benchmark,
+[42:01] so nothing happens on
+your local machine.
+[42:04] What WorkArena is an
+open source benchmark.
+[42:07] The benchmark is open source.
+[42:09] The product is not open
+source, but the benchmark is.
+[42:11] It's 600 work-related tasks that
+are performed on a ServiceNow
+[42:15] product.
+[42:17] We thought that by having
+access to ServiceNow
+[42:20] and the fact that
+millions of people
+[42:22] use it every day
+in their daily job,
+[42:24] we thought, well,
+that's a great tool
+[42:26] to make a benchmark to see how
+web agents are able to help
+[42:29] people in the workplace.
+[42:32] What we did, we started
+by making some tasks that
+[42:34] are really simple.
+[42:36] We call it WorkArena level 1.
+[42:38] This is just interacting with
+those six basic components.
+[42:42] For example, sorting a list or
+filtering a list in the product,
+[42:47] searching a knowledge base to
+find the answer to a question
+[42:49] like what's the Wi-Fi
+password for the office.
+[42:52] Reading a dashboard
+saying which item do we
+[42:55] have the most in
+stock, for example.
+[42:57] These are the kind
+of tasks that we have
+[42:59] in the level 1 of WorkArena.
+[43:01] And we go from that all the way
+to really complex, realistic
+[43:04] workflows.
+[43:05] And I'll show you some
+examples in the coming slides.
+[43:08] But before I move
+on, I just want
+[43:10] to explain how this remote
+hosted benchmark works.
+[43:14] How do we make it work.
+[43:16] Obviously, we cannot ship you
+a Docker image that contains
+[43:19] ServiceNow because this means
+we would be giving you the code
+[43:21] base of the product.
+[43:24] What we do here is we rely
+on something called developer
+[43:27] instances, and these are
+clones of the product
+[43:31] that anyone can get.
+[43:32] You just go to a website called
+developer.servicenow.com.
+[43:35] You request an instance and you
+get your own copy of the product
+[43:38] that you can use for--
+[43:40] its use for developers
+to learn how
+[43:42] to program custom
+tools for the product.
+[43:45] And so the benchmark is
+built on that basically.
+[43:48] You give the credentials
+to your instance
+[43:51] and then the agent interacts
+with the front end.
+[43:53] It interacts with the web pages
+and we do all the validation
+[43:56] by using back end APIs.
+[43:58] We check if the agent
+correctly solves the task
+[44:01] by going to check the
+state of the database.
+[44:04] Yeah, it's based
+on a real product
+[44:06] that people use for real, but
+everyone can access the tasks.
+[44:11] And the benchmark are
+open source, just not
+[44:14] the ServiceNow product.
+[44:16] Great.
+[44:16] So just to give you to make
+this a bit more concrete,
+[44:19] here's GPT-4, actually solving
+some tasks in WorkArena.
+[44:23] You could see it
+ordering an Apple Watch.
+[44:26] You can see it reading
+dashboards, filling out
+[44:29] some forms, sorting some lists.
+[44:32] So these are all tasks
+from work arena level 1.
+[44:35] This is the simplest
+kind of tasks
+[44:36] that we have in the benchmark.
+[44:40] Now I want to give you a more
+difficult task, an example
+[44:43] of a more difficult task.
+[44:45] This is actually what we
+call WorkArena level 3.
+[44:47] It's pretty hard.
+[44:50] Here, what you see is a ticket.
+[44:53] It's an interface that
+shows a ticket that's
+[44:55] assigned to a human.
+[44:57] In this case, the
+agent is that human
+[45:00] and they have to solve the task.
+[45:02] Basically what they have to do
+here is to go check a dashboard
+[45:06] and they need to find which
+item is the lowest in inventory
+[45:10] and then order some
+items to replenish it
+[45:13] from a service catalog.
+[45:16] You can see that all the
+agent receives as instruction
+[45:19] is please solve this.
+[45:20] And it starts from this page
+basically, which is a ticket.
+[45:24] And then it says, if
+you're not sure what to do
+[45:27] can always refer
+to the knowledge
+[45:28] base for further
+instructions and it gives it
+[45:31] instructions to which
+article they could check.
+[45:33] The first step
+for the agent here
+[45:35] is to go to the knowledge base.
+[45:37] It needs to use the menus and
+navigate to this knowledge base,
+[45:41] find the right article,
+extract the information
+[45:43] on how to proceed, for example,
+how to get to the dashboards.
+[45:46] Then it needs to go,
+open the dashboard,
+[45:49] read it, find which item is
+the least available in stock.
+[45:53] And then it needs to navigate
+all the way to a service catalog
+[45:56] where it's able to
+order this item.
+[45:59] Three high-level steps, but
+with many, many low-level steps
+[46:03] in between.
+[46:04] There's navigation involved.
+[46:06] It's not clear.
+[46:06] Imagine if I drop you in
+a room with multiple doors
+[46:09] and you don't really
+see what's behind them,
+[46:11] You need to get
+to the right spot,
+[46:13] but you can't explore
+too much because you
+[46:15] have a limited number of steps.
+[46:17] This is actually a
+really hard task.
+[46:21] And so in addition
+to this example,
+[46:24] we have all kinds of
+capabilities that are
+[46:26] being evaluated in these tasks.
+[46:29] One of them, I'll
+give you one example,
+[46:31] it's planning and
+problem solving.
+[46:32] So, for example, one of
+the tasks in work arena
+[46:37] involves looking at
+a set of employees,
+[46:40] seeing who is the most
+busy and taking some work
+[46:43] from the most busy
+employee and reassigning it
+[46:45] to the least busy one.
+[46:46] So basically workload
+balancing across employees.
+[46:50] There's other ones like
+scheduling with constraints
+[46:53] or scheduling some events
+with some constraints.
+[46:56] We have tasks about budget
+management, all kinds of things.
+[47:02] Sophisticated memorization
+tasks basically
+[47:05] involve collecting bits
+and pieces of information
+[47:08] across many pages and in
+the end solving a task based
+[47:11] on everything you gathered.
+[47:13] And finally, we have some
+tasks that are just infeasible
+[47:16] and the agent needs to say,
+hey, this cannot be done.
+[47:20] It needs to use some
+critical thinking
+[47:22] to be able to say that, no,
+this doesn't have a solution.
+[47:25] If you're interested, the paper
+is here and you can take a look.
+[47:28] It's also in the
+pre-reading for the course.
+[47:32] Now I'll show you how well the
+agents that we have right now
+[47:36] do on this benchmark.
+[47:38] The title is a bit of a spoiler,
+but what you see on the right
+[47:45] here is the scores
+from a human evaluation
+[47:49] that we performed on
+WorkArena level 2 and level 3.
+[47:52] And these are really
+the realistic workflows,
+[47:54] the ones I just showed you.
+[47:57] You can see that humans
+have a really high score.
+[47:59] The average score
+was roughly 94%
+[48:03] across all our human
+evaluators on those tasks.
+[48:07] And so when we look
+at WorkArena L1,
+[48:10] unfortunately we don't
+have human level for that.
+[48:12] But you can see
+that our best agent
+[48:15] it does 42.7% success
+rate, which means you
+[48:19] give it a task 42.7% of
+the time it solves it.
+[48:24] That's WorkArena L1 and this
+is a good agent because it
+[48:27] achieved a very high--
+[48:29] one of the highest scores on
+the web arena, this 23.45% This
+[48:33] is how we know it's
+a decent agent.
+[48:35] Now, let's look at what it
+does on WorkArena level 2.
+[48:40] A lot of zeros
+there, unfortunately.
+[48:43] We have some success.
+[48:46] You can see that there
+is something there,
+[48:47] but most of the tasks
+are not solved correctly.
+[48:50] And when we move it
+to level 3, which
+[48:52] is the example that
+you've seen before,
+[48:55] we get zeros all
+across the board.
+[48:57] OK despite the fact that
+humans get 94% success
+[49:01] rate on those tasks.
+[49:03] What you see here is that
+the example I showed you
+[49:07] in the beginning was exciting.
+[49:10] It seems that there's
+potential there,
+[49:13] but obviously there
+seems to be some work
+[49:15] to be done by the community.
+[49:17] And we think that this
+benchmark will really
+[49:19] help in making
+progress towards that.
+[49:22] So you may be curious,
+why doesn't this work?
+[49:25] Why do we have zeros everywhere?
+[49:27] A lot of time, it's
+failure to plan.
+[49:29] The agent only perceives
+what is on its local page
+[49:33] and fails to explore.
+[49:35] Sometimes, we have
+hallucinations,
+[49:37] hallucinated controls.
+[49:39] The agent will
+imagine a button that
+[49:42] is called solve
+task and the action,
+[49:44] it will make is click
+Solve task, basically.
+[49:47] It invents shortcuts for itself
+or basically incorrect syntax
+[49:52] when it's outputting
+which actions to perform.
+[49:57] WorkArena is not the
+only benchmark that
+[49:59] has been proposed recently.
+[50:00] As you can see, there are many.
+[50:02] There's tens of thousands of
+tasks in those benchmarks, all
+[50:06] for web agents.
+[50:07] And each of those evaluates
+different aspects.
+[50:11] What's unfortunate is that
+all of these benchmarks
+[50:14] are not necessarily
+being evaluated
+[50:16] with the same protocol,
+the same kinds of agents.
+[50:19] It's quite hard to compare.
+[50:21] We are making tools to
+try to unify everything.
+[50:26] We made this framework
+called BrowserGym,
+[50:29] and essentially it's a
+unified evaluation platform
+[50:32] and we tried to regroup
+most of the major benchmarks
+[50:35] and we're still adding some.
+[50:36] If you want to
+contribute to that,
+[50:38] actually, we accept
+pull requests.
+[50:39] If you think there's
+one of those benchmarks
+[50:41] that you think is interesting,
+feel free to-- we'll
+[50:44] work with you to get
+it into the platform.
+[50:47] Essentially what
+browser gym does
+[50:49] is that it gives you a
+standardized observation space.
+[50:52] You see this agentic
+loop on the side.
+[50:55] Well, essentially at
+the top, you have HTML,
+[50:57] but you have
+accessibility tree, which
+[50:59] is a shortened version
+of HTML, a bit refined.
+[51:03] And then you have screenshots.
+[51:05] We have a chat box modality.
+[51:06] There's a bunch of different
+observation modalities
+[51:08] that we provide in
+BrowserGym, and we also
+[51:11] provide a standardized
+action space.
+[51:13] You can see examples
+at the bottom here.
+[51:16] You can do a mouse click.
+[51:18] You can do a click on it
+says click bid something.
+[51:21] Bid is a numerical ID that
+we assign automatically
+[51:24] to every control on the page.
+[51:26] Basically to click on
+something, the agent
+[51:28] would say, click number two,
+and we would go and roll it
+[51:31] out using Python Playwright.
+[51:34] This is BrowserGym.
+[51:35] And again, we regroup most
+of the major benchmarks
+[51:39] and we're still
+adding some in there.
+[51:41] What's also cool
+is that BrowserGym
+[51:43] allows to do human evaluation.
+[51:45] This is what we use to do
+the human eval in WorkArena.
+[51:49] Essentially, you
+get the same kind
+[51:51] of chat box interface
+with the web browser,
+[51:54] except you get this
+thing where you
+[51:56] can assign a curriculum
+of tasks to a human
+[51:58] and then they can
+ask for validation
+[52:00] or they can simply give up, go
+to the next task, for example.
+[52:04] All of this is in browser gym.
+[52:05] You can pip install
+it or you can
+[52:07] use this QR code to access it.
+[52:10] Cool.
+[52:10] So in addition to
+two BrowserGym,
+[52:12] we propose AgentLab, which
+is another set of tool
+[52:15] for building web agents.
+[52:17] Here, AgentLab,
+the goal of it is
+[52:20] to be a toolbox to
+build web agents.
+[52:22] We provide simple
+building blocks
+[52:23] to build web agents,
+but also tools
+[52:26] to understand their behavior.
+[52:28] Why they're not working debug
+their performance, for example.
+[52:31] And a lot of tools to run
+large scale experiments
+[52:34] and ensure reproducibility.
+[52:37] One thing that we propose
+is called AgentXRay.
+[52:40] Here, you see that I'm selecting
+an experiment that I conducted.
+[52:45] I click on a task from
+one of the benchmarks
+[52:47] and I click on the random seed.
+[52:49] Then what I see is essentially
+what the agent was seeing.
+[52:52] I can see the screenshots of
+what the agent was seeing.
+[52:56] I can see basically this is
+the accessibility tree of a web
+[53:00] page.
+[53:01] You can see the reasoning
+traces of the agent,
+[53:03] you can see which
+actions were performed,
+[53:06] and you see also this kind
+of timeline here at the top.
+[53:10] This is giving you profiling
+information on how much
+[53:13] time was spent reasoning,
+how much time was
+[53:16] spent performing the actions.
+[53:18] How many steps the
+agent performs.
+[53:20] Basically, AgentXRay,
+the goal is
+[53:23] to help you understand what's
+going on with your agent
+[53:25] and try to improve it.
+[53:27] Great.
+[53:27] In addition to that,
+we proposed AgentLab--
+[53:30] and sorry, we propose tools in
+for reproducibility in AgentLa.
+[53:35] And essentially one
+challenge we try to address
+[53:39] is the fact that it's
+really hard to benchmark
+[53:41] on dynamic environments
+that we don't control.
+[53:45] Websites are updated
+continuously.
+[53:49] API-based LLMs can
+be silently updated.
+[53:51] We don't really
+see what's going on
+[53:53] in the background and
+Python packages evolve.
+[53:56] How do you make benchmarks that
+remain comparable through time?
+[54:00] What we're trying
+to do in AgentLab
+[54:02] and this is work in
+progress, there's
+[54:04] already something in
+our GitHub repository,
+[54:07] but we're building
+that as we speak.
+[54:10] We're trying to find ways to
+extract standardized observation
+[54:12] traces so we got observations,
+actions, observations, and so on
+[54:17] and try to propose public
+repositories for those traces
+[54:21] to be stored but with the
+properties of the agent that
+[54:24] was used with the versions
+of the Python packages,
+[54:27] with the dates and everything.
+[54:29] We're trying to make it as
+reproducible as possible
+[54:32] and make mechanisms for this
+to be automatic, automatic
+[54:35] as much as possible.
+[54:36] And in addition to that, we're
+trying to make leaderboards
+[54:38] for the major benchmarks
+using these traces
+[54:42] and the experimental
+information with mechanisms that
+[54:44] allow to reproduce the results
+and check if they still
+[54:48] remain valid through time since
+the environment is evolving.
+[54:53] And so by combining
+AgentLab and BrowserGym
+[54:57] we think there's a
+great opportunity
+[54:59] because, first of all, we have
+a standardized observation
+[55:02] space, standardized action
+space, standardized traces
+[55:06] and public repositories
+to store those traces.
+[55:09] We think that with
+this mechanism,
+[55:12] we have the potential of
+doing basically distributed
+[55:16] trace collection
+so everyone could
+[55:18] help us gather traces of web
+agents acting on the open web.
+[55:22] And we might be able
+to use that to collect
+[55:24] a big repository of traces
+that we could further
+[55:26] use for fine tuning and making
+better agents in the future.
+[55:30] So AgentLab and
+BrowserGym provide
+[55:31] the tools we need to do that.
+[55:35] Before I hand it
+over to Nicolas,
+[55:37] I just want to finish with
+the challenges of web agents.
+[55:40] There is hope.
+[55:42] I think we'll make great
+progress on those benchmarks
+[55:45] in the coming year.
+[55:47] I just want to review
+the major hurdles here.
+[55:50] Long context understanding,
+the websites are huge.
+[55:54] We're talking about
+tens of thousands
+[55:57] of tokens, hundreds of
+thousands of tokens,
+[55:59] easily even for the
+accessibility trees which
+[56:02] are supposed to be
+shorter than the HTML.
+[56:05] This makes huge observations.
+[56:07] The amount of relevant
+information in those contexts
+[56:11] is very small, so it's
+already a challenge
+[56:13] to be able to pick
+it out correctly.
+[56:15] Long term planning, as I said,
+is quite hard to be on a page
+[56:21] with no information of what
+is two or three pages away
+[56:25] and try to reason about, OK,
+I'm going to go to this menu
+[56:29] and then I'm going
+to click on that
+[56:31] and eventually I'll end
+up in the right place.
+[56:33] We have intuition for that.
+[56:35] We are used to using
+Amazon, for example,
+[56:38] so we know how to search that
+and navigate that and we can--
+[56:41] Analogous websites
+are not obscure to us
+[56:45] but for an LLM agent, it could.
+[56:48] there's
+[56:48] Work to be done in that space.
+[56:50] This Murthy et al.
+paper that I mentioned
+[56:53] is a good step in
+that direction.
+[56:55] By collecting traces of random
+actions at a very large scale.
+[56:59] This might help for fine tuning
+aims to better understand where
+[57:04] they could get in a few steps.
+[57:07] Learning and adaptability.
+[57:09] So we need to be able to
+learn from observation,
+[57:11] learn from demonstrations
+and mistakes.
+[57:14] There's some work
+in that direction.
+[57:15] I wanted to mention the Agent Q
+work that uses Monte Carlo tree
+[57:20] search and DPO to try
+to fine tune agents
+[57:23] and do inference time search.
+[57:24] I think this is an
+interesting work.
+[57:27] There is multi-modality
+that's very important.
+[57:30] Actually, the visual
+web arena benchmark
+[57:33] proposes a set of
+tasks that you simply
+[57:35] can't solve if you're not
+looking at the vision modality.
+[57:39] If I give you a task that is
+order me a shirt like that,
+[57:42] well, you need to be able
+to see what the shirt is
+[57:45] going to be able to solve it.
+[57:47] Cost and efficiency.
+[57:49] As I said, the videos
+that we showed you
+[57:51] were sped up by a lot.
+[57:53] We need to make this fast.
+[57:54] We need to make it efficient.
+[57:56] I think shrinking the context
+size is one direction.
+[58:00] There's a potential
+to use retrieval
+[58:02] to retrieve only the relevant
+elements from the observation
+[58:05] space.
+[58:06] There's potential for using
+multi-agent architectures where
+[58:11] you have, for example, the
+date picker agent, which
+[58:14] is a very small LLM
+that is only used
+[58:16] to do a very small task of
+filling out date pickers,
+[58:19] for example.
+[58:20] Perhaps there's some
+multi-agent architectures
+[58:22] that could be used there.
+[58:24] And finally, fine
+tuning smaller LLMs.
+[58:28] One that is very crucial--
+[58:30] I'm finishing with this one--
+[58:32] is safety.
+[58:34] No one wants to roll
+out an agent that
+[58:35] can be easily hijacked
+and current agents,
+[58:39] the ones I showed
+you in the demo,
+[58:40] actually it has been tested.
+[58:43] If you put white on white
+text on the page that says,
+[58:45] hey, GPT, follow these
+new instructions,
+[58:47] it will follow those
+new instructions.
+[58:51] We need robustness,
+we need agents
+[58:54] that are able to be robust to
+injections on the web page,
+[58:57] not only in the HTML,
+but also in the text box.
+[59:00] You don't want people to be able
+to write instructions there.
+[59:04] And I think this challenge
+is even bigger now
+[59:07] that we have multimodal
+models because you're
+[59:10] subject to attacks from all
+modalities, essentially.
+[59:14] So it amplifies the problem.
+[59:16] And so this is one of
+Nicolas's example on 2000--
+[59:20] It was 2030, but we
+switched it to 2026
+[59:24] because I think it's
+not so far away.
+[59:27] But you can imagine
+malicious Chrome plugins
+[59:30] or malicious
+browser plugins that
+[59:32] detect when you log
+into your bank's website
+[59:35] and inject using JavaScript
+some instructions on a web page
+[59:38] to hijack the agent
+that can get them to do
+[59:41] wire transfer to some account.
+[59:44] These seem far
+fetched, but they're
+[59:47] quite real when you start
+to think about web agents.
+[59:49] So we really need to be robust
+to these kind of things.
+[59:53] All right.
+[59:53] So that's it for web agents.
+[59:55] And I'll hand it
+back to Nicolas.
+[59:56] NICOLAS CHAPADOS:
+Thank you, Alex.
+[59:58] We're coming onto the last
+part of this presentation
+[01:00:03] where we take a
+step back and look
+[01:00:05] at what is the potential impact
+of those agent technologies
+[01:00:09] in the broader workspace.
+[01:00:13] And there is no question that
+AI agents are on their way
+[01:00:19] and will soon be on their
+way to change completely
+[01:00:22] the nature of work.
+[01:00:24] And to go back to the
+example we gave earlier,
+[01:00:28] it was only the beginning.
+[01:00:32] If you remember,
+Sandy was struggling
+[01:00:35] to get the knowledge
+base permissions for Jon
+[01:00:39] to see this article.
+[01:00:41] And at the time, she was only
+able to get a little bit of help
+[01:00:46] from generative AI to make
+her job a tiny bit faster.
+[01:00:51] So let's see how
+AI agents will be
+[01:00:54] able to tremendously help Sandy
+be much, much more productive.
+[01:01:02] In a world where AI
+agents are deployed first,
+[01:01:06] Sandy will not even look
+at the ticket right away.
+[01:01:09] There will be a ticket that
+will be coming her way.
+[01:01:12] But before she even
+opens it, a set of agents
+[01:01:16] will already have tried to do a
+partial solution of the ticket
+[01:01:21] itself.
+[01:01:23] We'll be getting an agent that
+looks at the ticket itself
+[01:01:30] and tries to solve it.
+[01:01:32] And it's going to propose the
+solution as a set of steps.
+[01:01:38] And the steps are going
+to be, well, maybe we
+[01:01:42] can start by finding
+what permissions
+[01:01:44] Jon has access to
+then we can fix the
+[01:01:50] find the right permissions
+for the Knowledge-Base article
+[01:01:53] and align Jon's permissions to
+where he needs to access the KB
+[01:01:57] article.
+[01:01:58] And then once this
+plan is done, maybe we
+[01:02:01] want to ask the human
+for confirmation.
+[01:02:05] We have an
+orchestrator agent that
+[01:02:06] is asking Sandy for permission.
+[01:02:09] Sandy says it looks
+at the plan and says,
+[01:02:11] yeah, it looks all right to me.
+[01:02:13] Let's proceed.
+[01:02:14] Once Sandy gives her
+approval, then we
+[01:02:17] have another bunch
+of AI agents that
+[01:02:19] will each solve the little
+subtasks that need to be done.
+[01:02:24] Then this is passed
+to a user access
+[01:02:28] agent that is contemplating
+giving Jon the right access.
+[01:02:34] But before doing anything
+destructive is asking again.
+[01:02:39] Sandy for confirmation.
+[01:02:41] Hey, Sandy, are you OK with
+me giving Jon permission
+[01:02:45] to access this knowledge base.
+[01:02:46] Sandy says yes, of course.
+[01:02:48] And finally the
+ticket is closed.
+[01:02:53] We see a much more
+granular and a lot more
+[01:02:57] work that's being undertaken
+by a team of AI agents
+[01:03:00] all working together
+to help out Sandy.
+[01:03:03] I will, in the
+interest of time, Skip
+[01:03:05] quickly on this beautiful chart
+saying the state of web agents
+[01:03:09] and how they can automate.
+[01:03:12] Once we take a look at
+the very granular ways
+[01:03:16] in which agents contribute
+to specific workflows,
+[01:03:19] we can ask ourselves, what's
+the potential for them
+[01:03:23] to have an impact on the
+broader world of knowledge work?
+[01:03:28] And before we do that,
+we need to ask ourselves,
+[01:03:31] what is knowledge work.
+[01:03:32] Of course, knowledge work
+is not a single thing.
+[01:03:35] It's many, many, many
+different things.
+[01:03:37] We have meetings, scheduling and
+coordination, ethical hacking,
+[01:03:42] language, localization.
+[01:03:44] We have literally
+thousands and thousands
+[01:03:47] of tasks in the economy
+that are broadly
+[01:03:49] categorized as knowledge work.
+[01:03:51] How do we get a
+sense of the impact
+[01:03:55] that AI agents are going
+to have on this very, very
+[01:03:58] broad spectrum of occupations.
+[01:04:01] Fortunately, there
+are tools that we
+[01:04:04] can use to help get started
+doing this kind of assessment.
+[01:04:08] In particular in the US, the
+Bureau of Labor statistics has
+[01:04:12] already compiled a big database
+called the O*NET database that
+[01:04:17] is literally a list of all the
+occupations in the US economy.
+[01:04:27] And for each occupation,
+each job description,
+[01:04:31] it has a set of
+tasks that need to be
+[01:04:35] done in the daily
+activities of this job.
+[01:04:40] To take one example, if we
+have software quality assurance
+[01:04:44] analyst and tester, we see the
+job description that is coming
+[01:04:48] from the O*NET database.
+[01:04:49] This is free.
+[01:04:50] You can download it.
+[01:04:51] There's no problem there.
+[01:04:52] And then the set of
+tasks and the skills
+[01:04:55] that a person needs to do.
+[01:04:58] If we want to assess the impact
+of AI agents, one way to go
+[01:05:02] is to take a look at
+the database like this
+[01:05:04] and try to understand
+is each task
+[01:05:07] that this software quality
+assurance is doing,
+[01:05:12] how far can it be automated
+through AI agents.
+[01:05:17] This is one way to proceed.
+[01:05:19] Of course, some people have
+thought about it before
+[01:05:22] and we have technology
+adoption curves.
+[01:05:26] This is coming from a McKinsey
+report from a few months ago
+[01:05:32] that takes a look,
+across OECD countries.
+[01:05:36] In this case, what is
+the anticipated adoption
+[01:05:42] curve for the broad set
+of generative technologies
+[01:05:47] of which AI agents are a
+subset across the economy,
+[01:05:51] with both expected adoption
+and worst case adoption curves.
+[01:05:56] One thing to keep
+in mind is that when
+[01:05:58] we try to analyze
+adoption curves like this,
+[01:06:05] there are many, many factors
+that are guiding the adoption,
+[01:06:09] and technology is
+only one of those.
+[01:06:12] The process of assessing
+technological maturity
+[01:06:16] only reflects a partial
+picture of where we are going
+[01:06:21] at the level of the economy.
+[01:06:23] And broadly speaking, we
+can think about two ways
+[01:06:26] of assessing impact.
+[01:06:28] There is a top-down way that is
+coming from a top-down analysis
+[01:06:34] of a database like the O*NET
+database and trying to ask GPT
+[01:06:38] to guess for each
+task of each job.
+[01:06:42] How much do you think
+the generative AI
+[01:06:46] will help automate this task?
+[01:06:51] And there is a
+bottom up assessment
+[01:06:55] in which we can use a
+benchmark like WorkArena
+[01:06:59] to track at a very,
+very granular level
+[01:07:03] the real actual automation rate
+for the state of technology
+[01:07:10] today as it pertains
+to specific tasks.
+[01:07:14] None of those
+approaches is perfect.
+[01:07:16] One is fuzzy, the
+other is incomplete.
+[01:07:18] But together, they can help
+us triangulate a little bit
+[01:07:22] and get a sense of what is the
+anticipated or the likely rate
+[01:07:28] of technology adoption, how fast
+the job descriptions will change
+[01:07:35] because part of them will
+be done by AI agents.
+[01:07:40] And this kind of
+analysis can be used
+[01:07:42] to help decision-makers
+and companies plan
+[01:07:46] for reskilling programs
+for employees, for example,
+[01:07:50] and make sure that
+we can navigate
+[01:07:53] technology readiness in a
+way that benefits all people.
+[01:08:01] But all in all, this is
+getting to be very exciting.
+[01:08:06] We can already see ways in
+which humans and machines are
+[01:08:10] working together in New ways.
+[01:08:12] There is a very
+influential study
+[01:08:14] that came out a few months
+ago from Harvard Business
+[01:08:17] School and BCG, the
+consulting firm,
+[01:08:20] that looked at the ways in which
+people were working jointly
+[01:08:28] with advanced generative
+AI technologies.
+[01:08:31] And they found that there
+were two main patterns
+[01:08:35] in the division of labor
+between human and machine.
+[01:08:38] One pattern is broadly
+called the Centaur pattern,
+[01:08:41] in which there is a strategic
+decomposition of labor.
+[01:08:44] The human is planning
+the high level task
+[01:08:47] and big chunks of work are
+outsourced, if you will,
+[01:08:51] to AI systems.
+[01:08:53] And the second way
+is called the Cyborg,
+[01:08:56] in which there is a very
+intimate, very granular
+[01:08:59] collaboration between human
+and machine to solve tasks
+[01:09:04] and to get work done.
+[01:09:05] And it's still very
+much early days.
+[01:09:07] There are enormous opportunities
+for user experience and computer
+[01:09:11] human interaction research
+there to really figure out
+[01:09:15] what will be the most productive
+patterns for each person.
+[01:09:19] Maybe it depends on the
+personality type, certainly
+[01:09:21] the kind of work to
+be done, and so on.
+[01:09:24] Finally, it's already
+time to conclude.
+[01:09:26] We leave it with a couple
+of resources to dig further.
+[01:09:30] We made a timeline of
+the influential work
+[01:09:34] if you want to dig further
+in the realm of LLM agents
+[01:09:39] and benchmarks.
+[01:09:42] So on the top are
+various frameworks
+[01:09:45] that have been introduced prior
+to 2024 along with benchmarks.
+[01:09:51] And we have the stuff
+that came out this year.
+[01:09:56] There has been a ton of
+activity in the space.
+[01:09:59] This is for benchmarks.
+[01:10:00] And on the web agent front,
+we have the early research,
+[01:10:05] starting with the
+minima WoB in 2017
+[01:10:11] and continuing this
+year with a ton of new.
+[01:10:18] Agentic frameworks for
+web agents, as well as
+[01:10:21] new benchmarks that
+Alex described.
+[01:10:25] With this, it's time
+to ask our lecturer
+[01:10:28] agent to create the slides for
+our presentation next year.
+[01:10:34] And it's also time to thank
+our amazing colleagues
+[01:10:39] at ServiceNow that made all of
+what you saw today possible.
+[01:10:42] QR codes for everything we
+talked about, tape agents, work,
+[01:10:46] arena browser, gym agent, lab.
+[01:10:48] Are there if you're interested.
+[01:10:50] We take pull requests.
+[01:10:52] All of that is open source
+for you to study and learn.

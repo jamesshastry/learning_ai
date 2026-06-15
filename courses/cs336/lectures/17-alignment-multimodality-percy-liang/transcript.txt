@@ -1,0 +1,1614 @@
+[00:05] So um originally the plan was to talk
+[00:08] more about reinforcement learning but I
+[00:10] thought since I only had one lecture to
+[00:12] give I think this class would be a
+[00:14] little bit incomplete without saying
+[00:16] something about multimodality which is
+[00:18] so pervasive if you look at all the
+[00:20] major models. Um so this will be a
+[00:23] overview of um multimodal models. Um, of
+[00:27] course, this could be a whole class in
+[00:28] itself. Um, and I'll try to do what I
+[00:31] can in one lecture. Okay, so let's dive
+[00:34] into multimodal models. So, so far in
+[00:36] this class, we've have exclusively
+[00:38] focused on language models. And language
+[00:40] models are already pretty general. They
+[00:43] give you the ability to go from any
+[00:45] piece of text to any text. So this could
+[00:47] be any language uh code um you know
+[00:51] poetry any anything you like even you
+[00:53] know let's say uh DNA for example
+[00:57] um but the world is multimodal um you
+[01:00] have text you have images audio video
+[01:05] and if you think about a sort of a north
+[01:08] star of where we want to be is what
+[01:10] people call an omnimodel which is
+[01:13] ability to take any combination of any
+[01:15] of these modalities ities and output any
+[01:18] combination of any of these modalities.
+[01:20] So for example, I can give you an image
+[01:23] and a video and I can ask a question
+[01:26] about you know which uh about the image
+[01:29] and the video. I can generate images. I
+[01:31] can convert the audio into an image. You
+[01:34] can imagine all sorts of different
+[01:35] applications um by having a omni model.
+[01:39] So, you know, in this class, I'm not
+[01:40] going to build up to a whole omni model,
+[01:42] but I'll give you um you know, some of
+[01:45] the pieces that are um at least allow
+[01:47] you to ingest a little bit of um of
+[01:50] images um which we'll mostly focus on
+[01:53] today.
+[01:55] So, so how do you build such a thing?
+[01:58] Well, um this is sort of a a weird way
+[02:01] to motivate this, but um the reality is
+[02:04] that transformers work really well and
+[02:07] despite the best efforts of people to
+[02:09] try other things um those are in across
+[02:12] all these modalities still at scale the
+[02:14] the best thing we have. So we have to
+[02:16] figure out how to use them. And now
+[02:18] transformers were designed for text. So
+[02:21] they have this property that they speak
+[02:23] you know tokens. So they take input as
+[02:26] input a bunch of tokens and then output
+[02:29] some tokens. And here I'm um
+[02:32] sort of expanding the notion of token to
+[02:34] be not just a discrete token that we've
+[02:36] seen in text but also uh potentially
+[02:39] continuous tokens. You can think about
+[02:41] these as embedding of uh tokens.
+[02:44] And the key thing is that a token should
+[02:47] represent some sort of semantic unit of
+[02:49] information. Um for example in natural
+[02:52] language uh tokens are subwords and
+[02:55] these are you know somewhat meaningful
+[02:58] whereas for example a pixel is is
+[03:00] certainly not uh meaningful by itself.
+[03:03] Um so somehow we must convert everything
+[03:07] including you know audio and um and
+[03:10] images into either discrete or
+[03:12] continuous uh tokens.
+[03:15] Now notice that we've already had to do
+[03:16] this even with text right in the first
+[03:19] lecture we talked about tokenization and
+[03:21] there it was um you know not too bad I
+[03:25] mean we had a BP tokenizer you guys
+[03:27] implemented it um it was you know it's
+[03:30] fine um one could wish for um you know a
+[03:34] better tokenizer or no token uh
+[03:37] something that doesn't have tokenizers
+[03:39] at all but um it's not the worst thing
+[03:42] in the world. Um now for non-ext
+[03:44] modalities um we have to scratch our
+[03:47] heads a lot more and figure out what is
+[03:49] the equivalent of the BP tokenizer that
+[03:51] will take an image and produce things
+[03:53] that a transformer can digest.
+[03:57] Okay. So
+[03:59] you have to answer two questions here.
+[04:01] One is for non-ext data for example
+[04:03] images or videos or audio how do you
+[04:06] input these into the transformer and
+[04:10] then how do you generate them out and
+[04:13] this lecture will mostly focus on uh
+[04:15] question number one.
+[04:17] Okay.
+[04:19] So so let's start um back in rewind the
+[04:22] clock back to uh 20 21. Um so the clip
+[04:26] model which some of you might be
+[04:28] familiar with is a lot of the foundation
+[04:31] of uh modern you know uh VLMs and so we
+[04:35] can go through this a bit uh more in
+[04:38] more detail. So, clip stands for
+[04:40] contrastive language image pre-training
+[04:43] and a bit of historical context is
+[04:46] around that time um you know com you
+[04:49] know GPD3 had already happened GP2 all
+[04:53] the language models had already um gone
+[04:55] into this kind of foundation model era
+[04:58] um you know vision was still um you know
+[05:02] there were some efforts but you know
+[05:04] traditionally had been based on large
+[05:06] annotated um data sets such as imageet
+[05:10] and training models um such as the
+[05:13] ResNet on these data sets and doing a
+[05:17] bunch of other things like data
+[05:18] augmentation and getting really good
+[05:20] performance.
+[05:21] And so the researchers at OpenAI were
+[05:24] wondering is it possible to leverage the
+[05:27] large amount of image and textual
+[05:30] captions um out there? So inspired by
+[05:33] this idea in language where you could
+[05:35] just scrape the internet you have all
+[05:37] this text it's very noisy but somehow if
+[05:40] you train a large enough model you can
+[05:42] make sense out of this and generate
+[05:44] something useful. Um so what was the
+[05:46] equivalent of that for for images?
+[05:49] So as a result clip was born and the
+[05:54] idea of clip is uh fairly you know
+[05:57] simple and straightforward. So the idea
+[05:59] here is that suppose I give you a bunch
+[06:02] of image text pairs. So let's say I give
+[06:06] you 32,000 of these. Okay. So what I'm
+[06:11] going to do is for each image I'm going
+[06:13] to encode it using image encoder which
+[06:16] I'll explain later into a vector. Um so
+[06:20] I'm going to have third uh 32,000 of
+[06:23] these um image encodings.
+[06:26] I'm going to also do the same thing with
+[06:28] the corresponding uh text. So that'll
+[06:31] give me uh t1 through tn. Right? So
+[06:34] these are the embeddings of the text.
+[06:36] These are embedding of the images.
+[06:39] Now the objective I want to set up is
+[06:41] that um I want the
+[06:46] you know image let's take I1. So I1 is
+[06:49] associated with aligned with t1 right.
+[06:52] So I want this um alignment
+[06:55] um the dotproduct between these two
+[06:57] embeddings to be much larger than the
+[07:00] dotproduct between I1 and all the other
+[07:02] texts. Okay. And conversely I also want
+[07:07] um for this text to say that this dot
+[07:10] productduct is larger than the
+[07:12] dotproduct between T1 and all the other
+[07:14] images.
+[07:15] So that in a nutshell is the clip
+[07:18] objective and you can imagine doing
+[07:20] there's um basically two to two * n um
+[07:25] different um kind of softmax
+[07:27] classification um you know problems. So
+[07:30] here's um here's the here's the code. So
+[07:34] you get a m byd matrix for the image
+[07:39] encodings and m byd times for the
+[07:42] textual embeddings. You normalize um and
+[07:45] you take the stop product
+[07:48] um with some with some temperature and
+[07:50] then you compute the cross um entropy.
+[07:54] Okay.
+[07:57] So it's basically like a multiclass
+[07:58] classification problem where the
+[08:00] examples are sort of structured in this
+[08:03] kind of um you know n byn matrix form.
+[08:09] Okay. Any questions about that?
+[08:15] All right. So
+[08:17] so this um so some more details about
+[08:21] how clip was built. Um so where does the
+[08:24] data come from? Um there are not you
+[08:28] know too many details in the in the
+[08:30] paper about uh the the data. Roughly
+[08:33] it's um you take a bunch of queries um
+[08:38] uh from somewhere and then you go search
+[08:41] online for these and you mine a bunch of
+[08:44] image and text uh pairs
+[08:47] and um this resulted in 400 million text
+[08:51] image text pairs. um the data set wasn't
+[08:54] released but there was an effort um by
+[08:59] this paper called you know open clip
+[09:01] which uh replicated
+[09:03] and and further kind of extended the
+[09:06] clip ideas um um so there was this data
+[09:10] set called lion 5B which was released
+[09:12] five billion you know images with
+[09:14] textual descriptions and there was a
+[09:17] bunch of processing that happened um
+[09:19] interestingly they actually used clip
+[09:21] for the data filtering and then trained
+[09:22] open clip. Um so you know there's some
+[09:25] bootstrapping happening but at least
+[09:27] this is a model where you can point to
+[09:29] the data set that it was trained on and
+[09:33] um the code as well.
+[09:37] Okay. So, a few other you know details.
+[09:40] Um, so images come in all sorts of
+[09:44] resolutions, right? If you find an
+[09:46] internet image, it might be uh long and
+[09:49] skinny or tall um sorry, long and skinny
+[09:53] or the other way. So, arbitrary
+[09:56] dimensions. And um one thing that you
+[10:00] learn about neuronets is that they don't
+[10:02] like things to be dynamic. they want
+[10:04] things to be you know fixed size. So
+[10:07] there is a sort of somewhat um you know
+[10:10] heristic uh processing that happens is
+[10:12] they resize the image so that the
+[10:15] shorter side is 336 or whatever target
+[10:19] size could be 224 as well. Um and then
+[10:24] they center crop um to get a square.
+[10:27] Okay, this is obviously for convenience.
+[10:29] Later we'll see that you can do much
+[10:31] better than this but this is just for
+[10:33] expediency and also at this time people
+[10:37] were the clip authors were thinking
+[10:40] about image net and classification. So
+[10:43] um usually the object is in the middle
+[10:46] and you're just trimming off some
+[10:47] background so it doesn't matter too
+[10:49] much.
+[10:53] Okay. So um so what is the vision
+[10:57] encoder? So this is the general
+[10:58] algorithm but I've uh haven't specified
+[11:01] what the image and text encoders are.
+[11:05] >> Yeah
+[11:08] and text when they input right. So they
+[11:11] provide text every type of email
+[11:14] generation that we follow will have some
+[11:17] sort of it. That's why they train on
+[11:20] both text and image rather than just
+[11:23] images. So the question I think is why
+[11:26] they train out image text pairs as
+[11:28] opposed to images.
+[11:32] >> Right? So there is a line of work that
+[11:36] tries to encode images um into
+[11:38] representations
+[11:40] um based on data augmentation. So for
+[11:43] example, if you take an image and I
+[11:46] think this idea called sim clear, you
+[11:48] augment it, um you crop it, you randomly
+[11:51] perturb it, um rotate it and you want to
+[11:55] say that that is the same image like
+[11:57] they should have similar embeddings. Um
+[11:59] now the and that's that's useful for
+[12:03] kind of low-level details but um the
+[12:07] problem is that um you won't data
+[12:09] augment your way from like one type of
+[12:11] dog to another dog. So by using that
+[12:15] text it gives you higher level semantic
+[12:18] um um representations of the images
+[12:23] and yeah that's a good question and
+[12:26] later we'll see how these semantic
+[12:28] representations are useful if you look
+[12:30] at the types of tasks that people are
+[12:32] trying to uh solve.
+[12:36] Okay so what is the vision encoder that
+[12:39] clip uses? Um they actually experimented
+[12:42] with a bunch of different ones um
+[12:44] resnats and vision transformers uh which
+[12:47] had just come out and they found out the
+[12:50] vision transformers perform the best. So
+[12:52] when people say clip they usually mean
+[12:54] the vit uh version and so you know a
+[12:58] vision transformer does the following.
+[13:02] Um so you take an image and um you you
+[13:08] break it up into these patches. Um I
+[13:11] think the original paper was like 16 by
+[13:13] 16. Um and uh the clip used 14 by 14. Um
+[13:18] but anyway you have these little you
+[13:20] know patches which are basically you
+[13:23] know vectors. So each patch is in some
+[13:26] sense a a well a token for this you know
+[13:30] vision transformer.
+[13:31] um you add the positional embeddings
+[13:33] just like you would if you're training a
+[13:35] a language model and then you just put
+[13:38] it through a standard transformer.
+[13:41] Um and if you want um to you know
+[13:47] classify then you you would um well you
+[13:51] would usually want to um okay so the
+[13:54] trans sorry the transformer encoder
+[13:56] produces a a a sequence of vectors right
+[14:03] and um the clip paper does something a
+[14:07] little bit different you can average all
+[14:08] these vectors that gives you a single
+[14:09] vector u but they saw it was better to
+[14:12] do a attention pooling which means that
+[14:14] you take the global average of all the
+[14:16] activations but then you also do another
+[14:19] round of uh um you know attention with
+[14:22] that query against the key and values of
+[14:26] each position and that gives you another
+[14:29] vector which is maybe a little bit more
+[14:31] um informed rather than just like a a
+[14:33] straightup average.
+[14:37] Okay, so that's uh the vit and um the
+[14:42] clip paper found that the best model is
+[14:45] what is called vit l14.
+[14:49] Um so this to decipher this this is a
+[14:51] large vit um I think it has like 24
+[14:56] layers or so um not quite sure about
+[14:59] that. um and 14x4 patches. Um each patch
+[15:04] is RGB, so it has three channels and um
+[15:08] they trained on 336 by 336 resolution
+[15:12] images. Actually, they trained on lower
+[15:15] res and then they um up you know uh and
+[15:18] then I guess for speed because high
+[15:21] resolution images takes uh longer and
+[15:23] then for the latter part of training
+[15:25] they train on higher res. Yeah.
+[15:28] >> Yeah. for the position embedding would
+[15:30] it be more complicated than text for
+[15:33] example X only has like one dimension
+[15:37] but even has two output down
+[15:40] >> yeah so a question is um can you do be
+[15:45] smarter about the position embeddings
+[15:46] because this is just you know linear
+[15:48] zero through nine um I think in this
+[15:51] paper they actually in the clip paper I
+[15:54] believe they tried some 2D version of
+[15:56] this and the 1DNA they found that it
+[15:59] doesn't really that matter that much.
+[16:01] Um, I think it's also,
+[16:05] you know, I always have to take these
+[16:06] results with a with the idea that
+[16:09] they're interesting classification in
+[16:11] mind. So, for classification, maybe it
+[16:12] doesn't matter. Later, we'll see fancier
+[16:15] positional embeddings that do take into
+[16:17] account the um the spatial structure.
+[16:24] Okay. So the text encoder um is a
+[16:29] standard transformer. It's a GPT2 style
+[16:31] transformer since um that was from the
+[16:33] same group that developed GPT2.
+[16:37] And um in order to get a single vector
+[16:40] out of a sequence um they prepended BOS
+[16:44] and um appended EOS and then they took
+[16:48] EOS um the activation at the highest
+[16:51] layer as the um the representation of
+[16:54] that whole sequence.
+[16:57] Okay. Okay, so you have the vision
+[16:58] encoder, you have the text encoder, and
+[17:01] then you can do this um process to to
+[17:04] train. Uh you pick a batch, you encode
+[17:07] all the text, you code all the images,
+[17:10] and then you form these um two end cross
+[17:13] entropy losses and then you go from
+[17:16] there.
+[17:18] Okay, so the headline result and which
+[17:21] got a lot of people excited about clip
+[17:24] back in 2021 is that on the imageet
+[17:27] benchmark, zero shot clip outperformed a
+[17:31] resnet that was trained on 1.2 million
+[17:34] imageet images. So if you think about
+[17:36] this 1.2 to image net images. This was
+[17:40] many many hours of Amazon Mechanical
+[17:43] Turk worker time to do this annotation.
+[17:47] Um, and now you have clip that was
+[17:50] trained on more organic you know web
+[17:53] data. Um, of course this was the labor
+[17:55] of a bunch of people on the web but you
+[17:57] know if you're able to leverage that or
+[18:00] existing data already then you can just
+[18:03] zero it. And the zeroot technique is
+[18:06] basically um to to explain I don't have
+[18:09] slide support here but you take an image
+[18:12] and then you have a bunch of text and
+[18:14] then you basically take the dot product
+[18:16] with the various labels and see which
+[18:18] one's the highest.
+[18:23] Oh yeah it is. Sorry it is on this part
+[18:26] of the site. Okay good point. So this is
+[18:29] a zero shop uh prediction um where you
+[18:33] take an image and then you Yeah, what I
+[18:34] said.
+[18:40] >> Cool. Any questions?
+[18:43] >> Yeah. this type of sound supervised
+[18:46] version is actually an issue if uh for
+[18:49] example there's a dog image like for all
+[18:52] the caption but maybe not just this
+[18:54] simple
+[18:55] this dog maybe other caption also would
+[18:59] that confuse the model
+[19:00] >> yeah so the question is if you have a
+[19:01] dog and there's maybe other captions
+[19:04] that also have dogs would that confuse
+[19:06] the model um in general this process is
+[19:10] going to be noisy um I it's okay if
+[19:14] there's another dog because on average
+[19:16] um it's unlikely that there's always
+[19:19] going to be a dog. Sometimes it's going
+[19:20] to be apple or a cat or something.
+[19:23] Um but but also another point is that
+[19:25] these images are um basically scraped
+[19:29] from images on the web with textual text
+[19:33] next to them or in the alt um kind of a
+[19:36] image. And so they're extremely noisy.
+[19:38] There's been, you know, studies that
+[19:40] look at when you have a caption of a of
+[19:43] a image, it doesn't necessarily just
+[19:45] like verbatim say what's in the image,
+[19:48] right? Because if you have an image and
+[19:49] it's a dog, you don't need to say a dog.
+[19:52] It's um so this is process is very
+[19:54] noisy. So it's um maybe
+[19:58] uh kind of somewhat surprising but also
+[20:02] interesting that it worked. I mean there
+[20:03] was a lot of data filtering that is
+[20:05] needed. So if you take arbitrary images
+[20:07] on text on that web, it's probably going
+[20:09] to be too way too noisy.
+[20:13] One other thing to note which um relates
+[20:15] to a point I'll come back to at the very
+[20:17] end is they also try this um alternative
+[20:21] where instead of doing this ranking,
+[20:23] they can predict text from the images.
+[20:26] So they can set an objective where they
+[20:28] try to take the images and predict the
+[20:30] text um either as a bag of words or um
+[20:36] as a language model and they show that
+[20:41] you know maybe I don't know somewhat
+[20:43] surprisingly that if you use a stronger
+[20:46] model it actually does does worse or at
+[20:49] least is less efficient um compared to
+[20:52] using bag of words um you know clip.
+[20:56] So this is saying that this is you know
+[21:00] I I think saying that for the actually
+[21:04] the representations that uh you're
+[21:06] trying to learn or again this is image
+[21:08] net accuracy so it's classification um
+[21:11] actually modeling the exact token
+[21:12] sequences of of the caption isn't um so
+[21:16] important for getting the rough um
+[21:19] representation of the image.
+[21:24] Okay, we'll come back to this uh point
+[21:26] at the at the end. Um, so so what do we
+[21:30] learned so far? Um, so we've encoded
+[21:33] images using clip and it captures the
+[21:36] semantics of the image because it's
+[21:39] paired with text and generally text
+[21:41] talks about the the semantics. Um, it is
+[21:45] important to note that the design
+[21:46] decisions here are based on image
+[21:48] classification. So it's not very, you
+[21:51] know, fine grained. Um, but yet it
+[21:54] still, as we'll say, serves a as a kind
+[21:57] of robust starting point for everything
+[21:59] we're going to do later.
+[22:01] One technical kind of downside of clip
+[22:04] is that it does require large uh, you
+[22:07] know, batch sizes like 30,000. Um, if if
+[22:10] you have a batch size of one, clearly it
+[22:12] doesn't work or even 10, it doesn't
+[22:14] work. And furthermore, the softmax
+[22:16] operation operates over the full batch.
+[22:20] So it's not really very decomposible.
+[22:22] Whereas if you think about normal
+[22:24] language model training um a batch of
+[22:26] examples all the sequences kind of
+[22:29] paralyze and you just like do a um a
+[22:34] aggregation at the at the end.
+[22:37] So this point will be addressed by
+[22:40] another uh paper um from Google that uh
+[22:43] came out called cichlip. And so think
+[22:46] about this as basically an improved
+[22:49] version of clip. So it stands for
+[22:51] sigmoid loss for language image
+[22:53] pre-training. Um and here the the main
+[22:59] difference is that clip does multiclass
+[23:01] classification. It says I have this
+[23:03] aligned text and image and I'm going to
+[23:06] say this is positive and against all the
+[23:09] other alternative images or against all
+[23:11] the alternative texts. cichlip in some
+[23:14] sense is a lot simpler. It basically
+[23:16] says for any given image text pair
+[23:21] are they aligned or not? Right? So if I
+[23:24] reference this diagram up here, it's
+[23:27] basically binary classification where
+[23:29] the diagonals are positive examples and
+[23:31] the off diagonal are negative examples.
+[23:33] That's it.
+[23:36] So so here's the algorithm. um you take
+[23:39] the embeddings, you normalize, you take
+[23:42] the dotproduct as usual uh but now
+[23:44] you're uh doing um you're forming the
+[23:48] labels which are minus one on off
+[23:50] diagonal and diagonals you have one um
+[23:54] and then you do a um you know log
+[23:57] sigmoid.
+[24:00] So the objective is very simple. Yeah.
+[24:03] little first as the sampling structure
+[24:06] because I think most of the samples are
+[24:08] not quite
+[24:11] so random cycling
+[24:14] the laws I think will
+[24:17] >> yeah so the question is does this
+[24:19] require any sophisticated sampling uh
+[24:22] strategies um at least in the initial
+[24:25] paper they were just operating on
+[24:28] literally the same type of matrix um you
+[24:31] could imagine I You're probably thinking
+[24:33] in general for kind of these contrastive
+[24:37] methods like the negative examples need
+[24:39] to be sometimes you need to balance the
+[24:41] positives and the negatives or the
+[24:42] negatives need to be like tight
+[24:44] negatives so that you're not biased but
+[24:47] um at least in the initial version this
+[24:49] was you know fairly just
+[24:51] straightforward.
+[24:54] So um to speak about the data um you
+[24:58] know uh this was done at Google this was
+[25:02] a data set they used another paper which
+[25:04] was another image language image model
+[25:06] around 2022 which got a web li data set
+[25:11] with you know order billion image text
+[25:13] pairs um they also do did some extra
+[25:16] work for example image that had text in
+[25:18] them they did OCR and that's another way
+[25:20] to form text image pairs and did some
+[25:23] filtering ing this was multilingual. Um
+[25:27] the main um po you know uh point of this
+[25:31] this paper was that it was much more
+[25:33] efficient to train than than clip. Um so
+[25:36] clip was trained uh 10 days on 256 uh
+[25:40] TPU v3s and cichlip was 5 days on 32 v4s
+[25:46] and you might think oh v4s are actually
+[25:48] should be faster than v3s in terms of
+[25:50] flops per second they're actually not.
+[25:53] um they're better because you can put
+[25:55] more of them in a pod and the
+[25:56] interconnect is better. But um at this
+[25:59] scale it's really um actually you know
+[26:02] not um not faster actually you know uh
+[26:06] like 60% slower or something. Um so the
+[26:10] the the way that this is uh you know
+[26:14] faster and of course I think clip
+[26:16] probably did not try to optimize the the
+[26:18] code for the maximum you know
+[26:20] throughput. it was just kind of let's
+[26:22] get this thing to work. Um but the cig
+[26:26] paper showed that you can um you know
+[26:29] parallelize this as follows. So you have
+[26:32] basically and if you recall your kind of
+[26:35] systems um lecture. So this is can think
+[26:37] about it as you know DDP if if you if
+[26:41] you like where each device is um uh
+[26:45] stores a subset of the the you know
+[26:49] image text pairs. Um however there's
+[26:53] interactions between the examples unlike
+[26:56] in language model training where
+[26:57] everything just factors. So in the first
+[27:00] uh pass um each device just computes all
+[27:03] the losses on um on the its whatever
+[27:08] image uh text pairs it has locally
+[27:12] um and and then and then you you send um
+[27:18] the text. So basically device one gets
+[27:22] uh T5 through T8 and now it's able to
+[27:25] compute the negatives here and then it
+[27:28] gets uh T9 through T12. So you kind of
+[27:30] rotate around until you cover all the
+[27:33] the off diagonal uh block entries.
+[27:37] Um another thing that uh they
+[27:41] was nice about cichlip is that you
+[27:43] effectively decoupling batch size from
+[27:45] the loss. Um whereas in clip the loss is
+[27:50] tied to the batch size. If you change
+[27:51] the batch size it's a different loss
+[27:53] function. Um so they were able to
+[27:55] experiment with much smaller batch sizes
+[27:58] um less than you know 16k and in that
+[28:01] regime um it's much better than clip
+[28:03] because the loss function if you have
+[28:05] too many too uh small of a batch size is
+[28:09] just degrades whereas um for smaller
+[28:12] batch size for cichlip um you have more
+[28:15] variance but um but it's the same in
+[28:18] expectation is the same loss. Um they
+[28:21] also say wow you can go up to large much
+[28:23] larger batch sizes but that doesn't
+[28:25] really help. Um and we saw that critical
+[28:28] batch sizes uh at some limit and 32k was
+[28:32] their essentially their critical batch
+[28:33] size.
+[28:37] Okay. So now we have clip and cig. Um
+[28:40] these are image encoders that take an
+[28:42] image um in this version just a fixed
+[28:45] size image 336 x 336 let's say and maps
+[28:49] it into a vector okay which uh contains
+[28:53] um some you know semantics.
+[28:56] So now let's start building um um VLMs,
+[29:01] vision language models. And I'm going to
+[29:04] talk about two families of models um
+[29:07] Lava and Quen. Um the two are very
+[29:11] similar in the sort of broad template.
+[29:14] There are some details that are
+[29:15] different which we'll we'll go through.
+[29:17] And the basic idea is that we're going
+[29:19] to take these embeddings and then just
+[29:21] inject them into a language model. So
+[29:23] this is going to be more of a flavor of
+[29:26] sort of mid-training or post-training
+[29:27] where uh we take an existing image
+[29:30] encoder, we take an existing LLM and
+[29:32] then we're going to kind of stitch it
+[29:34] together rather than training something
+[29:37] from scratch.
+[29:40] Okay. So the LA lava paper came out in
+[29:44] 2023.
+[29:45] Um and this got people excited because
+[29:49] um at around this time all the you know
+[29:52] the closed models um like GPD I think it
+[29:54] was GPD4 was able to do kind of visual
+[29:57] reasoning and um they were able to show
+[30:01] that they could do some visual reasoning
+[30:03] as well. It wasn't as good as GPD4 of
+[30:05] course uh but um but you know I think it
+[30:08] was an open model and people got to see
+[30:09] what went under the hood.
+[30:12] So um for VLMs there's essentially uh a
+[30:17] few pieces here. Um there's a vision
+[30:20] encoder. They use clip here. For the
+[30:23] text decoder they use a language model
+[30:25] called Vunia which is the the first
+[30:28] llama model that was fine-tuned on some
+[30:31] shared GPT conversations. So these are
+[30:34] uh conversations that people had with
+[30:35] chat GPT and shared them on this
+[30:37] website. I don't think this is up
+[30:39] anymore.
+[30:41] Um so the data that they used was um
+[30:46] based on
+[30:48] um MS uh Coco. So this was an annotated
+[30:51] data set where they had mechanical Turk
+[30:53] workers go and annotate a bunch of
+[30:55] images with bounding boxes and captions
+[30:58] describing what was in the image. Um so
+[31:02] they basically synthesized a a data set
+[31:05] for their model. So they prompted GPT4
+[31:08] with the captions or the detected
+[31:10] objects and asked GPT4 to generate
+[31:13] questions or conversations. Um for
+[31:16] example um this is an image in the MSCO
+[31:20] data set. This was an annotated um
+[31:22] caption done by a human and also uh here
+[31:26] is the you know also annotated by a
+[31:29] human. Um and then you ask GPD4 generate
+[31:34] uh me a conversation and you might get a
+[31:38] a question and an answer. Uh you might
+[31:41] ask GPD4 generate me a detailed
+[31:43] description. It generates something I
+[31:45] guess similar to the caption and then
+[31:48] you can ask GP4 to generate complex
+[31:50] reasoning and it does um you know
+[31:52] something like that.
+[31:54] Okay. So this is syn syn synthesized uh
+[31:57] data 158,000
+[31:59] examples
+[32:01] um and and then they you know trained a
+[32:05] model on this. So the model um so they
+[32:09] use they use clip um in particular the
+[32:12] the highest performing clip uh version
+[32:15] VITL14
+[32:18] um so 14x4 patches
+[32:20] um and then they let's just look at this
+[32:24] image um so they take images they send
+[32:28] it through this vision encoder clip that
+[32:30] gives you a vector but this vector isn't
+[32:34] really in the same space so to speak as
+[32:37] the text. So then they um multiply by
+[32:41] matrix W to get another vector which is
+[32:45] in the same space as the texture
+[32:47] embeddings. And for text you basically
+[32:50] just use your standard embeddings to get
+[32:53] vectors.
+[32:54] So what's basically happening is that
+[32:57] the text gets encoded into these vectors
+[33:00] and the image also gets encoded into
+[33:02] these these vectors and then these
+[33:04] vectors this whole sequence of vectors
+[33:06] just goes through a standard transformer
+[33:08] and produces output.
+[33:12] Okay, so we're in some sense converting
+[33:13] these images into textual tokens um so I
+[33:19] can leverage the pre-trained uh language
+[33:21] model.
+[33:24] Um so to train this model um they do uh
+[33:29] it two in two stages. The first stage is
+[33:32] that they they freeze the vision encoder
+[33:34] and the language model and only train
+[33:37] this matrix W. And this is what they
+[33:40] call the alignment phase which is
+[33:43] essentially making sure that the the
+[33:45] image um gets mapped into kind of the
+[33:48] same you know space because if you just
+[33:51] use a random W um these these images are
+[33:55] not going to be um I mean certainly
+[33:59] they're not embeddings representing any
+[34:01] sort of like natural language token. So
+[34:04] the goal of training W is that they sort
+[34:06] of look like natural language token
+[34:08] embeddings.
+[34:09] And the second stage is that they now
+[34:12] still freeze the vision encoder and then
+[34:14] train W and the language model. So
+[34:16] they're fine-tuning the language model
+[34:18] on on um their their data. So remember
+[34:23] their data is basically here's an image
+[34:26] and here is a conversation or
+[34:28] description or complex uh you know
+[34:30] reasoning example.
+[34:32] So this is all image plus text to text.
+[34:38] Okay. So um this is one example from
+[34:41] their paper. Uh it's kind of
+[34:44] interesting. So you have an input image
+[34:46] and um a conversation. The user says
+[34:49] what's unusual about this image? And
+[34:50] their model is able to tell you that uh
+[34:53] you don't usually iron on the back of a
+[34:55] minivan. Um, and they also make a point
+[34:58] that their model is is pretty good
+[35:00] because even if your your user um uh
+[35:05] prompt is not really prompting like the
+[35:07] unusualness, it still talks about it
+[35:10] whereas um you know GP4 obviously is
+[35:13] able to do this but uh other models at
+[35:15] the time uh were not um able to.
+[35:21] Okay, any questions about lava?
+[35:25] Okay, so that was 2023. Um, and I'm
+[35:30] going to sort of skip forward to uh Lava
+[35:33] 1 vision, which is 2024. There was a
+[35:36] sequence of papers after the Lava paper
+[35:39] came out of Lava 1.5, Lava Next. Um, and
+[35:43] the main but but I'll capture all of
+[35:45] these innovations I think in what I'll
+[35:48] describe next. Um the main thing that
+[35:53] they did is it's essentially the same
+[35:55] recipe but they were trying to be more
+[35:57] ambitious in terms of the types of
+[36:00] multimodal applications they could do.
+[36:02] So they um were able to handle multiple
+[36:05] images and videos. So here's the same uh
+[36:09] sort of diagram. Now they can take an
+[36:12] image, a single image or multiple images
+[36:15] or a video which is essentially a
+[36:17] sequence of images um corresponding to a
+[36:20] sampling of the frames. Um
+[36:24] and here the vision encoder they
+[36:26] upgraded to cichlip. Um the text decoder
+[36:30] they use Quen 2 now which was um
+[36:33] probably the best uh language model um
+[36:36] that was out at that time. And then for
+[36:39] the uh projector or the adapter which is
+[36:42] the thing that takes the output of the
+[36:45] vision encoder and turns it into the
+[36:47] input of the the language model is a
+[36:50] two-layer MLP instead of a linear
+[36:53] projection.
+[36:55] Okay. So relatively you know it's like
+[36:57] you have a system and you're just like
+[36:59] upgrading the parts but it's the same
+[37:01] kind of rough system. Um so the let's
+[37:06] talk a little bit about data processing.
+[37:08] Um
+[37:10] so one thing that they wanted to do is
+[37:12] to do OCR
+[37:14] and the thing with OCR is that you need
+[37:16] to preserve very fine grain information.
+[37:19] Um otherwise a J looks like a I and
+[37:22] that's that's not good. Um so remember
+[37:25] that clip resizes and crops to 336 by
+[37:29] 336. And clearly if you have a document
+[37:32] and you crop to 336 x36 you can't read
+[37:35] it. So uh their solution is this idea
+[37:40] called any res uh which was actually
+[37:42] introduced in the lava 1.5 paper and the
+[37:46] idea is basically um I mean it's fairly
+[37:50] straightforward. you break up an image
+[37:52] into, you know, multiple, you know,
+[37:54] pieces. Um, and the idea is that each
+[37:58] piece is the resolution of whatever the
+[38:01] vision encoder is going to take, 336 x
+[38:03] 336, for example. So, you're going to
+[38:06] code all the pieces and then you can
+[38:08] into a bunch of vectors and then you
+[38:10] concatenate the vectors. Okay? So,
+[38:12] you're you're basically noticing that
+[38:14] your vision encoder can't handle high
+[38:17] resolution. So rather than downsampling,
+[38:20] you're just going to uh crop and look at
+[38:23] different parts of the image.
+[38:25] And now if you have really super high
+[38:27] resolution images or videos, then you
+[38:30] get too many tokens. So then they have
+[38:32] to then they sort of down uh sample. But
+[38:35] um the idea behind any res is that it's
+[38:37] sort of adaptive. And this is sort of
+[38:40] nice because the transformer is already
+[38:42] adaptive. Language can be your sentences
+[38:45] can be any length. And the transformer
+[38:46] already handles that pretty well. So it
+[38:49] turns out images can be any resolution.
+[38:51] So that's kind of picking back on the
+[38:53] same um kind of dynamic uh ability.
+[38:57] Um so here is uh what they actually do
+[39:00] for for images here. So let's say you
+[39:03] have this image of a of a paper. Um they
+[39:07] do down sample and have one path which
+[39:11] is basically a down sampled encoding of
+[39:14] the entire paper. But then they break it
+[39:16] up into these chunks where each chunk is
+[39:18] the resolution that the vision encoder
+[39:20] expects and then encodes each of these
+[39:23] separately. And then you concatenate all
+[39:26] these patches and if you have too many
+[39:28] then you sort of you know reduce that
+[39:30] the number of patches and by um
+[39:32] interpolation.
+[39:35] So okay so then they're able to handle
+[39:40] images multiple images and video. So you
+[39:43] think about well you know all of these
+[39:46] are technically all reducible to images
+[39:49] but they put their thumb on a scale a
+[39:51] little bit because um they want to make
+[39:55] sure all the modalities are kind of
+[39:57] roughly uh you know comparable um
+[40:00] because videos can be very long. They
+[40:02] don't want their data set to be
+[40:03] dominated by a bunch of like repetitive
+[40:05] you know frames. So here's what they do
+[40:08] here. So for a single image they
+[40:11] basically have the full image
+[40:13] downsampled and then a bunch of crops um
+[40:16] up to n crops there up to nine. And if
+[40:20] you are presented with multiple images
+[40:23] then they just uh use the sort of the
+[40:26] you know the base base resolution. So if
+[40:29] you have a single image I get to look at
+[40:30] it more carefully. If I have multiple
+[40:32] images I'm just going to look at it kind
+[40:34] of from um you know afar. And for video
+[40:39] um we're going to use um even kind of
+[40:42] lower resolution or fewer tokens to
+[40:44] represent each frame because the idea is
+[40:46] that well videos can be um you know they
+[40:50] only use up to 32 frames. Um
+[40:53] uh but you know the the you start
+[40:56] running into kind of context length uh
+[40:58] problems uh for video
+[41:01] and later we'll see how you know a big
+[41:04] part of being able to handle multimodal
+[41:06] is is to deal with long context.
+[41:12] Okay. So um the data
+[41:16] here that they use is um is I would say
+[41:21] that they state the philosophy is like
+[41:23] they want to curate high quality data
+[41:26] and quantity. Another way to interpret
+[41:28] this is that it's very targeted uh data.
+[41:31] If you look at many of these it's like
+[41:33] very taskbased whether you're doing
+[41:36] visual question answering or um you know
+[41:39] answering questions about tables. So it
+[41:42] this is definitely kind of post-training
+[41:44] you know territory where you're you're
+[41:47] trying to get your model to do these
+[41:49] tasks and therefore you create a bunch
+[41:51] of these tasks and this this work is
+[41:53] also um unabashedly
+[41:57] basically you know distilling GPT4 um
+[42:00] you know models so that they can get the
+[42:02] best you know performance which is um I
+[42:06] guess not ideal but um this is what uh
+[42:09] you do if you don't have a annotation
+[42:11] budget. Um
+[42:14] and uh so they have single images,
+[42:18] multiple images and videos. So there's a
+[42:20] lot of different um you know uh you know
+[42:24] pieces. Some of these are very specific
+[42:26] like you give two images and you're
+[42:28] trying to spot the difference. Um but
+[42:31] one thing that uh okay I'll talk about
+[42:34] I'll come back to this at this point
+[42:36] later. So for training it's um roughly
+[42:40] the same idea as before where the first
+[42:43] stage is that you're focused on uh
+[42:46] alignment.
+[42:48] So um you know in particular you only
+[42:52] train you know the projector which is
+[42:55] the adapter.
+[42:57] Um and then in the second stage you
+[43:00] train and the third stage is you train
+[43:03] the full model. And before we had two
+[43:05] stages, now we have three stages. Um I
+[43:09] think you know I'm not sure there's any
+[43:13] particular principle reason for this
+[43:14] except for the second stage is trying to
+[43:17] put high quality data but more focusing
+[43:19] on knowledge and um the final stage is
+[43:22] uh focusing on examples that look like
+[43:24] your downstream tasks.
+[43:30] Okay. So one thing that they um found in
+[43:33] this paper which was kind of interesting
+[43:36] is um that you get transfer between
+[43:39] modalities.
+[43:41] So even though they have only single
+[43:43] image data for diagrams and charts but
+[43:46] this actually generalizes to the
+[43:48] multiple images. So at test time it's ne
+[43:51] at training time it never saw um example
+[43:54] where you have a table and a chart and
+[43:56] you're asking questions about it. But at
+[43:58] test time, you have a t um you have two
+[44:00] images, one for uh the the table and one
+[44:04] for the chart, and you're able to have
+[44:06] some sort of conversation about it. um
+[44:09] at training time you only have OCR data
+[44:12] on single image data and you only have
+[44:16] relational reasoning for multiple images
+[44:18] but you can generalize to these uh cases
+[44:21] where um which are useful for powering
+[44:24] guey agents where you show it a bunch of
+[44:27] you know screenshots this is multiple
+[44:28] images and it can generate um a
+[44:31] description of the the the screenshots.
+[44:36] Um another example is that um they have
+[44:39] this idea of visual prompting u where uh
+[44:42] you have this circle which is a part of
+[44:44] the image but that's meant to highlight
+[44:47] the part of the image that you're
+[44:48] supposed to you know do something about.
+[44:51] Um and this type of data only exists for
+[44:53] single images and now it can generalize
+[44:56] to um you know videos where the user
+[45:00] says describe the player highlighted in
+[45:02] the video and this player is across
+[45:04] multiple frames.
+[45:06] So this is you know when I first look at
+[45:09] this um and I said oh boy you know
+[45:12] you're basically targeting each of these
+[45:13] tasks. is kind of like supervised
+[45:15] learning. But um but if you have enough
+[45:17] tasks, these models seem to do do some
+[45:21] transfer um which is which is uh I guess
+[45:25] reassuring.
+[45:29] Okay, so again this is a fairly standard
+[45:33] uh VLM template vision encoder plus the
+[45:35] projector um into the language model. Um
+[45:39] there's a lot of work that goes into the
+[45:42] the data curation. and they lean pretty
+[45:44] heavily into synthesize task specific
+[45:46] data. Um the nice thing about the Lava
+[45:49] series is that it it's one of the few
+[45:52] works that open sources. They're not
+[45:54] just the model weights but also the
+[45:56] data. So you can really replicate and
+[45:58] study this stuff.
+[46:01] Okay. Now let's talk about uh Quen
+[46:04] models. Um so Quend started also
+[46:08] training in 2023 multimodal models. So
+[46:12] the first version was QuenVL
+[46:14] and uh hopefully I'll go through this
+[46:17] quickly because you hopefully see the
+[46:19] pattern. The vision encoder they used
+[46:22] open clip um remember open clip was a
+[46:24] open reproductions of of a clip model.
+[46:27] Um so it's basically a clip um encoder.
+[46:31] Um and they for the adapter
+[46:35] um they did one layer of cross attention
+[46:39] incorporate 2D positional embeddings and
+[46:42] maps to a fixed size of you know uh 256
+[46:46] which is a little bit you know I I guess
+[46:49] uh
+[46:51] I guess this will be changed later um
+[46:53] because this is definitely not very
+[46:54] dynamic but neither is the vision
+[46:56] encoder at this point. Um I guess this
+[46:59] got caught off but uh um but uh the
+[47:02] special tokens are like they have an
+[47:04] image tag and a box tag for bounding box
+[47:06] and a ref tag for um description.
+[47:10] This is what happens when your slides
+[47:11] are in HTML. Um so for training they
+[47:16] have three stages just like with the
+[47:18] lava models. In the first stage, um the
+[47:21] idea is to I mean they call it
+[47:23] pre-training but it's really you know
+[47:26] you're not pre-training from scratch. Um
+[47:29] they uh this is generally large scale
+[47:32] lowquality data. They freeze the um the
+[47:36] language model and train the vision
+[47:38] encoder and adapter. Um so this is a bit
+[47:42] different in that from um the lava
+[47:44] models in that they train the vision
+[47:47] encoder um and at this point um and you
+[47:51] can see some of the data sets that they
+[47:54] um are are training on 1.4 for you know
+[47:57] billion examples. Stage two they move to
+[48:00] higher quality task specific data and
+[48:02] you can see some of the kind of the
+[48:04] usual suspects of like VQA data sets um
+[48:08] you know chart question answering and so
+[48:10] on. Um and then they train all the
+[48:12] parameters here. And finally stage three
+[48:15] is um you uh instruction tuning data. Um
+[48:19] you freeze the visual encoder and you
+[48:22] train um the the adapter in the language
+[48:26] model. Um here are some examples of the
+[48:29] type of things that they're able to do.
+[48:30] So um of course this is Quen. So may
+[48:33] some of these examples are in in in
+[48:35] Chinese. um their interest is also
+[48:39] making a model that is supposed to be
+[48:42] sometimes subsuming a language model. So
+[48:44] a language model can do code. So we want
+[48:47] the vision model to be good at code as
+[48:50] well. Um and the you can have this
+[48:54] example if you can see it is an image
+[48:56] and can fight Spider-Man the Hulk and it
+[48:59] can output bounding boxes um you know as
+[49:01] well. It doesn't actually output an
+[49:03] image. It just outputs um uh you know a
+[49:06] bounding box.
+[49:09] Um and then you can do OCR. You can
+[49:12] compare um you know. So use your stuff.
+[49:16] Um okay. So then Quinn 2 um was um again
+[49:20] a kind of upgrade. There's some new
+[49:22] ideas here which I'll go through. Um so
+[49:25] they use a larger vision encoder. Um
+[49:29] they also started doing uh dynamic
+[49:31] resolution. I think this was the main
+[49:34] thing we remember when we went from lava
+[49:36] to lava one vision they realized oh we
+[49:39] need to handle images and of different
+[49:41] sizes and if you try to do video you
+[49:44] it's clear that you need some sort of
+[49:45] dynamic resolution. So um the model is
+[49:50] is basically so let's say you have this
+[49:53] this uh picture here that uh might be
+[49:57] mapped to um 11,000 tokens. This tiny
+[50:01] picture of a equation might be only
+[50:03] mapped to eight tokens um and so on and
+[50:06] so forth. Um so how do they um you know
+[50:12] do this? Well, basically each um it's a
+[50:16] kind of the same idea of the NRA idea
+[50:18] from lava where each uh 224x 224 patch
+[50:22] is encoded with a vit um and remember
+[50:28] the vit that they started with is the
+[50:31] open clip vit but this gets um you know
+[50:35] uh fine-tuned
+[50:36] um and then they try trying to reduce
+[50:39] the context size they uh compress every
+[50:41] 2x two into one. So that they ultimately
+[50:45] every patch uh gets um generates 66
+[50:49] tokens for videos. They sample two
+[50:52] frames a second but you know max out at
+[50:55] 16,000 you know tokens. Um
+[50:59] um okay so one thing coming back to this
+[51:01] question about positional embeddings um
+[51:04] so they did do something different uh
+[51:07] here with Quen 2. Um so they use this
+[51:10] idea called multimodal rotary uh
+[51:13] multimodal rope. So remember we saw rope
+[51:16] before and the idea behind rope is that
+[51:19] you have a um you know embedding such
+[51:22] that the
+[51:24] um you know the inner product between
+[51:26] the vectors kind of depends only on the
+[51:28] kind of distance. So the distance is
+[51:31] defined in 1D by just the number of
+[51:34] tokens you're away from it. So now uh
+[51:37] the multi-dimensional version is
+[51:39] essentially the same thing except for
+[51:41] now you have um 3D. So you have height,
+[51:45] you have width and you have time. So
+[51:48] each position, each patch now is a a
+[51:51] triple uh defined by the the
+[51:54] coordinates. And then to compute the M
+[51:58] rope, you basically for every dimension
+[52:01] you compute the rope and then you
+[52:03] concatenate. Okay, so it's a fairly, you
+[52:06] know, straightforward um idea. Although
+[52:10] later with Quen 3, we'll see how this is
+[52:12] actually um a bit sub-optimal.
+[52:16] Um okay, so they initialize the language
+[52:21] model with, you know, this is the Quenv
+[52:23] model. So of course they're initializing
+[52:24] with Quen. Um and then they have three
+[52:27] stages of training um which is very
+[52:31] similar to um what bef we did before.
+[52:34] And then they were able to show a bunch
+[52:37] of you know different capabilities
+[52:39] um you know some video understanding um
+[52:42] you know it can do math and code
+[52:45] function calling um and and so on so
+[52:47] forth.
+[52:50] Okay. So quickly I'll talk about Quen 3.
+[52:54] Um so again there's a few kind of
+[52:58] changes here. Um I wouldn't say these
+[53:00] are kind of structural big changes but
+[53:03] they are probably changes that do impact
+[53:05] the the quality of the model. So this is
+[53:07] from last year Quen 3VL report. Um and
+[53:12] so it's a roughly the same uh diagram
+[53:15] here. I'll point out a you know maybe a
+[53:19] I'll come back to this diagram. I'll um
+[53:21] go through some of the changes. So one
+[53:24] is that now they're using quen 3 models.
+[53:26] They have a a series of dense ande
+[53:28] models and the quen 3 models are you
+[53:30] know really really good and it really
+[53:32] helps the quality of the final model. Um
+[53:35] one thing that they are invested in is
+[53:38] long context understanding. So their
+[53:39] context length can go up to 256K
+[53:42] which is uh really important if you're
+[53:45] trying to do long video. Um let's talk
+[53:48] about the vision encoder. So they use
+[53:51] cichlip 2 which is basically improved
+[53:54] version of cichlip. It's actually an
+[53:56] identical architecture is designed to be
+[53:57] backward compatible. Um and then um they
+[54:02] improved their rope and um the way to
+[54:07] explain this is before you had the three
+[54:10] dimensions time, width and height and uh
+[54:14] basically uh going to
+[54:18] ba um basically allocate the first block
+[54:21] of uh dimensions to the time then the
+[54:24] next block to width and the next to
+[54:27] height. And the problem if you remember
+[54:30] um rope is that you know each uh
+[54:33] component refers represents a different
+[54:35] you know frequency. So this would mean
+[54:38] that maybe all the temporal dimensions
+[54:39] are low frequency and all the height
+[54:41] dimensions are high frequency. So they
+[54:44] basically interle them um when they
+[54:48] realize that and they now um all the the
+[54:54] axes are exposed to both low and high
+[54:56] frequency.
+[54:58] Um another thing they did was explicit
+[55:02] video uh timestamps. Um so if you look
+[55:06] at closely at this uh sorry this was
+[55:12] wait okay this is quant three. Oops. Um
+[55:16] so if you look uh this is probably a
+[55:18] little bit too small but um before the
+[55:22] time stamp was kind of implicit in the
+[55:26] the positional encodings right each
+[55:28] frame in a video intrinsically gets a
+[55:31] different you know uh there's a notion
+[55:33] of time just because it's in a different
+[55:35] position. Um but here they made the time
+[55:38] explicit. So these are actually token 0
+[55:41] seconds is a token that is is now you
+[55:45] have a token that represents the time.
+[55:47] Um and they found this uh you know to be
+[55:50] helpful presumably because it's
+[55:52] something that you can directly refer to
+[55:53] like what happened at you know after two
+[55:55] seconds.
+[55:57] Um so that is the main uh one of the
+[56:02] main changes.
+[56:04] um they also did this square root
+[56:08] normalized per token loss. So the idea
+[56:11] is that you know some examples that call
+[56:14] video are very long and some examples
+[56:17] that involve a single image are very
+[56:19] short and the normal thing is that every
+[56:22] token is treated the same and this would
+[56:25] mean that the video examples are going
+[56:27] to you know you know dominate. Uh so
+[56:30] they basically um the details aren't too
+[56:32] clear but I I believe they um normalized
+[56:35] each example by the uh square root of
+[56:37] the um the length uh to basically
+[56:41] downweight the impact of really long
+[56:43] examples.
+[56:45] Um the the final thing that is uh worth
+[56:48] noting which is interesting is that they
+[56:50] did something interesting with adapter.
+[56:52] So remember we start the adapter is a
+[56:54] thing that connects the vision encoder
+[56:55] to the language model and lava was the
+[56:58] simplest. It was just a linear
+[56:59] projection and then we got an MLP and we
+[57:01] got some cross attention and uh deep
+[57:04] stack which is actually a paper from the
+[57:06] deepseek uh team u but when you know
+[57:09] used here is uh is more sophisticated.
+[57:13] um they noticed that well the vision
+[57:16] coder already computes a stack of um you
+[57:19] know vision uh you know embeddings and
+[57:23] we're basically going to basically add
+[57:26] these directly into the residual stream
+[57:30] of of the um the language model. Okay.
+[57:35] So this is sort of a bit more of a kind
+[57:38] of a deep fusion of the the vision um
+[57:42] encoder into the language model um as
+[57:46] opposed to the vision encoder is a black
+[57:48] box that just outputs a sequence of
+[57:50] vectors.
+[57:54] Okay. So training um is uh so they have
+[57:58] two phases. Um pre-training has actually
+[58:02] four stages, post- training has three
+[58:03] stages. So this you know you can see
+[58:05] that this pipelines are getting quite uh
+[58:08] complicated now. Um so they first train
+[58:11] the adapter this is the same as all
+[58:13] these models and then they have three
+[58:16] stages where they progressively train on
+[58:18] longer and longer sequences from 8k to
+[58:20] 32k to 2 56 uh k. Uh most of the tokens
+[58:26] are in the stages two and three. Um and
+[58:31] and then for post- training they do SFT
+[58:35] on long uh chain of thought data,
+[58:38] knowledge distillation and then some
+[58:40] reinforcement learning. Um um at this
+[58:44] point it's really kind of a systems
+[58:45] paper. There's you know there's a bunch
+[58:47] of I highlighted the kind of the core
+[58:50] new ideas but there's a lot of details
+[58:52] that are are are different. And if you
+[58:55] look at the final results the this is a
+[58:57] pretty uh pretty good model. I mean if
+[58:59] you look at these benchmarks as compared
+[59:01] to the closed models Gemini um GPD5 and
+[59:05] Opus 4.1 um you know these these numbers
+[59:10] are um the bold means that it's the the
+[59:12] best number in that in that row. So the
+[59:15] quen models are actually quite quite
+[59:17] strong.
+[59:21] Okay maybe the yeah question
+[59:28] So, we're going to have
+[59:46] Yeah.
+[59:54] >> Yeah.
+[59:55] >> So the question is how do you if what
+[59:58] about video generation and how do you
+[01:00:00] know whether there it should be a video
+[01:00:01] or text. So first of all these models
+[01:00:03] don't generate video videos or images.
+[01:00:06] The video all the multimodal stuff is on
+[01:00:08] input side. you're always generating uh
+[01:00:11] text
+[01:00:12] and so
+[01:00:15] um and then you're always in most of
+[01:00:20] these stages except for RL you're
+[01:00:22] supervising every token. So there's no
+[01:00:25] you know uh LM as a judge or quality on
+[01:00:28] how um well um the the description is
+[01:00:31] working. It's just basically whatever is
+[01:00:33] in your data set. Now with RL you can
+[01:00:36] play around with different you know
+[01:00:37] reports.
+[01:00:39] >> Yeah.
+[01:00:40] >> Yeah. Um I want to ask is the training
+[01:00:43] of multiple model
+[01:00:45] than training the pure LM from those
+[01:00:49] system perspective perspective.
+[01:00:52] for system. I think um the most um band
+[01:00:57] would be used in uh images videos
+[01:01:02] that test and from side I think uh image
+[01:01:06] videos they have more to
+[01:01:10] so that
+[01:01:12] be
+[01:01:16] >> yeah so the two questions are um are
+[01:01:20] training multimodal models harder on the
+[01:01:22] system side and I mean certainly it's
+[01:01:25] not easier um um I think you pointed out
+[01:01:28] that um the data sets are larger video
+[01:01:32] data is just like you know even loading
+[01:01:34] it can be bquares um generally we have
+[01:01:38] not really focused on data loading for
+[01:01:40] talking about language models because
+[01:01:42] it's very very cheap so that needs to be
+[01:01:46] um taken into account and you know all
+[01:01:48] the same principles of making sure that
+[01:01:49] your data loading is happening async
+[01:01:52] with actual computation needs to be
+[01:01:54] taken into account. And the second uh
+[01:01:57] part was um sorry what was this second
+[01:02:00] question?
+[01:02:02] >> They have more tokens.
+[01:02:02] >> Oh yeah. So the videos and images can
+[01:02:06] have more especially video have more
+[01:02:08] tokens. So um that's one reason we saw
+[01:02:12] this kind of normalization to to make
+[01:02:15] sure that we're not um you know giving
+[01:02:17] more weight to video. I mean you can
+[01:02:19] always downweight. So if you have more
+[01:02:21] tokens, if you don't like that, you can
+[01:02:23] uh downweight. Um we talked to in the
+[01:02:25] last or uh two weeks ago about like data
+[01:02:28] mixtures. So you can always kind of
+[01:02:30] weight things according to whatever um
+[01:02:33] you know makes sense. Um but there's
+[01:02:36] also a lot of text tokens out there. So
+[01:02:39] I think in general um if you look at
+[01:02:43] yeah the models are trained on like tens
+[01:02:45] of trillions of tokens. Um, I think
+[01:02:48] there's a Yeah, I wouldn't say that the
+[01:02:51] number of multimodal tokens like vastly
+[01:02:53] outnumbers text tokens.
+[01:02:56] >> Yeah. Oh, I think you were first.
+[01:03:13] >> Yeah.
+[01:03:14] >> Yeah.
+[01:03:22] Yeah. So the question is um when you do
+[01:03:24] this alignment um how does it know what
+[01:03:27] the language is the model language model
+[01:03:30] uh pre-trained and it's definitely has
+[01:03:32] to be pre-trained because otherwise
+[01:03:33] there's it doesn't make sense to align
+[01:03:36] it. So the language model is frozen and
+[01:03:38] you're just training the adapter to
+[01:03:40] connect the the given uh vision encoder
+[01:03:44] with the with a given uh language model.
+[01:03:48] And uh the way you train it is well you
+[01:03:50] pick a token budget 67 billion um you
+[01:03:54] know tokens and you just train. There's
+[01:03:56] not a like adaptive threshold here.
+[01:04:00] >> Yeah. also let me know about the
+[01:04:02] difference between the brand number.
+[01:04:09] So I notically
+[01:04:22] this the size of the vision
+[01:04:29] that
+[01:04:30] So
+[01:04:32] >> yeah. So the question is are um the
+[01:04:36] number of parameters in the vision code
+[01:04:37] are much uh smaller and the answer is uh
+[01:04:41] yes in general. I'm trying to find um
+[01:04:43] where is the other place I
+[01:04:46] um
+[01:04:48] not here. Okay. Um
+[01:04:52] the reason is that the vision encoder is
+[01:04:54] in some sense doing a very local you
+[01:04:57] know operation. It's looking at a patch.
+[01:04:59] A patch is very small and it's just
+[01:05:01] trying to understand the patches.
+[01:05:03] There's not much knowledge. Um so to
+[01:05:05] patch we're not reasoning. So most of
+[01:05:07] the capabilities of the model are are
+[01:05:11] still kind of in the language model. Um
+[01:05:14] I'm trying to find the
+[01:05:17] okay where maybe it was up here. Okay. I
+[01:05:21] can't Oh yeah. Um so if you look at the
+[01:05:24] lava model so the full so it's 72
+[01:05:29] billion parameter language model um and
+[01:05:34] um
+[01:05:35] show you what
+[01:05:39] okay I don't know why this number is uh
+[01:05:45] so oh this sorry this is 72 million okay
+[01:05:47] so this is uh much smaller the projector
+[01:05:50] is much smaller and the the vit is
+[01:05:53] generally less than a billion you know
+[01:05:55] uh parameters. Um yeah I guess mostly
+[01:06:01] because it's fairly um kind of a local
+[01:06:04] operation. I guess that's the easy way
+[01:06:05] to say it. Okay, I'm going to think some
+[01:06:08] other questions. I'm going to try to
+[01:06:10] move on now. Um so
+[01:06:14] so I guess quen 3 is a kind of the the
+[01:06:16] last vision language model I'll talk
+[01:06:19] about. this got uh save our performance.
+[01:06:22] Um
+[01:06:24] um there's a lot of you know data work
+[01:06:27] that happens not too many details about
+[01:06:30] the data and the data mix um in these
+[01:06:32] later quen models. Um so you'll have to
+[01:06:36] look at um the lava paper or the um the
+[01:06:41] AI2 has a mobile paper which I didn't
+[01:06:44] get a chance to talk about that has more
+[01:06:46] details here. Um and you know from Quen
+[01:06:51] to Quen to Quen 3 many of these changes
+[01:06:55] were mostly
+[01:06:58] um you know there's some kind of changes
+[01:07:00] there um but the overall framework is
+[01:07:04] remains the same and mostly it's kind of
+[01:07:07] scaling up curating more data sets
+[01:07:09] noticing that you know your long context
+[01:07:12] isn't you have to handle long context
+[01:07:14] and maybe sharpening your image
+[01:07:16] processing and so on.
+[01:07:19] Okay. So, I'm going to now jump to um
+[01:07:23] something quite different.
+[01:07:26] So, there's this paper called Chameleon
+[01:07:28] from Meta in 2024.
+[01:07:31] Um so, so far VLMs encode images into
+[01:07:36] these vectors and then they inject them
+[01:07:39] into a language model. And because it's
+[01:07:41] a language model, you can only generate
+[01:07:44] text. you can't generate you know
+[01:07:46] images. Um
+[01:07:49] so
+[01:07:51] you know there's many ways you can go
+[01:07:52] about fixing this. You can just take a
+[01:07:55] VLM. You can also attach a diffusion
+[01:07:56] head and you now you can generate images
+[01:07:59] or but I want to talk about this you
+[01:08:02] know idea here which is chameleon says
+[01:08:06] what if we mapped everything into
+[01:08:08] discrete you know tokens
+[01:08:10] and in some ways aesthetically this is
+[01:08:13] uh well maybe this reflects that I'm a
+[01:08:15] language person this is kind of
+[01:08:17] appealing um um because now you can
+[01:08:21] analyze and generate images in the same
+[01:08:23] way everything is a discrete token If
+[01:08:25] you want to do um you know uh you know
+[01:08:29] what let's say you want to generate you
+[01:08:32] know images uh you can say here is a
+[01:08:35] here's a text prompt and then you can
+[01:08:38] you know just you know these are more
+[01:08:40] just tokens that you can generate or you
+[01:08:42] can kind of uh flip flip uh the you know
+[01:08:46] the language and the text around as
+[01:08:48] well. um they have these examples um and
+[01:08:51] from the command paper you can prompt um
+[01:08:54] and saying I'm bored can you show me
+[01:08:55] some birds and then it would be text and
+[01:08:58] then there' be images and then some more
+[01:09:00] text and some images so it's interled
+[01:09:02] and you don't so the in some sense the
+[01:09:05] vision of an omni model is that text and
+[01:09:08] images truly live in the same space and
+[01:09:11] this is accomplished by um making
+[01:09:13] everything look like text that's one way
+[01:09:15] to do it okay so I'll talk a a little
+[01:09:18] bit about how this is done. So the thing
+[01:09:22] um to you need to do now um is to map
+[01:09:28] images into discrete tokens. So there's
+[01:09:31] this idea rather old uh from um
+[01:09:36] uh from or 2017
+[01:09:38] which is called vector quantized
+[01:09:40] variation encoder and the basic idea
+[01:09:43] here is to uh map an image into um a
+[01:09:49] discrete code and what you learn is a
+[01:09:52] mapping that maps this into a continuous
+[01:09:56] uh vector and this gets sort of rounded
+[01:09:59] to the nearest code. So you have a code
+[01:10:01] book which has let's say 8,000 uh codes.
+[01:10:06] So these are like prototypical
+[01:10:08] uh vectors that correspond to what you
+[01:10:10] know patches and then so you pick uh you
+[01:10:14] know one of these that's the closest and
+[01:10:17] that would be your representation. So
+[01:10:19] that's your encoder. It goes through a
+[01:10:20] continuous phase and then you sort of
+[01:10:22] round it to the nearest code. And now
+[01:10:25] the decoder is you take that code and
+[01:10:27] you try to reconstruct the image and
+[01:10:30] then you train these VQEs by um you know
+[01:10:34] uh basically minimizing the
+[01:10:36] reconstruction loss. Um there's some
+[01:10:39] other terms that you add because this is
+[01:10:41] not differentiable um which I won't have
+[01:10:44] time to get into.
+[01:10:46] Okay, but at the end of the day, you
+[01:10:48] have 512 x 512 images that are converted
+[01:10:53] into a,024 tokens. Um, and each token is
+[01:10:59] kind comes from a vocabulary of 8,000.
+[01:11:03] Okay. So now you have basically text,
+[01:11:06] you have your images, um, which are
+[01:11:09] basically these codes. um they train a
+[01:11:12] new tokenizer uh to you know now because
+[01:11:16] now you have different sort of your data
+[01:11:18] looks different than if it were just um
+[01:11:20] normal uh natural language. Um the
+[01:11:24] training is is um now actually very
+[01:11:28] straightforward. This is just normal
+[01:11:30] language model training, right? There's
+[01:11:32] no adapter, there's no um you know turn
+[01:11:35] the vision encoder or there's there's
+[01:11:38] just a language model now. So this is
+[01:11:40] the part that's kind of appealing. Um so
+[01:11:45] there's still two stages but you know
+[01:11:47] even for language model training there's
+[01:11:48] usually two or more stages where the
+[01:11:51] first stage is the bulk of training is
+[01:11:53] large unsupervised
+[01:11:55] um they have you know both text and text
+[01:11:58] and image um and then stage two they mix
+[01:12:01] in high quality data.
+[01:12:05] Okay, so this is really great and and
+[01:12:07] elegant. Um there's a few problems with
+[01:12:10] this. One is that um they found that the
+[01:12:14] training was not stable. And the reason
+[01:12:17] is that you know text and images despite
+[01:12:20] occupying the same space just behave
+[01:12:23] very differently.
+[01:12:25] So just calling things discrete tokens
+[01:12:28] isn't really, you know, isn't hiding the
+[01:12:31] fact that there's an image living there.
+[01:12:33] And in particular, text tokens, if you
+[01:12:36] think about predicting the next word,
+[01:12:38] this has relatively lower entropy. Most
+[01:12:41] words are kind of predictable, whereas
+[01:12:43] image tokens um have very high entropy.
+[01:12:46] I don't know what shade of blue this
+[01:12:48] exact token is going to be. Um and so as
+[01:12:52] a result they found that this training
+[01:12:54] with this kind of mixture led to a lot
+[01:12:56] of the norms of um the parameters to
+[01:13:00] grow um and to generate kind of loss um
+[01:13:04] instability. They were able to kind of
+[01:13:06] mitigate or fix this to some extent via
+[01:13:10] via QK norm and Z loss regularization
+[01:13:12] which controls the norm growth. Um so so
+[01:13:17] um I'm not even going to uh show the
+[01:13:19] results but um I wanted to highlight
+[01:13:23] this work because there's a certain
+[01:13:24] elegance here because it's just one
+[01:13:26] model that treats really all modalities
+[01:13:29] the same. But the downside is that um it
+[01:13:34] turned out this model was not really as
+[01:13:37] performant and the discretization does
+[01:13:40] definitely loses information. Um so
+[01:13:43] think about uh you know OCR um you know
+[01:13:46] again if you discretise
+[01:13:48] um you know very small print you're not
+[01:13:51] going to be able to read it anymore. And
+[01:13:54] finally training with multimodalities is
+[01:13:56] also tricky. We kind of saw this a
+[01:13:58] little bit with the quen models and we
+[01:14:00] had to you know play around with the
+[01:14:01] weights but this is more exacerbated
+[01:14:04] here. So you know VKU VAEs were kind of
+[01:14:08] popular for a while and then and in fact
+[01:14:12] you know many people were using this for
+[01:14:14] image generation. The main reason to do
+[01:14:17] that is well you have a transformer um
+[01:14:19] how do you generate from a transformer?
+[01:14:21] You well you have to generate discrete
+[01:14:22] things and you basically put all your
+[01:14:25] you know data into this discrete form.
+[01:14:28] But then you know diffusion models uh
+[01:14:30] came out um and became popular and
+[01:14:33] viable for generation. So this flavor of
+[01:14:37] method is sort of uh less uh less
+[01:14:40] popular than it used to be.
+[01:14:43] Okay. So um maybe just kind of reflect
+[01:14:46] and summarize here. Um you know frontier
+[01:14:49] models these days are expected to be
+[01:14:51] multimodal or even more strongly
+[01:14:54] natively multimodal or omnimodels. Um,
+[01:14:58] you know, unfortunately there's, you
+[01:14:59] know, I think when Gemini comes out or
+[01:15:01] GPD comes out, they tout are touted as
+[01:15:04] being natively multimodal and handle all
+[01:15:06] these modalities and in fact they do.
+[01:15:09] Um, but of course there's no details
+[01:15:10] about how these are are built. Um I
+[01:15:14] think that you know it's probably some
+[01:15:17] you know combination of uh having a
+[01:15:20] continuous encoder because you don't
+[01:15:22] want to lose information and then
+[01:15:24] diffusion for the generation because but
+[01:15:27] that's you know my speculation. Um you
+[01:15:31] know the fundamental challenge I think
+[01:15:32] when you're dealing with multimodality
+[01:15:34] is how do you handle non-ext modalities?
+[01:15:38] Um it's also interesting that there's a
+[01:15:41] symmetry between you know understanding
+[01:15:43] the modality and generation and there's
+[01:15:46] different there's no one universal
+[01:15:48] encoder let's say for example in when we
+[01:15:50] looked at clip um you only cared for
+[01:15:54] classification to capture high level
+[01:15:56] semantics so these vectors could be
+[01:15:58] fairly small and capture the high level
+[01:16:01] semantics whereas if you wanted to do
+[01:16:04] OCR or whether you wanted to generate an
+[01:16:06] image then you need really fine grain
+[01:16:09] detail like you need to um that's why
+[01:16:11] diffusion is so good because it can like
+[01:16:13] really micro um optimize the the the low
+[01:16:17] high frequency information
+[01:16:20] um you know I think in general when
+[01:16:22] you're dealing with multimodalities
+[01:16:24] uh you have to think carefully about um
+[01:16:27] weighing them properly
+[01:16:30] um for example video certainly has lower
+[01:16:33] information density than text um so you
+[01:16:36] don't want a video to overwhelm your
+[01:16:38] your your text. Um and like I said
+[01:16:42] before um perhaps the at least the
+[01:16:45] current best um thing is having
+[01:16:48] continuous encoders. You know even you
+[01:16:52] know it seems like even clip even though
+[01:16:54] it's five years old or similar ideas are
+[01:16:56] still kind of the go-to way to capture
+[01:17:00] semantics of of of images. Transformers
+[01:17:04] are still there. Um and then uh
+[01:17:06] diffusion models which I didn't talk
+[01:17:08] about are are great for you know
+[01:17:10] generation.
+[01:17:13] Okay so I will stop there. Um that's uh
+[01:17:17] it for
+[01:17:19] um the lecture on multi modality. Um I
+[01:17:23] guess we don't have any homework on uh
+[01:17:25] doing this but if you're curious um it
+[01:17:28] would be I think I encourage you to play
+[01:17:30] around with um you know training some of
+[01:17:32] these models.

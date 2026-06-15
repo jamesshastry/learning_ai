@@ -1,0 +1,2027 @@
+[00:00] This is work with a very large number of
+[00:02] people over 200 contributors and I
+[00:05] include a lot of slides adapted from a
+[00:06] couple of these folks, Kristen and
+[00:08] Michael. So, the context of this lecture
+[00:10] is that it's never been easier, as we're
+[00:12] all aware, to build really impressive AI
+[00:15] demos. And, you know, pretty obviously,
+[00:18] one of the best examples of this is none
+[00:20] other than Chat GPT. It's this one
+[00:22] interface
+[00:24] where you can ask just about any
+[00:25] questions that come to your mind and not
+[00:27] only will the system find answers that
+[00:29] suit your uh your questions, it will
+[00:31] synthesize them on the fly
+[00:32] conversationally. Now, we're all taking
+[00:35] that for granted, but let's just marvel
+[00:37] at how amazing that is.
+[00:38] Now, what makes it really cool and a big
+[00:41] step forward compared to before is that
+[00:42] it could also help us with tasks. So, I
+[00:45] have here an example of me asking Chat
+[00:48] GPT to help with a piece of code. I'm
+[00:49] asking it to parallelize sequential
+[00:52] Python loop I had.
+[00:53] Now, you know, and it does exactly as I
+[00:55] ask.
+[00:56] Now, at this stage, we're all extremely
+[00:59] familiar with the primary weakness of
+[01:02] these language models, which is, in some
+[01:04] sense, precisely their key strength.
+[01:06] Which is that they are so fluent, in
+[01:08] fact, that when they make mistakes,
+[01:10] they can be incredibly hard to
+[01:12] incredibly hard to detect. So, Stanford
+[01:15] was not founded in 1891, although it's
+[01:18] close. Maybe using that example of
+[01:20] Berkeley is weird, but anyway.
+[01:22] Um
+[01:22] And the whole reason I asked for help
+[01:25] with this piece of code was that you
+[01:27] know, I wanted to avoid data races. So,
+[01:30] when I was given code that simply
+[01:32] naively parallelized the code and had a
+[01:34] bug in it, I was glad I didn't trust
+[01:36] that model
+[01:37] and, you know, didn't simply plug in
+[01:39] this code into my code base.
+[01:42] So, the big picture here is that even
+[01:43] though it's incredibly impressive
+[01:45] incredibly easy to build impressive
+[01:46] demos, turning monolithic language
+[01:48] models into reliable AI systems remains
+[01:51] really hard. And that's what the rest of
+[01:53] this talk will focus on.
+[01:56] Now, these are not just problems, you
+[01:58] know, you see in your kind of personal
+[02:01] interactions with a with a chatbot,
+[02:03] these have real implications all over
+[02:05] the place. And that's just one example
+[02:07] of this happening in practice.
+[02:10] Now, I'm not saying Chat GPT is is bad
+[02:12] or language models are bad because it
+[02:14] made a mistake or two.
+[02:16] What I'm saying though, and that's
+[02:18] because every AI system and everything
+[02:19] we'll talk about today will always make
+[02:21] mistakes.
+[02:22] What I'm saying though is that
+[02:23] fundamentally the monolithic nature of
+[02:25] language models makes them particularly
+[02:28] hard to control when we're building
+[02:30] systems, to debug when they do make
+[02:32] mistakes, and to improve when we want to
+[02:35] iterate on the development of our
+[02:37] systems.
+[02:38] And increasingly, the way people are
+[02:40] tackling this, as we had in the title of
+[02:41] the of the lecture, is by building
+[02:44] compound AI systems. So, if you haven't
+[02:46] heard of this term before, it just means
+[02:48] modular systems or modular programs in
+[02:50] which language models are not serving as
+[02:52] the user-facing end-to-end system, but
+[02:54] they're actually playing specialized
+[02:57] modular roles inside this bigger
+[02:59] architecture.
+[03:01] So, you know, a very familiar example of
+[03:04] that that I'm sure sort of prior talks
+[03:07] discussed a lot in this in this class is
+[03:09] retrieval augmented systems.
+[03:12] So, you know, instead of building a
+[03:13] system that takes a question like this
+[03:15] and just gives it to your monolithic
+[03:17] language model, just a black box deep
+[03:18] neural network, and basically hopes that
+[03:20] the system does the right thing,
+[03:22] you might break it down into smaller
+[03:24] pieces where you have a retrieval model
+[03:26] consult a massive corpus
+[03:28] with the question as a search query,
+[03:31] retrieve the top K, you know, most
+[03:33] relevant results, feed those as context
+[03:36] to the language model, and then
+[03:37] basically prompt the model to use the
+[03:39] information there and cite it in its
+[03:40] answer.
+[03:42] Now, there are lots of reasons that
+[03:43] might be attractive. One of those is
+[03:46] transparency.
+[03:47] This system might still make mistakes or
+[03:49] it might say the right thing, but either
+[03:51] way, we can always inspect sort of the
+[03:53] trace of the system behavior, see what
+[03:55] it retrieved, and see why it generated
+[03:57] what what, you know, the information it
+[03:59] did. That would help us see when it's
+[04:01] right, you know, it says something
+[04:02] justified based on a citation that's
+[04:04] factual.
+[04:05] It could also help us see it when it's
+[04:06] wrong. For example, it made an incorrect
+[04:09] inference based on a relevant piece of
+[04:11] information or maybe it simply retrieved
+[04:13] something irrelevant and extrapolated in
+[04:15] a weird way.
+[04:16] There's another reason this is really
+[04:17] attractive, which is that
+[04:19] you know, a system like this can be a
+[04:20] lot more efficient. It has more steps,
+[04:23] for sure,
+[04:24] but now the language model does not
+[04:26] necessarily need to know everything
+[04:28] about all topics because we've sort of
+[04:30] offloaded that knowledge and a lot of
+[04:32] that like basically step-by-step control
+[04:35] flow either to a knowledge base from
+[04:37] which we're retrieving or to simply a
+[04:39] program that is executing these steps.
+[04:41] So, we've gained a lot from having these
+[04:43] sort of decompositional approach.
+[04:46] Another another example of a compound AI
+[04:49] system beyond rag and something slightly
+[04:51] more sophisticated is taking that to the
+[04:53] next step and asking, well, one of the
+[04:55] biggest sort of powers of language
+[04:57] models is that they are not limited to
+[04:59] answering questions they've seen exactly
+[05:01] before. They can sort of synthesize or
+[05:03] compose information, so at least that's
+[05:04] the that's that's the hope.
+[05:06] Um so, this is exactly what a compound
+[05:08] AI systems system that does multi-hop
+[05:11] reasoning or multi-hop retrieval
+[05:12] augmented generation would do. It's the
+[05:14] fact that we can now take questions and
+[05:16] instead of simply giving them to a dumb
+[05:18] search engine, we can ask our language
+[05:20] model itself to act as a module that
+[05:23] breaks down this question into little
+[05:24] pieces, finds information about each
+[05:26] piece, and then basically returns that
+[05:28] to the language model whose job is to
+[05:30] then take you know, whatever got
+[05:32] retrieved and produce answers that maybe
+[05:34] synthesize information in a more
+[05:36] holistic way.
+[05:38] What's really great about sort of
+[05:39] compound AI systems, continuing that
+[05:41] line of thought, is that we have a lot
+[05:43] of control as the people building this
+[05:45] system.
+[05:46] You know, you're not sort of
+[05:47] bottlenecked at the next release of a
+[05:49] language model, whether you're the one
+[05:50] building it, which might be unlikely, or
+[05:52] not, you actually have a lot of control
+[05:55] over the development of your
+[05:57] architecture. And that allows you to
+[05:59] iterate much faster and to build systems
+[06:02] like this system here, Berlin, that I
+[06:03] built near the start of my PhD, that do
+[06:05] things that your individual language
+[06:07] models at that time absolutely couldn't
+[06:09] do.
+[06:10] Another example is to take this and
+[06:12] even, you know, another step further and
+[06:14] to basically say,
+[06:16] could we have these systems generate
+[06:17] long reports, like maybe articles with
+[06:19] citations like a Wikipedia page? And
+[06:21] that's where, you know, maybe you could
+[06:23] say something like, write me an article
+[06:25] on the on the Colbert retrieval model,
+[06:27] and a system like this, which is Storm
+[06:30] from Stanford,
+[06:31] could then basically have a lot of
+[06:33] modular components that are at a much
+[06:36] finer level of granularity. So, it could
+[06:37] brainstorm, it could generate outlines,
+[06:41] it could revise these outlines, it could
+[06:43] then basically ask a model to generate
+[06:45] questions about each part of the
+[06:46] outline, retrieve sources, synthesize
+[06:49] information in a much more systematic
+[06:51] way,
+[06:51] you know, than a simpler architecture
+[06:53] would.
+[06:55] And what's really great here is that
+[06:56] because we have sort of this ability to
+[06:58] compose
+[07:00] better scoped uses of our language
+[07:02] models, we can really iterate on the
+[07:04] quality we get out of these systems.
+[07:06] So, it's much easier for the language
+[07:08] model to, you know, take information
+[07:10] that's given to it and synthesize
+[07:12] something reasonable as opposed to maybe
+[07:14] tackle a bigger problem of trying to
+[07:16] sort of remember facts, for example. So,
+[07:18] by by being able to manage all of these
+[07:21] little compositions, we can do a lot
+[07:23] more in terms of quality.
+[07:26] And lastly, the sort of final advantage
+[07:29] of building these types of systems is
+[07:31] inference time
+[07:33] scaling. So, basically, if you have the
+[07:36] language model, it's pretty clear at
+[07:37] this point that if you intelligently
+[07:39] spend more compute at test time, so you
+[07:42] have a question and you're trying to
+[07:43] sort of leverage the language model
+[07:45] maybe to search over a large space of
+[07:48] potential paths, for example, that
+[07:50] that's something that can really help.
+[07:52] So, an example of a compound AI system
+[07:54] where this really helps here is
+[07:55] AlphaCodeium, which basically is the
+[07:57] system that is targeting that generating
+[08:00] code, but instead of simply asking a
+[08:02] model to produce a, you know, a piece of
+[08:04] code, it has all these steps in which it
+[08:06] would, for example,
+[08:08] you know, reflect on the problem,
+[08:11] reflect on public tests that, you know,
+[08:12] maybe exist for a for a given for a
+[08:15] given task that you have, generate
+[08:17] various solutions, rank them based on
+[08:19] their performance, and then basically
+[08:20] iterate from there. And it's not, you
+[08:23] know, unintuitive that this type of
+[08:25] decomposition, which reflects the way
+[08:27] you might instruct a, you know, an
+[08:29] intern or a friend or something to to
+[08:31] approach a task like this, it's not
+[08:32] unintuitive that that can really help
+[08:34] quite a bit, and that's what this type
+[08:36] of work shows. And this is something
+[08:37] that keeps popping up in many many many
+[08:39] applications. In many cases also, you
+[08:42] know, in task-agnostic form, you know,
+[08:44] in the form of methods that basically
+[08:46] can scale compute
+[08:48] independently of a particular task.
+[08:51] So, we talked about how amazing compound
+[08:53] AI systems are and how sort of they give
+[08:55] us these five things from quality
+[08:58] to control to transparency to inference
+[09:01] time scaling. So, they're awesome. But
+[09:02] the problem is, unfortunately, we're
+[09:04] working with highly limited modules at
+[09:07] the end of the day. Our language models
+[09:09] themselves
+[09:11] are extremely sensitive to how you ask
+[09:13] them to play these roles of these little
+[09:15] things you're trying to compose. And
+[09:17] because of that, under the hood, these
+[09:19] really beautiful diagrams we looked at,
+[09:21] they're typically implemented, you know,
+[09:23] and we're all guilty of this, myself
+[09:24] included, they're typically implemented
+[09:26] with, you know, thousands of tokens of
+[09:29] of English or some other natural
+[09:30] language trying to coerce a language
+[09:32] model to play a to play that role of
+[09:34] each of these modules.
+[09:36] And so, this is something we see across
+[09:38] all types of tasks where we're writing
+[09:40] sort of tens of kilobytes of strings in
+[09:43] JSON files trying to define our our
+[09:45] language model systems.
+[09:47] And of course, if we could just do that
+[09:48] and then succeed in a way that is sort
+[09:50] of highly portable and in a way that's
+[09:52] highly general, maybe it's fine. Maybe
+[09:53] it's a fine price to pay, but the
+[09:55] problem is that it's not
+[09:57] it's not something that will generalize
+[09:59] or sort of will systematically allow us
+[10:01] to compose these systems.
+[10:03] So, the problem here at a high level is
+[10:05] that each of these prompts implementing
+[10:07] each of the modules we looked at is sort
+[10:09] of coupling
+[10:11] five different roles.
+[10:14] So, first role it's sort of trying to to
+[10:17] to cover is the role of a signature, the
+[10:19] role of like I want a function that's
+[10:21] supplying this this module and
+[10:23] essentially it's just a specification of
+[10:25] here are your inputs and here's what
+[10:27] they mean and here's what here's the
+[10:28] transformation I want you to make to
+[10:30] give me the outputs.
+[10:32] It's also specifying the computation
+[10:35] sort of that
+[10:36] tries to specialize this signature with
+[10:40] some kind of inference time strategy.
+[10:41] So, you might tell the model, "Hey,
+[10:43] please think step-by-step." Or you might
+[10:44] tell the model, "Hey, you're an agent
+[10:46] and you have these tools and you should
+[10:47] call these tools and when you call them
+[10:48] I'll intercept it, I'll give you back
+[10:50] the response." Or you might say
+[10:52] something like, you know, I'll I'll
+[10:53] generate 10 different things and explore
+[10:55] all of them with some kind of reward
+[10:57] model for example.
+[10:58] So, in all of these cases we're sort of
+[11:00] expressing a lot of that in the prompt
+[11:02] and in the code around the prompt.
+[11:04] Um, the prompt is also trying to sort of
+[11:06] couple with all of that the computation
+[11:08] that's well formatting all of the inputs
+[11:10] we want to give to this sort of
+[11:12] function or the signature
+[11:14] and is also encapsulating the logic for
+[11:16] how we want to get several things and
+[11:18] sort of parse them and cast them to the
+[11:19] right types and maybe retry if they're
+[11:21] not really formatted properly and all
+[11:23] that stuff.
+[11:24] It's also on top of that expressing
+[11:26] well, the objective. You know, you're
+[11:28] you're not just telling
+[11:29] you know, you're not simply describing
+[11:32] what the inputs and and output behavior
+[11:34] is, you're really also trying to encode
+[11:36] in your prompt a lot of information
+[11:38] about do's and don'ts and basically what
+[11:40] you're trying to maximize. You know, be
+[11:42] factual or don't hallucinate or you
+[11:44] know, don't cite pages that don't exist
+[11:47] or whatever.
+[11:48] Um, and so, you know, that's that's
+[11:50] essentially a different notion from
+[11:52] simply declaring what the what the what
+[11:54] that module is doing as we see in the
+[11:55] diagrams. And lastly, for any given
+[11:58] language model as we said they're super
+[12:00] sensitive and these pipelines are really
+[12:01] complex. So, you're going to see in
+[12:03] practice that people work really hard to
+[12:05] sort of coerce the model to basically do
+[12:08] the right thing through a lot of trial
+[12:10] and error in English or in some natural
+[12:12] language.
+[12:13] And maybe there's also sort of
+[12:15] fine-tuning of the weights around that
+[12:16] if if you're doing a you know, a more
+[12:19] advanced application.
+[12:20] So, the bigger picture here across these
+[12:22] five roles is that existing compound AI
+[12:24] systems are awesome. They have a lot of
+[12:26] potential to be really modular and to
+[12:28] sort of solve problems we can't solve
+[12:30] with neural networks alone or with
+[12:31] language models alone,
+[12:33] but the problem is they're too
+[12:34] stringently typed if you will. They
+[12:36] couple the fundamental architecture of
+[12:39] the system design that the developer
+[12:41] wants to express which nicely is the
+[12:43] thing we see in the diagrams we saw of
+[12:44] compound AI systems.
+[12:46] They couple that with incidental choices
+[12:49] that are super specific to the specific
+[12:51] pipeline you have or the language model
+[12:53] choice you've made which are things that
+[12:55] change all the time. So, you have a
+[12:57] pipeline that has five pieces, you go in
+[12:59] and you want to slightly change the
+[13:00] objective or introduce a sixth module or
+[13:02] maybe change the language model to a
+[13:04] cheaper thing that just came out that is
+[13:06] supposed to be as good, good luck. Your
+[13:07] entire sequence of you know, thousands
+[13:10] of words of of prompts are basically
+[13:12] irrelevant at that point. And this is
+[13:14] something that really blocks adoption in
+[13:15] practice as well as portability of a lot
+[13:17] of the cool systems we we we covered
+[13:19] where people in industry for example
+[13:21] could uh approach you and say, "Well, we
+[13:23] really love that paper,
+[13:24] um, but it's clear that the prompts
+[13:26] there were tuned sort of and developed
+[13:28] with a particular data set or benchmark
+[13:29] in mind. That's not our use case. We
+[13:31] have no visibility or clue how you
+[13:34] decided to arrive at those prompts. So,
+[13:36] we're basically practically unable to
+[13:37] use the stuff you built."
+[13:39] So, an argument I'll be making today and
+[13:42] I'll be relying on in the rest of this
+[13:44] lecture is that we do know how to
+[13:47] iteratively
+[13:48] and controllably build systems and
+[13:51] improve them in a modular way.
+[13:53] And that sort of elusive concept is
+[13:56] called programming.
+[13:58] Um, so a lot of the rest of this talk
+[14:00] will be about sort of this ambition of
+[14:04] what if we could build compound AI
+[14:06] systems as programs,
+[14:08] right? Just computer code, standard
+[14:10] Python,
+[14:11] but with fuzzy natural language
+[14:13] functions or natural language modules
+[14:15] that can learn their behavior from data.
+[14:17] So, you're basically thinking of just
+[14:18] writing code and then inserting these
+[14:21] little pieces that are supposed to
+[14:22] represent the boxes we saw earlier that
+[14:24] are sort of exhibiting intelligent
+[14:26] behavior and then you specify an
+[14:27] objective and you have the system try to
+[14:29] learn sort of behavior around the
+[14:31] natural language specifications that
+[14:33] you're putting around these modules. If
+[14:35] we could do that, we could lose a lot of
+[14:36] the problems that we saw with existing
+[14:38] compound AI systems where you're not
+[14:40] going to have to be writing these
+[14:41] prompts, you're going to be building a
+[14:42] general design that could sort of be
+[14:45] ported from a language model to another
+[14:47] language model. And in this analogy, the
+[14:49] portability is sort of like working with
+[14:51] with hardware. You know, if you write a
+[14:52] piece of code in C on a certain CPU
+[14:56] architecture and you move to a different
+[14:57] CPU architecture, a good compiler is
+[15:00] going to take your same high-level C
+[15:02] high-level between codes and then
+[15:03] compile it to potentially very different
+[15:05] lower-level machine code on different
+[15:08] architectures and make sure that it
+[15:09] works. So, here we want to
+[15:12] the sort of the ambition that we have is
+[15:13] that we want to write code in
+[15:15] higher-level
+[15:16] higher-level abstractions that are sort
+[15:18] of independent as much as possible of
+[15:21] these low-level details of how to get a
+[15:23] language model to do the thing you want
+[15:25] it to do and then we're going to build
+[15:26] compilers or optimizers that take that
+[15:29] and spit out specific sort of strategies
+[15:32] for working on a given
+[15:34] on a given infrastructure which in this
+[15:36] case means a language model or other
+[15:37] things.
+[15:38] So, these are some of the systems we saw
+[15:39] earlier and so, you know, the approach
+[15:42] that we will take sort of towards this
+[15:44] vision is called DSpy.
+[15:46] Someone said, I think Alex said, data
+[15:48] science Python. It has nothing to do
+[15:50] with data science, it's a long story.
+[15:52] But DS is declaratively self-improving.
+[15:55] Declaratively self-improving Python. So,
+[15:56] it's Python but it's smarter.
+[15:59] Um, and the way in which we're going to
+[16:01] do this is we're going to say, "Well,
+[16:03] let's define this thing called a
+[16:04] language model program which is just a
+[16:06] Python program, just a Python class or
+[16:08] function."
+[16:09] Um, and in that function, you know, it's
+[16:12] going to take it's a function that takes
+[16:13] inputs in natural language, maybe a
+[16:14] question that we want to answer or maybe
+[16:17] like a report we want to summarize or a
+[16:19] topic we want to generate I don't know,
+[16:21] an email about or something. And the
+[16:23] output is also in natural language,
+[16:24] maybe the answer or the report or the
+[16:26] email or whatever it is. And maybe, you
+[16:27] know, the output could be several pieces
+[16:29] of these.
+[16:29] And what makes this interesting as a
+[16:32] function is that in the normal course of
+[16:34] its execution, it's just kind of loops
+[16:36] and exceptions and go-to statements and
+[16:39] all the things you shouldn't use and all
+[16:40] that stuff, but in the in the course of
+[16:42] its execution, it's calling these
+[16:43] functions that are modules that are
+[16:46] fuzzy. So, it's basically making calls
+[16:47] like, "Hey, generate a search query for
+[16:49] me." Or turn this natural language into
+[16:52] SQL or whatever it is. So, it's making
+[16:54] these kind of like high-level natural
+[16:55] language claims which look like prompts
+[16:57] but they're sort of much more structured
+[16:59] and much shorter because they're only
+[17:01] expressing sort of the the stuff that
+[17:04] you need to declare like, "What is the
+[17:06] actual behavior?" Not how should the
+[17:08] model do it.
+[17:10] Um, so, we can have this function in
+[17:12] which in its course of execution, it's
+[17:15] calling these modules and each module is
+[17:18] basically defined by simply a
+[17:20] declaration of what it should do,
+[17:21] what inputs it takes and what outputs it
+[17:23] produce it produces. Usually that's one
+[17:25] liner basically in in many cases.
+[17:28] So, here's an example
+[17:30] of an actual sort sort of simple DSpy
+[17:32] run
+[17:33] I put before the talk. So, basically,
+[17:35] you can say, "I want a fact-checking
+[17:37] module." You know, before that there
+[17:38] might be like loops and exceptions and
+[17:40] commented out code and all sorts of
+[17:42] mess. And then you have basically a you
+[17:44] know, I want to apply a chain of thought
+[17:46] strategy over this function signature
+[17:49] that says, "I want you to take a set of
+[17:51] claims
+[17:52] and give me a list of booleans that is
+[17:54] the verdicts of you know, are these
+[17:56] claims true or not?" And then I get a
+[17:58] module that's this function. I can give
+[18:00] it a
+[18:01] a list of claims and it can basically
+[18:03] think and then it can tell me well, the
+[18:05] first one is true and the second one is
+[18:06] false, right? So, so far this is
+[18:08] basically just kind of an interface of a
+[18:10] function that is declared, you know,
+[18:12] with natural language types. We're
+[18:14] basically just saying, you know, the the
+[18:16] keywords here are not special but I can
+[18:19] understand them because I understand
+[18:20] English as a language model and I can
+[18:22] sort of see that okay, the verdicts here
+[18:23] is is going to sort of suggest that
+[18:25] probably until I optimize this or learn
+[18:27] somehow, you know, this is this is a
+[18:30] true statement and Python is not a
+[18:31] compiled language in standard usage. So,
+[18:34] this basically defines for us an
+[18:36] optimization problem under the hood
+[18:38] which is basically you're given this set
+[18:40] of modules in our program that your
+[18:41] program calls
+[18:43] and for every module our goal is going
+[18:45] to be to sort of basically decide how
+[18:48] should we take this code and actually
+[18:50] call the language model which means
+[18:52] coming up with the string that goes into
+[18:53] the model which might be a lot more, you
+[18:55] know, sophisticated or or just very
+[18:57] different from how it looked at the
+[18:59] specification level we saw earlier in
+[19:01] the signature.
+[19:03] Um, the other thing we also can control
+[19:05] in some cases although we're not cover a
+[19:06] lot of that today is well, you know,
+[19:08] what are sort of the weight settings
+[19:10] that we want to assign our our language
+[19:12] model, you know, in the sense of if we
+[19:14] want to fine-tune the model to sort of
+[19:16] perform better at our task.
+[19:20] So, you know, the idea is now we have
+[19:21] this function with all these modules and
+[19:23] if you can give me a training set you
+[19:25] know, of inputs to that function and
+[19:27] maybe some kind of hint or final label
+[19:30] or some kind of metadata,
+[19:32] I should be able to basically try to
+[19:35] find the settings of the of the prompts
+[19:37] and the weights such that on average or
+[19:40] you know, in expectation
+[19:42] some kind of metric of calling the the
+[19:45] program with modules assigned in this
+[19:47] way is maximized.
+[19:48] That's the optimization problem that we
+[19:50] will be dealing with, you know, once
+[19:52] someone writes a program in an
+[19:54] abstraction that could support this type
+[19:56] of behavior, which which is the S by.
+[19:59] Now,
+[20:00] you know, the problem here is that this
+[20:01] is really hard.
+[20:03] So, we don't have and we're not asking
+[20:05] anywhere
+[20:06] for you know, gradients across the
+[20:09] system. System might generate code and
+[20:11] execute it. It might call external
+[20:13] tools. It might run a calculator.
+[20:15] So, we don't necessarily know how to
+[20:17] optimize a system like this. Certainly
+[20:19] not a not directly with gradients. And
+[20:21] we can't sort of like cheat and try to
+[20:23] optimize each module on its own because
+[20:25] we are not in general asking for labels
+[20:27] for every step of the system. If we were
+[20:29] to ask for labels for every step of the
+[20:31] system, the whole argument about
+[20:33] iterative development and modularity
+[20:34] would collapse because I added a module
+[20:37] and now you're asking me to go label
+[20:38] some data, whereas the ideal sort of,
+[20:41] you know, development cycle that we want
+[20:43] is that you're building a system, you
+[20:44] notice a need,
+[20:46] you notice a need to add a module of
+[20:48] some sort or you want to experiment just
+[20:50] inject it, you recompile, you see what
+[20:52] happens, and you see if your system is
+[20:53] better or not. So, basically we can't
+[20:55] assume the existence of
+[20:58] of labels for each of these modules.
+[21:01] So, that's a problem because it's not
+[21:02] obvious how to go about sort of
+[21:03] optimizing this and that's one of the
+[21:05] things we'll talk about in the rest of
+[21:06] these
+[21:07] these slides.
+[21:08] And let's take a concrete example here
+[21:09] so that the rest of this sort of is
+[21:11] developed in a way we can we can follow.
+[21:12] So, suppose that
+[21:15] we wanted to build this
+[21:17] simple multi-hop retrieval augmented
+[21:20] generation pipeline. I have it in visual
+[21:22] form here, although the DSP code is
+[21:23] basically the same.
+[21:26] You know, it's a function that takes a
+[21:27] question, which is a string, and it's
+[21:29] going to output an answer, which is also
+[21:30] a string.
+[21:31] And in that function, you know, the last
+[21:33] step is this question that we got with
+[21:36] some context, we want to give it to a
+[21:37] language model in some way, and
+[21:39] basically have it generate our answer.
+[21:41] But the question is how do we get this
+[21:42] context? So, the multi-hop thing here is
+[21:45] that we will have a loop. Maybe the loop
+[21:47] could be smarter. It could like decide
+[21:48] when to stop or something. But for now,
+[21:50] we'll just hardcode that it goes twice.
+[21:52] And in every iteration, we'll ask our
+[21:54] language model to take whatever context
+[21:55] we've built up so far, which is empty at
+[21:57] the beginning,
+[21:58] generate a search query, take this
+[22:00] query, dump it into the context, maybe
+[22:02] append it or something, and then
+[22:04] basically we can loop again so that the
+[22:06] system is generating queries to seek
+[22:07] things that we haven't found so far. So,
+[22:11] a question that, you know, is is would
+[22:12] come up in in in this in this scope
+[22:14] would be something like
+[22:15] I don't know, how many floors are in the
+[22:18] castle that David Gregory inherited. An
+[22:20] example that I like to use. So, the the
+[22:23] first query you might ask is, well, who
+[22:25] is David Gregory?
+[22:27] And then you might learn that he's a
+[22:28] Scottish guy from, I don't know, the
+[22:30] 1600s or something, and that he
+[22:32] inherited the castle called Kenilworth
+[22:34] Castle. Then you might ask, well, how
+[22:35] many floors are in Kenilworth Castle
+[22:37] given that the original question was
+[22:39] trying to seek that. And so, that gives
+[22:41] you the behavior that we're seeing here
+[22:43] in terms of the multi-hop
+[22:45] behavior.
+[22:47] So, that sort of visual function can be
+[22:49] written in DSP code as as as like here.
+[22:52] We're not going to look at too much
+[22:53] code, but this is just a module. If
+[22:55] you're familiar with something like
+[22:56] PyTorch or just deep neural networks in
+[22:58] general, we're kind of borrowing some of
+[23:00] the syntax.
+[23:01] But in this module, we're going to
+[23:05] have an initialization sort of method
+[23:07] that just declares the submodules that
+[23:10] we have in our compound AI system. So,
+[23:12] we're going to have a sort of a chain of
+[23:14] thought strategy, express our sort of
+[23:17] signature that says you take some
+[23:19] context, you take a question, and you
+[23:21] generate a search query, and all of
+[23:22] these are strings. So, we're not telling
+[23:24] you they're strings cuz that's the
+[23:24] default.
+[23:26] And then there's another module that
+[23:27] takes the same inputs or same types of
+[23:29] inputs and generates an answer.
+[23:30] Now, the sort of
+[23:32] part of your code that is the actual
+[23:34] sort of program logic is here where
+[23:36] you're simply just, you know, the loop,
+[23:38] we saw that in the last slide can sort
+[23:39] of be expressed.
+[23:41] So, that's the forward method can define
+[23:43] the program logic that we have.
+[23:46] We talked about signatures, so they are
+[23:47] telling the system what the module
+[23:49] should do
+[23:50] as opposed to working really hard with a
+[23:52] certain language model as to how it
+[23:54] should express that behavior.
+[23:56] And the modules, as we said, you know,
+[23:58] there are many sort of strategies to
+[24:01] spend compute, you know, given the
+[24:03] language model, to sort of define a
+[24:05] general sort of
+[24:07] approach to take a signature and
+[24:09] actually express it in terms of calls to
+[24:10] a language model, and those sort of
+[24:12] help,
+[24:13] you know,
+[24:15] improve quality in many settings. So,
+[24:17] there are sort of heuristics that you
+[24:18] can apply very similar to layers in
+[24:21] neural networks. So, I'll go through
+[24:22] with my tangent here and say like
+[24:24] you could, if you want, and this is sort
+[24:26] of like if if if if that's
+[24:28] This is not essential to understanding
+[24:29] the rest of the talk, but sort of
+[24:30] intuitively, you could think of this as
+[24:33] these are normally chain of thought or
+[24:34] other things, just conceptual things
+[24:36] that you can't actually compose because
+[24:38] a chain of thought, you know, the
+[24:39] original paper, which is super cool, is
+[24:41] basically just a bunch of prompts they
+[24:42] wrote for individual tasks. So, for
+[24:44] answering math questions, you you write
+[24:46] some examples and you ask them all to do
+[24:47] stuff. You can't apply to a different
+[24:48] task, you got to write different
+[24:49] prompts. But what we're we're saying
+[24:50] here is
+[24:51] why can't we borrow from layers in
+[24:53] neural networks where you give them
+[24:55] dimensions that sort of just describe
+[24:56] what types of types of tensors they can
+[24:58] accept and what types of tensors they
+[24:59] give you,
+[25:00] and then have that behavior be
+[25:02] expressed. So, in a neural network
+[25:03] architecture, you could say, I want
+[25:04] attention that takes the following sort
+[25:06] of
+[25:07] vectors and gives me those other
+[25:08] vectors. And sort of you could have that
+[25:10] or you could have an RNN do this or a
+[25:11] linear layer or convolutional whatever.
+[25:13] So, similarly here, we're asking why
+[25:15] can't we take these
+[25:16] sort of inference strategies and make
+[25:18] them general in a sort of meta
+[25:20] programming sense and sort of define
+[25:22] these, you know, define them over these
+[25:23] signatures and have them express that
+[25:25] behavior in a general way that can be
+[25:27] composed. Awesome. So, the question here
+[25:29] is this is the abstraction. This is how
+[25:31] you write the program. How do you
+[25:32] actually sort of
+[25:34] what are we supposed to do? So, this
+[25:35] actually works as a system. Cuz it looks
+[25:37] pretty. To me, it looks pretty, maybe
+[25:38] not to everybody, but to me this looks
+[25:39] really elegant. But the question is, how
+[25:41] do we take this and actually sort of
+[25:43] give you a system that, you know, you
+[25:44] could actually deploy and that you're
+[25:45] happy with and you could iterate on and
+[25:47] all that. So, iterating on it is easy
+[25:48] cuz you could come in and like add one
+[25:50] more module, add an if statement, throw
+[25:52] an exception and catch it, and you could
+[25:53] do all kinds of things. But the question
+[25:55] is really how do we sort of translate
+[25:57] these strategies with signatures into
+[25:59] actual prompts under the hood?
+[26:01] So, you can take this here, and the very
+[26:03] first step is pretty trivial, although
+[26:05] it's important to do it right, which is
+[26:07] that sort of internally, we can sort of
+[26:09] translate this into a basic prompt, one
+[26:11] that will not necessarily work really
+[26:12] well or anything. There's no guarantees
+[26:14] about it
+[26:15] through sort of built-in adapters and
+[26:16] predictors. So, predictors are just this
+[26:18] guy, which is basically another module
+[26:20] that has some logic inside, and really
+[26:22] what it does
+[26:23] fundamentally is it adds one more output
+[26:25] here, another field here that asks for
+[26:27] reasoning.
+[26:28] But the adapter is going to take this
+[26:30] guy and is going to say, well, you know,
+[26:32] depending on how you implement it or
+[26:33] which which one you choose or whatever,
+[26:35] it's going to say, well, I I I have a
+[26:36] model here that's maybe a chat model or
+[26:38] maybe it's an instruct model, and I want
+[26:40] to sort of format these fields in a
+[26:42] certain way just to kickstart the
+[26:44] process.
+[26:45] So, it's going to basically give us a
+[26:46] basic prompt under the hood that's
+[26:47] something like, hey, given a field
+[26:49] context and question, you know, give me
+[26:51] a query, and here is the format you want
+[26:53] to follow cuz I want to be able to parse
+[26:54] the stuff that you give me.
+[26:56] Nothing about this is going to work
+[26:57] particularly well, but it's going to get
+[26:58] us started.
+[27:00] Now, the role of optimizers on top of
+[27:02] this, which is sort of a different
+[27:04] component, many algorithms we'll
+[27:05] discuss,
+[27:06] is to take this initial prompt and to
+[27:08] take the whole program in which there
+[27:09] are many of these modules, many of these
+[27:11] prompts, and to sort of look at them as
+[27:13] parameters or look at them as like, you
+[27:15] know, having a lot of variables that we
+[27:16] can tinker with and figure out how to
+[27:19] maximize sort of the metric that we saw
+[27:21] in the in the objective we wanted to
+[27:22] maximize a few slides ago.
+[27:25] So, we might start here and maybe the
+[27:27] system would perform in a, you know, at
+[27:28] 37% accuracy on a given, you know,
+[27:31] strict metric. So, the actual quality
+[27:33] might be a bit higher, but anyway, let's
+[27:34] say this is something that has,
+[27:37] we're trying to sort of have a metric
+[27:38] that's highly precise but has somewhat
+[27:40] lower recall.
+[27:42] And we might then basically just ask,
+[27:43] hey, I like the Me Pro V2 optimizer in
+[27:46] DSP
+[27:47] much the same way as in a neural network
+[27:49] sort of situation. You might say I like
+[27:51] Adam or I like, I don't know, RMSProp.
+[27:54] You give it some data, you give it the
+[27:55] program, you give it a metric, and you
+[27:57] ask it to do a good job, and it spits
+[28:00] out, you know, a better prompt, maybe
+[28:01] fancier instructions, and gives it some
+[28:03] examples, sort of and sticks them into
+[28:06] this into the prompt of one of the
+[28:08] modules or several of the modules such
+[28:10] that the quality is, you know,
+[28:11] substantially higher.
+[28:13] So, you know, on a certain real task,
+[28:15] sort of, instead of tweaking, you know,
+[28:18] 2,000 tokens of the prompts that look
+[28:20] something like this, and, you know, at
+[28:22] the end of the day, sort of getting an
+[28:24] accuracy like 33% with a certain model
+[28:27] from OpenAI,
+[28:29] we can sort of explore a much larger
+[28:31] design space and get higher scores in
+[28:33] interesting ways, you know, through
+[28:35] these compositions. So, let's look at at
+[28:37] sort of a results table here on the
+[28:38] multi-hop question answering task that
+[28:40] we've been sort of using as a running
+[28:42] example.
+[28:44] The simplest thing you could do in in
+[28:45] DSP or sort of just when you're thinking
+[28:47] about a compound AI system is the
+[28:49] trivial is the trivial compound AI
+[28:51] system that's not actually compound in
+[28:53] which you just ask the system to take
+[28:55] the input and just predict the output,
+[28:58] and you don't bother optimizing it. So,
+[29:00] if you do that, sort of we did this a
+[29:01] while back, this is, you know, exactly a
+[29:03] year ago, this result,
+[29:05] you can get GPT-3.5 to perform, you
+[29:07] know, sort of at this at this level, and
+[29:09] a Llama 2 model sort of is a little bit
+[29:12] behind.
+[29:14] But you could say, well, we know that a
+[29:15] decomposition like RAG could help,
+[29:17] especially that this is a factual task
+[29:19] where answering questions.
+[29:20] So, we could do a RAG system, and the
+[29:22] interesting thing is, well, we could
+[29:24] also try, you know, running one of the
+[29:26] optimizers that we'll talk about in a
+[29:27] minute, and what you start seeing is the
+[29:29] cool thing that already, you know, a
+[29:31] small model
+[29:32] can start to perform better than a
+[29:34] larger model
+[29:35] with a sort of simpler architecture or
+[29:38] even with a sophisticated architecture
+[29:39] without optimization. But the large
+[29:41] model can preserve a lot of its
+[29:42] advantage here as well.
+[29:44] Now, you could iterate on your program
+[29:46] and build a multi-hop compounding AI
+[29:47] system. And there you can see that, you
+[29:49] know, with optimization, you can boost
+[29:51] the quality quite a bit with large
+[29:52] models as well as sort of with open
+[29:54] models and with more recent models, all
+[29:55] these numbers are substantially higher
+[29:57] nowadays.
+[29:59] Now, what's really cool, although we're
+[30:00] not going to be able to spend a lot of
+[30:02] time on that, is the very same program
+[30:04] that we wrote here, which is giving us
+[30:06] all of these results across models and
+[30:07] across sort of optimization optimization
+[30:09] decisions that we can make. We can also
+[30:11] use optimizers that sort of update the
+[30:13] weights, that do fine-tuning.
+[30:14] Essentially,
+[30:15] uh whole space of reinforcement learning
+[30:17] is open in front of us.
+[30:18] And we can get very small models to sort
+[30:20] of imitate these bigger ones and we can
+[30:23] have like a model beneath a billion
+[30:25] parameters that's like many years old.
+[30:27] T5 is out in 2019. Uh
+[30:30] score competitively, in fact better
+[30:32] than, you know, uh
+[30:34] close sort of at that at that time
+[30:36] frontier models,
+[30:38] sort of
+[30:39] on
+[30:41] on the the the given task. So, question
+[30:45] is that we will be looking at over the
+[30:47] rest of the lecture is
+[30:49] what are the what is the space of
+[30:50] optimizers like and what are the
+[30:52] interesting choices we can make and what
+[30:53] works and what doesn't. Um so, in
+[30:56] general, there are too many DSPy
+[30:58] optimizers to discuss today. They vary
+[31:00] in how they tune the prompts and weights
+[31:01] in a program, but there is actually kind
+[31:04] of a general pattern that you can see in
+[31:05] many of them in most of them. Um
+[31:08] The first thing is, in general, as we
+[31:10] saw earlier, you're going to for every
+[31:12] module just guess an initial prompt. And
+[31:14] this is actually something in DSPy
+[31:16] happening outside the optimizer in
+[31:17] general, it's happening through what we
+[31:18] call the adapter, that just sort of like
+[31:20] takes your signature and makes a sort of
+[31:22] a deterministic construction, most of
+[31:25] the time deterministic, sometimes with a
+[31:26] language model,
+[31:27] of what the initial prompt should look
+[31:29] like.
+[31:30] And then the next thing we'll do is
+[31:32] rejection sampling. So, we're going to
+[31:34] take the inputs that you gave us in the
+[31:36] sort of in the in your problem
+[31:37] specification.
+[31:39] Maybe we'll raise the temperature of the
+[31:40] language model. Maybe we'll plug in a
+[31:42] large model. Maybe we'll just keep the
+[31:44] system simple.
+[31:46] And then we'll basically run through
+[31:47] your program with these basic prompts to
+[31:50] sort of try to collect trajectories
+[31:52] throughout all of these steps
+[31:55] that lead your metric to sort of assign
+[31:57] high scores. So, you're basically giving
+[31:59] us this program, you're giving us a
+[32:00] bunch of inputs, and you're giving us a
+[32:02] metric that can assess when things are
+[32:04] good or bad. Maybe it's just checking if
+[32:06] the answer is correct, or maybe it's
+[32:07] asking a language model, or maybe asking
+[32:09] a DSPy program to sort of evaluate the
+[32:12] system on a rubric or any number of
+[32:14] other design choices that you're allowed
+[32:15] to sort of, you know, experiment with.
+[32:17] So, we're going to use those in order to
+[32:19] basically start to collect traces of
+[32:22] every module, examples of every module,
+[32:24] of its inputs and outputs when they're
+[32:26] chained together sort of lead to high
+[32:28] scores through your through your metric.
+[32:31] We can then use these examples in a
+[32:33] bunch of different ways to update the
+[32:34] modules of your program. The simplest
+[32:36] thing you could think of is if you have
+[32:37] examples of every module that have sort
+[32:39] of proven to work in the past, it
+[32:41] doesn't mean that they're correct, but
+[32:43] it means that maybe there's some hope
+[32:45] that they're useful. And the simple
+[32:46] thing you could do is try to stick them
+[32:47] into the prompt as demonstrations, as
+[32:50] examples that just say, "Hey, when I got
+[32:52] this input and I did this behavior, it
+[32:53] seemed to work pretty well in the past."
+[32:55] Um and, you know, once you do that,
+[32:57] maybe you can actually start exploring,
+[32:59] well, which of the examples, and can we
+[33:01] try to be intelligent about this or not,
+[33:02] which of these examples that we just
+[33:04] built can be useful
+[33:06] for actually taking this module,
+[33:08] plugging it into a program, and getting
+[33:10] the program to work better on a bunch of
+[33:12] other examples.
+[33:14] Another thing you can do is you could
+[33:16] try to sort of induct instructions. If
+[33:18] you have a lot of examples of a module,
+[33:20] you'll have a better sense of
+[33:22] understanding of what the module should
+[33:23] do
+[33:24] and when that leads to good behavior and
+[33:26] when that doesn't lead to good behavior,
+[33:28] and you can give those to a language
+[33:29] model and ask basically, you know,
+[33:32] what is the thing that we're trying to
+[33:33] ask here? And a thing to keep in mind is
+[33:36] that in all of these cases, language
+[33:37] models are being used to build these
+[33:39] components, but we're not assuming that
+[33:41] language models are good at it.
+[33:43] Language models are going to give you 20
+[33:44] different things and, you know, 19 of
+[33:47] them are going to suck, but because we
+[33:49] can try so many and we can explore that
+[33:51] space
+[33:52] to varying level levels of intelligence,
+[33:54] we can basically strike gold fairly
+[33:56] often and find the combination of these
+[33:57] pieces that leads leads to better
+[34:00] prompts in a way that is basically
+[34:02] independent of a particular setup that
+[34:03] you have. So, you can adjust your
+[34:05] program or your language model choices,
+[34:07] rerun the system, and and, you know,
+[34:09] have optimization happen.
+[34:12] And then, of course, you could run, you
+[34:13] know, once you build these examples, if
+[34:14] you have enough of them, you know, you
+[34:16] could basically fine-tune the model on
+[34:18] them or do reinforcement learning
+[34:20] depending on how you're sampling or do,
+[34:22] you know, preference fine-tuning and
+[34:23] other other approaches there as well.
+[34:26] So, you know, there are various papers
+[34:29] that we have that explore these types of
+[34:30] strategies. The two ones I sort of
+[34:33] requested in the in the suggested
+[34:35] readings were
+[34:37] sort of the one introducing MeProm and
+[34:39] the one introducing a strategy
+[34:42] for combining prompt optimization and
+[34:44] fine-tuning. And the rest of this talk
+[34:46] will be about
+[34:48] the MeProm the MeProm paper. So, before
+[34:50] we discuss MeProm,
+[34:52] um
+[34:53] you know, this stuff, this is sort of we
+[34:55] discussed a sequence of abstractions and
+[34:57] then sort of at a high level how a set
+[34:59] of algorithms that we call optimizers
+[35:01] take programs written with these
+[35:03] abstractions and sort of give you
+[35:05] compound AI systems that work well, but
+[35:07] you're expressing in a way that is sort
+[35:09] of more portable and I think a lot more
+[35:11] elegant. Um but what's cool here is that
+[35:14] these things actually work pretty well
+[35:15] in practice. So, a few months ago,
+[35:17] University of Toronto researchers
+[35:20] participated in this Medica competition
+[35:22] against 15 other, you know, schools and
+[35:24] industry groups and whatnot,
+[35:27] um and they won the competition in sort
+[35:30] of building question-answering systems
+[35:31] for medical, you know, domains by 20% by
+[35:36] 20-point margin against the next best
+[35:38] system. And, you know, one of the
+[35:40] biggest differences between that their
+[35:42] approach and others is they used DSPy to
+[35:43] sort of express their system and they
+[35:45] used DSPy prompt optimizers, they used
+[35:47] an early version of MeProm in fact,
+[35:50] to to achieve this result on three
+[35:52] different, you know, sort of one three
+[35:54] different settings of that competition,
+[35:56] which had three settings.
+[35:58] Um a month later, folks at the
+[36:01] University of Maryland,
+[36:02] who also sort of whose lead author
+[36:05] sort of is responsible or is leading
+[36:07] this
+[36:08] prompting guide with, I think, like tens
+[36:11] of thousands of users or or more,
+[36:13] sort of worked on a suicide detection
+[36:16] task that I believe he got from
+[36:17] industry. They wrote a really nice paper
+[36:18] about it. He worked for 20 hours. They
+[36:21] documented all of the sort of prompting
+[36:23] strategies that he explored for building
+[36:25] this system for suicide detection.
+[36:27] Basically, it's a glorified classifier.
+[36:30] And, you know, he documented all the
+[36:32] approaches he tried, the prompts he
+[36:34] explored, and then, you know, in his
+[36:36] words, he applied DSPy in 10 minutes and
+[36:38] it sort of outperformed his best system
+[36:40] by 40 to 50%.
+[36:43] So, they have a really nice paper about
+[36:45] this from the University of Maryland.
+[36:46] And then, you know, it's had enabled
+[36:48] sort of a lot of state-of-the-art
+[36:49] systems from PATH for training retrieval
+[36:52] models, where we're optimizing prompts
+[36:55] that synthesize the data that sort of is
+[36:57] used to train to train small models
+[37:00] under the hood. I think there's a lot of
+[37:02] sort of
+[37:03] interesting ideas there.
+[37:05] To Irena, which is a system for
+[37:07] classifying with language models when
+[37:10] you have like 50 labels but 10,000
+[37:13] classes, which I thought was an
+[37:14] impossible thing. It just didn't make
+[37:16] sense for language models,
+[37:17] but Carl built this in DSPy and sort of
+[37:20] showed that it's possible.
+[37:21] And then STORM, which generates
+[37:23] Wikipedia articles from a topic that you
+[37:25] give it.
+[37:27] So, now sort of having seen some of
+[37:28] these examples, let's sort of
+[37:32] look more closely at the paper
+[37:34] Optimizing Instructions and
+[37:35] Demonstrations for Multi-Stage Language
+[37:37] Model Programs
+[37:39] by co-first authors Kristoffer Lund and
+[37:41] Michael Ryan at at Stanford. And a lot
+[37:43] of the slides that I have next sort of
+[37:45] are are sort of
+[37:47] borrowed from Kristoffer and Michael
+[37:50] in the DSPy work.
+[37:53] So, the problem setting, just to restate
+[37:55] it, is we are given a bunch of inputs,
+[37:57] examples of a task,
+[37:59] so maybe questions, let's say. And we
+[38:01] are given that, you know, the developer
+[38:03] built a language model program of the
+[38:05] sort we discussed earlier, just a
+[38:06] function with a bunch of modules
+[38:08] expressed in natural language. Um and,
+[38:11] you know, each of them might look like
+[38:12] this. So, you know, we looked at the
+[38:13] context question, give me an answer. Any
+[38:16] kind of just trying to do this behavior.
+[38:18] Uh I don't know if example is very
+[38:21] useful at that point, but The Victorians
+[38:22] is a documentary series written by an
+[38:24] author born in what year?
+[38:26] So, you know, maybe you want to answer
+[38:28] that, 1950, by looking at context that
+[38:31] you retrieved in the earlier loop that
+[38:32] we have here.
+[38:35] We're also asking for a metric. Um some
+[38:37] metrics, you know, by nature require
+[38:39] labels. Like, for example, here, if you
+[38:41] know that the answer is 1950, we don't
+[38:43] need labels for the whole thing. But,
+[38:44] you know, if we know the answer is 1950,
+[38:45] evaluation is easy.
+[38:47] Other times, maybe the metric is like,
+[38:48] "I don't actually know what the answer
+[38:49] is, but I want to get answers that are
+[38:52] grounded in the context that got
+[38:53] retrieved cuz I trust the context and if
+[38:55] the answer is grounded in it and is
+[38:56] relevant, then that probably means it's
+[38:57] correct." That's a different metric that
+[38:59] does not need labels.
+[39:00] So, there are sort of a very large scope
+[39:02] of things. But, it's really important
+[39:04] that you sort of explicitly define what
+[39:06] is it that you're trying to maximize.
+[39:08] And once you've done that, you don't do
+[39:10] this sort of as part of your prompts,
+[39:12] you do this in a way that's independent
+[39:13] of your program so that you can explore
+[39:16] sort of along both axes pretty
+[39:18] modularly. So, that's something
+[39:19] important that you should keep in mind.
+[39:21] And that abstraction sort of really
+[39:22] forces you to do that. Okay, yeah. So,
+[39:24] the goal is to give us an optimized
+[39:26] language model program P prime
+[39:28] by, in the case of the the optimizers we
+[39:30] look at next, we're going to keep the
+[39:32] weights frozen. In fact, we'll assume we
+[39:35] don't have access to them.
+[39:37] Instead, we're going to optimize the
+[39:39] instructions, so like the descriptions
+[39:41] of the task that goes to the model as
+[39:43] well as the demonstrations
+[39:45] which is sort of these few shot examples
+[39:47] that just show the model in the prompt
+[39:49] you know here are some inputs and here's
+[39:50] the corresponding behavior we saw in the
+[39:52] outputs that seem to work well in in the
+[39:53] past.
+[39:56] Some assumptions that we're making is
+[39:57] that we don't want to
+[40:00] assume any access to you know log
+[40:02] probabilities or model weights
+[40:05] because you want to iterate sort of fast
+[40:07] you want to work in in natural language
+[40:08] space with APIs that are high level. We
+[40:10] have a lot of work where we relax this
+[40:11] assumption and we look at into
+[40:13] fine-tuning
+[40:14] but that's sort of you know
+[40:17] and actually there's we have work that
+[40:18] shows you really need both to get the
+[40:20] best performance in many cases but if
+[40:22] you had to pick one prompt optimization
+[40:23] tends to be more powerful.
+[40:26] We also assume no intermediate metrics
+[40:28] or labels as we said earlier and we want
+[40:30] to be very budget conscious so we want
+[40:33] to minimize two things. We don't want to
+[40:34] ask you for a lot of example inputs of
+[40:36] your task because it's hard to create
+[40:38] inputs although technically inputs is
+[40:40] the easiest thing to scale because you
+[40:42] can build a demo and then put it in
+[40:43] front of your friends and then you have
+[40:44] a lot of inputs when they ask questions
+[40:45] you know if if your privacy policy
+[40:47] allows you to do that
+[40:49] but we don't want we don't want to sort
+[40:50] of ask for a lot of inputs so maybe 150
+[40:52] or couple hundred you know not tens of
+[40:55] thousands for example
+[40:57] and we don't want to call the language
+[40:58] model too many times because it takes
+[40:59] time or it's expensive etc. So these are
+[41:01] the assumptions that we want to sort of
+[41:03] or the constraints that we have on this
+[41:05] problem.
+[41:06] Now there are two types of problems we
+[41:08] want to tackle in general
+[41:09] the first is that well what's a prompt
+[41:12] like is this long sort of combinatorial
+[41:14] string and it's you know anything really
+[41:17] goes it's it's all valid so how do you
+[41:19] even explore this space especially if
+[41:21] you don't have gradients and if you
+[41:22] don't want to call the model too many
+[41:23] times seems basically hopeless
+[41:26] and the second problem is well if you
+[41:28] have so many modules which is really
+[41:29] this is kind of an I think an even worse
+[41:32] one when you combine the two together is
+[41:33] if you have so many modules you know and
+[41:35] you're changing things all over the
+[41:36] place how do you know what is leading to
+[41:38] improvement or what's sort of hurting
+[41:40] because interact you know you might
+[41:42] improve the prompt in one part locally
+[41:44] but actually hurts because the other
+[41:45] part made an assumption about the output
+[41:47] of the first part and now you sort of
+[41:48] have to account for these types of
+[41:50] blame assignment.
+[41:52] So I'll sort of cover three methods
+[41:55] this is not exhausted by any stretch of
+[41:56] the imagination but these three are sort
+[41:58] of like
+[41:59] really good sort of
+[42:01] different methods of of tackling this
+[42:03] problem. So the simplest thing you could
+[42:05] do in my opinion you know I you know is
+[42:07] is at least at least for the value it
+[42:09] gives you is to sort of bootstrap or
+[42:11] self-generate few shot examples by
+[42:14] running the a dumb version of your
+[42:15] program to build examples and then to
+[42:18] plug them in and to search over that
+[42:19] space. And the cool thing is you can
+[42:20] iterate that you can take the better
+[42:21] program build even better examples you
+[42:24] know build ensembles of them use larger
+[42:26] models to build examples it's a very
+[42:27] sort of large computational space but at
+[42:29] the end of sort of simplest form
+[42:32] you know you have the program you take a
+[42:34] training input you basically say like
+[42:36] I'll execute the python in here some of
+[42:38] these are just normal python you know
+[42:40] return statements or loops or I don't
+[42:42] know like you call a code executor or
+[42:44] whatever but some of them are modules
+[42:46] and so we sort of they're special
+[42:48] they're where we're sort of tracking
+[42:50] them
+[42:51] and and tracing their inputs and outputs
+[42:53] and basically we say well you know these
+[42:55] things are generating search queries and
+[42:56] generating answers and if the metric at
+[42:58] the end ends up liking the answer and
+[42:59] tells me that's good well that whole
+[43:01] trajectory of like inputs and outputs
+[43:03] seems interesting enough to keep it
+[43:05] around.
+[43:06] Now this can be a sort of a set of
+[43:08] demonstrations of all our modules and we
+[43:11] can simply say what if we take those we
+[43:13] plug into that we plug them into the
+[43:15] modules of our program and then we could
+[43:17] do in the simplest case just a random
+[43:19] search take a kind of a bag of our
+[43:22] subset of these demonstrations plug them
+[43:24] into the respective you know three or
+[43:25] four prompts and take that run it on a
+[43:28] small validation set maybe could be try
+[43:30] to be smart about sort of how you're
+[43:32] doing that evaluation and then basically
+[43:34] look at that score and try to maximize
+[43:36] that score. So that's the sort of like
+[43:38] the you know I think the the the the
+[43:40] simplest successful thing you could try.
+[43:45] A different approach is to look into the
+[43:47] prompt optimization literature not for
+[43:49] language model programs but for language
+[43:50] model calls and those folks sort of have
+[43:53] a lot of rich sort of you know
+[43:55] concurrent sort of research but under
+[43:57] much stronger constraints. So in the
+[43:59] prompt optimization literature which is
+[44:01] you know I mean these things are sort of
+[44:02] of course morphing closer together but
+[44:04] they started pretty separately
+[44:06] you are assuming that you have labels so
+[44:08] you have inputs and outputs and it's one
+[44:10] prompt that's the whole system there's
+[44:11] no like program involved
+[44:14] and you're assuming that sort of there's
+[44:16] this little part like you know a one
+[44:18] liner somewhere that you want to search
+[44:20] over. The space of this sort of
+[44:22] exploration is very large people do all
+[44:23] sorts of things from you know gradient
+[44:25] based exploration to other sort of forms
+[44:27] of reinforcement learning and all types
+[44:29] of stuff but one approach that's really
+[44:31] cool and really high level is called
+[44:33] optimization through prompting
+[44:35] from DeepMind and the way that works is
+[44:37] it basically they want to plug in a
+[44:39] little prefix at the end of the prompt
+[44:41] sort of to just get the model on the
+[44:43] right track and so you know they start
+[44:45] with think step by step but they want to
+[44:47] end up at the end with like I don't know
+[44:48] take a deep breath and think step by
+[44:50] step
+[44:51] and they show that that could actually
+[44:52] help some models you know do a lot
+[44:54] better. It's a much smaller sort of
+[44:56] scope but it's an interesting space of
+[44:58] what to explore and we want to sort of
+[44:59] see if we could take this and apply it
+[45:01] to language model programs with the
+[45:03] weaker assumptions we have. So you know
+[45:05] the way opro works for a single prompt
+[45:07] is they basically go to a model and say
+[45:09] here is the original thing give me 10
+[45:11] variants or 100 variants and let me
+[45:13] basically just evaluate all of them on a
+[45:15] little sort of evaluation set and let me
+[45:18] basically
+[45:19] look at which ones worked best maybe the
+[45:21] top 10 go back to the model and say here
+[45:23] is the top 10 here is how well they
+[45:25] performed give me more and the idea now
+[45:28] is the model might be smart enough to
+[45:29] say I see some patterns between the
+[45:31] successful things and the unsuccessful
+[45:33] instructions that I can sort of do
+[45:35] essentially a form of you know you might
+[45:37] call that I don't know you know
+[45:39] basically mutating mutating these these
+[45:42] these instructions and and I can
+[45:43] basically try them again and repeat this
+[45:45] process. So that's the the the opro
+[45:47] approach.
+[45:49] So how could you take sort of opro and
+[45:50] naively apply it to a language model
+[45:52] program? Well the simplest thing I think
+[45:54] is coordinate ascent. So what that means
+[45:56] is and we're not going to spend too much
+[45:58] time here I don't know if the figure is
+[45:59] big enough
+[46:00] but you know let's say you have two
+[46:02] modules the simplest thing you could do
+[46:03] is basically go to the model
+[46:05] generate a lot of these proposals plug
+[46:08] one at a time keeping the other one sort
+[46:10] of fixed keeping the other modules fixed
+[46:13] at the at the initial instruction
+[46:15] evaluate all 10 approaches and then
+[46:17] basically see which one worked best and
+[46:19] maybe freeze it and sort of repeat for
+[46:21] optimizing the next stage and you can
+[46:23] sort of loop through this process
+[46:26] of of optimization. The problem is this
+[46:28] is horrendously expensive because you
+[46:30] know every time you're exploring
+[46:32] optimizing one module you're sort of
+[46:33] running the whole program while freezing
+[46:35] the other modules and you're making this
+[46:37] big greedy assumption that the best sort
+[46:39] of choice at any given stage is going to
+[46:43] be useful once you freeze it and try to
+[46:45] optimize the rest of the parts so you're
+[46:47] not co-optimizing these pieces.
+[46:50] It's very expensive and actually doesn't
+[46:52] even work that well.
+[46:54] A different approach here would be
+[46:56] to give up
+[46:58] an assumption or to sort of make an
+[47:01] assumption. So you could give up on the
+[47:02] assumption of explicit credit assignment
+[47:04] you don't really care
+[47:07] to figure out sort of fixing all
+[47:09] variables and changing one at a time you
+[47:11] could just ask the models to generate
+[47:13] prompts for every stage all at once and
+[47:16] sort of hope that that process converges
+[47:17] in a nice place
+[47:19] or you could go to the model and say
+[47:21] actually it's a bit of a harder task
+[47:23] it's a bit of a harder ask but here is a
+[47:25] sequence of all prompts of all modules
+[47:27] and I want you to propose you know new
+[47:29] prompts for all of the other modules and
+[47:30] you could try to do it jointly which of
+[47:32] course has the risk of potentially
+[47:34] confusing the model it's a much harder
+[47:35] task but it you know is is is something
+[47:37] that let's say
+[47:39] you know
+[47:40] with an oracle language model it's
+[47:43] strictly more powerful by far. Now if
+[47:45] you want this whole thing to work well
+[47:47] in a language model program it is really
+[47:50] important that you're not myopic about
+[47:51] optimization. So you don't just look at
+[47:53] the signature you're just saying
+[47:54] generate a search query and you know
+[47:57] the user didn't say search query they
+[47:59] just said query is it a sequel query a
+[48:01] search query for Google for a
+[48:04] retrieval model that is you have offline
+[48:06] these things are different and sort of
+[48:08] you're at the mercy of the quality of
+[48:10] the proposals you're getting so you
+[48:12] might as well try to make sure that
+[48:13] they're contextualized
+[48:15] sort of appropriately with respect to
+[48:17] the program you have. So that's this
+[48:20] notion of you want the proposals to be
+[48:22] grounded. So sort of in a traditional
+[48:25] prompt optimization setting there's the
+[48:27] history of the prior steps how we got
+[48:29] here what things we tried how well they
+[48:31] performed and then there is maybe a
+[48:33] training set of explicit examples that
+[48:35] you sort of got from the user because
+[48:37] your whole system sort of doesn't have
+[48:39] any missing pieces it's just input and
+[48:41] output.
+[48:43] So
+[48:44] you know we have this intuition that to
+[48:46] take this and to sort of generalize it
+[48:48] to language model programs it would be
+[48:50] very useful to provide a lot of
+[48:51] contextual information about the program
+[48:53] setup that we have
+[48:55] and so the first thing is because we
+[48:57] don't have these training input output
+[48:58] labels for every module in general
+[49:00] or for any modules in many cases we can
+[49:02] start plugging in the bootstrap demos
+[49:04] that we looked at earlier. So we you
+[49:06] know they're basically as good
+[49:08] you know for all we know and they seem
+[49:10] to be successful when you're doing
+[49:11] bootstrap few shot so maybe we could
+[49:13] just plug them in as the examples that
+[49:15] we'll use for constructing these
+[49:16] prompts. Now that by itself is gives you
+[49:18] a lot because you could sort of see what
+[49:20] works and potentially what doesn't
+[49:23] but and here's a sort of an
+[49:25] you know an example of a question you
+[49:27] want to generate a search query
+[49:29] and sort of the reasoning that the model
+[49:31] generates when it's building the search
+[49:32] query that it that it produced that
+[49:34] eventually he of led to a trajectory
+[49:36] that was successful
+[49:37] on a certain question.
+[49:40] The other thing is, well, you know, you
+[49:41] want to give the model sort of an
+[49:42] understanding of the whole task. So, it
+[49:44] would be useful if the of the if the
+[49:46] model building your instructions could
+[49:48] see a summary of the data set that we're
+[49:50] playing with.
+[49:51] And so, this is, you know, sort of an
+[49:53] example of that where the model
+[49:54] basically says, "Looks like this is on
+[49:56] the uh multi-hop data set. Consists of
+[50:00] factual trivia-style questions across a
+[50:02] wide range of topics, etc." So, you
+[50:03] basically have a component that builds
+[50:05] up the summary by, you know, essentially
+[50:07] some sort of uh
+[50:09] you can think of it as a map reduce over
+[50:10] the data set with a language model.
+[50:12] Um and then an interesting thing that,
+[50:14] you know, you might want to ground your
+[50:15] system in is, well, could it actually
+[50:18] see the whole pipeline so it understands
+[50:20] the role of every module in it? And this
+[50:23] basically works by literally taking the
+[50:25] sort of, you know, inspecting the code
+[50:27] that you have for a program and then
+[50:29] giving it to the language model that
+[50:31] understands the syntax and basically it
+[50:32] builds a representation of the
+[50:35] you know,
+[50:36] the the the the program here in natural
+[50:37] language that says, "Hey, we have a
+[50:38] program that appears to be designed to
+[50:41] answer complex questions by retrieving
+[50:43] and processing information from multiple
+[50:44] sources. In this case, it's set up for
+[50:47] two hops, etc."
+[50:49] And
+[50:50] you know, the module in this program is
+[50:52] responsible for generating a search
+[50:53] query, etc.
+[50:57] And we might also
+[50:59] uh sort of try to maximize sort of the
+[51:01] diversity of the stuff here by just
+[51:02] sampling a random instruction that's you
+[51:04] know, that from the standard literature
+[51:06] and just kind of
+[51:08] plugging those in
+[51:10] um for your uh proposer. So, like, "Hey,
+[51:13] don't be afraid to be creative." Or all
+[51:14] these things. We could just take them
+[51:16] out of the loop, you know, you don't
+[51:17] have to write them. We will write them
+[51:19] once and then we can basically reuse
+[51:21] them for building these uh these
+[51:22] systems. So, we just discussed sort of
+[51:24] extending uh optimization uh through
+[51:26] proposing with language models. Um so,
+[51:29] uh we've covered sort of two two general
+[51:31] strategies for optimization here. One is
+[51:32] building examples and searching over
+[51:34] them.
+[51:35] Uh the second is
+[51:37] giving the model as much grounding as
+[51:39] possible in the language model program
+[51:41] and um
+[51:43] asking it to propose instructions that
+[51:45] we can sort of uh iterate over, you
+[51:48] know, through learning from the previous
+[51:50] attempts. And then the last approach
+[51:52] here is going to be a little bit
+[51:53] different where our goal is to optimize
+[51:54] both the instructions and the few-shot
+[51:56] examples, but in an efficient way uh of
+[51:59] of dealing with credit assignment.
+[52:01] The intuition here is language models
+[52:03] are not particularly good yet at uh sort
+[52:05] of dealing with credit assignment
+[52:07] themselves, um
+[52:08] but because we're working with all of
+[52:10] these sort of spaces of discrete
+[52:11] proposals, like a lot of instructions or
+[52:13] a lot of examples that we're building,
+[52:15] uh we could actually borrow a lot of
+[52:16] intuition from the literature on
+[52:18] hyperparameter optimization um and we
+[52:21] can sort of build what is called a
+[52:22] surrogate model, uh a model that is
+[52:24] basically um optimized to predict the
+[52:26] quality of uh any configuration um
+[52:29] possible of our system and that we can
+[52:31] use to uh sample sort of uh
+[52:35] proposals for the entire system that we
+[52:37] can actually test.
+[52:39] So, ME PRO, uh the ME PRO optimizer
+[52:41] works in three steps. First thing is it
+[52:42] bootstraps demonstrations of the task.
+[52:44] We've explained what that means. Um it
+[52:47] builds candidate instructions um
+[52:50] using a language model program inside
+[52:52] the optimizer that has all these pieces
+[52:54] we looked at earlier, like the data set
+[52:56] summarizer, the language model program,
+[52:59] you know, uh
+[53:00] uh you know, describer, all these all
+[53:02] these little pieces.
+[53:05] And um
+[53:06] you know, that handles this form of
+[53:08] credit assignment here by relying on
+[53:11] just a simple probabilistic model from
+[53:13] the hyperparameter optimization
+[53:14] literature.
+[53:17] So, what we have here is a language
+[53:18] model program with two modules and in
+[53:20] every module we have essentially two
+[53:22] bulky parameters. One is the what's the
+[53:24] string describing the task, which is the
+[53:26] instruction, and we get a basic one from
+[53:28] the adapter that we discussed earlier,
+[53:30] and then no examples at first. But this
+[53:32] is the list that we can learn uh sort of
+[53:34] uh as a bunch of these input-output
+[53:36] examples.
+[53:38] And that fact that we've done the
+[53:40] bootstrapping and the candidate proposal
+[53:42] in a grounded way means that we can
+[53:43] basically start exploring this discrete
+[53:45] space of what is the right combination
+[53:47] across these modules of instructions and
+[53:50] of sets of examples or lists of examples
+[53:52] in each module that would lead to the
+[53:54] highest quality.
+[53:55] And of course, we can't try all of them.
+[53:57] So, we're going to rely on this Bayesian
+[53:58] optimizer to sort of basically um
+[54:01] uh help us uh
+[54:03] give us an acquisition function uh that
+[54:04] allows us to sort of like make good
+[54:06] guesses as to which combinations we
+[54:08] should try. Once we pick a pick a com- a
+[54:11] combination, we can plug it into a
+[54:12] version of the program and then
+[54:14] basically evaluate it on a mini batch of
+[54:17] the data set that we have, on the
+[54:18] validation set that we have. So, maybe
+[54:20] the data set has like 200 examples, we
+[54:21] could sample 30 of them, get a score,
+[54:24] and then go back with that score, let's
+[54:26] say 75%, 50%, whatever, and feed it back
+[54:30] to update the sort of the surrogate
+[54:32] model that we have. So, it's like, "Hey,
+[54:34] if this is the set of combinations I
+[54:35] chose that got gets me, I think, 50%. I
+[54:39] think because, well, it depends on the
+[54:40] random sample in the mini batch. Um so,
+[54:43] in the future, you know, we're trying to
+[54:45] sort of uh
+[54:46] uh
+[54:47] get an acquisition function that sort of
+[54:49] has a one or, you know, let's say a
+[54:51] property like I I would like to get the
+[54:53] most promising uh improvement uh in in
+[54:56] future proposals. And there are, of
+[54:58] course, many sorts of such choices you
+[55:00] could make.
+[55:01] And we can sort of repeat this this
+[55:02] process in trials um until
+[55:05] um we sort of
+[55:07] uh
+[55:07] find a really good combination
+[55:09] at the end of the day.
+[55:12] And what's happening here is that this
+[55:13] thing gets smarter over time, so the
+[55:14] combinations it proposes tend to go up
+[55:17] um sort of over time as opposed to say
+[55:19] random search where you're just trying
+[55:20] combinations.
+[55:25] So, how do these things compare? Uh we
+[55:27] looked earlier at a slide that had
+[55:28] results sort of with like pretty
+[55:30] powerful optimizers with like yes
+[55:32] optimizing or like just using the
+[55:33] off-the-shelf thing. We also looked at
+[55:35] the results sort of with people writing
+[55:36] prompts by their own hand, but it's also
+[55:38] sometimes instructive to try to think of
+[55:40] like ways of benchmarking these
+[55:41] different optimizers against each other.
+[55:43] It's actually really hard and it's a
+[55:44] place where we need more contributions
+[55:46] cuz you want to build tasks that are
+[55:47] representative, tasks that are hard, not
+[55:49] overfit by given language models, but
+[55:51] where you also can sort of build
+[55:53] interesting and realistic compound AI
+[55:54] systems that we can sort of optimize and
+[55:57] explore. Uh so, an attempt at this is
+[55:59] LangProbe, language model program
+[56:01] benchmark, um that uh sort of has these
+[56:05] tasks. So, like multi-hop stuff,
+[56:06] classification, inference, whatever.
+[56:10] And you know, some of them have two
+[56:11] modules, some have four modules, some
+[56:13] have one module.
+[56:16] So, here are some sort of initial kind
+[56:17] of part of the of the test set results
+[56:20] on a bunch of these tasks.
+[56:22] Um and we're looking at optimizing
+[56:24] instructions only uh through we looked
+[56:26] at sort of module-level O PRO we
+[56:28] discussed before without grounding and
+[56:29] with grounding and then zero-shot ME PRO
+[56:31] that's not allowed to use examples, but
+[56:33] only uses instructions. And the first
+[56:35] thing that jumps at you is that, well,
+[56:37] you know,
+[56:38] on average, optimizing instructions
+[56:40] compared to like using a, you know, a
+[56:42] basic kind of adapter can help quite a
+[56:44] bit. So, you know, you can get a few
+[56:45] points here or uh you know, a bunch of
+[56:47] points there, can get some nice bump
+[56:49] there. Uh sometimes it overfits to the
+[56:51] training set if it's really small and
+[56:53] it's actually worse. Um
+[56:55] but in general, it really does struggle
+[56:58] with a lot of these tasks to optimize
+[56:59] prompts and though instructions alone.
+[57:01] Um and it's not really obvious which of
+[57:04] these wins.
+[57:05] If you look into optimizing with
+[57:07] demonstrations, that picture is pretty
+[57:08] different. Like you can already get, you
+[57:10] know, 10-point jumps, um several point
+[57:13] jumps here, uh several here as well. You
+[57:16] know, it overfits here um and it seems
+[57:18] that instructions are actually quite
+[57:19] powerful
+[57:20] um and you know, here you can get very
+[57:22] large gains as well.
+[57:23] And the interesting thing is when you
+[57:25] look under the hood at sort of this
+[57:27] process of just random search over
+[57:29] bootstrapped demonstrations that the
+[57:30] system generated, um
+[57:32] it's wild how much they vary. You have
+[57:35] stuff that's worse uh here than the
+[57:37] initial sort of zero-shot approach, but
+[57:39] you have stuff sort of on the frontier
+[57:41] that's way better. And it's really
+[57:43] interesting what, you know, all of these
+[57:45] were generated in the same way um by
+[57:47] running the the program and basically
+[57:49] doing rejection sampling. But it's
+[57:50] interesting to see like how big of a
+[57:52] difference uh sort of they can make when
+[57:54] you plug them into the program.
+[57:56] And the last thing is, well, you could
+[57:57] take ME PRO which does few-shot
+[57:59] instruction optimization both together
+[58:01] um and you can get sort of the best
+[58:02] results
+[58:03] uh you know,
+[58:05] quite often, most of the time.
+[58:06] With with some nice jumps across various
+[58:08] pieces of these.
+[58:10] Um an interesting thing is, well, you
+[58:12] know, optimizing examples tends to be a
+[58:14] winner, but there are sort of patterns
+[58:16] where you can spot that focusing on
+[58:18] instruction optimization is actually
+[58:21] leading to more visible improvements, uh
+[58:23] which is basically cases where the
+[58:25] original
+[58:26] basically cases where the task has this
+[58:28] property of like a conditional
+[58:31] um you know, uh pattern where seeing one
+[58:33] example doesn't actually teach you the
+[58:35] whole pattern or seeing two examples
+[58:36] doesn't teach you the whole pattern
+[58:37] because there are sort of more cases
+[58:39] than you can cover with just examples or
+[58:40] the
+[58:41] kind of the uh precise threshold or the
+[58:44] precise kind of region in which a rule
+[58:46] applies is not clear from examples by
+[58:48] themselves.
+[58:50] So, kind of concluding here um and maybe
+[58:53] opening for questions more explicitly
+[58:55] since uh they're open anyway,
+[58:57] um
+[58:58] sort of just some set of lessons on what
+[59:01] you might call natural language
+[59:02] programming, uh which is sort of what
+[59:04] these set uh what this set of
+[59:05] abstractions in DSP allow us to do. Um
+[59:09] big lesson
+[59:10] uh not to forget compound AI systems is
+[59:12] that programs can be a lot more
+[59:14] accurate, more controllable, and more
+[59:16] transparent than using deep neural
+[59:19] networks alone, models alone.
+[59:21] Um and uh we sort of just need
+[59:25] declarative programs. You don't need to
+[59:26] sit down and write sort of 10,000 token
+[59:29] uh sequence of five prompts. Um you can
+[59:31] really write 10 lines of code, just
+[59:33] express an objective, and pick an
+[59:35] optimizer, and run this thing on your
+[59:36] favorite language model.
+[59:38] Um, and the high-level optimizers can
+[59:40] bootstrap, you know, examples for
+[59:41] prompts or propose instructions and
+[59:43] explore that space. And that they're
+[59:45] pretty bad at any individual proposal on
+[59:48] average, but you can sort of uh run a
+[59:50] large-scale search on this that does
+[59:52] actually find things that in in some
+[59:53] cases, in many cases, uh sort of
+[59:56] outperform the stuff you you can do by
+[59:57] hand. But, the real power here is
+[59:59] because you're freed sort of from the
+[01:00:01] choices of of how do I tune each module,
+[01:00:05] you can explore the space of compound AI
+[01:00:06] systems more directly, where you're
+[01:00:08] getting a lot of value from iterating on
+[01:00:10] the modules you're building, how they're
+[01:00:12] connected together, um you know, what is
+[01:00:14] the exact right objective that I want to
+[01:00:16] maximize, in many cases it's not
+[01:00:18] obvious, um etc. etc.
+[01:00:21] So, DSPy makes it possible to approach
+[01:00:23] this sort of natural language
+[01:00:24] programming by sort of yanking out uh
+[01:00:27] hundred and prompts and giving us these
+[01:00:28] the notion of signatures, um throwing
+[01:00:31] away prompting techniques and inference
+[01:00:33] time strategies um that are sort of
+[01:00:35] really fuzzy and, you know, you know,
+[01:00:37] what is a I don't know what is a chain
+[01:00:39] of thought really, uh and giving you
+[01:00:40] actual sort of predictors uh you can
+[01:00:43] compose as modules that can take your
+[01:00:45] signatures and sort of apply in a meta
+[01:00:48] programming sense the strategy on top,
+[01:00:50] um
+[01:00:51] manual prompt engineering, you throw
+[01:00:52] that away and you sort of work with
+[01:00:54] optimized uh programs where you're
+[01:00:55] tuning the instructions uh
+[01:00:58] or the weights sort of in a given uh
+[01:01:00] strategy.
+[01:01:02] And this is something that's sort of
+[01:01:03] being widely used in production and in
+[01:01:05] open source. Everything is at dspy.ai
+[01:01:07] including links to all the papers I
+[01:01:09] discussed or didn't discuss.
+[01:01:11] Uh I so it's used at JetBlue,
+[01:01:12] Databricks, Walmart, VMware, Replit,
+[01:01:14] Haystack, you know, Sephora, Moody's,
+[01:01:16] and other stuff. Uh you can sort of find
+[01:01:18] a nice list of public uh facing use
+[01:01:21] cases, people that are sort of fine
+[01:01:22] going on the record to
+[01:01:24] uh sort of to learn what people are
+[01:01:25] actually doing with this. And it's a
+[01:01:26] really great way actually to learn of
+[01:01:27] like
+[01:01:28] not just what people are doing with
+[01:01:29] DSPy, but like what kinds of compound AI
+[01:01:31] systems are getting actually deployed,
+[01:01:33] and sort of who's deploying them, and
+[01:01:35] how are they optimizing them. Many of
+[01:01:36] these folks sort of go on podcasts and
+[01:01:38] describe how they're optimizing their
+[01:01:39] systems for, I don't know, law firms or
+[01:01:41] other things.
+[01:01:42] Um yeah, so this is sort of a nice
+[01:01:44] uh great folks and in the open source
+[01:01:46] community, uh cool collaborators that
+[01:01:49] sort of make all this stuff possible,
+[01:01:51] and uh you know, you could pip install
+[01:01:53] DSPy and get started uh right now.
+[01:01:57] Just to conclude, key lessons on
+[01:01:58] optimization in natural language. Um in
+[01:02:01] many cases, in isolation, nothing seems
+[01:02:04] to be building good examples of the task
+[01:02:05] automatically, what we call
+[01:02:06] bootstrapping, um seems to be this
+[01:02:08] notion of show, don't tell.
+[01:02:10] But, on tasks where there are these
+[01:02:12] conditional rules that are sort of
+[01:02:14] scoped in hard-to-detect ways,
+[01:02:16] optimizing instructions seems powerful,
+[01:02:18] and I should make it super clear that
+[01:02:21] the biggest coolest thing in DSPy is
+[01:02:24] that we've isolated signatures from
+[01:02:26] optimizers, from adapters, from you
+[01:02:28] know, metrics, and basically and from
+[01:02:31] inference time strategies, and that you
+[01:02:32] can iterate on any of these four or five
+[01:02:34] things independently and compose with
+[01:02:37] everyone else. So, all of the programs
+[01:02:38] that exist right now, if you decide to
+[01:02:40] build an RL-based prompt optimizer, you
+[01:02:42] know, or if you decide to introduce an
+[01:02:44] inference time strategy as a predictor,
+[01:02:47] everybody could just like, you know,
+[01:02:48] change one line in their code, and then,
+[01:02:50] you know, you could see boost across the
+[01:02:51] entire set of, you know, use cases that
+[01:02:53] exist out there if you do it well.
+[01:02:56] Um and, you know, there are sort of
+[01:02:57] tricks that make this work that we've
+[01:02:59] discussed here. All right. So, actually
+[01:03:01] I had this slide, and I like to use this
+[01:03:03] slide. Um
+[01:03:04] I I I you know, but
+[01:03:06] right before the talk or or the lecture,
+[01:03:09] someone told me, you know, uh many of
+[01:03:11] the other lectures, and maybe I'm
+[01:03:12] counted with that, uh you know, proudly,
+[01:03:14] but
+[01:03:16] sort of are from sort of large closed
+[01:03:18] labs that don't publish. They're
+[01:03:20] certainly not academic, certainly not
+[01:03:22] anymore, and they seem to be leading all
+[01:03:24] of the progress and whatnot. And so, I
+[01:03:26] really want to say that like, you know,
+[01:03:28] a lot big goal of DSPy and sort of meta
+[01:03:30] goal is to enable open research to again
+[01:03:33] lead uh AI progress. And open research
+[01:03:36] here has a lot of advantages for us in
+[01:03:37] terms of like, you know, uh why we'd
+[01:03:40] want that to be the case. It's not part
+[01:03:42] of the scope of this talk, um but I'll
+[01:03:44] tell you how this DSPy really makes a
+[01:03:46] difference in this in this space, uh and
+[01:03:48] it's to basically uh show that that
+[01:03:50] progress is really going to come through
+[01:03:52] modularity. So, we're not asking people
+[01:03:54] to sort of figure out sort of how to
+[01:03:56] fund, you know, billion-dollar runs uh
+[01:03:59] in isolation, or at least ad hoc tricks
+[01:04:02] that sort of you apply and then, you
+[01:04:03] know, 2 weeks later the model changes
+[01:04:05] and it's not really very relevant
+[01:04:06] anymore, but instead sort of we've sort
+[01:04:09] of outlined this space that I hope I
+[01:04:11] convinced you uh of is you know, of
+[01:04:13] basically how do you scope uh out your
+[01:04:15] programs well, how do you develop
+[01:04:17] general uh inference time strategies
+[01:04:19] that act as predictors that anyone could
+[01:04:21] apply to their signatures, and how we
+[01:04:23] can devise new optimizers that could
+[01:04:25] allow to any could apply to any of these
+[01:04:27] programs that sort of uh give us systems
+[01:04:30] that are stronger than the sort of the
+[01:04:32] the sum of their parts, if you will, um
+[01:04:34] and you know, through that I hope that a
+[01:04:36] lot of open research on optimizers,
+[01:04:38] predictors, modules, and whatnot can
+[01:04:40] sort of uh lead to the type of progress
+[01:04:42] we we saw with neural networks where
+[01:04:44] people, you know, different people
+[01:04:45] developed attention, uh transformers,
+[01:04:47] convolution, and other things in a way
+[01:04:48] that is highly distributed and was
+[01:04:50] obviously incredibly successful uh as
+[01:04:52] opposed to a, you know, maybe uh the way
+[01:04:54] in which maybe we iterate on large
+[01:04:56] language models in a closed way now

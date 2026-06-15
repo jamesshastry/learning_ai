@@ -1,0 +1,1195 @@
+[00:00] uh pleasure to be here um I'm going to
+[00:02] talk about some of our work on agents
+[00:05] but I want to take a broader view of
+[00:07] what's happening in Ai and focus on the
+[00:09] importance of Open Source um so everyone
+[00:14] has seen some sort of figure like this
+[00:16] where over the last few years the
+[00:18] capabilities of these models have simply
+[00:20] skyrocketed but what's less appreciated
+[00:22] is that the openness and access to these
+[00:25] models has plummeted almost
+[00:27] symmetrically we used to have access to
+[00:30] the full paper weights code data and now
+[00:34] all we have is API it's a very good API
+[00:37] but it's just an API and so the question
+[00:40] is why does access matter at all right
+[00:43] you can do a lot of things with just the
+[00:45] API but I want to make a simple Point
+[00:48] here is that access shapes research this
+[00:51] is something that I don't think we think
+[00:52] about very much because most of the time
+[00:54] we have our heads down we're just
+[00:56] working on whatever problem given what
+[00:58] we have but if you look historically
+[01:01] access has really dramatically changed
+[01:03] the type of work that has happened so
+[01:05] going back to the the 90s where the
+[01:08] entire field of Cisco NLP emerged just
+[01:11] because we had access to Internet scale
+[01:14] data a text and digital
+[01:16] form in the 2010s there was a
+[01:19] proliferation of these organic large
+[01:22] scale annotated data sets like Imad and
+[01:24] Squad and these were available because
+[01:27] we had crowdsourcing platforms like
+[01:29] Amazon Turk and then finally in the
+[01:31] 2010s of course we wouldn't be here
+[01:33] without gpus deep learning would not
+[01:35] have taken off so access shapes research
+[01:39] so for foundation models I'm going to
+[01:41] talk about three types of access the
+[01:43] first is API access to a blackbox model
+[01:47] the second is open weight access and the
+[01:50] third is open source so API access think
+[01:55] about it as you're a cognitive scientist
+[01:58] and all you can do is measure the
+[02:00] behavior of this Black Box by putting in
+[02:02] prompts and getting out responses but
+[02:04] you can't look inside the black
+[02:06] box I'm going to talk about how you can
+[02:09] actually do a lot here and in particular
+[02:12] since this is an agent class I'm going
+[02:13] to talk about all the interesting types
+[02:16] of Agents you can build um using just
+[02:19] blackbox
+[02:21] access open weight access you can think
+[02:24] about as you're a neuroscientist who can
+[02:26] now poke at the internals of what's in
+[02:29] this black box now of course real
+[02:32] neuroscientists have it much harder than
+[02:33] we do um but um you can get a little bit
+[02:37] more deeper access which allows you to
+[02:39] sort to begin to understand the
+[02:41] mechanisms behind the models and also to
+[02:43] create novel derivatives such as of
+[02:46] distillations and fine
+[02:48] tunes but both API and open weight
+[02:52] access you have to remember we're still
+[02:55] confined to existing models to their
+[02:57] architectures and to their design
+[02:58] decisions and and what we need instead
+[03:01] is open source access so in open source
+[03:04] access you think like a computer
+[03:06] scientist who is building a system and
+[03:08] who can control every part of it and
+[03:10] this gives you the opportunity to really
+[03:12] question everything to question the data
+[03:15] set to question the model architecture
+[03:17] to question the training procedure you
+[03:19] have the ability to hopefully make
+[03:22] things better as a
+[03:25] result so we're going to go um in the
+[03:28] rest of the talk I'm going to send this
+[03:30] layer cake step by step so starting with
+[03:33] API models so if you think about API
+[03:38] model I wanted you to think about it as
+[03:41] what I call quotequote a universal
+[03:43] function right it's a function such that
+[03:46] if you give a prompt with a natural
+[03:47] language instruction that function can
+[03:50] do a lot of different things it can
+[03:52] summarize it can verify things it can
+[03:55] generate and and that's the the power
+[03:58] for power of these Foundation models is
+[04:01] that you there's so general purpose and
+[04:04] now once you have one of these
+[04:06] apis then you can start thinking about
+[04:08] composing them into larger systems which
+[04:10] we can then think about as
+[04:12] agents and importantly we want to think
+[04:15] about the API as a controller of
+[04:18] execution so it's not the case that you
+[04:20] have just a fixed program and then all
+[04:22] you're doing is calling out to an API at
+[04:24] the leaves as as Primitives but in fact
+[04:27] the API actually controls the execution
+[04:30] flow it controls what the program is
+[04:32] going to do
+[04:34] next so here is um a basic architecture
+[04:38] of an agent that we're going to work
+[04:40] with um through the next uh 10 or 20
+[04:43] minutes or
+[04:44] so and here's the way it works so an
+[04:47] agent takes observations from The Real
+[04:50] World uh it perceives them and adds them
+[04:53] to a memory stream a memory stream is
+[04:55] going to be something that records
+[04:58] everything that has happened
+[05:00] so
+[05:01] far and because it's a digital agent
+[05:03] there's no reason to forget it simply
+[05:04] stores everything so now there stores
+[05:07] too much now you need to U
+[05:10] retrieve the relevant memories and that
+[05:13] gives you a piece of context that you
+[05:16] can use to do one of three things you
+[05:19] can act in the present which means
+[05:22] essentially tool use grounding into the
+[05:24] real world uh taking various actions you
+[05:27] can look backwards and you can reflect
+[05:31] on your memories this is things you can
+[05:33] think about summarizing what you've seen
+[05:35] so far verifying what you've seen so far
+[05:38] and so on and you can plan you can plan
+[05:41] for the future and this gives agents a
+[05:45] sense of long-term direction as opposed
+[05:47] to just simply reacting in the moment
+[05:51] okay so with this basic Eng architecture
+[05:53] where every one of these boxes is
+[05:55] powered by one of these blackbox API um
+[05:59] uh LM apis we can start to build things
+[06:02] I'm going to tell you two types of
+[06:04] Agents we can build one class of Agents
+[06:07] is problem solving agents these are the
+[06:09] agents that you typically think of when
+[06:11] you think of the word agent they solve
+[06:13] problems um the second is going to be
+[06:15] simulation agents which is something
+[06:17] that maybe not all of you have seen but
+[06:19] I think is really really uh fascinating
+[06:21] so let's go through problem solving
+[06:23] agents so I'm going to show you two
+[06:25] Works um that we have recently on
+[06:27] problem solving agents um the first is
+[06:30] ml agent bench this is work uh with my
+[06:33] uh student Chen um and appeared at icml
+[06:37] this year so the problem here is
+[06:40] something that all of you are familiar
+[06:41] with it's you're given a machine
+[06:43] learning problem some data some starter
+[06:47] code and an evaluator for test accuracy
+[06:50] and your goal is simply to build the
+[06:52] best machine learning model you can okay
+[06:54] so what do you do you write some code
+[06:58] you um run the code you get some log of
+[07:02] what has happened and then based on that
+[07:05] you think a little bit and revise the
+[07:07] code and you run the code and so on okay
+[07:10] so this is what all of you have done and
+[07:13] the goal is to build an LM agent that
+[07:15] actually does that okay so um this is in
+[07:19] a slide basically what we do um so we
+[07:24] craft this prompt so uh you're a helpful
+[07:27] research assistant here's the thing you
+[07:29] can do here's a task description and um
+[07:33] I want the agent to reflect on the
+[07:37] observations that it's gone so far um
+[07:40] make a plan of what to do next um fact
+[07:43] check that your plan because sometimes
+[07:45] to to guard against hallucinations um
+[07:48] think a little bit and propose an action
+[07:52] to take okay so then that goes into the
+[07:55] language model the language model um
+[07:58] dutifully does reflection plan fact
+[08:01] checks thinks and then produces an
+[08:03] action and that action is something like
+[08:06] run a script edit a file so on and that
+[08:10] produces through interactions with the
+[08:12] underlying environment a observation in
+[08:16] this case it's executing this train.py
+[08:19] file and produces some log of training
+[08:23] accuracies and now given that
+[08:25] observation it goes back into this
+[08:27] memory stream um and where the memory
+[08:30] stream um when we construct The Prompt
+[08:33] we give the last three um elements of
+[08:37] the memory Stream So the memory stream
+[08:38] has basically the full log of what has
+[08:42] happened so
+[08:43] far okay so basically this is just you
+[08:46] know it goes in a in a loop the LM calls
+[08:50] generates some actions it uh generates
+[08:53] some observations by executing code and
+[08:56] it goes back into memory string so
+[08:58] relatively you know
+[08:59] simple um we created 13 different um
+[09:05] benchmarks um and evaluated a whole host
+[09:07] of different models and the results were
+[09:10] mixed I would say um the best performing
+[09:13] model is Claud 3 and for some of the
+[09:16] more classic kle competitions it does
+[09:19] really well on you know presumably
+[09:21] because it probably has seen some of
+[09:22] this in its it's training data but some
+[09:24] of the newer ones like pblm it just
+[09:27] completely fails on okay so this is you
+[09:30] know a challenging deliberately chosen
+[09:33] to be a challenging problem U but I
+[09:35] think it's something that I think at the
+[09:37] cusp of what current language modeling
+[09:40] agents can actually
+[09:41] do so there's actually a whole bunch of
+[09:44] work in this area which I think is
+[09:46] really exciting um and the idea here is
+[09:51] that I I think of this as
+[09:53] self-improvement so this is not any
+[09:55] agent Benchmark it's an agent Benchmark
+[09:57] that's aimed to improve research which
+[09:59] means that if you solve the task you
+[10:02] actually get better algorithms at you
+[10:04] know you're improving the model and once
+[10:06] you improve the model maybe you can
+[10:07] solve the task better so I think that's
+[10:10] a kind of an interesting um thing to
+[10:12] keep in
+[10:13] mind so now let's talk about a second
+[10:16] type of agent that we've been working on
+[10:18] one for solving cyber security
+[10:21] challenges um so here is the task so you
+[10:26] have an agent it's given access to a
+[10:29] server um running let's say at Port 80
+[10:33] and it's also given the code that's
+[10:35] running on the server so it has a copy
+[10:37] of the code locally and furthermore it
+[10:39] has a bash shell which it can do
+[10:41] whatever it wants okay and the goal of
+[10:44] the agent is essentially into hack into
+[10:46] the server right in or in specifically
+[10:49] what that means is it's going to read
+[10:51] the code understand and identify a
+[10:55] potential security vulnerability exploit
+[10:57] that um by running some sort of bash
+[11:00] command and then retrieving what is
+[11:03] known as a flag which is a secret string
+[11:07] to prove that it has indeed broken into
+[11:09] the server okay so the evaluation here
+[11:12] is very I think uh clear um and these
+[11:17] are called Capture the Flag competitions
+[11:19] which are uh hosted annually um by cyber
+[11:23] security um you know
+[11:26] people and so that's the task the this
+[11:29] is an extremely hard task um I don't
+[11:31] think I could do this uh you know very
+[11:34] well um and to make it a little bit uh
+[11:38] easier we have the option of giving the
+[11:41] agent a set of sub questions which
+[11:43] attempt to break down the the the the
+[11:47] the ultimate task into a bunch of
+[11:49] different substeps um where we can
+[11:52] measure hopefully some partial
+[11:56] progress okay so the way we build agent
+[11:58] to Sol this the cyber security task is
+[12:02] uh essentially the same recipe as we use
+[12:04] for um the ml agent bench so you ask the
+[12:09] agent to reflect make a plan think and
+[12:13] execute a command now that command uh
+[12:16] returns um uh some after the execution
+[12:21] some observations are returned and
+[12:24] that's used to update the memory stream
+[12:28] okay so it's a very general recipe that
+[12:30] you can see applies to a bunch of
+[12:32] different quite radically different um
+[12:35] agent
+[12:36] problems so how the results look so we
+[12:40] benchmarked um a bunch of different uh
+[12:43] models and the best performing model is
+[12:45] again claw 3.5 it solves
+[12:48] 17.5% of the benchmarks and the
+[12:52] interesting thing is not all not all the
+[12:54] benchmarks are the same the hardest
+[12:56] Benchmark in our uh a task in our
+[13:01] sidebench took a team of humans 24 hours
+[13:05] to solve and these are people with cyber
+[13:07] security experience they're not just
+[13:09] random people um they're competitors and
+[13:12] the hardest Pro task that the best model
+[13:15] was able to solve at to date uh took uh
+[13:19] humans 11 minutes so quite a bit of Gap
+[13:23] um between what humans can do and what
+[13:26] um uh the best models can do but again
+[13:28] this Gap is you know shrinking over
+[13:32] time okay so again this cyber security
+[13:36] Benchmark is is interesting not just
+[13:39] because it's a difficult and interesting
+[13:41] Asian Benchmark but also because of two
+[13:45] reasons one is that there is a
+[13:47] tremendous amount of uh wonder and and
+[13:50] interest in understanding the risks of
+[13:53] AI in particular with relation to cyber
+[13:56] security so is it the case that once you
+[13:57] develop Frontier models
+[13:59] now we have these enormously powerful
+[14:01] agents that can basically break the
+[14:03] internet um and so from that perspective
+[14:07] AI policy makers are really interested
+[14:09] in the question of risk assessment and
+[14:12] this Benchmark provides an A A
+[14:14] Quantified way of thinking about
+[14:17] risk on the other hand there are cyber
+[14:20] security people who routinely build
+[14:23] penetration testing tools so so these
+[14:24] are tools which try to identify and
+[14:27] break code before the deployment so that
+[14:30] you can fix the problems before um you
+[14:33] put the server up and so these folks are
+[14:36] really excited about this work because
+[14:38] now we suddenly have much
+[14:40] more effective uh penetration testing
+[14:45] tools so so far I've shown you with a
+[14:49] fairly simple uh prompting strategy you
+[14:51] can build problem solving agents in both
+[14:54] ml engineering and cyber security now
+[14:57] let's turn to building simulation
+[15:00] agents so this is a um based on a paper
+[15:04] by June um from from last year and the
+[15:08] goal is can we simulate people or human
+[15:13] behavior um so in order to do that we
+[15:15] built a a virtual world where which we
+[15:19] called Smallville and there are 25
+[15:22] agents um each agent is powered by LM
+[15:27] architecture um Which models uh this uh
+[15:31] architecture in fact this figure comes
+[15:33] from that original paper which we've
+[15:36] sort of repurposed over and over again
+[15:37] for all our agent projects um I'm going
+[15:40] to focus on two pieces of this so
+[15:43] retrieve and
+[15:46] reflect so remember the memory stream
+[15:49] REM remembers everything that happens
+[15:52] and if you think about a human like
+[15:54] yourself um you're wandering around most
+[15:57] things that you experience are fairly
+[16:00] mundane but nonetheless they all go into
+[16:02] the memory Stream So the memory stream
+[16:04] has something like refrigerator is Idol
+[16:07] or desk is neat and organized so hardly
+[16:09] remarkable things to write home about
+[16:12] but you never know what you're going to
+[16:14] need and that's why we store
+[16:17] everything now the problem gets kicked
+[16:20] to at um sort of inference time where
+[16:23] you need to make use of this memory you
+[16:25] can't put everything in the memory
+[16:26] stream in your your prompt so so you
+[16:29] need to retrieve so we retrieve based on
+[16:32] three criteria one is recency so things
+[16:36] that happen in recent memory are
+[16:39] presumably things that you should pay
+[16:40] attention to more um importance which is
+[16:44] things events are generally um marked
+[16:47] with some sort of intrinsic importance
+[16:49] like desk as Idol is not very import
+[16:51] whereas if you got married that's
+[16:53] probably pretty important I would hope
+[16:55] um and the third thing is is relevant so
+[16:58] based on the current context which
+[17:00] things are relevant so for example if
+[17:02] you um are looking for your your water
+[17:05] bottle then maybe the memories of H
+[17:09] where the B water bottle has been is now
+[17:11] suddenly much more relevant than it
+[17:13] would otherwise
+[17:15] be okay so with these three factors uh
+[17:19] we do retrieval to slim down the memory
+[17:21] stream dynamically to a a much smaller
+[17:24] set the second thing I want to mention
+[17:27] is reflection so remember the memory
+[17:29] stream is very very low level and if you
+[17:32] have an agent that just reacts to
+[17:34] individual memories that's going to be
+[17:37] an agent that is is going to be fairly
+[17:40] um sort of in the weeds um so reflection
+[17:43] takes groups of memories and abstracts
+[17:45] them so for example we have this uh guy
+[17:48] in a the small B called whose name is
+[17:51] Claus Miller he's reading about Urban
+[17:54] Design so that's a concrete observation
+[17:56] but then it gets abstracted again and
+[17:59] again into something high level like CL
+[18:01] Miller's highly dedicated research so
+[18:03] this is give what gives the agents a
+[18:05] more Global sense of of purpose rather
+[18:08] than reacting to low-level
+[18:11] details another thing I think is really
+[18:14] important about modeling humans is that
+[18:16] humans are social animals and they talk
+[18:18] to each other and so our agents also
+[18:22] talk to each other so uh in one instance
+[18:25] Isabella is planing a Valentine's Day
+[18:28] party she tells all her friends about it
+[18:31] and then those friends continue to
+[18:33] spread uh the news to other people and
+[18:36] sometimes the the news comes back to um
+[18:39] Isabella and so one thing that's really
+[18:42] interesting about um the simulation that
+[18:44] we observed is how information diffusion
+[18:47] is modeled through the multi-agent
+[18:50] simulation okay so one problem with this
+[18:54] um generative agents is that it's all
+[18:56] made up right these are not real people
+[18:58] these are are just little you know
+[19:00] avatars running around in this virtual
+[19:02] environment so but the true promise I
+[19:05] think of this technology is can we
+[19:07] simulate actual real people so what does
+[19:09] that even mean so this is a paper that
+[19:12] we just put out on archives so as of
+[19:14] like today or yesterday um and this is
+[19:18] our attempt to make it more real so
+[19:21] again led by student June um and the key
+[19:25] Insight here is interviews because
+[19:29] remember people are very You Know Rich
+[19:32] and how do you pack an individual into a
+[19:35] an LM agent so um interviews have been
+[19:39] used as a you know a tool and you know
+[19:42] the social sciences and uh for quite
+[19:44] some time to capture a lot of Rich
+[19:47] information about you know people and so
+[19:50] when we were doing these pilot uh
+[19:52] studies you know an interviewer was
+[19:54] asking June you know to start tell me
+[19:56] the story of your life starting from the
+[19:58] beginning and June talks well I what
+[20:00] born in Korea I moved to Boston um and
+[20:03] then you know then the follows up a
+[20:06] dynamically as like oh tell me about
+[20:08] what was like transitioning um to Boston
+[20:11] from Korea well moving into a different
+[20:12] country is really um you know a heavy
+[20:15] lift and so on so you could see that the
+[20:17] interview content actually captures
+[20:19] enormous amount of information it
+[20:21] captures not only the factual content of
+[20:23] what actually happened but also um the
+[20:25] perspectives and the personalities of of
+[20:29] the
+[20:30] interview and so what we did here was to
+[20:33] try to scale this up so uh we sampled a
+[20:38] thousand
+[20:39] people demographically diverse from the
+[20:43] US we had each of them go through a
+[20:46] two-hour audio interview U with an LM
+[20:50] agent of course um and this produced an
+[20:53] interview
+[20:54] transcript that interview transcript now
+[20:56] becomes the seed of the agent memory
+[21:01] okay so now we have for each human over
+[21:04] here a corresponding agent over here so
+[21:08] we have a thousand humans a thousand
+[21:09] agents and the question is how close are
+[21:13] the agents to the actual corresponding
+[21:15] humans at the individual level to assess
+[21:18] this we ran a battery of surveys uh
+[21:22] games and experiments um which are taken
+[21:25] from you know the social scientists
+[21:27] economics
+[21:29] psychology and we ran the same exx
+[21:32] experiments on the humans as on the
+[21:34] agents and then we're just comparing do
+[21:36] they match or not okay so this is a very
+[21:38] nice quantitative way to answer the
+[21:41] question are these simulated agents
+[21:44] actually behaving like
+[21:45] people and a very quick snapshot of the
+[21:48] result is that yes by and large the
+[21:51] agents are able to capture humans of
+[21:54] course not you know
+[21:55] completely um one I think um factor is
+[21:59] that um humans are themselves not
+[22:01] consistent so if you asked um humans to
+[22:04] do these surveys and then you ask them
+[22:07] two weeks later they're only 81% of the
+[22:10] time matching themselves so that's sort
+[22:12] of a Skyline of how are you can get and
+[22:16] now you have these agents um based on
+[22:19] GPD 40 um trying to answer the same
+[22:24] questions they get around
+[22:26] 69% so you can think about about this is
+[22:29] you're capturing 95 oh sorry 85% of the
+[22:33] total accuracy where Baseline is
+[22:34] something like in in the 20s so um so
+[22:37] this is not
+[22:39] bad
+[22:40] um and we we see that if you don't use
+[22:43] the interviews um it's it's worse so the
+[22:45] interviews do actually capture a
+[22:47] tremendous amount of
+[22:49] richness okay so let me reflect a bit on
+[22:53] blackbox API access so we can do a ton
+[22:58] with just blackbox apis you can create
+[23:01] all these agents to solve complex
+[23:03] problems in M Engineering and cyber
+[23:05] security and also to actually create
+[23:07] simulation agents and you can think
+[23:09] about this is really building an
+[23:12] approximate digital twin of society so
+[23:14] social sciences are actually really
+[23:16] excited about this tool because you can
+[23:19] it basically provides an in vitro
+[23:21] laboratory for them to run experiments
+[23:24] and you can go to do cool things like
+[23:26] give the same agent a the control and a
+[23:29] treatment you know and then measure the
+[23:31] difference so and you can you know we
+[23:33] have a thousand you know demographically
+[23:35] diverse so you get sort of breath now of
+[23:37] course it's important to remember that
+[23:39] these are not real humans and your
+[23:42] mileage might vary depending on what
+[23:44] your questions are asked but this
+[23:46] technology again is getting only better
+[23:48] and as long as we're being grounded and
+[23:51] and realistic in our expectations I
+[23:53] think this is going to be a um a very
+[23:55] powerful
+[23:56] tool so one thing that I think is
+[23:58] lacking so far is that so far these
+[24:00] agents have been static we've taken
+[24:03] off-the-shelf language models um such as
+[24:06] gp340 or Claude and we simply prompted
+[24:10] them and what we really like these
+[24:13] agents to be able to do is learn from
+[24:15] experience this is what humans do we're
+[24:17] not static um so you can think about
+[24:19] this analogy of where we are with alphao
+[24:22] so remember alphago had two phases one
+[24:25] is supervised learning on top of human
+[24:28] uh you know games and Then followed by
+[24:30] reinforcement learning where it or sort
+[24:32] of self-improved and I think we're for
+[24:35] LM you know agents or language models
+[24:37] were sort of here right now where we've
+[24:40] invested over the last four years quite
+[24:42] a bit of energy in terms of pre-training
+[24:45] these very very powerful models and now
+[24:47] we're be beginning to build agents and
+[24:50] one opportunity I see with agents is not
+[24:52] that only that they can do interesting
+[24:54] tasks but they also present new
+[24:57] opportunities for
+[24:58] Improvement because once you have an
+[25:00] agent that's operating some uh in
+[25:03] environment it can presumably get some
+[25:05] sort of reward signal and with that
+[25:07] reward signal is now you're off to the
+[25:09] races in terms of improving the agent so
+[25:12] I think it's a lot of exciting stuff to
+[25:14] to come but in order to do all that you
+[25:17] need deeper access to models you can't
+[25:19] just have the blackbox API anymore so
+[25:22] let's now descend the layer cake into
+[25:25] open weight models so what is open
+[25:28] weight model so technically these are
+[25:32] more more accurately they're called dual
+[25:34] use Foundation models with Wily
+[25:36] available weights um this terminology
+[25:39] comes from the executive order from last
+[25:40] year it's a bit of a mouthful so I'm
+[25:42] going to use the term open weights and
+[25:45] just as a kind of technicality um but an
+[25:48] important one the reason that they're
+[25:50] widely available as opposed to just
+[25:52] available is that the licenses of these
+[25:55] models including llama um have
+[25:57] restrictions for example if you're um
+[25:59] you have 700 million monthly active
+[26:01] users then it's not open to you you have
+[26:04] to get a special license from
+[26:06] meta okay so one immediate off the bat
+[26:10] advantage of open we models is
+[26:12] reproducibility so how many of you have
+[26:14] run experiments on text D Vinci 003 or
+[26:19] 002 okay so some of you um and well too
+[26:24] bad because it's no longer available um
+[26:27] so one problem with these API models is
+[26:30] that you don't control them and once in
+[26:32] a while they just disappear which is
+[26:34] really bad from reproducibility because
+[26:36] now you can't reproduce any of those
+[26:39] experiments that you had done before
+[26:42] whereas if you had the weights you can
+[26:44] just store them um on your or your
+[26:47] laptop under your mattress wherever and
+[26:49] where they'll be safe and there
+[26:53] forever okay so what can you do from a
+[26:55] research perspective with open weight
+[26:57] models I'm I'm going to give you a few
+[26:59] examples of some of the types of
+[27:02] research you can do so um this is you
+[27:05] know much of this is not my work um
+[27:08] so this is work um by you know folks
+[27:11] from
+[27:12] translo um apparently if you ask llama
+[27:16] 3.1 AP instruct this question which is
+[27:20] bigger 9.8 or
+[27:22] 9. 11 um it willly 9.11 is bigger than
+[27:27] 9.8 so if you're paying attention this
+[27:29] is actually incorrect um I think right
+[27:33] right everyone okay good um so if you
+[27:38] just had an API model You' be scratching
+[27:40] your head like why is this language
+[27:42] model being so ridiculous but if you
+[27:45] have open weights you can open up the
+[27:47] hood and then you can try to figure out
+[27:49] what's going on so this is what the the
+[27:50] transluc folks did which I think is
+[27:52] really which is really cool is that for
+[27:55] every single neuron they looked at um
+[27:59] the examples that trigger that neuron
+[28:01] and Ed that to create a summary of that
+[28:04] neuron so now if you can actually
+[28:07] there's a cool interface you can go play
+[28:09] with online where you Mouse over 11 it
+[28:11] shows you that 11 is triggering this
+[28:13] neuron that fires in references to
+[28:16] September 11 so now you think oh okay I
+[28:19] think I know what's going on is that
+[28:21] this is getting interpreted as a a date
+[28:23] or somewhat as a date and if they're
+[28:25] dates then you know 911 is after 9
+[28:28] 8 okay so by looking inside you can
+[28:32] actually get de a deep much deeper
+[28:35] insight into the inner workings of these
+[28:37] models and debug to some of these
+[28:40] Mysteries they also have some examples
+[28:42] you can show see online where you have
+[28:45] um a model that refuses to answer a
+[28:47] question but then if you look inside it
+[28:49] clearly knows the answer and it's not
+[28:51] just just refusing to tell
+[28:54] you okay so here's another um fun paper
+[28:58] from Nvidia where they took a 15 billion
+[29:00] parameter model prun away some of the
+[29:02] layers and resulted in a 8B and a 4B
+[29:05] model with um minimal drop in in
+[29:09] performance so I think that this is one
+[29:12] instance I think of a larger Trend um
+[29:15] that I think is really interesting where
+[29:17] you have um big models that we have
+[29:19] trained but in order to use them you
+[29:21] need to make them smaller and so there's
+[29:23] the question is how do you take the the
+[29:26] power and modeling capab of a larger
+[29:28] model and sort of push it into a smaller
+[29:31] model and I think this relevant for
+[29:33] agents because agents remember it's a
+[29:37] you need an API in the Inner Loop of
+[29:40] perhaps doing some more complicated task
+[29:43] and you want uh potentially your API to
+[29:45] be much faster than just you know just
+[29:48] doing a one-hot um query of
+[29:51] API um here's another um project that uh
+[29:55] I think was really um impactful which is
+[29:59] uh adversary attack so these authors
+[30:03] took um llama um and uh optimized for a
+[30:09] prompt that essentially tries to
+[30:11] jailbreak it to get the mod to do
+[30:13] malicious things and um for this you
+[30:17] need open we access because you need to
+[30:20] um look at the gradients through the
+[30:22] model which is something you can't do
+[30:23] with like GPD
+[30:24] 40 and um you optimize um over these um
+[30:29] the the prompt so that's fine but the
+[30:31] really mind-blowing thing is that you
+[30:33] take this prompt that is optimized for
+[30:36] llama 3 and then you just take it and
+[30:39] put it into the prompt for an open AI
+[30:41] model I think this is GPD uh
+[30:43] gp4 and it actually jailbreaks
+[30:47] gp4 so this is really fascinating
+[30:50] because there's something sort of really
+[30:53] deep and mysterious about the
+[30:55] transferability of these attacks and and
+[30:58] also it goes to show that open we models
+[31:01] access open we models actually have
+[31:04] implications on closed models because it
+[31:06] tells us something about closed models
+[31:07] because of
+[31:09] transferability okay so next I'm going
+[31:11] to tell you a little bit more about one
+[31:14] particular project that we've U been
+[31:16] doing with my student Sally Ahmed and
+[31:18] rohad and this is a project that is
+[31:22] definitely used as open weight models
+[31:24] but not only that it's in it exists
+[31:27] because because of open weight models
+[31:29] and I'll explain what that means so if
+[31:32] you go to um hugging face you'll see
+[31:36] that there are a ton of models out there
+[31:39] and some of these models are fine-tuned
+[31:40] on the same Foundation model and some of
+[31:42] them are not or at least it's claimed
+[31:44] that they're not and so in general they
+[31:47] you have these um a sort of a a zoo um
+[31:51] of of models and you want to understand
+[31:55] what what is going on what's the
+[31:56] relationship between those
+[31:58] models um because often documentation is
+[32:01] poor and people might be trying to
+[32:03] mislead other people and so on okay so
+[32:06] concretely what this spils down to is a
+[32:08] model Independence testing problem
+[32:11] you're given two weights sets of weights
+[32:14] and you're asked were these
+[32:17] independently trained or
+[32:19] not full stop and in particularly if
+[32:22] they're not it could be that one was
+[32:23] fine to from another the Theta 2 was
+[32:25] fine to from Theta one or they're both
+[32:28] fine T from a common model we don't
+[32:29] distinguish those cases but what we're
+[32:32] distinguishing is between just full
+[32:34] Independence and not independent okay so
+[32:37] I think this is very clean um so how do
+[32:41] you solve this
+[32:42] problem well and a first idea is that
+[32:45] you might just take the weight and just
+[32:48] compare them compare some cosine
+[32:49] similarity or some sort of similarity
+[32:51] metric um and for NLP weights this means
+[32:54] just taking the the rows and um
+[32:57] computing cosine similarity and
+[32:59] averaging um so this you know has gives
+[33:03] you a number um but the the problem with
+[33:06] this is that well you know is if you get
+[33:11] 0.1 does that mean they're independent
+[33:13] or not I don't know are there any you
+[33:16] know guarantees it's not clear where you
+[33:19] set the threshold and does the threshold
+[33:21] depend on the model architecture it's
+[33:23] it's it's not very
+[33:25] rigorous but this is the ort of the
+[33:28] kernel of something we're going to turn
+[33:29] into actual rigorous
+[33:31] test um in order to do that I'm going to
+[33:33] introduce a thought experiment suppose
+[33:37] you knew how Theta 1 was created it was
+[33:40] created through this train function
+[33:42] given some random initialization of the
+[33:44] parameters okay so what I'm going to do
+[33:46] now is I'm going to just retrain a bunch
+[33:49] of copies of theta 1 okay in practice
+[33:53] we're not going to do this but thought
+[33:54] experiment and the idea is that
+[33:58] if Theta 1 and Theta 2 were truly
+[34:02] independent then this similarity metric
+[34:04] should look basically like the
+[34:07] similarity metric of another random
+[34:10] copy okay but if these Were Somehow very
+[34:14] correlated then this would look very
+[34:17] different So based on this Insight you
+[34:19] can construct a actual P value for the
+[34:22] hypothesis test of whether Theta 2 and
+[34:24] Theta 1 are independent by simply
+[34:27] looking at the fraction of times that
+[34:30] this um independent you know statistic
+[34:35] is actually more extreme than the
+[34:37] statistic that you actually observe with
+[34:39] Theta 1 and Theta 2 so this in its
+[34:41] Essence turns a statistic into a
+[34:44] threshold that gives you a formal
+[34:47] guarantee okay so now the problem is
+[34:50] that well you don't know how Theta 1
+[34:54] came about um because you only given the
+[34:57] weights you you can't actually execute
+[34:58] this and furthermore if even if you knew
+[35:01] you probably wouldn't want to train you
+[35:03] know spend millions of dollars training
+[35:05] this model over and again just to do
+[35:06] this
+[35:07] test but we can do something um here and
+[35:13] the goal is to fake it so we're not
+[35:17] actually going to train the model but
+[35:18] we're going to sort of pretend we did
+[35:20] and the idea is leveraging the sort of
+[35:23] natural symmetries of the model and so
+[35:26] we're going to Define per of theta is
+[35:28] you're going to permute the hidden units
+[35:30] defined by Theta so like this so take a
+[35:34] matrix and permute the
+[35:35] rows and the idea is that when you
+[35:38] permute that's kind of like a
+[35:41] counterfactual that's a model that could
+[35:43] have Arisen now I didn't actually train
+[35:46] from scratch to get it but because of
+[35:48] symmetries my I could have started with
+[35:50] a different initialization and also gone
+[35:52] to that model so it turns out you can
+[35:55] actually compute A P value using this um
+[35:58] statistic as well and this is actually a
+[36:01] working you know a very efficient um you
+[36:04] know
+[36:05] algorithm okay so in order to validates
+[36:08] this approach we looked at the subset of
+[36:11] hugging face models where we sort of
+[36:13] understood what ground truth was so in
+[36:15] particular models around llama 2 and
+[36:17] their sort of
+[36:19] replications um and we looked at running
+[36:23] this test on models that were truly
+[36:25] independent and we see that the p P
+[36:27] values are um you know all over the
+[36:30] place which is what you want P values
+[36:32] are supposed to be uniformly distributed
+[36:33] if um under the under n and um if
+[36:37] they're not independent then the P
+[36:39] values are actually minuscule so you ask
+[36:42] about statistical significance well this
+[36:43] is like kind of um blowing out of the
+[36:46] water this is like actually under
+[36:47] flowing to the significant to the point
+[36:50] where it's underflow so this is a very
+[36:52] strong test um and it's sort kind of a
+[36:54] Smoking Gun that these were actually not
+[36:56] independent which
+[36:58] um is true because we know that these
+[37:01] models are fine tunes of llama
+[37:03] to
+[37:05] okay so uh more fun things we can do so
+[37:10] earlier this year there was a
+[37:12] controversy around this mysterious model
+[37:14] Miku that appeared on the on the
+[37:18] internet and people suspected it was a
+[37:21] um a leak that was mistal fine-tuning
+[37:25] llama 2 and uh you know eventually the
+[37:28] mistro CEO said yes it was it was a leak
+[37:31] model um and indeed we were able to
+[37:34] verify with our test that indeed these
+[37:36] two models are um not independent of
+[37:39] each other um there's we also were able
+[37:41] to show that striped hyena which is a
+[37:43] model was derived from
+[37:46] mistol and then finally um llama 3.2 the
+[37:51] their 3B model in their blog post they
+[37:53] show say that this is derived from llama
+[37:56] 3.1 B and we also verify that indeed
+[38:00] these are not independent but moreover
+[38:03] what's I think um really interesting is
+[38:05] that our test not only gives you the
+[38:07] single bit of information whether two
+[38:10] models are independent or not but it
+[38:11] actually tells you which layers were
+[38:13] derived from which layer so we were able
+[38:15] to show that certain layers of llama 3
+[38:18] were 8B were used to create the 3B model
+[38:22] so this is information that actually
+[38:23] wasn't um included in the the actual
+[38:27] blog post which is kind of a cool bit of
+[38:29] reverse engineering there okay so some
+[38:33] Reflections on open weight models so
+[38:35] it's very clear that open weight models
+[38:38] such as llama 3 have been immensely
+[38:40] valuable for research I only showed you
+[38:42] a small fraction of all the papers that
+[38:45] have been using llama 3 and I'm sure
+[38:47] some of you are using it in your own
+[38:48] research as well so in enable research
+[38:51] on inability different fine-tuning
+[38:53] techniques distillation model merging
+[38:56] and furthermore you get all this to
+[38:57] these nice reproducible um you know
+[38:59] guarantees and not having to worry about
+[39:01] model
+[39:02] deprecation one I think uh interesting
+[39:05] thing about open weight models is that
+[39:07] you're making these very sort of
+[39:11] arbitrary changes to the weights by by
+[39:13] averaging them by taking out layers and
+[39:15] they're sort of kind of frud in a way
+[39:18] and the question is how do these on
+[39:20] Earth yield any sort of functional uh
+[39:24] changes that are coherent and the answer
+[39:26] is that they don't there's no guarantee
+[39:28] of this and in general you actually have
+[39:31] to go back and fine-tune your model and
+[39:33] sort of heal it after you sort of rip
+[39:36] out like you know half of its um you
+[39:38] know
+[39:39] layers um openway models also teaches of
+[39:43] us about API models and it also opens up
+[39:47] new types of problems for example this
+[39:48] model Independence testing problem would
+[39:50] we wouldn't have worked on this problem
+[39:51] if it weren't for open weight models at
+[39:55] all so but at the end of the day we're
+[39:58] still confined by the blueprint of
+[40:00] existing models so all these models are
+[40:02] still Transformer architectures they're
+[40:04] still the particular set of Weights that
+[40:07] meta has you know given us and so in
+[40:11] order to go deeper to open source we
+[40:14] need to you know open up the the hood
+[40:17] more so
+[40:19] fortunately there have been a lot of
+[40:22] there's a lot of open- source language
+[40:25] um model efforts from you know Lu to ai2
+[40:28] the hugging face and so on um and each
+[40:31] of these is trying to create you know
+[40:33] open source models um the the downside
+[40:38] is at this present moment the open
+[40:40] source models are far uh weaker than the
+[40:43] strongest um you know open weight or API
+[40:47] models um so but you know what is
+[40:51] exactly is you know open source um so a
+[40:55] little bit of kind of historical context
+[40:57] open source clearly comes from the term
+[41:00] open source software and open source
+[41:02] software and free software have had a
+[41:04] long history in in you know computer
+[41:08] science coming stemming from the roots
+[41:10] in you know MIT in the 50s the hacker
+[41:13] culture and it's idea in Academia where
+[41:16] you do open science um these are sort of
+[41:19] the roots that Inspire open source and
+[41:22] it has coess into these values of
+[41:25] creativity exploration transparency
+[41:27] collaboration resistance against
+[41:29] Authority so this sort of defines what
+[41:31] open source sort of stands for and of
+[41:34] course there's famous um you know
+[41:36] figures like Richard stalman and lonus
+[41:38] torold that created this whole ecosystem
+[41:42] around g g Linux and that led to um the
+[41:45] open source initiative founding in 98
+[41:48] which finally defined the term you know
+[41:50] open source and so open source were
+[41:53] practiced long before the term open
+[41:55] source software even was defined and now
+[41:58] OSI is now trying to Define what open
+[42:01] source means for AI and it can be
+[42:03] summarized in terms of Four Freedoms the
+[42:05] ability to use a system without asking
+[42:07] for permission the ability to study the
+[42:09] ability to modify and the ability to
+[42:12] share okay and in more detail open
+[42:16] source definition requires that the
+[42:18] model parameters be available so this is
+[42:22] open weights but without restrictions um
+[42:25] that the code be available and here the
+[42:27] code importantly means not just the the
+[42:30] inference code but the training code and
+[42:33] also the data processing and filtering
+[42:35] code because the data is actually a
+[42:38] vital ingredient in determining the
+[42:40] behavior of these models and without the
+[42:42] knowledge of how the data was
+[42:44] constructed you can't really be truly
+[42:47] open
+[42:48] source and finally there's data
+[42:52] information and so you might answer ask
+[42:55] the question why data information and
+[42:57] not data and the answer is that you
+[43:00] don't want to get sued um so and
+[43:04] basically the longer version is that
+[43:08] most Foundation models are trained on
+[43:10] web data and web data is you know sort
+[43:13] of anything goes it's most of it's
+[43:16] copyrighted or at least it's not clear
+[43:18] that is not copyrighted and so model
+[43:20] developers don't actually own the
+[43:22] license to redistribute or the data so
+[43:26] there are some lawsuits that are going
+[43:28] to settle hopefully you know next year
+[43:31] or something um that are going to rule
+[43:34] on whether training on this data is fair
+[43:37] use but even if training is fair use um
+[43:40] you still can't do redistribute the
+[43:43] copies of someone else's book kind of
+[43:47] verbatim okay so another piece that I
+[43:50] think is critical is the ability to
+[43:53] modify and I would say that compute is
+[43:57] an important ingredient here so this is
+[43:59] not technically part of the open source
+[44:01] definition nowhere does it say you need
+[44:03] a compute but in order to achieve the
+[44:06] spirit of being able to modify a system
+[44:10] it's clear that you need compute
+[44:11] otherwise you have this thing and you
+[44:13] can actually you know you if you want to
+[44:16] change the data well you need to kind of
+[44:17] retrain at least or at least do continue
+[44:20] pre-training or
+[44:22] something
+[44:23] so I'm going to talk about three
+[44:25] projects that we've done that really
+[44:28] require deep access to um the kind of
+[44:32] full training process and and the
+[44:35] weights and the data and so on so the
+[44:37] first paper I'm just going to go these
+[44:39] very you know briefly so there're not
+[44:41] going to be too much detail here there's
+[44:42] a question is what mixture over data
+[44:45] sources do you use so language models
+[44:47] are typically trained over some
+[44:49] combination of Wikipedia books web code
+[44:52] and so on and usually people just set
+[44:55] the weights sort of you know magically 2
+[45:00] uh books you know 04 code looks good to
+[45:03] me based on Vibes but we uh created a a
+[45:07] procedure based on distribution and
+[45:08] robust optimization which automatically
+[45:11] Tunes these mixtur and we show that this
+[45:13] per performs 2.6 times um faster or
+[45:18] trains a model 2.6 times faster than a
+[45:20] manually specified weights so in order
+[45:23] to do this research you clearly need to
+[45:25] be able to train models from
+[45:27] scratch um a second uh project we did
+[45:31] was on um developing a new Optimizer
+[45:35] based on uh second order information in
+[45:37] particular the look at the diagonal hes
+[45:39] with some clipping and this provides a
+[45:42] 2X speed up over atom and again of
+[45:45] course in order to do this research you
+[45:47] need to be able to train from scratch to
+[45:49] show um uh that you get improvements
+[45:52] over some atom and the final um
+[45:57] project we did was on Pro producing
+[46:01] another architecture on alternative to a
+[46:03] Transformer that is not as monolithic
+[46:04] and is more
+[46:05] interpretable um so it's called the
+[46:07] backpack language model and without
+[46:10] going to any detail this model architure
+[46:13] allows for precise model editing so you
+[46:16] can take a language model and you can
+[46:18] sort of with a test time intervention of
+[46:20] some hidden uh units get the model to
+[46:25] edit it into a world where it believe
+[46:26] beli that the MacBook was created by HP
+[46:29] rather than Apple
+[46:31] um okay so all this is nice and well we
+[46:35] so we touched the learning algorithm the
+[46:37] architecture and the data you know
+[46:40] recipe now I often get this question
+[46:42] would these results hold if we scaled
+[46:44] out and really what this question is
+[46:47] asking is you know how do you get the
+[46:48] compute to even answer that question and
+[46:52] so for this I think this is where open
+[46:54] source I think is really at um is is
+[46:58] really kind of
+[46:59] bottlenecked um and so I'll give you
+[47:02] three sort of suggestions on how we
+[47:05] might deal with the compute problem the
+[47:08] first is that use scaling laws okay so
+[47:11] typically you think about scaling laws
+[47:12] is telling you about bigger and bigger
+[47:14] models right but one thing that I think
+[47:18] SK law could be made to do but currently
+[47:22] I don't think they do this very well is
+[47:24] sort of extend in the opposite direction
+[47:25] into a smaller
+[47:27] regime where you can operate in a
+[47:30] smaller scale model with a belief or the
+[47:35] hope that whatever you do down here
+[47:38] different data different architecture is
+[47:40] actually going to scale up to larger
+[47:43] scales and this is a way that I think
+[47:45] you can work at small scale but with a
+[47:48] mindset of scaling
+[47:50] up okay second is there are actually a
+[47:54] lot of idle gpus you know everywhere so
+[47:57] most of the time people always complain
+[47:59] not enough compute not compute but there
+[48:01] are pockets of times where there is Idle
+[48:04] compute and so if we were only able to
+[48:06] harness all this globally we could
+[48:08] actually there's probably quite a lot of
+[48:11] compute um available to do certain
+[48:14] things and one technical hurdle to this
+[48:17] is that the interconnect speed when
+[48:19] you're looking at decentralized compute
+[48:21] is just horrible it's you know at least
+[48:23] two orders of magnitude worse than it is
+[48:25] in the data center and training large
+[48:27] Foundation models requires fast
+[48:31] interconnects um two years ago we had
+[48:34] this this paper which show that uh with
+[48:37] some amount of clever scheduling and
+[48:39] some sort of lowlevel systems um work
+[48:42] you can actually train one billion
+[48:45] parameter models at the time um in a way
+[48:47] that's only two times slower than if you
+[48:49] were doing in a data center even though
+[48:51] the interconnects were 100 times slower
+[48:54] okay so this is promising and since then
+[48:57] there's been a lot of work including uh
+[48:59] dloo from from De mine um showing a
+[49:03] better you know an um algorithm to do
+[49:06] this and there's been even this this
+[49:08] effort from Prime intellect where there
+[49:11] is a decentralized training effort
+[49:14] happening of a 10 billion parameter
+[49:16] model where um anyone can just you know
+[49:19] pull compute into this massive pool so I
+[49:22] think this is really exciting to see how
+[49:24] far you can get with the central ized
+[49:27] compute okay so track number three is um
+[49:31] basically ask for more money um and so
+[49:34] there's the N the national AI research
+[49:37] resource um which has a pilot that is
+[49:42] trying to get more compute to fund um
+[49:46] you know a public AC um academic AI
+[49:50] research um and hopefully you know well
+[49:54] we the pilot I think is is
+[49:57] is is ending but hopefully this will be
+[49:59] renewed and hopefully we'll be able to
+[50:00] get see more of this um it is worth
+[50:04] noting that other fields kind of have
+[50:06] figured this out right and by it I mean
+[50:09] being able to harness a um advocate for
+[50:14] the funding of massive infrastructure
+[50:16] projects for example the Human Genome
+[50:18] Project um you know in James web's
+[50:21] telescope the um you know LHC these are
+[50:25] multi-billion
+[50:27] projects that are in service of open
+[50:31] academic research right not just for you
+[50:34] know commercial but for AC academic
+[50:36] research and the idea is that the types
+[50:38] of problems that you would solve if you
+[50:40] were structured in sort of this public
+[50:43] domain is different than what you know
+[50:45] the open AIS and the anthropics would
+[50:49] do okay so um just to conclude we've
+[50:54] talked about the three different levels
+[50:56] of access
+[50:57] um I think um underlying theme here that
+[51:01] I want to stress is that access shapes
+[51:04] the research right so if you have API
+[51:07] access there are a lot of interesting
+[51:09] things you do and we've been doing a lot
+[51:11] of these things building all sorts of
+[51:13] different agents um with open we models
+[51:17] you can do a lot more you can fine-tune
+[51:18] you can do
+[51:19] distillation and you can do a lot um of
+[51:22] interesting things with open we models
+[51:24] as well but I think it's important to
+[51:27] recognize that our research lives more
+[51:30] and more today are living within the
+[51:31] confines of the apis and fixed
+[51:35] weights and in order to make I think
+[51:39] fundamental progress we need to question
+[51:42] more things we need to AG question the
+[51:44] data the the model architecture the
+[51:46] training algorithm in order to make more
+[51:50] uh you know progress and not be stuck in
+[51:52] this local Optimum and the eventual goal
+[51:54] is to really understand the mapping
+[51:57] between data and model architecture to
+[52:00] Model Behavior and this is hard even if
+[52:04] you have full access right in the 2010s
+[52:06] we were complaining about how hard deep
+[52:08] learning was to understand and now
+[52:11] things are a lot worse when you only
+[52:12] have API access there's no hope so at
+[52:14] least if we can get open source access
+[52:17] we have some hope of answering these
+[52:19] sort of deep um fundamental questions
+[52:21] about
+[52:22] Ai and of course compute is a big
+[52:25] challenge here
+[52:27] I think there's still a lot of things
+[52:28] you can do at small scales I think you
+[52:31] can do things at small scale but with a
+[52:33] mindset of scale and also I think it's
+[52:36] really interesting to think about how we
+[52:38] can do decentralized pooling of compute
+[52:41] so we can do more than we together than
+[52:44] we can do
+[52:45] individually okay with that I'll
+[52:47] conclude and take any questions thanks

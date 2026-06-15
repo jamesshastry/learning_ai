@@ -1,0 +1,2133 @@
+[00:04] So, today we're going to talk about
+[00:05] data.
+[00:07] And where we are is that
+[00:10] you know how to train a model
+[00:12] given data.
+[00:13] Last time we saw evaluation, so we know
+[00:15] what a good model is.
+[00:17] And the for the next two lectures this
+[00:20] week we're going to focus on what data
+[00:22] should we train on.
+[00:24] And I want to argue that data is the
+[00:26] most important thing to get right in
+[00:28] language models. And one justification
+[00:30] for this is if you look at what
+[00:33] companies actually disclose. So, here is
+[00:35] the Llama 3 paper.
+[00:37] Um they have full transparency into
+[00:40] architecture. Well, of course, because
+[00:42] it's open weight model.
+[00:43] Um they even tell you about the training
+[00:45] procedures.
+[00:47] Um but they don't say anything about
+[00:49] their data.
+[00:51] So, they just say we train from a
+[00:53] variety of data sources.
+[00:56] Um and do some stuff.
+[00:58] And there's good reasons for this
+[01:00] secrecy.
+[01:02] One is that um data is is kind of your
+[01:05] competitive secret sauce, uh competitive
+[01:07] dynamics. You don't want to let your
+[01:09] competitors what you're doing.
+[01:11] And the second thing, which we'll talk a
+[01:13] little bit more about, is is copyright
+[01:15] liability. You don't want to get sued if
+[01:17] you tell people you're training on
+[01:18] certain types of data.
+[01:21] So,
+[01:22] data is a long topic in in machine
+[01:24] learning. And before foundation models,
+[01:27] data working meant you annotate label
+[01:30] data for supervised learning.
+[01:33] Um nowadays there's less um manual
+[01:36] annotation, at least in pre-training.
+[01:38] But there's still a lot of curation and
+[01:41] cleaning work that needs to be done. And
+[01:44] so, fundamentally this hasn't really
+[01:45] changed. Data has always been a
+[01:48] bottleneck and always will be a
+[01:49] bottleneck because it's in some sense of
+[01:52] long-tail problem.
+[01:53] And that scales with human effort. So,
+[01:55] if you have a lot of people trying to
+[01:57] work on a problem, well, there's only so
+[02:00] many people that can work on
+[02:01] architectures and systems, but data,
+[02:04] well, that's like, you know, especially
+[02:06] if you're training a foundation model
+[02:07] that's trying to do all these things,
+[02:09] you can paralyze that effort easily. So,
+[02:10] that's why these data teams and
+[02:13] these model developers are actually
+[02:15] quite quite big.
+[02:18] So,
+[02:19] so data comes in at different stages of
+[02:22] a of the pipeline. Today, we're focusing
+[02:24] mostly on pre-training.
+[02:26] So, pre-training, you take raw data,
+[02:28] these are documents from the web, then
+[02:30] you move into mid-training where you
+[02:32] train on more high-quality data to
+[02:34] enhance certain capabilities and give
+[02:36] long context, things like that. And then
+[02:38] finally, post-training where you're
+[02:40] training on things like
+[02:42] chat transcripts or
+[02:44] if you're doing reinforcement learning,
+[02:45] you get some environments that you're
+[02:47] training on. This becomes more
+[02:48] task-specific.
+[02:51] In practice, the lines are a bit blurry.
+[02:55] Um
+[02:55] and there could be more than three
+[02:58] stages,
+[02:59] but this is sort of a basic template. Um
+[03:02] the trend is that we go from training on
+[03:05] large amounts of low-quality data to
+[03:06] smaller amounts of high-quality data.
+[03:10] So, as a result of this process, you'll
+[03:13] see in the literature some people talk
+[03:15] about a base model. This usually means
+[03:17] after pre-training and mid-training.
+[03:19] Instruct models or chat models are after
+[03:22] post-training.
+[03:23] Um but of course, the lines are becoming
+[03:26] blurry enough that what is a base model
+[03:28] anymore is really kind of unclear and
+[03:32] more recently,
+[03:33] the largest models are there's no base
+[03:35] model. There's just Qwen 3.5 397B and
+[03:39] that's it. There's you don't see the
+[03:40] intermediate checkpoints.
+[03:44] So, for models that are open source,
+[03:46] like Olmo from AI2, you can see
+[03:49] everything that's happening. And so,
+[03:51] we'll study some of these models. Um so
+[03:54] for example, in pre-training, there's a
+[03:57] bunch of sources, which we'll talk about
+[03:59] what these mean, but you know, some web
+[04:01] pages, academic papers, math pages,
+[04:04] proofs, and so on. There's mid-training.
+[04:07] Um higher-quality web data, instruction
+[04:09] data,
+[04:11] um a bunch of synthetic data often goes
+[04:13] here.
+[04:14] And then finally, post-training, there
+[04:16] is a bunch of um you know, chat uh logs.
+[04:19] There's more math and reasoning and
+[04:21] coding and and you do safety at this at
+[04:24] this point as well.
+[04:27] So, you know, what are all these data
+[04:28] sets?
+[04:29] You know, how do you choose them, and
+[04:31] how do you process them?
+[04:33] So, that's that's the main question.
+[04:36] Okay, so in the spirit of the class,
+[04:39] we're going to talk about data. I'm
+[04:40] going to go start from scratch. So,
+[04:42] where does data come from?
+[04:45] Okay, so
+[04:46] um
+[04:47] you know, one might hear in
+[04:49] the hallway, "Oh, language models are
+[04:51] trained on the entire internet."
+[04:53] So, so first of all, this doesn't really
+[04:55] quite type check because for that to be
+[04:57] true, it would have to be an agent that
+[05:00] like an RL agent that goes on the
+[05:01] internet and like does stuff, but that's
+[05:03] not actually how pre-training works. Um
+[05:05] slightly more accurately, it's trained
+[05:08] on the public World Wide Web. Um this is
+[05:11] not quite accurate uh for reasons I'll
+[05:14] explain.
+[05:16] Okay, so first of all, the web is
+[05:18] actually uh a bunch bunch of live
+[05:20] servers that just exist in the world,
+[05:22] and you can connect to. So, take any
+[05:24] website, you can go and download a page.
+[05:27] Or you can basically send a request and
+[05:29] get back a response.
+[05:31] So, you can't actually train on these
+[05:33] live uh servers unless you're training
+[05:34] an RL agent. Um so typically, what you
+[05:37] do is you you have a crawler, or someone
+[05:40] builds a crawler, not necessarily you.
+[05:42] Um the crawler
+[05:44] needs to discover what web pages are out
+[05:46] there, starting with a seed seed set,
+[05:48] and it downloads this discovered web
+[05:50] pages as it's it's crawling.
+[05:53] So, um
+[05:55] but now
+[05:57] still you can't just run a crawl and
+[05:59] download all the web pages on the
+[06:00] internet.
+[06:01] And there's a few reasons for this. Um
+[06:05] one is that a lot of the web content is
+[06:08] actually dynamic. So, especially these
+[06:10] days a lot of sites are apps.
+[06:12] Um the URL isn't even as full a
+[06:14] specification of the content. It's just
+[06:17] um an app that you interact with. Um and
+[06:20] you need to often click buttons or
+[06:22] submit forms to access content.
+[06:24] Um for example, if you're on, you know,
+[06:26] Discord or something, it's not like you
+[06:27] can just like
+[06:29] crawl Discord and get a um all the
+[06:32] content out of Discord.
+[06:34] Okay? So, so that's one kind of thing,
+[06:36] and a lot of content is actually known
+[06:39] as kind of in the deep web, um which is
+[06:42] not just like you're, you know, doing um
+[06:45] uh web page crawling and following
+[06:46] hyperlinks, which is a very kind of
+[06:49] traditional model of web crawling.
+[06:52] The second thing is that um
+[06:55] you know, authentication. So, some pages
+[06:57] need a login and account, and generally
+[07:00] you have to
+[07:01] to pay.
+[07:03] Um for example, there's Facebook, X,
+[07:05] LinkedIn, New York Times.
+[07:07] Um there's actually huge amounts of
+[07:09] content that are actually locked up
+[07:11] behind these walled gardens. So, these
+[07:12] are technically on the internet or on
+[07:14] the web, but uh you can't just build a
+[07:17] crawler and go crawl uh you know,
+[07:19] Facebook.
+[07:21] I guess if you're Facebook, you can
+[07:23] crawl Wait, you don't need to crawl
+[07:24] Facebook. You have the data and you can
+[07:25] train a model. Or if you're you're X
+[07:27] XAI, you can train on X. But if you're
+[07:29] anyone else, you can't actually access
+[07:31] this content.
+[07:34] So, okay, suppose you don't have the
+[07:37] authentication issue, there's still
+[07:39] potential restrictions here.
+[07:41] Um so,
+[07:43] so there's something called robots.txt.
+[07:46] And this is a file that um is usually
+[07:49] placed at the root level of
+[07:51] a directory such such as nytimes.com.
+[07:54] And it basically tells you what you're
+[07:55] allowed to crawl and what not. So, this
+[07:58] things are a lot of things are
+[07:59] disallowed such as uh OAI search bot or
+[08:03] perplexity bot, Cora bot.
+[08:06] Um, I think basically
+[08:07] uh chat GPT user, Claude bot, and all
+[08:10] these things.
+[08:12] Okay? So, um this is not a
+[08:16] tech This is not a legal restriction.
+[08:19] This is just like you're supposed to be
+[08:20] a good citizen and look at robots.txt.
+[08:23] And if your name is on that list, then
+[08:26] you should not crawl. That's That's
+[08:27] basically the
+[08:28] um the contract not even a contract.
+[08:31] That That is the
+[08:32] thing you're supposed to do.
+[08:34] Um
+[08:36] A lot of websites now use
+[08:38] um something like Cloudflare to detect
+[08:41] and block bot activity.
+[08:43] So, sometimes you go on to a website and
+[08:45] it gives you a capture, right? That's
+[08:47] because it's somehow some algorithm has
+[08:49] detected that you might be a bot and
+[08:51] then it's making sure you're human.
+[08:53] And um if you're actually a bot there
+[08:55] then well, you can't I mean, you could
+[08:57] try to get around this, but it generally
+[08:59] this is a obstacle in your way.
+[09:01] A website might block certain IP
+[09:03] addresses um or or countries and they
+[09:07] might have rate limits. So, there's
+[09:08] technical restrictions on what you can
+[09:10] actually uh crawl.
+[09:13] Um
+[09:14] And then there's also legal
+[09:15] restrictions.
+[09:17] So,
+[09:18] um there's websites have terms of
+[09:21] service that say, "If you go to a
+[09:23] website, you have to obey this contract
+[09:25] to use the website." And the terms of
+[09:27] service often will say, "If you are a
+[09:29] bot, go away." Um, "You cannot use this
+[09:32] the content of the site for AI training
+[09:34] or
+[09:34] um whatever it might be."
+[09:37] And um
+[09:38] And also, if the if you even if terms of
+[09:41] service don't say anything, the content
+[09:43] of the website might have, you know, a
+[09:46] license uh or you might not have a
+[09:48] license to train. And we'll talk more
+[09:50] about this in a bit.
+[09:52] So, there's legal restrictions on what
+[09:54] you can uh allowed to train on.
+[09:57] These things are also evolving over
+[09:59] time. Um so, there's a nice paper um by
+[10:02] Shane Lampray called uh Consent Consent
+[10:05] in Crisis.
+[10:06] And what they did is they examined the
+[10:08] restrictions, both the technical
+[10:10] restrictions, robots.txt, and the legal
+[10:12] restrictions, the terms of service,
+[10:14] um for various URLs in common data sets
+[10:17] which we'll talk about later.
+[10:19] And the conclusion was that the
+[10:20] restrictions have increased over time.
+[10:22] So, here's a graphic that shows The top
+[10:25] one shows robots.txt.
+[10:27] Um and if you just look at this red,
+[10:29] that's the full restrictions. Um and up
+[10:33] until 2023,
+[10:36] um everything was fairly fairly
+[10:38] constant. And then up until 20 mid-2023,
+[10:43] all of a sudden you see the amount of
+[10:45] the fraction of websites that have full
+[10:46] restrictions on it has grown to almost
+[10:49] like, you know, 50% here.
+[10:51] And for terms,
+[10:54] um this there's a similar trend where
+[10:57] I guess um in 2016, no one really put
+[11:00] any terms on their pages, and now most
+[11:03] pages put some terms, and um
+[11:07] most of the terms say uh you can't uh
+[11:09] use this for AI.
+[11:12] Okay, so even though it was possible to
+[11:14] crawl the internet back
+[11:17] uh in, you know, let's say 20 2020,
+[11:21] the internet actually, at least what you
+[11:22] can legally uh crawl is actually much
+[11:25] smaller.
+[11:29] So,
+[11:30] of course, these are
+[11:33] you know, guidelines and sometimes
+[11:35] either intentionally or unintentionally
+[11:38] you could violate these things. So, this
+[11:40] is sometimes you get into these
+[11:42] situations where
+[11:44] there's this guy who
+[11:46] um
+[11:47] uh what was this I forget the name of
+[11:49] this the site was complaining about
+[11:52] Anthropic crawling them hitting their
+[11:54] servers a million times in 24 hours
+[11:57] which was
+[11:58] not good. And then read the docs was
+[12:01] also getting hammered. So, there's a
+[12:02] period where which I think probably has
+[12:04] hopefully been corrected by now that
+[12:06] crawlers were
+[12:08] hammering you know, websites. And and
+[12:13] there the here this is interesting is
+[12:16] like even before talking about copyright
+[12:18] issues. There's I think problems with
+[12:21] crawling because
+[12:22] either violating terms of service or
+[12:25] robots.txt
+[12:27] or just just blow up down
+[12:31] you know, generating a lot of server
+[12:32] load which this costs money for the
+[12:34] person hosting it and also degrade
+[12:36] service for everyone else trying to use
+[12:38] it. So, there are you know, issues with
+[12:41] with crawling and then of course there's
+[12:43] copyright which will talk about soon.
+[12:46] That's a whole another complex can of
+[12:48] worms.
+[12:50] Okay, and then finally there's these
+[12:53] things called shadow libraries there
+[12:55] which are also part of the web.
+[12:57] Um so, examples are
+[13:00] Libgen or Anna's Archive
+[13:03] and these they completely disregard
+[13:04] copyright and bypass paywalls. So,
+[13:07] someone has collected a ton of of data
+[13:11] usually books and articles that are all
+[13:13] copyright and people have to pay for
+[13:15] these and have made them available for
+[13:18] free.
+[13:19] Um and these there have been a lot of
+[13:22] takedown orders, lawsuits and these are
+[13:24] blocked but Um, these are circumvented
+[13:27] because
+[13:28] um, they just make servers in other
+[13:30] countries.
+[13:32] Um, and the people doing this
+[13:34] argue that this is making free what's
+[13:37] freely available, what should have been
+[13:39] freed. But, generally from a legal
+[13:41] perspective, this is piracy and
+[13:43] copyright infringement. And we'll come
+[13:45] back to this point later. So, there are
+[13:48] a lot of books and papers on this uh on
+[13:51] these uh shadow libraries.
+[13:54] Okay, so the summary so far,
+[13:57] the internet is a huge and messy and you
+[14:01] know, scary place.
+[14:02] Um, and
+[14:04] you can't actually get all of it. Um,
+[14:06] there are technical restrictions,
+[14:08] there's legal restrictions on what um
+[14:10] data one can access. So, now it's next
+[14:13] time someone says uh I trained on the
+[14:15] internet, you can tell them all of these
+[14:17] things you uh learned.
+[14:20] Okay, so now let's go to the the second
+[14:23] uh part of
+[14:25] you know, what data can we use? Um,
+[14:28] and this has to do with uh copyright.
+[14:31] So, suppose you were able to obey the
+[14:33] terms of service
+[14:35] um and you are really a good citizen and
+[14:38] you obey the rate limits.
+[14:41] Um, now there's still a question of are
+[14:43] you allowed to train on this data?
+[14:46] And this is a ongoing uh
+[14:49] question that has not been fully
+[14:51] resolved, but there has been a bunch of
+[14:54] developments in the last uh year.
+[14:56] So, the legal uh context for thinking
+[14:59] about this question falls into
+[15:00] intellectual property law.
+[15:03] And this is a system of you know, system
+[15:06] that is trying to incentivize the
+[15:09] creation of intellectual goods. So, I
+[15:11] think it's remember to
+[15:13] uh remember the spirit of the law is to
+[15:15] not just say,
+[15:18] you know, technically say no to
+[15:20] everything, but to incentivize the
+[15:22] creation of uh intellectual goods.
+[15:24] And there's many forms of intellectual
+[15:26] property that are covered.
+[15:29] There's copyrights, patents, trademarks
+[15:31] trademarks and secrets. Trade trademarks
+[15:34] and trade secrets.
+[15:36] The thing that has is most relevant for
+[15:39] language model data is copyright law.
+[15:43] So copyright law has a fairly long
+[15:45] history going back to the 1700s in
+[15:48] England.
+[15:49] And so 1709 was the first time that
+[15:51] governments and courts started actually
+[15:54] regulating a copyright for this goal of
+[15:57] incentivizing you know innovation and
+[15:59] creation.
+[16:01] And in the US more recently the
+[16:03] Copyright Act of 1976 is what think of
+[16:06] defines a lot of kind of modern
+[16:09] copyright. So copyright protection
+[16:11] applies to original works of authorship
+[16:14] authorship fixed in any tangible medium
+[16:16] of expression. Yada yada yada.
+[16:20] Okay?
+[16:21] So
+[16:22] a few notes. So not everything is
+[16:25] copyrightable.
+[16:26] In particular
+[16:28] collections are not copyrightable. So
+[16:31] for example, if you have a a telephone
+[16:34] you know directory
+[16:36] unless there is some creativity in how
+[16:39] you arrange things,
+[16:41] this is not really a copyrightable.
+[16:44] And furthermore copyright applies to an
+[16:47] expression not the idea.
+[16:49] So you can't copyright an an idea like
+[16:52] you can't copyright the quicksort
+[16:54] algorithm. You can copyright the like
+[16:56] implementation of a quicksort algorithm,
+[16:58] but not the quicksort algorithm.
+[17:01] So one thing that happened in 1976
+[17:04] is that the barrier to getting a
+[17:07] copyright was relaxed a lot. So more
+[17:10] things are copyright. So it used to be
+[17:12] that you had to publish something to
+[17:14] have something copyright. Now um,
+[17:17] just have to be fixed. And what that
+[17:19] means is that
+[17:21] registration of any sort is not required
+[17:24] for copyright protection. This is in
+[17:26] contrast to patents. Patents, you have
+[17:28] to go pay a a lot of money to get a
+[17:30] patent and you would have to file a
+[17:32] patent. But, the threshold for copyright
+[17:34] is very low. For example, you put
+[17:37] something on your website, it's
+[17:38] copyrighted.
+[17:40] That's it.
+[17:42] Um, now,
+[17:44] you if you want to sue someone, you have
+[17:46] to go get it registered, but it only
+[17:47] costs $65. So, um, which is much smaller
+[17:52] than the lawyer fees that you'll
+[17:53] probably pay. So, um, it's really still
+[17:56] a very low low bar.
+[17:59] So, one thing to know about copyright is
+[18:01] that it lasts,
+[18:03] uh,
+[18:03] 75 years and then the copyright expires
+[18:07] and whatever that content gets released
+[18:09] into the public domain and this is now
+[18:12] you permiss- everyone can use it freely.
+[18:15] Okay, so a lot of, um, people who have,
+[18:18] uh, lived in the past, um, all of their
+[18:21] great works are in the public domain,
+[18:23] which is great for everyone.
+[18:24] So, the rationale here is that you're
+[18:26] incentivizing innovation.
+[18:28] Um, so,
+[18:30] when an artist or a creator creates
+[18:33] something, you want to protect their You
+[18:36] don't want to have someone else to just
+[18:37] take it. So, you protect them for a
+[18:39] while, but, you know, after 75 years,
+[18:41] presumably, it's not worth protecting or
+[18:43] they're passed away or something. So, it
+[18:46] doesn't make sense to keep things, uh,
+[18:47] copyrighted anymore.
+[18:50] Okay, so So, basically, everything on
+[18:53] the internet is, uh,
+[18:55] copyrighted.
+[18:57] Okay, so you're saying, "Hm, wait a
+[18:59] minute. So, that means is every
+[19:01] everything just if I train on anything,
+[19:03] that's a copyright violation?" Well,
+[19:05] not necessarily.
+[19:07] So, everything is copyrighted, but you
+[19:09] can use copyrighted works. And the way
+[19:11] you do it is
+[19:13] A, you either get a license for it
+[19:16] or B, you appeal to appeal to the fair
+[19:18] use clause.
+[19:20] Okay, so a license is
+[19:23] from contract law is something that a
+[19:25] licensor grants to a licensee. Basically
+[19:28] says, don't sue me.
+[19:30] Like you can uh
+[19:33] you can use this this work in the ways
+[19:35] that the license permits.
+[19:38] So there's a really nice license called
+[19:42] you know creative commons
+[19:44] which allows something to kind of act
+[19:47] like it was in the public domain. Um
+[19:50] enables free distribution of copyrighted
+[19:52] work. So your examples include like
+[19:54] Wikipedia, OpenCourseWare, Khan Academy,
+[19:57] um all these all these things. It was
+[20:00] created in 2001
+[20:03] to essentially bridge public domain and
+[20:05] existing copyright because
+[20:07] otherwise you have to wait 75 years. But
+[20:10] what if the creator says, I don't I will
+[20:12] actually want people to use it. They can
+[20:14] now have a means a legal means of
+[20:16] saying, I put a creative commons license
+[20:18] on it. It's going to act like it's in
+[20:20] the public domain and uh
+[20:24] you know, and everyone can use it.
+[20:27] So so far things in the public domain
+[20:29] and things that have creative commons
+[20:31] licenses are uh
+[20:34] uh you can use it.
+[20:36] Um but there's many other things that
+[20:40] uh
+[20:40] times where you don't have it's not a
+[20:43] creative commons license, it's not in
+[20:45] the public domain. You have to get a
+[20:46] license. So
+[20:48] um
+[20:49] if you have money, you can pay someone
+[20:51] uh to give you a license. So there's a
+[20:53] bunch of deals between model developers
+[20:55] and content uh I guess platforms that uh
+[21:00] license allow the model developers to
+[21:02] license the data for training foundation
+[21:05] models.
+[21:06] Okay, so that's the first thing. You can
+[21:08] get a license, either Creative Commons
+[21:10] or you can pay someone for a license.
+[21:12] Now, if you don't want to pay,
+[21:14] you can appeal to fair use,
+[21:17] which is a more complicated matter.
+[21:20] Um so, this is section 107 of the
+[21:23] Copyright Act. And there are
+[21:26] basically, fair use says, I can use this
+[21:28] anyway, even if I don't have a license.
+[21:31] And there's four factors determine
+[21:33] whether four fair use applies.
+[21:36] So, the first one is the purpose or
+[21:39] character of the use, like what are you
+[21:40] trying to do with it?
+[21:42] And none of these are, you know,
+[21:45] hard rules. They're just tendencies
+[21:47] which have to be weighed in in court if
+[21:49] it comes to that.
+[21:51] So, for example, if you're trying to do
+[21:52] something for education, it is more
+[21:54] likely to be fair use than if you're
+[21:56] trying to sell and make money off of it.
+[21:58] If you're trying to if you transform
+[22:00] something, then that's going to be more
+[22:03] favored than if you just literally host
+[22:04] the identical copy.
+[22:07] Um the nature of the actual copyrighted
+[22:09] work is also important. So, things that
+[22:12] are more factual are more likely to be
+[22:15] fair use than fictional works. Right?
+[22:17] Because if you write a summary of World
+[22:19] War,
+[22:20] you know, facts about page about facts
+[22:22] about World War II is is less There's
+[22:25] less um
+[22:27] protection over a
+[22:29] you know, my
+[22:30] you know, really creative poem.
+[22:34] Um
+[22:35] And then
+[22:36] uh
+[22:37] you know, the amount of portion of the
+[22:38] original work. So, using a snippet is uh
+[22:41] favored over the whole work. So, if you
+[22:44] just take a little bit, that's not as
+[22:45] bad as taking everything. So, that's
+[22:47] fairly straightforward.
+[22:48] And the final thing is um
+[22:51] is kind of related to original
+[22:53] motivation. It was like, why do you why
+[22:55] copyright at all? It's to protect uh and
+[22:58] align economic incentives. So, the
+[23:00] effect that um what the the use has on
+[23:03] the market for the original work. So, if
+[23:06] you take author's work and you provide
+[23:11] an alternative and that decreases amount
+[23:14] that the original author could
+[23:16] monetize their work, that is seen as
+[23:19] potentially bad. But, if you're
+[23:20] transforming in a way and adding, you
+[23:23] know, going to a new market or doing
+[23:24] something else with it, then that's
+[23:26] going to be treated more favorably.
+[23:30] Okay. So, here's some examples of fair
+[23:32] use. You can watch a movie and write a
+[23:34] summary of it. You can reimplement an
+[23:37] an idea like an algorithm,
+[23:40] not copy the code.
+[23:42] And then there was this
+[23:44] famous
+[23:45] you know lawsuit between Authors Guild
+[23:48] and Google.
+[23:50] So, if you go to Google Books, you can
+[23:52] see snippets of of various books, which
+[23:55] are copyright.
+[23:57] So, there was a huge um
+[23:59] uh you know
+[24:01] uh
+[24:03] deal about whether this was deemed fair
+[24:05] use because you're sort of
+[24:07] redistributing
+[24:09] um
+[24:10] you know, other copyrighted work. And
+[24:13] and eventually
+[24:14] eventually meaning after 11 years, this
+[24:17] lawsuit was settled in favor of Google,
+[24:19] which is why this thing exists.
+[24:23] And this has set some precedent for
+[24:24] thinking about
+[24:26] whether
+[24:28] you know language model training is fair
+[24:30] use.
+[24:32] Um one thing to note is that copyright
+[24:34] is is not about verbatim memorization.
+[24:38] So, this might be I think for ML
+[24:41] audience, this might be a little bit new
+[24:43] because a lot of papers are focused on
+[24:45] verbatim memorization, but that's that's
+[24:48] one way you can violate copyright, but
+[24:49] not the only one. So, for example,
+[24:52] plots and characters can be
+[24:54] copyrightable.
+[24:55] So, you can copyright Harry Potter, the
+[24:57] the character, not any particular
+[24:59] um
+[25:00] you know, book or anything.
+[25:02] But, uh there are some exceptions. For
+[25:04] example, if you're parodying something,
+[25:08] uh so, you're creating something that is
+[25:10] looks like a derivative, but as long as
+[25:11] you're making fun of it, it's actually
+[25:14] more likely to be fair use.
+[25:16] So, this Yeah. So, a lot of copyright is
+[25:19] about semantics. It's definitely not
+[25:21] about n-gram overlap. Um
+[25:23] and also about uh
+[25:25] the economics.
+[25:27] Okay. So, what is the implication for
+[25:29] language models?
+[25:30] So,
+[25:32] first off, um
+[25:34] copying data,
+[25:36] like even if you're not training, like
+[25:37] even the mere fact of copying,
+[25:40] which is in the word copyright, is
+[25:43] potentially a violation already, even if
+[25:46] you don't do anything with it.
+[25:48] Okay?
+[25:49] Um
+[25:50] training a model, um
+[25:53] you know, I guess this is
+[25:55] This is not really a Let's see how I
+[25:57] would have to take that. This is not
+[25:59] necessarily a a fact, but is intuitively
+[26:03] has a transformative uh flavor, right?
+[26:06] Because it certainly not It certainly
+[26:07] seems different than just like
+[26:09] re-hosting uh another work, right? It's
+[26:13] doing something uh transformative.
+[26:16] Um
+[26:17] and
+[26:18] you know, in some sense, the models are
+[26:20] really trained on this data as a means
+[26:23] to the end. You know, we're trying to
+[26:25] extract the general idea, learn about
+[26:27] the world and how it works, rather than
+[26:30] only just the uh concrete expression.
+[26:34] Um and the other thing is that
+[26:36] regardless of cop- copyright, language
+[26:39] models can definitely affect um
+[26:42] you know, the market. So, so I think
+[26:44] this is also, remember, that's the
+[26:46] fourth uh item for for fair use. So, by
+[26:49] negatively affecting the market, you're
+[26:52] you know, more likely to be ruled um not
+[26:54] fair use.
+[26:56] Okay, so so fair use is kind of a little
+[26:59] bit, you know, slippery. Um
+[27:02] Um suppose you have fair use or you have
+[27:05] a license,
+[27:07] um remember that there's still terms of
+[27:09] service that allow prevent you from
+[27:12] actually just uh getting a piece of
+[27:14] work. For example, YouTube has all these
+[27:16] videos which are
+[27:18] um
+[27:19] licensed.
+[27:20] But the terms of service
+[27:22] um forbid prohibits just downloading the
+[27:25] videos uh as a using a bot or like
+[27:28] scraping.
+[27:29] Right? So, which is another layer. So,
+[27:31] there's multiple layers of
+[27:33] um restrictions here.
+[27:35] Okay, so let me talk a little bit about
+[27:37] where things are on the legal landscape.
+[27:40] So, back in 2023, New York Times filed
+[27:42] suit against OpenAI saying, "You trained
+[27:45] on our news articles and look, here's
+[27:47] evidence we were able to actually prompt
+[27:50] uh ChatGPT to generate a news article
+[27:53] almost verbatim."
+[27:54] Uh I don't think this is this is still
+[27:56] pending. There's uh a case against
+[27:59] Anthropic where
+[28:01] um the allegation was you pirated
+[28:03] millions of books and you trained on
+[28:05] these books to to make Claude.
+[28:08] Um just last year
+[28:10] uh this was a kind of a landmark ruling
+[28:13] um that said, "Actually, this particular
+[28:16] instance of training is is fair use.
+[28:20] However,
+[28:21] Anthropic, you're still in trouble
+[28:23] because you pirated all these books
+[28:26] um and that is a no-no.
+[28:28] Right? So, notice that this is has
+[28:31] nothing to do with training.
+[28:33] Just a mere a fact of cop- pirating, I
+[28:35] mean, which is this is not a a new
+[28:38] thing, is is is um illegal.
+[28:42] Um Anthropic, actually, interestingly,
+[28:45] had bought and scanned all of the books,
+[28:48] um which is actually fair use. So, the
+[28:50] court said, "You're allowed to scan. You
+[28:52] buy a bunch of books, rip off the
+[28:54] binding, scan and digitize it for your
+[28:55] own use. That's fair use."
+[28:58] But, that doesn't absolve you of your
+[29:00] sin of uh pirating. So, you can't pirate
+[29:03] and then buy it and say like, "Actually,
+[29:05] never mind what I just uh did first."
+[29:09] Um so, the outcome is that Anthropic
+[29:11] paid 1.5 billion to settle um the
+[29:13] authors. So, this is like about $3,000 a
+[29:16] book.
+[29:17] Um so, there's also a lawsuit against
+[29:20] Meta.
+[29:21] Um
+[29:22] The allegation was that you trained on
+[29:24] our books. Um sorry.
+[29:26] And uh this was, as we'll see later,
+[29:29] actually revealed in the the Llama
+[29:30] paper. And the judgment, which came
+[29:33] right after Anthropic, was um yes,
+[29:36] training is fair use.
+[29:38] Um and then they also torrented some
+[29:41] books, so that's still pending. So,
+[29:43] that's probably
+[29:44] um if precedent holds, this is also not
+[29:47] going to be uh good for for Meta.
+[29:50] Um
+[29:52] Okay, so the summary so far
+[29:55] is um
+[29:57] training,
+[29:58] you know, so to speak, has been deemed
+[30:01] uh fair use or at least has been not
+[30:04] deemed not fair use.
+[30:06] Um
+[30:07] The new rulings have so far been,
+[30:10] you know, narrow. It's not to say that
+[30:11] any training on any copyrighted content
+[30:14] is is fair use.
+[30:16] Um but in these cases, it's fine. Uh
+[30:18] pirating books is clearly illegal. I
+[30:21] guess we already knew that.
+[30:23] And but this is still a very active and
+[30:26] evolving uh area.
+[30:31] Okay, any questions about the the
+[30:34] sources of data?
+[30:36] I think before we get into the actual
+[30:37] data sets, I just want to
+[30:39] kind of
+[30:41] um set the stage with this kind of a
+[30:43] more general uh social context.
+[30:51] Yeah.
+[30:55] Um the question is what do I think of
+[30:57] voice dating at 11 labs?
+[30:59] Um I don't know too much about that, so
+[31:01] um
+[31:02] so we can talk offline.
+[31:04] Yeah.
+[31:13] >> [clears throat]
+[31:33] >> Yeah, so the question is what happens
+[31:35] with time if you have one license and
+[31:37] then it gets changed, uh what happens?
+[31:40] So, first I'm not a lawyer.
+[31:42] Um however, uh second, so this
+[31:45] um
+[31:46] so the first license, I believe you're
+[31:49] still allowed to train on it, but what
+[31:52] happens is that the license usually
+[31:54] applies to not just let's say a fixed
+[31:57] set of documents, for example, Reddit.
+[31:58] There's constantly new content being
+[32:00] created
+[32:01] um and the license being changed means
+[32:03] that you wouldn't be able to train on
+[32:05] the the later
+[32:07] things.
+[32:10] Um
+[32:12] Okay, so let's look at various uh
+[32:14] sources of uh data.
+[32:17] So, let's go back to crawling.
+[32:19] Um so most model developers um have
+[32:23] their own crawler uh because they want
+[32:26] to have control over full control over
+[32:28] what the data
+[32:29] is. Um
+[32:31] Um fortunately for the rest of us, if
+[32:33] you don't want to uh build your own
+[32:36] crawler, um there's something called
+[32:37] Common Crawl, which has been around for
+[32:40] quite some time since 2007.
+[32:42] Um,
+[32:43] and every month they run a web crawl.
+[32:46] Uh, gets about 3 to 5 billion web pages.
+[32:49] Um, each crawl has some overlap with a
+[32:52] previous crawl, but they try to
+[32:53] diversify and get new pages. Um, so
+[32:56] there's 300 billion pages so far.
+[32:59] Um, which seems This was from their
+[33:01] website. It seems a little bit big
+[33:03] because if you multiply this number by
+[33:05] 20, um, you don't really get a 300
+[33:07] billion, but that's what they say.
+[33:09] Um,
+[33:11] so how many URLs are out there? That's
+[33:14] really hard to estimate. So, uh, the
+[33:17] Google search index is at least 100
+[33:20] petabytes, uh, according to them.
+[33:23] And
+[33:24] um, you know, each Common Crawl,
+[33:27] uh,
+[33:27] dump has about two, uh, billion, you
+[33:31] know, web pages. So, that's about 372,
+[33:34] um, terabytes.
+[33:35] And this is not including images. This
+[33:37] is just mostly focused on the, um, the
+[33:39] text.
+[33:41] So, crawling is is conceptually
+[33:43] straightforward, but all the, uh, gory
+[33:46] details are in the implementation. You
+[33:48] start with a bunch of URLs,
+[33:50] um, and then you you iterate. It's
+[33:53] basically graph traversal. You pop a URL
+[33:55] from a queue, you download it, and then
+[33:56] you look at all the hyperlinks in that
+[33:58] page, and then you add them to the
+[34:00] queue. And generally this is done in
+[34:02] parallel, uh, over many machines.
+[34:05] Um, and uh, there's many decisions here.
+[34:09] Which paper, which pages to download.
+[34:12] Um,
+[34:13] to respect You have to respect our
+[34:14] robots.txt.
+[34:16] Don't overload the server. Um,
+[34:19] sometimes, uh, the websites change, and
+[34:23] so you want a policy that will download,
+[34:27] um,
+[34:29] you know, frequently change pages, but
+[34:30] not spend time downloading pages that
+[34:32] don't change. So, there's some policy
+[34:34] around that. And like I mentioned
+[34:36] before, URLs are dynamic, so
+[34:39] um
+[34:39] both sometimes the same URL leads to
+[34:42] different content depending on like some
+[34:44] state of the the browser, but also
+[34:47] different many URLs might lead to the
+[34:49] same content, so there's a lot of
+[34:50] duplication that um happens if you're
+[34:53] not you know, careful.
+[34:55] Um in particular, mirror sites um
+[34:57] explicitly is about duplication.
+[35:00] So, Common Crawl releases their dumps in
+[35:01] two formats. One is a WARC uh file. So,
+[35:04] this is the raw HTTP response.
+[35:07] Right? So, this remember HTTP protocol
+[35:09] is that you send a a get
+[35:12] you know, here's a a a URL uh
+[35:16] and then out comes a a HTTP kind of
+[35:19] response. And it's just the WARC file is
+[35:22] that response.
+[35:23] Um
+[35:25] they also do some processing, they
+[35:26] convert to a WAT file, uh which is
+[35:29] necessarily a lossy process.
+[35:31] Um it turns out that this is not
+[35:34] necessarily the best way to use uh the
+[35:36] web. Um
+[35:38] the HTML to text
+[35:41] uh there are many tools for this,
+[35:42] including Trafilatura and Brazilia
+[35:44] Parser. And the way you convert actually
+[35:47] does matter. So, this is from the Data
+[35:50] Comp at WLM paper, which we'll talk a
+[35:52] little about. It is ablation, where you
+[35:54] look at the WAT files that Common Crawl
+[35:56] releases versus these other
+[35:59] um
+[36:00] these other tools. And it seems like
+[36:02] Trafilatura and Brazilia Parser are um
+[36:05] you know, better.
+[36:08] Okay, so
+[36:10] one thing you can do is just rely on
+[36:12] general web crawls.
+[36:14] But often, the the web is not a uniform
+[36:17] place. It's not like you there's uh a
+[36:19] bunch of websites and you just like get
+[36:21] some random fraction of them and that's
+[36:23] your data set. And there are specific
+[36:25] pockets of really interesting high
+[36:28] quality content, and I'll talk about
+[36:30] three of those, Wikipedia, GitHub, and
+[36:31] archive. So, Wikipedia, all of you know
+[36:35] about
+[36:36] um
+[36:36] it's been around since 2001, and now
+[36:39] there's
+[36:40] 67 million articles of around all these
+[36:43] different languages.
+[36:45] Um
+[36:46] and it is it doesn't Wikipedia is not
+[36:48] all
+[36:50] um content by any means. There's no You
+[36:53] can't have original thought
+[36:57] um in it
+[36:59] because everything has to be kind of
+[37:01] referenced and cited.
+[37:03] So, in some sense, you could argue that
+[37:05] Wikipedia is doesn't contain anything
+[37:07] because that's not already on on the on
+[37:11] the web. Well, actually, that's not true
+[37:13] because
+[37:14] they can also cite books, which are, you
+[37:16] know, obviously, you can't easily get
+[37:18] them. So, Wikipedia is so good. Um
+[37:21] So,
+[37:22] and also there's articles based on
+[37:25] notability.
+[37:27] So, not everything
+[37:29] Not everyone
+[37:31] can get a Wikipedia article about them.
+[37:34] Um
+[37:35] So, anyone on the internet can write
+[37:38] this content. This was the radical thing
+[37:41] about wikis,
+[37:43] and it's sort of still a miracle, I
+[37:44] think, to me that this this actually
+[37:46] works.
+[37:48] It just happens that any vandalisms gets
+[37:50] reverted by administrators or bots, I
+[37:52] guess, these days.
+[37:54] There's um
+[37:56] you know, a small number of Wikipedians,
+[37:58] like as any sort of peer production
+[37:59] system, there's a small set of people
+[38:01] who do most of the work.
+[38:03] Um
+[38:04] And for example, this guy has like 5
+[38:07] million edits. Um
+[38:09] and
+[38:10] one thing about Wikipedia is that every
+[38:12] few weeks they do a periodic dump. So,
+[38:14] basically, take all Wikipedia, package
+[38:16] into a nice
+[38:17] um tar file, and then you can just
+[38:20] download that.
+[38:21] So, this is important because you don't
+[38:23] need to crawl Wikipedia. In fact, they
+[38:25] don't want you to crawl Wikipedia. They
+[38:26] just want you to download this if you're
+[38:28] going to crawl. And this is much uh
+[38:30] better than crawling.
+[38:31] One kind of just a fun aside or um good
+[38:35] to know is that there's this paper um
+[38:37] that says
+[38:39] um you can actually poison uh Wikipedia.
+[38:43] So, you might think that this vandalism
+[38:46] um gets reverted. So, if you do attacker
+[38:48] tries to do something fishy uh you'll
+[38:50] just get it rolled back. But, what um
+[38:53] Carlini uh realized is that these
+[38:56] periodic dumps um happen at a regular
+[38:59] cadence.
+[39:00] And so, what what you can do is you can
+[39:03] go in and you can just edit it right
+[39:06] before the dump happens.
+[39:08] And then the dump ha- the it happens and
+[39:10] then um and then the edits get rolled
+[39:12] back, but the dump still has the
+[39:13] malicious content.
+[39:15] Um
+[39:16] and with if you're able to inject things
+[39:19] into uh web pages, that means you can
+[39:22] cause there's works that's uh show that
+[39:25] you can cause um
+[39:27] the model to, let's say, ascribe
+[39:29] negative sentiment to any sort of uh
+[39:30] trigger uh phrase like the iPhone.
+[39:34] So, my one takeaway here is that um if
+[39:37] you can consider adversaries, even
+[39:39] so-called high-quality contents might
+[39:41] contain um bad things in them.
+[39:44] I think this has been uh a fix uh since
+[39:47] then.
+[39:50] Okay, so GitHub is a good place for code
+[39:53] and code is important um not just for if
+[39:56] you want coding capabilities for your
+[39:58] language model, but if you want general
+[40:01] um you know, reasoning. Um so, GitHub,
+[40:04] all of you know
+[40:06] um again, it's a live service for
+[40:08] hosting code repositories. Uh been
+[40:10] around for since 2008, about the same
+[40:13] age as uh Common Crawl.
+[40:15] Um it has 400
+[40:17] uh 20 million repositories, 28 million
+[40:20] are public. Um, each repository contains
+[40:25] an It's not a file. It's as you know,
+[40:26] it's it's a directory with commit
+[40:28] history, issues, pull requests, and
+[40:29] comments.
+[40:31] Um, code has generally a lot of um, you
+[40:33] know, duplicates um, and this because
+[40:36] either copying code or or forking code.
+[40:40] Um,
+[40:42] and um, GitHub has deemed it you're
+[40:46] allowed to train on any public
+[40:48] repository with a permissive uh, you
+[40:51] know, license. So, MIT or Apache
+[40:53] licenses are are fine.
+[40:55] Um, so you there's uh remember there's
+[40:57] two types of data when you talk about
+[40:59] GitHub. There's like the repository data
+[41:01] which you can uh just uh go and download
+[41:04] through the GitHub Git protocol. And
+[41:07] again, you know, you shouldn't scrape
+[41:09] GitHub. Uh you should just download the
+[41:11] repository. And then the metadata
+[41:13] associated with each repository, issues,
+[41:16] and pull requests, and so on. These are
+[41:17] made actually via the GitHub archive
+[41:20] which gives you hourly snapshots of this
+[41:22] event stream, which I think is interest-
+[41:24] really interesting data. It's basically
+[41:25] every single comment or star or um
+[41:28] action on GitHub gets uh
+[41:31] that gets recorded.
+[41:33] There's this uh Software Heritage
+[41:35] Foundation that um
+[41:38] is focused on the repository, not the
+[41:40] metadata. And they aggregate GitHub um
+[41:44] GitHub is not the only place where code
+[41:45] shows up. There's also smaller um
+[41:48] entities like GitLab, Bitbucket, and so
+[41:50] on. And they aggregate all that those
+[41:53] repositories.
+[41:54] Um,
+[41:56] okay, so archive uh just very briefly,
+[41:59] everyone knows archive. This has been
+[42:01] around as a site that allows people to
+[42:04] share papers since 1991, started with
+[42:06] physics, and now has a lot of uh other
+[42:09] areas in it. Um,
+[42:12] each uh of the 3 million submissions has
+[42:16] the metadata, a PDF, and optional LaTeX
+[42:20] source.
+[42:21] Okay, so already you should be thinking,
+[42:23] well, what does it mean to train on
+[42:25] archive? It's uh not clear because this
+[42:28] is well, you have to convert the PDF
+[42:30] into a text or you can use a LaTeX
+[42:32] source, which is a bunch of files. Um
+[42:36] there it's not peer-reviewed, but there
+[42:37] is some approval process, and authors
+[42:40] can choose to maintain the rights uh or
+[42:44] put in the Creative Commons, which uh so
+[42:47] everything is actually very clearly
+[42:49] licensed. Um all the metadata is under
+[42:52] permissive license, so you can use that
+[42:54] regardless, and then you can go and you
+[42:56] look at all the papers that are Creative
+[42:58] Commons licensed, you download those,
+[42:59] and you can use them.
+[43:01] And I think most archive papers are
+[43:03] uh Creative uh you know, Commons.
+[43:06] Um
+[43:08] and then again, this is available, you
+[43:10] don't crawl archive, you just go down to
+[43:13] uh bulk download it from some uh
+[43:15] website.
+[43:18] Okay.
+[43:19] So, any questions about um source of
+[43:22] data? Yeah.
+[43:29] Are there restrictions on data generated
+[43:32] by models?
+[43:33] Generated by models? Yeah, by using that
+[43:35] data.
+[43:36] Oh, oh, I see. Uh we'll talk about that
+[43:39] uh later on. So, the question is, what
+[43:41] about model generated, like synthetic
+[43:42] data, are you allowed to use it?
+[43:44] Um the short answer is probably yes.
+[43:49] Yeah. Are you using crawlers like Open
+[43:51] or crawl and stuff like that? Um
+[43:54] I guess like the
+[43:56] cuz you mentioned earlier that there are
+[43:58] websites that have a lot of pirated
+[44:00] books on it, right? How do you like How
+[44:03] do you ensure that those types of
+[44:05] websites don't show up in your crawl of
+[44:07] the internet. Yeah.
+[44:08] Yeah, so the question is there's a lot
+[44:11] of websites with pirated books. So, if
+[44:12] you're just doing a web crawl, you can't
+[44:14] look at all the websites. So, how do you
+[44:16] make sure that everything is kosher? And
+[44:18] that's part of the difficulty is you
+[44:19] can't.
+[44:20] And and so
+[44:23] there's most likely in Common Crawl
+[44:25] there are copyrighted books and content
+[44:27] that
+[44:28] uh you are not supposed to
+[44:31] train on and you can appeal to you
+[44:33] appeal Well, you appeal to fear it. So,
+[44:35] remember everything is copyright. Books
+[44:36] are not
+[44:38] uh remarkably different from your your
+[44:40] website.
+[44:41] Uh for example, both are uh you know,
+[44:43] copyrighted. Probably a book author has
+[44:45] more of a
+[44:47] uh
+[44:48] you know, if they want to go into court,
+[44:50] they'll probably be able to protect that
+[44:51] better because it's published than your
+[44:53] uh your website, but
+[44:55] um but but still. Um
+[44:58] and I'll talk a little little bit about
+[45:00] later. If you really want to be careful,
+[45:02] um you can do something I'll um
+[45:05] show later.
+[45:07] Okay, so what I'm going to do now is to
+[45:09] now talk about the various uh
+[45:12] data sets that are actually used in
+[45:14] building models starting all the way
+[45:16] back to 2019. So, we've talked about the
+[45:18] origin of data and source of data. So,
+[45:20] you have a feeling for just the general
+[45:23] um data you know, landscape. Um
+[45:26] and so let's start with BERT. Okay, so
+[45:29] BERT was from 20
+[45:31] um 18 and they trained back in the day,
+[45:34] they just trained on Wikipedia and
+[45:36] books. So, what is this books?
+[45:38] Um
+[45:39] so, there's this website called
+[45:40] Smashwords. It was uh created that allow
+[45:43] anyone to just put a ebook uh up for to
+[45:47] publish and they had about half a
+[45:49] million books in 2024. So, in 2015 there
+[45:54] is this paper
+[45:56] um
+[45:57] who just scraped uh
+[45:59] Smashwords. Um uh so sorry, took the
+[46:03] books that were free
+[46:05] and um
+[46:07] and just made a corpus.
+[46:08] This was back in the innocent days when
+[46:10] no one was paying attention to any of
+[46:11] this. So, this books corpus was around
+[46:14] for many years in the academic computer
+[46:18] academic community.
+[46:20] Um, since then it has been taken down
+[46:22] because it violated the terms of
+[46:24] service.
+[46:25] Okay? Just because it was free and you
+[46:27] can get it doesn't mean it's it was
+[46:31] legally allowed.
+[46:33] Um, so
+[46:35] one thing about to note about BERT is
+[46:37] that
+[46:38] the sequences were documents rather than
+[46:42] sentences. All the language modeling
+[46:44] research before that was focused on
+[46:47] sentences.
+[46:50] Okay, so in 2019 GPT-2 came around and
+[46:54] so what did they do?
+[46:55] Um, so they
+[46:58] wanted to get high quality web content.
+[47:02] And at that time people knew about
+[47:04] Common Crawl,
+[47:05] but somehow the Common Crawl data was
+[47:07] too messy.
+[47:09] So, what they did was came up with this
+[47:10] clever idea where you can take
+[47:13] you look at pages
+[47:15] that are outgoing links from Reddit
+[47:17] posts with
+[47:18] greater than three karma.
+[47:20] So, good posts must link to good good
+[47:23] good websites. So, you grab those
+[47:25] those
+[47:27] pages and you get 40 GB of
+[47:31] text, a million pages.
+[47:33] Um, they never released this data,
+[47:36] but there was an open replication of web
+[47:38] text
+[47:39] which people use quite a bit.
+[47:43] Um
+[47:45] Okay, so
+[47:47] so that's a GPT-2. So, as you're going
+[47:50] through this, I guess think about both
+[47:53] uh
+[47:54] you know, there's many methods of
+[47:56] filtering and collecting data and it's
+[47:58] interesting to look at these design
+[48:00] choices and
+[48:02] um okay, so CCNet was developed by um at
+[48:06] that time Facebook. Um so the goal was
+[48:09] to create large high-quality data sets
+[48:12] for pre-training and they were
+[48:13] interested especially interested in um
+[48:15] low-resource languages.
+[48:18] Um so they didn't want some very manual
+[48:21] process that only worked for for
+[48:22] English.
+[48:24] Um so they did did a bunch of things.
+[48:26] They did deduplication
+[48:28] um
+[48:30] and uh language identification. They
+[48:32] trained a classifier to detect a
+[48:34] language um and
+[48:38] keep the only the language that you
+[48:40] you're looking for.
+[48:41] Um and for quality filtering
+[48:45] uh the idea that they had was they
+[48:47] wanted to keep documents that look like
+[48:49] Wikipedia.
+[48:50] So Wikipedia
+[48:52] um at the time was deemed good
+[48:54] high-quality content and they use the
+[48:56] language model that was trained on
+[48:57] Wikipedia and you score probability of
+[49:00] a a new document under that language
+[49:02] model to gauge how Wikipedia-like it
+[49:05] was.
+[49:06] So rather than outgoing links to Reddit,
+[49:08] they use a language model on Wikipedia.
+[49:11] Um and uh they you know show that uh
+[49:14] because you can get much more more data,
+[49:16] you can actually outperform uh training
+[49:19] uh performing just training on Wikipedia
+[49:22] and this was a tool that will later uh
+[49:25] appear in some other papers.
+[49:29] So um
+[49:31] here is another work. This is from
+[49:33] Google uh 2019. Um
+[49:37] so this is called C4.
+[49:39] So this paper is actually more famous
+[49:43] for the T5 model um which pushes the
+[49:46] idea that you should just treat all the
+[49:48] NLP tasks in a world as text-to-text.
+[49:52] But actually a big contribution of this
+[49:53] paper, which is a very long report, was
+[49:56] the C4 data set.
+[49:58] And the observation, which was
+[50:00] very clear at that time,
+[50:02] was that Common Crawl is
+[50:05] mostly not useful for natural language.
+[50:08] Right? There is sort of this idea that
+[50:09] you had these small data sets, and they
+[50:12] were high-quality, and then all you had
+[50:14] Common Crawl, which was a mess. And any
+[50:17] attempt to train on Common Crawl just
+[50:19] led to to junk results. So, people were
+[50:21] thinking like, "How do I get a larger
+[50:23] but high-quality subset of Common
+[50:24] Crawl?"
+[50:26] So,
+[50:27] we saw the Reddit idea, we saw the the
+[50:31] Wikipedia-like language model idea.
+[50:34] C4 used a
+[50:35] different idea, and this is saying,
+[50:38] "Let's just define a bunch of rules."
+[50:40] Which turned out to be fairly effective.
+[50:42] So,
+[50:43] um
+[50:44] basically, they keep lines that end in
+[50:47] punctuation, have more than five words,
+[50:49] remove pages with fewer than three
+[50:51] sentences,
+[50:53] remove pages that contain any bad words.
+[50:55] Um
+[50:56] Uh
+[50:57] remove things like terms of use,
+[51:01] you know, boilerplate. Interestingly,
+[51:03] remove the curly brace, which, you know,
+[51:05] filters out a lot of code. So, they
+[51:07] weren't clearly at that time they
+[51:08] weren't thinking about code models.
+[51:11] Um and they filtered out anything that
+[51:14] was not
+[51:15] English.
+[51:17] Okay, so the end result is that you have
+[51:18] 156 billion tokens. So, you know, 40
+[51:23] sorry, 800 gigabytes of text. So, this
+[51:25] is much larger than the GPT-2 data set,
+[51:27] which was only 40 gigabytes of text.
+[51:31] Uh
+[51:32] a bit later, there was some analysis
+[51:34] done in C4, which showed Here is the
+[51:37] websites that were represented. So, you
+[51:39] have a bunch of Wikipedia, patents was a
+[51:42] very common
+[51:44] thing.
+[51:45] Um they also released the web text like
+[51:48] document. They also used this idea of
+[51:51] links in Reddit posts
+[51:53] um and
+[51:55] uh
+[51:56] from Reddit posts with greater than uh
+[51:58] three karma and filtered through those
+[52:00] pages.
+[52:02] Um
+[52:04] so they were able to
+[52:06] get using this method 17 GB of text
+[52:11] using 12 um
+[52:13] Common Crawl dumps. Remember web text
+[52:15] was 40 GB,
+[52:16] which means that Common Crawl is is, you
+[52:20] know, maybe incomplete or uh doesn't
+[52:22] have everything because if it had
+[52:24] everything, you should be able to hit 40
+[52:26] GB. And
+[52:28] And they they showed that at that time
+[52:30] you could use this data and improve on a
+[52:32] bunch of NLP uh you know, benchmarks.
+[52:36] Okay, so we've seen using rules,
+[52:39] um
+[52:40] things that look like Wikipedia, Reddit
+[52:41] links.
+[52:42] And now uh let's talk about GPT-3.
+[52:46] So GPT-3, the data set was um they did
+[52:49] their they used Common Crawl, they did
+[52:51] their own processing. Um there is this
+[52:54] web text which was essentially the GPT-2
+[52:56] data set but expanded. Um notice that
+[52:59] there's some overlap. Common Crawl does
+[53:01] overlap with this, but this is a subset
+[53:04] of more targeted um distribution.
+[53:07] Um there is this
+[53:09] in the paper it's described as books one
+[53:11] and books two, which is um miss
+[53:15] internet-based books corpora. So this
+[53:17] remains a mystery exactly what it is. Um
+[53:21] and Wikipedia.
+[53:24] Okay, so
+[53:26] so the result was about 500, you know,
+[53:29] GB of of text, 400 billion tokens.
+[53:33] Um
+[53:34] and to do the Common Crawl uh
+[53:37] processing, they trained a quality
+[53:39] classifier to distinguish things they
+[53:41] determined deemed to be high quality
+[53:44] from the rest. And they did some fuzzy
+[53:46] deduplication because
+[53:48] um
+[53:49] you know,
+[53:50] web text and Common Crawl had uh dupes.
+[53:54] Okay, so this paper um
+[53:57] followed the idea of using a classifier
+[53:59] to just to train to do quality uh uh
+[54:03] classification.
+[54:05] So, after GPT-3 came out, this was I
+[54:07] think a big event and there were a
+[54:09] number of efforts to try to things in
+[54:11] the open. So, one of the initial efforts
+[54:14] was the the Pile, which is
+[54:17] um
+[54:18] uh a grassroots effort uh from Eleuther
+[54:21] AI, where they had a bunch of um people
+[54:27] in this Discord just jamming and
+[54:29] figuring out high-quality sources and
+[54:31] they came up with this uh list in the
+[54:33] end. And today this is still pretty
+[54:36] interesting and diverse. It has
+[54:39] uh you know, the Common Crawl, has
+[54:41] PubMed,
+[54:42] um this has this thing called Books 3,
+[54:45] which you know, we'll talk about,
+[54:47] Archive GitHub, which we talked about,
+[54:49] um
+[54:50] you know, Wikipedia, IRC, another books
+[54:54] corpus, uh philosophy papers, and so on.
+[54:58] Um
+[55:00] And so,
+[55:02] uh
+[55:04] you know, they included this Enron
+[55:05] emails data set. So, Enron went bust in
+[55:08] 20 2002 and um all the emails were
+[55:12] released and this is one of the few
+[55:14] email data sets we have, um which is a
+[55:17] weird distribution I think for um email,
+[55:19] but that's that's what you get.
+[55:22] Um so, Project Gutenberg was uh so,
+[55:25] let's talk about books a little bit. Um
+[55:28] So, Project Gutenberg was uh started
+[55:33] um in 1971 and it only includes books
+[55:36] that received copyright clearance. Uh
+[55:39] So, mostly books in the public domain.
+[55:44] And
+[55:45] there's this packaging of Gutenberg into
+[55:47] PG-19, which is
+[55:49] Gutenberg's before 2019.
+[55:54] And which is I guess most of them
+[55:56] because for them to be in public domain,
+[55:59] you have to wait 75 years.
+[56:01] So, Books 3, which is
+[56:04] kind of this
+[56:05] interesting
+[56:07] data set that appeared in the pile. So,
+[56:11] this is
+[56:12] described actually as
+[56:16] you know, 200K books from a shadow
+[56:18] library called Bibliotek.
+[56:20] It concludes all books from your
+[56:23] favorite authors.
+[56:24] And at that time, again, 2020, no one
+[56:27] was paying attention. It just sat you
+[56:29] know, people used it to train models.
+[56:32] And since then, it has been taken down.
+[56:37] So, you cannot use or should not use
+[56:39] Books 3 anymore.
+[56:42] We'll come back to Books 3 again.
+[56:45] So, Stack Exchange
+[56:47] uh
+[56:48] you've probably used um
+[56:51] uh quite a bit. Although, I guess these
+[56:53] days maybe less so because of AI. Um
+[56:59] There's a bunch of user contributed
+[57:00] questions and answers starting 2008. And
+[57:04] um
+[57:05] You know, one thing that's it's
+[57:06] interesting about this data set is that
+[57:08] it's a sort of a Q&A format.
+[57:10] And this is quite close to kind of a
+[57:13] real
+[57:14] you know, application.
+[57:16] So, normally you think about
+[57:18] pre-training data as here's Wikipedia
+[57:20] articles, just like raw text.
+[57:23] Right? But some parts of the web are
+[57:25] actually look like
+[57:27] you know, supervised, like what you
+[57:29] would want to ask your language model.
+[57:31] So, you know, which I think maybe
+[57:35] helps the model learn certain types of
+[57:38] question answering behaviors.
+[57:40] So, not everything is like super
+[57:42] magically emergent. It's like, well,
+[57:44] this type of data does exist on the web.
+[57:46] Um
+[57:48] So, there's also
+[57:51] this data has metadata, which is like
+[57:53] the number of votes, which are useful
+[57:55] for filtering. And again, this this data
+[57:58] is uh
+[58:00] released in data dumps that allows you
+[58:02] to just download without crawling it.
+[58:05] Okay, so now in 2021,
+[58:08] there was another paper from DeepMind.
+[58:11] They trained a model called Gopher,
+[58:13] which
+[58:14] was
+[58:15] never released and actually was sort of
+[58:17] subsumed by Chinchilla.
+[58:19] Um
+[58:20] Um but the description of data, I think,
+[58:22] is actually really good. You should read
+[58:23] this paper because I think it's very
+[58:25] thorough in the way that they describe
+[58:27] the data processing.
+[58:29] Well, except for the parts where they
+[58:31] don't tell you what's in the data. Um
+[58:33] so, there's there's this thing created
+[58:36] this MassiveWeb,
+[58:38] and they had
+[58:39] you know, C4, which remember was the
+[58:41] data set that we looked at before from
+[58:43] Google.
+[58:44] Um they trained on books, news, GitHub,
+[58:46] and Wikipedia. They don't say anything
+[58:47] about how they they got that. Um
+[58:50] So, um for the MassiveWeb, they
+[58:55] kept English, deduped,
+[58:57] and their quality filtering was also
+[59:00] based on manual rules. And part of the
+[59:05] reason for this is that they had more
+[59:07] control over that. So, I think as you
+[59:10] can see,
+[59:11] um
+[59:12] there is a sort of this like
+[59:15] division between people who wanted to
+[59:17] use rules,
+[59:19] um
+[59:20] and people who wanted to use
+[59:22] classifiers. Um
+[59:25] So, they got, you know, a massive
+[59:27] as the name suggests, a massive amount
+[59:29] of uh text.
+[59:31] Um
+[59:32] but, you know, their model was only
+[59:33] trained on like a very small fraction of
+[59:35] this uh of this uh data set.
+[59:38] Um
+[59:40] Okay, so
+[59:42] in 2022,
+[59:44] uh Llama 1 came out. And the data set
+[59:48] here, this was actually a a very nice
+[59:50] paper in that it detailed their
+[59:53] data processing. So, this is probably
+[59:55] one of the
+[59:57] uh last uh non-open, fully open uh
+[01:00:00] models that actually talk about their
+[01:00:01] data processing.
+[01:00:02] So, they have Common Crawl processed
+[01:00:05] with CCNet, which you know
+[01:00:07] um
+[01:00:07] uh about. Um the classification though
+[01:00:11] was whether the page references
+[01:00:13] uh was a reference of Wikipedia, not
+[01:00:15] whether it is actually a Wikipedia
+[01:00:17] article.
+[01:00:18] Um so, the idea is that, well, maybe
+[01:00:20] Wikipedia articles are like too
+[01:00:23] stylized. And we know that Wikipedia
+[01:00:26] articles references a bunch of other
+[01:00:27] articles, which are presumably good. So,
+[01:00:29] let's call those the good uh websites.
+[01:00:32] Um they had uh you know, C4. Um they did
+[01:00:37] a bunch of processing on GitHub to get
+[01:00:38] permissive licenses,
+[01:00:40] uh Wikipedia. Um they trained on, you
+[01:00:44] know, Books 3
+[01:00:46] and Project Gutenberg. So, Books 3
+[01:00:48] really got them in a lot of uh trouble
+[01:00:50] because they're just announcing to world
+[01:00:52] that, "Hey, I trained on this data set."
+[01:00:54] And you look back, "Oh, this came from.
+[01:00:56] Where did it come from?" It came from
+[01:00:57] the pile. "Oh, it came from a shadow
+[01:00:59] library." So, um
+[01:01:01] you know, that's why people don't to
+[01:01:03] talk about their data anymore.
+[01:01:05] Uh so, they looked at archive
+[01:01:09] um and uh actually used the the LaTeX to
+[01:01:12] do the the processing, Stack Exchange,
+[01:01:15] and they got a 1.2 trillion tokens. They
+[01:01:17] didn't actually release this data set,
+[01:01:19] but they had enough of a description in
+[01:01:21] their processing that this was uh
+[01:01:23] reproduced by Together's Red Pajama uh
+[01:01:26] V1 um data set, which was then used in
+[01:01:30] other, you know, sources.
+[01:01:33] So, as you can see here, Red Pajama V1
+[01:01:36] initially also contained Books3, which
+[01:01:38] has now been kind of uh
+[01:01:40] you know, stripped out.
+[01:01:43] So, various uh decisions made by early
+[01:01:46] on about copyright actually influence
+[01:01:48] have a fairly uh big kind of watershed.
+[01:01:53] Okay, so let's talk about Refined Web.
+[01:01:55] So, this is um
+[01:01:57] a paper
+[01:01:59] uh
+[01:01:59] that
+[01:02:01] um tried to make a point that web data
+[01:02:03] is all you need.
+[01:02:04] Right? So, the web, in some sense, is
+[01:02:07] everything. And then we talked about all
+[01:02:08] these specialized sources like there's
+[01:02:10] GitHub and archive and and Stack
+[01:02:13] Exchange. And they said, "Well, what
+[01:02:15] happens if we just um stick with the
+[01:02:18] web?"
+[01:02:19] So, they did job of uh doing the
+[01:02:22] transformation from HTML to text. They
+[01:02:24] filtered um using the Gopher rules,
+[01:02:28] which is basically keep things that look
+[01:02:30] like English.
+[01:02:32] Um they explicitly at that time still
+[01:02:34] said, "Avoid ML-based filtering to avoid
+[01:02:37] uh biases.
+[01:02:38] I don't want to like find an overly
+[01:02:40] narrow subset of uh of the web."
+[01:02:43] Um they did some, you know,
+[01:02:44] deduplication, and they had 5 trillion
+[01:02:47] tokens. They released about 600 billion
+[01:02:49] of them.
+[01:02:50] Um so, the fine-web uh from Hugging Face
+[01:02:55] um was a replication of Refined Web, but
+[01:02:59] improved it. So, they took all the
+[01:03:00] Common Crawl dumps at that time,
+[01:03:03] did some filtering, um again using
+[01:03:05] manual rules um because to not inject
+[01:03:08] biases,
+[01:03:09] deduped, um did PI removal, and got, you
+[01:03:13] know, 15 trillion, you know, tokens. So,
+[01:03:16] you can see that the size of the data
+[01:03:18] these data sets um is growing
+[01:03:20] you know, quite a bit.
+[01:03:22] Um
+[01:03:23] and
+[01:03:25] um
+[01:03:26] so then there is this Dolma data set
+[01:03:29] from AI2 and this is um
+[01:03:33] a data set that includes their own
+[01:03:36] processing of Common Crawl, the Stack
+[01:03:38] which we'll talk about before, C4 which
+[01:03:40] you know about and a bunch of other
+[01:03:42] things. Um
+[01:03:44] And the the Reddit data set was from
+[01:03:48] this this project
+[01:03:50] called PushShift.
+[01:03:53] Um and at that time you could still get
+[01:03:55] this data and you can you know, train on
+[01:03:57] it
+[01:03:58] before things got locked down. Um AI2
+[01:04:01] has their own um
+[01:04:03] you know, crawl of academic papers so
+[01:04:05] called Semantic Scholar so they derive a
+[01:04:07] data set based on that.
+[01:04:09] Um so, let's look at their Common Crawl
+[01:04:12] processing.
+[01:04:13] So,
+[01:04:15] um they
+[01:04:16] use a language identification, they So,
+[01:04:19] this was model based but quality
+[01:04:21] filtering still avoid model
+[01:04:25] uh based filtering.
+[01:04:26] Um and then they remove toxicity using a
+[01:04:29] rules and a classifier.
+[01:04:32] Um
+[01:04:34] and they got 3 trillion tokens out of
+[01:04:36] that.
+[01:04:37] So, DCLAM I think was maybe a point
+[01:04:40] where this idea of model based quality
+[01:04:44] filtering started to really kind of
+[01:04:47] become the the the norm here.
+[01:04:50] Um so, DataComp they their initial
+[01:04:53] motivation was to define some sort of
+[01:04:56] pipeline so that people can try
+[01:04:58] different data methods um in a standard
+[01:05:02] way and show results. But I think the
+[01:05:05] main way that I think people use this is
+[01:05:07] just using their data set that they
+[01:05:09] released to train models and do other
+[01:05:11] things.
+[01:05:12] Um
+[01:05:14] So, they
+[01:05:16] uh
+[01:05:17] process Common Crawl to produce data on
+[01:05:19] pool. So, this is completely unfiltered.
+[01:05:21] And if you look at this this is this is
+[01:05:22] massive, 240 trillion you know, tokens.
+[01:05:26] Um this is probably more than
+[01:05:28] number of tokens that anyone really
+[01:05:30] trains on. But, a lot of this is fairly
+[01:05:33] uh low quality. So, then they have a
+[01:05:35] pipeline where all that gets you know,
+[01:05:38] filtered if you only keep and you know,
+[01:05:40] English.
+[01:05:41] Um you have some sort of rules to really
+[01:05:43] narrow it down. You do dedupe. And then
+[01:05:46] you do this model-based filtering.
+[01:05:49] And you end up with you know, something
+[01:05:50] that's 1.4%. And this is the data set
+[01:05:53] that um
+[01:05:55] we'll see actually works you know,
+[01:05:57] pretty well.
+[01:05:58] So, the model-based filtering and this
+[01:06:00] was
+[01:06:01] you know, s- kind of strangely good. So,
+[01:06:04] to train a classifier,
+[01:06:06] they took um
+[01:06:09] Open
+[01:06:10] or Hermes,
+[01:06:12] which is
+[01:06:13] essentially a instruction data that was
+[01:06:15] generated by uh GPT-4
+[01:06:18] and Eli5, which is a subreddit with uh
+[01:06:21] various questions and answers. So, this
+[01:06:24] is um let's see.
+[01:06:28] Like these are tied the type of
+[01:06:29] questions that are in Eli5.
+[01:06:32] Um
+[01:06:35] Okay. So, anyway, you get the idea.
+[01:06:38] Um
+[01:06:39] So, it's it's kind of weird, but um
+[01:06:42] but somehow this this works. So, the
+[01:06:45] negative examples are anything from
+[01:06:46] Refined Web, which is remember it's just
+[01:06:48] like a uh
+[01:06:49] a very loosely filtered version of the
+[01:06:52] web. It's basically the web. And it got
+[01:06:53] 3.8 trillion tokens.
+[01:06:56] Um they train a fast class classifier.
+[01:06:58] Think about this is a linear classifier.
+[01:07:00] Um and then they show that this um this
+[01:07:04] magical classifier quality classifier
+[01:07:06] outperforms um a bunch of you know other
+[01:07:10] things that they they tried.
+[01:07:13] Um
+[01:07:14] So, DCL M this became sort of a for a
+[01:07:18] while at least in the open community a
+[01:07:20] bit of a gold standard for quality
+[01:07:23] filtering.
+[01:07:25] Um let's move on to Nematron. So,
+[01:07:29] Nematron this is from Nvidia.
+[01:07:31] They said that well DCL M filters too
+[01:07:34] aggressively. It's
+[01:07:36] removing like most of the data.
+[01:07:38] Um and remember they only got
+[01:07:42] uh uh
+[01:07:43] I mean 3.8 trillion tokens, right?
+[01:07:46] Um
+[01:07:48] So, we need more tokens.
+[01:07:50] So, what do we do? We are going to
+[01:07:53] um
+[01:07:54] do something more
+[01:07:56] uh I guess elaborate.
+[01:07:59] We're going to prompt our existing model
+[01:08:02] to score find uh web documents based on
+[01:08:06] educational value. So, we're going to
+[01:08:07] prompt a language model and said is this
+[01:08:09] education or not? Create a bunch of
+[01:08:11] labels, train a fast text model.
+[01:08:14] So, that's one
+[01:08:15] um classifier. Another classifier is
+[01:08:17] just using the DCL M classifier.
+[01:08:20] So, we're going to use those uh
+[01:08:22] classifiers. We're also going to use
+[01:08:25] synthetic data. So, this is
+[01:08:28] probably the one of the
+[01:08:29] um
+[01:08:31] I don't know if it's a it's probably not
+[01:08:32] the first, but uh one of the the main
+[01:08:35] data sets that really lean into
+[01:08:37] synthetic data as a for pre-training. Um
+[01:08:41] So, they had for low quality data as
+[01:08:43] deemed by these classifiers, you use a
+[01:08:46] language model to rephrase it to make it
+[01:08:48] more
+[01:08:49] uh look like Wikipedia.
+[01:08:51] Um for high quality data, we use a
+[01:08:53] language model to generate various
+[01:08:55] tasks. For example, given a Wikipedia
+[01:08:58] article I can generate question answers
+[01:08:59] or I can generate like please summarize
+[01:09:01] this
+[01:09:03] document, um extract key information
+[01:09:05] from it and so on.
+[01:09:07] So they resulted in
+[01:09:10] data set that was six trillion tokens.
+[01:09:14] So this is quite a you know
+[01:09:16] substantially larger than DCLM.
+[01:09:18] Um
+[01:09:20] and just for kind of reference
+[01:09:23] this is still
+[01:09:25] kind of small by
+[01:09:28] some you know considerations. So Llama 3
+[01:09:30] was trained on 15 trillion tokens, Gwen
+[01:09:33] 3 was trained on 36 trillion. Although
+[01:09:35] there is a sort of this
+[01:09:38] it's not clear how big these unique
+[01:09:40] tokens these are because when you look
+[01:09:42] at token counts in language model papers
+[01:09:45] some of it's like repeated. Like you do
+[01:09:47] multiple epochs, two epochs that's twice
+[01:09:49] the number of tokens.
+[01:09:51] So you have to be careful when you look
+[01:09:53] at those numbers.
+[01:09:55] And they show that this
+[01:09:57] the data set is you know better. Their
+[01:10:00] high quality subset
+[01:10:02] beats the previous data sets.
+[01:10:07] Okay, so
+[01:10:08] up until now [clears throat] we've seen
+[01:10:11] a bunch of different
+[01:10:13] methods for
+[01:10:15] filtering. I think all of these sort of
+[01:10:17] look
+[01:10:18] very kind of similar at some level. You
+[01:10:20] take a web crawl, you either decide I'm
+[01:10:23] going to use rules to filter or I'm
+[01:10:24] going to use a model. If I'm going to
+[01:10:26] use a model then I have to decide what
+[01:10:27] looks like good data and then try to
+[01:10:30] train a classifier and classify all my
+[01:10:33] documents and select. And there's a
+[01:10:35] seems to be a trade-off between you can
+[01:10:37] take a lot of common crawl. You can get
+[01:10:40] um
+[01:10:40] you know 240
+[01:10:43] you know trillion tokens if you want,
+[01:10:44] but that's probably going to be really
+[01:10:46] low quality. Or you can get like one
+[01:10:48] trillion tokens and there's sort of some
+[01:10:52] you know sweet spot in between.
+[01:10:54] Let me
+[01:10:57] talk about two final things.
+[01:11:00] So code and
+[01:11:03] going back to this question of
+[01:11:04] licensing.
+[01:11:05] So the stack is
+[01:11:07] a very nice project that was trying to
+[01:11:11] make a really good coding data set since
+[01:11:13] it was cleared by 2022 that coding was
+[01:11:17] going to be really kind of important.
+[01:11:19] So what they did in the initial version
+[01:11:21] is that they
+[01:11:23] clone you know 137
+[01:11:26] new repos. They kept the ones that were
+[01:11:28] permissively licensed,
+[01:11:30] removed example near duplicates and
+[01:11:33] resulted in you know one sorry 3
+[01:11:36] terabytes of code.
+[01:11:38] And then
+[01:11:39] in 2024 they had an update and here they
+[01:11:44] took more than the metadata like the
+[01:11:46] issues, comments and PRs
+[01:11:49] from GitHub, the repositories from the
+[01:11:51] software heritage which we talked about.
+[01:11:54] They also scraped documentation from
+[01:11:56] various websites by crawling them. They
+[01:12:00] did a bunch of processing. So in GitHub
+[01:12:03] repos you have binary files which you
+[01:12:05] probably don't want to train on. They
+[01:12:06] have malware, you get rid of that.
+[01:12:09] A lot of GitHub especially these PRs are
+[01:12:12] bots so you have to filter that. Dedupe,
+[01:12:15] do PI reduction.
+[01:12:17] There's a lot of pull requests and stuff
+[01:12:20] and they basically subsample to kind of
+[01:12:23] keep it representative and the data set
+[01:12:25] manageable.
+[01:12:27] They also did this thing which was I
+[01:12:28] thought was kind of nice which is that
+[01:12:32] there's many programming languages out
+[01:12:34] there. There's a lot of Python.
+[01:12:36] A lot of C
+[01:12:38] but low resources languages like Nim
+[01:12:41] which I hadn't even heard of. They're
+[01:12:43] not that
+[01:12:44] um
+[01:12:45] common. So what they do is they compile
+[01:12:48] this code and then into a low level
+[01:12:51] intermediate language, LLVM, which
+[01:12:53] everything like C compiler can compile
+[01:12:55] into this, and they've uh juxtaposed the
+[01:12:58] low-resource language and the
+[01:13:00] intermediate representation. So, then
+[01:13:02] the the
+[01:13:04] the language model can actually learn um
+[01:13:06] the mapping between the shared low-level
+[01:13:09] representation, which has a lot of data
+[01:13:11] on, and the thing that it does has less
+[01:13:14] data on.
+[01:13:15] Um and just for fun, you add in all the
+[01:13:19] other
+[01:13:20] you know, good stuff um that you can.
+[01:13:22] So, this is sort of Stack V2 is like
+[01:13:24] mostly code and then plus other things
+[01:13:27] that were used to train um their coding
+[01:13:30] models.
+[01:13:32] And um and one thing about uh pull
+[01:13:35] requests is that
+[01:13:38] their pull requests and all the metadata
+[01:13:40] is not by its nature uh linearized
+[01:13:44] sequence. So, there has to be some steps
+[01:13:46] to take into linearize it.
+[01:13:48] So, one important thing you have to side
+[01:13:50] is how much context to provide. So, for
+[01:13:52] example, uh event might just be I
+[01:13:55] changed one line of code. Right? And
+[01:13:57] that could just be one line, but
+[01:13:58] presumably to learn
+[01:14:00] that, you want to provide some context,
+[01:14:03] maybe a few lines around it, maybe the
+[01:14:04] entire file surrounding that diff. And
+[01:14:07] these are some design decisions that you
+[01:14:08] have to make for um for linearization.
+[01:14:12] And so, they at the end of the day, the
+[01:14:15] tokens that they train on look something
+[01:14:16] like this, where it's sort of this like
+[01:14:18] XML like structured data, where you have
+[01:14:21] like the PR um and then you have a bunch
+[01:14:25] of diffs um and then for comments, you
+[01:14:27] have basically the events of like a
+[01:14:29] comment was posted um what the review
+[01:14:33] state of that uh PR was, and so on and
+[01:14:36] so forth.
+[01:14:37] So, it's not just learning um how to
+[01:14:39] generate code, but also the software
+[01:14:40] development process around code.
+[01:14:44] Okay, so finally, I'll talk about uh
+[01:14:48] common pile.
+[01:14:49] So recall that almost all the data on
+[01:14:51] the internet is copyrighted.
+[01:14:54] Um some of it is permissively licensed.
+[01:14:56] Some of it is even in the public domain.
+[01:14:59] And while you can appeal to fair use and
+[01:15:03] say I'm going to train on it anyway.
+[01:15:06] Um this is not quite settled. Right? So
+[01:15:09] if you're very very risk-averse, then
+[01:15:11] you say um well, let's
+[01:15:15] Like if I don't know whether it is okay,
+[01:15:17] that's a no.
+[01:15:19] If you take that attitude, then that's
+[01:15:20] what uh Common Pile did. So can you
+[01:15:23] train a good model with only
+[01:15:25] permissively licensed um data?
+[01:15:29] Um
+[01:15:30] or rather how far you can you get.
+[01:15:33] So
+[01:15:35] this was a project that uh went and
+[01:15:39] scoured the the internet for all the
+[01:15:42] different types of data that it could
+[01:15:44] possibly find that was worth training
+[01:15:47] on, that was permissively licensed. It
+[01:15:49] includes um you know, Stack V2 and code.
+[01:15:53] Um
+[01:15:54] turns out that a lot of government
+[01:15:55] proceedings are actually uh
+[01:15:57] permissively, you know, uh licensed. Uh
+[01:16:01] wikis, um some
+[01:16:04] uh things on the on the web. Some news
+[01:16:07] sites are actually um permissively
+[01:16:09] licensed. Academic papers,
+[01:16:11] um online, you know, forums, things that
+[01:16:15] are in the public domain,
+[01:16:16] um educational resources and and so on.
+[01:16:20] So in the end there were 8 terabytes of
+[01:16:23] you know, data, which is actually pretty
+[01:16:24] good for permissively licensed uh data.
+[01:16:28] Um doing this project is actually much
+[01:16:32] harder than maybe it sounds at first
+[01:16:34] glance. It's not just simple as like,
+[01:16:36] oh, you look at the license and you're
+[01:16:37] like, oh, yep, Apache, a good or or CC,
+[01:16:41] a good.
+[01:16:42] Um there's some subtleties.
+[01:16:44] Um
+[01:16:45] first is license laundering.
+[01:16:48] So, people are kind of sloppy with
+[01:16:50] licenses. So, people might take some
+[01:16:52] copyright work and just, you know, put
+[01:16:54] it on a slap a CC BY on it. Anyone can
+[01:16:57] write this on the internet. It's kind of
+[01:16:58] hard to tell whether this is like a real
+[01:17:03] real or not.
+[01:17:05] Um
+[01:17:06] there's also this uh common practice
+[01:17:08] where, you know, for example, Doma is
+[01:17:11] um
+[01:17:12] is permissibly licensed. Remember, Doma
+[01:17:15] is the AI2 collection,
+[01:17:17] but collection licenses don't extend to
+[01:17:19] the individual works.
+[01:17:22] So, the collection is like
+[01:17:24] you know, is you
+[01:17:26] I mean, first of all, there's a question
+[01:17:27] where the collections are I think
+[01:17:29] collections can be copyright, but you
+[01:17:30] can I guess you can put a license on it.
+[01:17:32] Um anything. Um but the individual works
+[01:17:37] um are not
+[01:17:38] uh
+[01:17:39] necessarily if uh good. So, you can't
+[01:17:41] just look at data sets on Hugging Face
+[01:17:43] and you Many data sets on Hugging Face
+[01:17:45] you see they have a permissive license,
+[01:17:47] but if you dig deeper, it's actually not
+[01:17:49] um permissively licensed at the
+[01:17:51] individual level.
+[01:17:52] And they also made a decision to
+[01:17:55] uh forego training on any synthetic uh
+[01:17:57] data because training
+[01:17:59] um language models on synthetic
+[01:18:01] unlicensed data is is unclear.
+[01:18:04] So, probably it's going fine um
+[01:18:09] because um like technically these these
+[01:18:12] are like open way models with MIT
+[01:18:14] license. You can um
+[01:18:16] you know, do whatever uh you can use
+[01:18:19] them however you want, but um you know,
+[01:18:22] these language models were uh
+[01:18:24] presumably also trained on unlicensed
+[01:18:26] data, so it's a little bit of kind of
+[01:18:28] data laundering if you are really kind
+[01:18:31] of honest um here.
+[01:18:34] Um so,
+[01:18:36] so with this uh,
+[01:18:38] data, they compared with a bunch of, um,
+[01:18:42] other models, um, like the first LLaMA,
+[01:18:45] uh, MBT, um, and Qwen. And on a bunch of
+[01:18:49] benchmarks, they show that this
+[01:18:51] is not bad. I would say it's not nearly
+[01:18:54] as It's not as good as the Qwen, uh,
+[01:18:57] models, for sure, but it's, uh,
+[01:18:59] certainly outperforming the very
+[01:19:02] old kind of ver um,
+[01:19:04] This is like, you know, from 20
+[01:19:07] 20 three, I guess. So, quite old models.
+[01:19:10] Um, so, I would say that the conclusion
+[01:19:13] here is that you can do reasonably, but
+[01:19:16] it's I think it's still, uh, pretty
+[01:19:18] tough to compete without, um, doing more
+[01:19:20] tokens. But, I don't think this is the
+[01:19:22] final word on it, and I think you can
+[01:19:24] probably eke more out of publicly
+[01:19:26] permissive licenses if you try.
+[01:19:29] Okay, so, to summarize this, uh, lecture
+[01:19:32] here.
+[01:19:34] So, maybe hopefully I now I've,
+[01:19:36] um, given you some appreciation that
+[01:19:39] data is a very rich topic. It's not that
+[01:19:41] data just falls from the sky, or you
+[01:19:43] just go on Hugging Face and you download
+[01:19:45] a data dataset. Um, data has to come
+[01:19:48] from somewhere, and there's also a
+[01:19:50] technical, but also social context in
+[01:19:53] which, uh, data comes.
+[01:19:55] Um,
+[01:19:56] you know, because at the top, there's
+[01:19:59] the internet is a bunch of live
+[01:20:00] services. Right? There's hack to has
+[01:20:03] someone has to do the work of producing
+[01:20:05] raw whether it be the website that gives
+[01:20:07] you dumps, or someone has to build a
+[01:20:08] crawler, or or something.
+[01:20:11] And then, you someone has to make a
+[01:20:13] decision of how to process it into
+[01:20:15] usable form,
+[01:20:16] um, filtering, transformation,
+[01:20:19] deduplication. All of these things have
+[01:20:21] an impact on the quality of your final,
+[01:20:24] uh, language model.
+[01:20:26] And notice that filtering is like
+[01:20:28] probably one of the most
+[01:20:29] kind of important things. How do you go
+[01:20:31] from 200 trillion tokens to
+[01:20:35] you know, less than
+[01:20:36] like 3 trillion tokens. I think that
+[01:20:39] obviously is a huge reduction, which
+[01:20:41] um I think merits a lot of attention.
+[01:20:45] Data is in some sense a key ingredient
+[01:20:48] that differentiates language models. A
+[01:20:50] lot of language models are
+[01:20:52] um roughly the same kind of transformer
+[01:20:54] architecture,
+[01:20:55] um
+[01:20:56] but you know, data is some depending on
+[01:20:59] um how you process it can make a pretty
+[01:21:01] big difference.
+[01:21:03] There's plenty of legal and ethical
+[01:21:04] issues around data, um more than I can
+[01:21:08] get into this lecture.
+[01:21:10] And also, this this process is very
+[01:21:13] messy.
+[01:21:14] Um unlike, you know, some of the other
+[01:21:16] parts of this class, where things are
+[01:21:19] maybe more based on kind of first
+[01:21:21] principles,
+[01:21:22] um
+[01:21:23] you know,
+[01:21:24] data processing is right now, at least,
+[01:21:27] a lot just based on kind of vibes. You
+[01:21:29] set up you define this classifier, you
+[01:21:31] define this rule, you set some
+[01:21:32] threshold.
+[01:21:34] Um so, there are many opportunities to
+[01:21:35] improve. So, as you do your assignment
+[01:21:37] four,
+[01:21:38] uh maybe think about whether there's uh
+[01:21:40] better ways to do this, and this could
+[01:21:41] be maybe a research direction.
+[01:21:45] Okay, so that's it for today. So, next
+[01:21:47] time I'll continue talking about data.
+[01:21:49] I'll do talk a bit about uh
+[01:21:50] post-training data and a bit more about
+[01:21:53] uh you know, filtering.

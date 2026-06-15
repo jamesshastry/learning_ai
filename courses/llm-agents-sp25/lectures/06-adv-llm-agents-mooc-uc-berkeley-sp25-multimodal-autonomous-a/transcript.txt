@@ -1,0 +1,2078 @@
+[00:07] Okay, great. So, I think uh we'll get
+[00:11] started. Okay, thanks. Thanks everyone
+[00:14] for joining us today. It's our great
+[00:16] honor pleasure to have Russ from uh CMU
+[00:21] uh give uh the guest lecture on
+[00:23] multimodel autonomous AI agents. Uh Russ
+[00:26] is a professor at K Melon University and
+[00:30] also VP of research at Meta and
+[00:33] previously he was a director of AI
+[00:36] research at Apple as well. Uh Russ is
+[00:40] someone who doesn't need an
+[00:41] introduction. He has been a longtime uh
+[00:45] well-known uh and also early pioneer uh
+[00:49] in uh deep learning uh AI in general and
+[00:53] has done a lot of really exciting work
+[00:55] uh in the space for a very very long
+[00:57] time. So so I'm personally really
+[00:59] excited uh to have Russ give the guest
+[01:02] lecture uh and uh he's been doing really
+[01:06] exciting work in web agents multi model
+[01:09] autonomous AI agents. So yeah, really
+[01:11] looking forward to it. Thanks, Russ.
+[01:14] Thank you. Thank you, Don. Thanks for
+[01:15] the introductions. Um, so everybody can
+[01:18] hear me. Everything is good, right?
+[01:20] Okay, so today I'm going to talk about
+[01:23] uh multimodel AI agents and sort of give
+[01:25] you a little bit of overview what we've
+[01:27] been doing and some of the work that's
+[01:28] been happening around uh uh that space.
+[01:30] It's a very exciting space. I think that
+[01:33] a lot of people are thinking that the
+[01:34] year 2025 2026 is going to be the year
+[01:36] of agent. So you'll see a lot more work
+[01:38] coming out of out of academia and
+[01:40] industry net space. So um when we think
+[01:44] about large language models right we
+[01:46] think a lot of different sort of you
+[01:48] know innovations that happened in the
+[01:50] last uh in the last few years you know
+[01:52] we see examples of in context learning
+[01:54] zero short learning you have very good
+[01:57] representations of text uh you have uh
+[02:00] general long and coherent text that
+[02:02] these models can generate. sort of world
+[02:04] knowledge uh and so uh amazing things
+[02:07] has been happening in the space of large
+[02:08] language models right but uh what I
+[02:13] would like to talk to you about today is
+[02:15] uh this notion of going beyond just the
+[02:18] language models so you can think of
+[02:19] language models as you know given the
+[02:21] question you know the language model can
+[02:23] generate the answer instead we can try
+[02:26] building systems where that basically
+[02:28] can automate a lot of laborious tasks
+[02:32] right so And a lot of productive tasks
+[02:34] we perform today on the computer
+[02:36] potentially as well as you know many
+[02:38] tasks that we perform on the web could
+[02:40] potentially be automated. Okay. So for
+[02:42] example you know how many of you have
+[02:45] tried setting up AWS instance right uh
+[02:49] on you know my students are basically
+[02:50] saying it's it's a really difficult
+[02:52] process to do. The question is couldn't
+[02:54] you have an agentic model that goes and
+[02:57] sets up AW instance for you right so you
+[02:59] can start running your
+[03:01] experiments or you know wouldn't it be
+[03:03] nice and I think the technology is
+[03:04] getting there a little bit at this point
+[03:06] is you know create a set of PowerPoint
+[03:08] slides to present the content of this
+[03:09] paper right so I give you the paper the
+[03:11] agent reads and sort of goes to the
+[03:13] PowerPoint and organizes slides and
+[03:15] creates and gives you sort of a
+[03:17] presentation of of the paper you know
+[03:20] you know can you automate some of the
+[03:21] tasks that we're doing on Excel going on
+[03:23] the web and uh and so forth, right? You
+[03:25] can imagine a lot of useful uh uh
+[03:28] outcome if you're actually able to
+[03:30] design uh models that can do those
+[03:33] tasks. In this sort of lecture, I'm
+[03:36] going to be focusing primarily on web
+[03:38] agents and sort of give you a little bit
+[03:39] of overview of uh what these models are,
+[03:42] how we evaluate these models. Um and the
+[03:46] idea here is that you know you have a
+[03:48] basic language model, some sort of sort
+[03:50] of foundation model. Obviously you need
+[03:52] some form of text understanding like an
+[03:54] HTML and you also need to have a very
+[03:56] good understanding of uh uh the visual
+[03:58] information like the actual website
+[04:00] itself right so you can think of visual
+[04:03] encoding plus some form of text
+[04:05] understanding that goes into large
+[04:06] language model and that gives you some
+[04:08] form of web grounding right that you can
+[04:10] then use for uh uh performing tasks
+[04:14] tasks on the web and there's been a lot
+[04:16] of work I'm not going to list uh uh
+[04:18] there's been a lot of work in the last
+[04:19] few years where people trying to sort of
+[04:22] understand and trying to build systems
+[04:24] that can they can do these tasks. Let me
+[04:26] show you an example, right? An example
+[04:28] of a system um where I can say suppose I
+[04:32] give the task to my agent. Uh get me to
+[04:35] the page of a good Thai restaurant in
+[04:37] Pittsburgh. It should have at least 200
+[04:39] reviews and 4.3 stars. Pick the one with
+[04:41] the highest rating. Right? And this is
+[04:43] what the system does. Right? So it's
+[04:46] sort of, you know, it goes on Yelp.
+[04:49] It sort of searches for Thai restaurant.
+[04:52] So, it types in autonomously Thai
+[04:54] restaurant, right? It's um it's then
+[04:57] searching through possible restaurant in
+[05:00] Pittsburgh. It sort of finds one of
+[05:03] these restaurants which has 4.5 star
+[05:05] rating. It's a Pussad Garden. It's
+[05:07] actually a pretty good restaurant in
+[05:08] Pittsburgh, right? It's a good Thai
+[05:10] restaurant. Now, it's complete. Now
+[05:12] imagine I'm asking it to say well get me
+[05:14] a reservation at this uh for two people
+[05:17] at the earliest date and use my name JY
+[05:20] co who is the student who built this uh
+[05:22] and the phone number right and so the
+[05:23] agent goes on Google finds this
+[05:25] particular restaurant looks at the dates
+[05:27] looks at the next available date and
+[05:30] actually uh successfully making a
+[05:33] reservation right um and putting the
+[05:35] phone number and then basically stops
+[05:37] because you need to get a confirmation
+[05:38] to actually book something right uh So
+[05:41] it basically says you know in summary in
+[05:43] the next action I'll perform is stop
+[05:44] unable to proceed without confirmation
+[05:46] code for 30 f instructions to complete
+[05:48] the reservation right. So you sort of
+[05:49] have this notion of the agent that takes
+[05:51] tasks. It generates chain of thoughts
+[05:53] within thinking and then uh takes takes
+[05:55] the action. Or I can give the example of
+[05:58] help me navigate to the shirt that has
+[06:00] on it. Right? So it goes on Amazon um
+[06:03] it's trying to basically look for
+[06:05] something similar and uh you know finds
+[06:10] a shirt that has something similar,
+[06:12] right?
+[06:13] um these are the examples that are
+[06:14] heavily cherrypicked uh out of I think
+[06:18] that we've tried maybe like you know 30
+[06:20] times and out of 30 times one of them
+[06:21] succeeded right so that basically means
+[06:23] that these systems do not are not really
+[06:26] uh working very well at this point but
+[06:28] uh it has the potential of you know give
+[06:30] you a flavor of what these systems can
+[06:31] do I think in today's world like open
+[06:34] eyes operator kind of like sort of you
+[06:36] know uh moving in that direction is one
+[06:38] of one of the uh very strong models
+[06:40] that's that's out there. So today I'm
+[06:43] going to talk about three different
+[06:44] things, right? I'm going to talk about
+[06:46] visual web arena which is a way of
+[06:48] evaluating uh multimodal agents on uh
+[06:52] some of the realistic visual tasks. I'll
+[06:55] talk about some of the inference time
+[06:57] algorithm what we call a three search
+[06:59] algorithm for large language model
+[07:00] agents um which sort of allows you to uh
+[07:05] uh potentially uh do interesting search
+[07:07] apply interesting search techniques to
+[07:09] find uh necessary information on the web
+[07:12] and then the last part I'll talk a
+[07:13] little bit about uh some of the way of
+[07:15] scaling up data for training these
+[07:17] agents because one of the aspects of of
+[07:19] of of uh of these agents in general is
+[07:22] the availability of data what can you do
+[07:24] online and how can you get the data
+[07:25] online? Right? So, let's look at the uh
+[07:28] visual web arena. Um, one of the earlier
+[07:32] versions uh was uh uh was developed by
+[07:35] folks at CMU. Uh right, it was done by
+[07:40] um Shyen Shuan Zu and Frank Zu. Um
+[07:44] they've introduced the notion of webin
+[07:46] which is a fairly realistic environment
+[07:48] at the moment. It has popular categories
+[07:51] like shopping, Reddit and GitLab which
+[07:53] is equivalent to Amazon and Reddit and
+[07:55] GitHub. It's a self-hosted open-source
+[07:58] essentially environment which is re
+[08:00] reimple reimp implementation of the
+[08:02] environment and the data comes from real
+[08:04] websites from Amazon wrote uh Reddit and
+[08:07] GitHub and what's interesting about this
+[08:09] environment and I'll talk about this the
+[08:10] tasks are fairly easy for humans about
+[08:12] 78 success rate but very difficult for
+[08:14] language models at a time they've
+[08:15] reported numbers like 40%. The only
+[08:18] problem with this particular task is
+[08:19] that task are designed to use just HTML
+[08:21] source code, right? And we found that a
+[08:26] lot of times when whenever you're
+[08:27] dealing with HTML and JavaScript, it's
+[08:30] it's it's a very messy type of
+[08:33] representation interactive elements that
+[08:35] when you're interacting with the
+[08:36] environments, they don't get displayed
+[08:37] correctly HTML. There is like Java CSS
+[08:40] code and it's it's very hard to kind of
+[08:42] like process them in context length.
+[08:44] HTML pages can be fairly complex like
+[08:46] they can easily feel feel up to 100,000
+[08:48] tokens right if you kind of like trying
+[08:50] to uh uh look at that. So um and this is
+[08:56] how it sort of looks like you know you
+[08:57] have this uh you know kind of like HTML
+[09:01] based representation spatial layout is
+[09:04] also not conveyed very well in in HTML
+[09:07] so it looks like just a texton
+[09:08] representation
+[09:10] um it's very difficult to deal with
+[09:12] right um just because HTML is messy so
+[09:15] we've tried building what we call visual
+[09:17] web arena uh which is we try to build
+[09:20] and track the process of multimodel
+[09:22] agents agent that actually have visual
+[09:24] grounding. Um, so we've designed these
+[09:27] visually grounded tasks to test the
+[09:29] abilities of these models and it's sort
+[09:31] of inspired by web arena. So we call it
+[09:33] visual web arena. Um and you have visual
+[09:36] inputs and outputs um that allows you to
+[09:39] work with unique and interesting sort of
+[09:41] and something that's uh real world and
+[09:44] again we sort of uh have the
+[09:46] environments of what we call one-stop
+[09:48] shop which is uh essentially Amazon like
+[09:51] environment Reddit and OS class which is
+[09:53] more like a craggly stack of environment
+[09:55] the class type of environment right so
+[09:58] let me show you um and then you can
+[10:00] think about that you know you have some
+[10:02] representation I have some visual input
+[10:04] and I ask you to um uh to solve
+[10:07] something that actually requires visual
+[10:09] grounding and visual understanding. So,
+[10:11] let me show you some examples of of
+[10:13] this. Let's say um I ask I give you the
+[10:17] task. I ask you to find this exact bike.
+[10:19] So, I'm looking for this bike that's
+[10:21] listed for 35500 and post the comment
+[10:24] offering $10 less than the asking price.
+[10:26] Okay? And this is what the agent has to
+[10:29] do. Again, it's a simulator. It's a
+[10:30] fully self-hosted environment, right?
+[10:33] You sort of go, you navigate, you find
+[10:35] this bike, and then you basically make
+[10:38] uh a posting by offering, you know, $10
+[10:42] less than what the asking price is,
+[10:44] right? That's just one one example,
+[10:46] right? And that basically you you've
+[10:48] completed uh successfully completed that
+[10:51] task. And I can imagine in the future
+[10:53] there's going to be agents that's going
+[10:54] to be bargaining on your behalf and
+[10:55] there's going to be agents on the other
+[10:57] side that's going to be, you know,
+[10:59] making you counter offers. Here's
+[11:01] another example. Let's say I ask you buy
+[11:04] the cheapest color photo printer and
+[11:05] send it to Emily's place as shown in the
+[11:07] image. And what you can see this image
+[11:09] is upside down. Um, which makes it
+[11:12] fairly difficult for existing models to
+[11:14] sort of look at this and actually figure
+[11:16] out what the address should be, right?
+[11:18] So some of these kind of like tasks we
+[11:19] designed so that it wouldn't be that
+[11:21] easy for the models to to solve. Um, and
+[11:24] so what the agent needs to do, it sort
+[11:26] of needs to go, it needs to find, it
+[11:28] needs to sort by price, it gets the
+[11:30] printer, it adds to the cart, then it
+[11:33] goes and it starts completing, you know,
+[11:35] the address. So, you know, it has pull
+[11:38] down menu. So, it sort of, you know,
+[11:40] looks fairly realistic, right? And then
+[11:42] you go and then you place the order. And
+[11:45] when you end up in this state, that
+[11:47] particular state, that basically means
+[11:49] that you've successfully accomplished
+[11:50] the task. Right? Um, again, just to
+[11:54] reemphasize, it's a simulation. Uh, it's
+[11:56] not actually doing it on the real web.
+[11:58] It's a self-hosted, uh, uh, environment.
+[12:00] Here's another one where requires you to
+[12:03] sort of jump between two different uh,
+[12:05] websites. You can ask, what's the 2022
+[12:07] total nominal GDP of the area that
+[12:10] produce most sugar cane in the year of
+[12:12] 2021 and billion, right? And that's your
+[12:15] landing page. What's interesting here is
+[12:17] that you're essentially asking the model
+[12:19] to understand the images because if you
+[12:23] look at the year 2021 that's over here
+[12:26] and you look um I think in this case
+[12:30] Asia produced more sugar cane than than
+[12:34] Brazil or the other way around Brazil
+[12:36] produced more sugarcane than Asia. So
+[12:38] you kind of like have to look at these
+[12:39] graphs and understand um what's uh which
+[12:43] country you should be looking at. Right?
+[12:45] So if you kind of zoom in, you can sort
+[12:46] of say, okay, uh that was I think that
+[12:49] was Asia that produced more sugarcane.
+[12:51] So you have to go on Wikipedia and then
+[12:53] find find the answer, right? And the
+[12:55] answer is
+[12:56] 339 trillion
+[12:58] um GDP. So you can kind of see that you
+[13:02] have to sort of have this visual
+[13:03] grounding. You have to understand
+[13:04] images. You have to understand graphs um
+[13:08] to to solve some of these tasks. All
+[13:10] right. So the way that the environment
+[13:12] is represented, we can think of this
+[13:14] environment as a pom dp environment. So
+[13:16] this partial observable mark of decision
+[13:18] process. So you have states, you have
+[13:21] actions, observations and transition
+[13:23] function, right? And so for those of you
+[13:24] who've worked in reinforcement learning
+[13:26] or who've been sort of dealing with mark
+[13:29] of decision MTPs, that should be
+[13:31] familiar. And that was the goal to
+[13:32] design the environment in such a way
+[13:34] that it becomes an MDP so that you can
+[13:37] potentially you know train your favorite
+[13:39] uh reinforcement learning algorithms on
+[13:41] this. So the environment itself have
+[13:44] observations whether it's an HTML
+[13:46] whether it's the visual representation
+[13:49] like the actual website itself uh and
+[13:52] something that we call accessibility
+[13:53] tree which is a cleaned up
+[13:54] representation of HTML.
+[13:57] You have a set of actions and the set of
+[13:59] actions is actually fairly diverse set
+[14:01] of actions, right? You can clear click
+[14:02] on particular element. You can hover
+[14:04] over particular element. This is an
+[14:06] interesting one. You can type in a
+[14:07] particular element and text, right? So
+[14:09] you can think it's not just a set of
+[14:10] discrete actions, you know, basically
+[14:12] you can type in whatever, right? If
+[14:14] you're searching for something or you're
+[14:15] filling um uh certain
+[14:18] boxes, you can have a new tab. So you
+[14:21] can jump to uh a new website, you can
+[14:24] focus on a particular top, you can close
+[14:27] the top, you can go particular URL, you
+[14:29] can go forward, go backwards, scroll up,
+[14:30] scroll down and then you have an action
+[14:32] called stop and then answer. Stop is the
+[14:34] action where the model basically says
+[14:35] okay I've solved the task stop and then
+[14:37] I give you the final the final answer.
+[14:40] Um in this particular environment you
+[14:41] have deterministic transition function.
+[14:43] You have the state that generates the
+[14:45] HTML page and given the state and an
+[14:48] action you generate the next state and
+[14:50] that the next state generation is
+[14:51] actually deterministic basically meaning
+[14:53] that if you're on a particular website
+[14:54] and you click on a particular element or
+[14:56] you type something there is only one uh
+[14:59] there's no stoasticity so you know gets
+[15:01] you to the next state and we also define
+[15:03] reward functions and reward function is
+[15:05] primarily to to evaluate when you've
+[15:07] successfully solved u a task. So it's a
+[15:10] fairly sparse reward signal that we get
+[15:12] in this environment. Okay. But let me
+[15:15] show you just walk you through what the
+[15:17] model actually needs to do here. Right.
+[15:20] So what the model needs to do is it you
+[15:22] know has to start on the on the
+[15:24] homepage. So here you're trying to find
+[15:26] the cheapest uh printer and you have to
+[15:28] navigate to the printer category right
+[15:30] in terms of the actions that you need to
+[15:32] take. Then you have to sort by
+[15:33] descending order. So if you click sort
+[15:35] by price right then you click on the
+[15:38] cheapest color printer. You have to
+[15:39] choose what's the cheapest one. So you
+[15:41] kind of like have to understand how much
+[15:43] each printer cost and you have to choose
+[15:44] the cheapest one. Then you have to add
+[15:46] it to the shopping cart. That's another
+[15:48] step. You have to proceed to checkout.
+[15:50] That's another step. Then you have to
+[15:51] fill in the form correctly, right? With
+[15:53] with the information given to you in
+[15:55] this image. Um and then you have to
+[15:58] place the order. So if you look at the
+[16:00] entire trajectory here, it's fairly
+[16:02] complex trajectory, right? The model has
+[16:04] to sort of reason about what it's seeing
+[16:06] on the web. It has to understand what I
+[16:08] mean by the cheapest. Um, so it has to
+[16:10] have a notion of sorting. Um, then it
+[16:13] has to really understand good multimodel
+[16:15] abilities to understand what what I'm
+[16:17] seeing in the images. Uh, what's the
+[16:19] address and I have to go in and fill in
+[16:21] the address, right, with the right
+[16:22] information. So if you look at it, it's
+[16:24] it's not a very trivial task uh, uh, to
+[16:27] accomplish, right? And that's just one
+[16:28] of uh, a thousand tasks that we've
+[16:31] designed.
+[16:32] So in terms of the distribution of tasks
+[16:34] across the websites um uh you know we've
+[16:38] looked at how difficult those tasks are.
+[16:40] We have I think we have 950 tasks in
+[16:42] total close to thousand tasks and you
+[16:44] can see about 15% are easy. Basically
+[16:47] what that means is that it's easy in
+[16:48] terms of reasoning difficulty and easy
+[16:51] in terms of visually understanding what
+[16:53] I'm asking you. Basically means you have
+[16:55] to do only a few clicks to actually
+[16:56] solve the task. And then you sort of
+[16:58] have this corner here which is fairly
+[17:00] difficult uh reasoning difficulty. So I
+[17:03] really have to understand what I'm
+[17:04] seeing in the image. And visual
+[17:06] difficulty uh and reasoning difficult
+[17:08] basically means that I have to click on
+[17:09] a lot of things and kind of explore to
+[17:12] to successfully uh uh accomplish uh this
+[17:15] particular task. Right? So in this
+[17:17] particular environment you can actually
+[17:18] split and try to understand is it my
+[17:20] visual models I'm missing or is it my
+[17:22] reasoning uh is is is missing.
+[17:26] uh here's how we evaluating uh these in
+[17:30] this environment. So we have execution
+[17:31] based evaluation. So for example a lot
+[17:33] of times we want to find the exact
+[17:35] match. So if I'm ask you the question
+[17:37] what's the ising number of the company
+[17:38] that occupies the largest portion of
+[17:40] Warren Buffett portfolio then I kind of
+[17:42] like go to Wikipedia I find Warren's
+[17:44] Buffford portfolio and then I sort of
+[17:45] get the information and I need to get
+[17:47] this exact number. Sometimes if I said
+[17:50] add something like that to the man's
+[17:52] wear who whatever this man is wearing to
+[17:54] my wish list then I kind of like you
+[17:56] know find something and I basically have
+[17:58] visual QA like is this a polo shirt yes
+[18:00] or no is this a green shirt and so forth
+[18:03] right um and then you have you know
+[18:06] sometimes when you're looking for
+[18:06] something you say it has to include you
+[18:09] know above 200 or below 30 above 20,000
+[18:12] below 30,000 and so forth right so you
+[18:15] can kind of like have these verifiers
+[18:17] that once you once I give you the final
+[18:20] state. I can actually run these
+[18:22] verifiers and sort of tell you have you
+[18:24] solved the task or not. And for a lot of
+[18:25] these prompts, there's only one
+[18:27] solution, right? Because the environment
+[18:29] is not, you know, the full internet.
+[18:30] It's fairly constrained, but at least
+[18:32] you can verify whether your model
+[18:34] actually successfully solved the task or
+[18:36] not. Now, when we think about LLM's uh
+[18:40] or visual language VLMs agents, visual
+[18:42] language models, um the way to think
+[18:45] about this is is the following, right?
+[18:48] Um, one thing I can do is I can look at
+[18:50] the HTML and try to, you know, use that
+[18:52] as a representation into my uh into my
+[18:55] LLM. It's also cluttered with a lot of
+[18:58] unnecessary information. You know, it
+[19:00] has a long and confusing context.
+[19:02] There's been a lot of work where people
+[19:03] sort of doing markups where they're
+[19:04] trying to identify the relevant parts of
+[19:07] the HTML and trying to use that. There's
+[19:10] another representation is to use
+[19:12] something that's called set of marks
+[19:13] which is a simplified representations.
+[19:16] uh so what it does is it basically puts
+[19:18] bounding boxes around elements around
+[19:20] clickable elements right so whether I
+[19:22] can click on certain elements or not and
+[19:24] that's something that you can get from
+[19:26] uh from any HTML right so that's set of
+[19:28] marks representation something that you
+[19:30] can do both of these representation have
+[19:32] advantages and disadvantages set of
+[19:33] marks is useful because actually
+[19:35] visually I understand what I'm seeing in
+[19:37] the image and what I can click on um but
+[19:41] it's also very cluttered type of
+[19:42] representation and there is a third type
+[19:44] of representation that people are now
+[19:46] beginning to use which is coordinate
+[19:47] based representation where I'm just
+[19:48] trying to predict the coordinate of
+[19:49] where I need to click. So ultimately
+[19:51] it's probably going to be combination of
+[19:53] both HTML set of marks some kind of
+[19:55] coordinate based
+[19:56] representation and the way you can think
+[19:58] about these sort of representation is
+[20:00] that if let's say I have a original web
+[20:02] page I can use the set of marks
+[20:04] representation right so I can put the
+[20:06] bounding boxes and have ids for each box
+[20:10] and sort of have some representation
+[20:11] what each box is actually doing and
+[20:13] perhaps have some form of captioning of
+[20:16] each image. So I have this sort of set
+[20:19] of set of marks elements in the text as
+[20:22] well as the actual visual
+[20:23] representation, right? And if I say if
+[20:25] I'm trying to find this post, navigate
+[20:26] to the comment section of it, then you
+[20:28] pass it to the LLM or VLM agent and then
+[20:31] the agent actually executes a precise
+[20:33] action to to do next. For example, I
+[20:36] want to click on element ID 31 and
+[20:38] element ID 31 is one of the elements
+[20:41] here, right? And so again the way that
+[20:44] we typically have a representation I
+[20:46] have a goal I get an observation I
+[20:49] represent it using set of marks that
+[20:51] goes to the multimodel large language
+[20:53] models both the text and the image as
+[20:55] well as the goal and the model generates
+[20:58] chain of thoughts. So in this case it
+[20:59] would generate listing step by step. The
+[21:01] objective is to navigate to the food the
+[21:03] post and and so forth. Um to navigate to
+[21:06] this listing I need to click on the
+[21:08] comment linked associated with the
+[21:09] sushi. In summary, my next action will
+[21:11] be, you know, I'll perform action click
+[21:13] 34. And again, that's the action that
+[21:15] you're clicking. Right? So that's one
+[21:17] particular action that the model is um
+[21:21] uh is taking uh and then it goes once
+[21:24] you click on that particular element,
+[21:26] the the simulator will go to the next
+[21:28] web page, the next the next state. And
+[21:31] then you repeat this uh you repeat this
+[21:33] process, right? And here again the
+[21:35] action is you take a particular action
+[21:37] uh from the list of actions that that
+[21:38] I've mentioned
+[21:40] before. Now if I look at um sort of
+[21:43] baseline models and kind of try to
+[21:45] understand which models are working well
+[21:47] and which models are not. Uh what's
+[21:49] interesting is that if I only use text
+[21:51] only based representation
+[21:53] um then I hit something like 9%
+[21:56] accuracy. If I use text plus caption, so
+[21:58] if I caption any any visual information,
+[22:01] any images that I have on the web pages,
+[22:03] you know, you have improvement. If I
+[22:05] actually try to use multimodal model,
+[22:07] you get further improvement. If I use
+[22:10] set of marks representation, sort of
+[22:12] like I understand clickable elements and
+[22:13] what I can do, you get a little bit of
+[22:16] improvement as well. So you kind of go
+[22:18] from 9% to something like 18%. And then
+[22:20] you get human level performance. And the
+[22:22] human level performance hits close to
+[22:24] you know in this case for visual web it
+[22:26] was hitting something like 85 86 uh uh
+[22:30] accuracy right so there's a big gap
+[22:32] between what people are capable of doing
+[22:34] it and what existing models are capable
+[22:37] of doing um this was interesting the way
+[22:40] that we've collected the data is we
+[22:41] actually asked students at
+[22:43] CMU to solve these tasks we give them
+[22:46] the prompts we give them the tasks we
+[22:47] give them the environment and they just
+[22:49] interact with the environment and then
+[22:50] they end in a state and then to evaluate
+[22:52] using our execution based evaluation
+[22:54] whether they success successfully solved
+[22:56] the task. What's interesting is that we
+[22:58] found that you know humans were not at
+[23:01] 100%. Uh right and what's interesting a
+[23:04] lot of mistakes that people make are
+[23:05] kind of silly mistakes. Uh so for
+[23:08] example if I ask you to find uh you know
+[23:11] if I ask you to say well find me the
+[23:13] cheapest bicycle right uh that has these
+[23:16] specific constraints or these
+[23:17] conditions. I want it to be black. I
+[23:19] want it to be of this color. I want it
+[23:21] to be less than $2,000. Go find me the
+[23:24] cheapest bike. Uh what people tend to
+[23:27] do, people tend to kind of like go
+[23:29] through the go through the simulator.
+[23:31] They look at they find one bike, they
+[23:33] find the second bike, and then they
+[23:34] basically say, "Okay, I'm tired of
+[23:36] looking for anything else." Right? So I
+[23:38] have two bicycles, I take the cheapest
+[23:39] one and say, "I'm done." H whereas
+[23:42] actually there are 10 bicycles, right?
+[23:44] That satisfy the constraint. So people
+[23:45] are just not very good at information
+[23:47] seeking tasks or at least we didn't pay
+[23:50] uh students enough. We gave them pizza
+[23:53] uh to to kind of like go and you know
+[23:55] spend more than a few minutes to solve
+[23:57] these tasks. So majority of the kind of
+[23:59] information seeking task is where people
+[24:01] were not really good at and sometimes
+[24:03] people were kind of like a little bit uh
+[24:05] you know they would solve the task but
+[24:07] they would forget to click on you know
+[24:09] you know place the order. So they would
+[24:10] solve the task, they would add to the
+[24:12] cart, they find the right thing, but
+[24:13] they forget to click on, you know, place
+[24:15] the order and they forgot to and if if
+[24:17] they forget to, you know, uh, place the
+[24:20] order, then our system basically says
+[24:21] that, well, you haven't solved it,
+[24:23] right? Because they actually haven't
+[24:24] haven't bought the item. Um, and so, you
+[24:27] know, this is an interesting uh part
+[24:29] because I think that agentic systems
+[24:32] should be able to solve these tasks.
+[24:34] system should be much better at
+[24:35] information seeking and finding sort of
+[24:37] uh uh the information just because it
+[24:39] requires less uh cognitive load whereas
+[24:42] people are not very good at doing
+[24:44] that. If I look at sort of you know
+[24:46] trying to understand you know where we
+[24:49] are uh with these models you can kind of
+[24:51] like see that llama you know the the
+[24:54] older versions of llama they all were
+[24:56] kind of like really bad. If I have
+[24:58] accessibility tree plus captions, a lot
+[25:00] of these models would kind of, you know,
+[25:02] go higher. And then once I have
+[25:05] multimodels, you have much better
+[25:07] representation. And then once I have,
+[25:08] you know, the multimodel models at that
+[25:11] time looking Gemini Pro and GPT4, I
+[25:13] think GPT40 now hit something like 90%.
+[25:16] So like these models do do climb, they
+[25:18] do better, uh, but they still far below
+[25:21] what people can do. Uh, right. Even the
+[25:24] best models today are sitting around
+[25:27] 20% accuracy right in terms of solving
+[25:30] these
+[25:32] tasks. And here's one example I wanted
+[25:34] to show is it's an interesting example
+[25:37] where uh the GPT model was able to
+[25:39] successfully solve it. I ask you I don't
+[25:42] like the author of this image from the
+[25:43] posts, one of the posts. Can you help me
+[25:46] uh block them? And the engine would
+[25:49] actually go it would sort of click on
+[25:50] the right things. It would find the
+[25:52] post. it would go to the settings and
+[25:54] through sort of executing multiple
+[25:56] clicks it would actually block a
+[25:59] specific user right just as an example
+[26:01] like you give it this instruction and
+[26:02] the model would actually go um and and
+[26:04] do that and this sort of has this notion
+[26:07] of that I'd like to think about web
+[26:09] agent architectures and I'll I'll make
+[26:11] that reference later on for physical
+[26:13] agents uh but you can think about these
+[26:15] sort of architectures where you know you
+[26:17] observe some input say a web page um you
+[26:21] do some form of parsing right of the web
+[26:24] page whether it's visual and HTML or
+[26:26] some kind of compressed representation
+[26:27] of HTML plus visual understanding you
+[26:30] have an objective right and the
+[26:32] objective is what I need to do and a lot
+[26:35] of times what uh what a lot of these
+[26:36] models would do is they would generate
+[26:38] high level plan right they would
+[26:39] generate a plan of how to execute how
+[26:41] you should proceed to solve the task and
+[26:44] then you kind of you know uh execute the
+[26:46] low-level actions which is clicking on
+[26:48] the specific element right and that sort
+[26:50] of goes in loop
+[26:51] you know, you can refine the highle
+[26:53] plan, you can execute a low-level action
+[26:55] up until you hit a stop action, which
+[26:57] basically means that the agent is done.
+[26:59] Uh, I think I've solved the task. Okay?
+[27:03] And, you know, you can think of planning
+[27:05] as, you know, uh, as a system. There's
+[27:07] been some work on building these
+[27:08] hierarchical systems where, you know,
+[27:10] for example, step one, I can say,
+[27:13] navigate me to a particular category,
+[27:16] right? Step two, um, you know, I I want
+[27:19] to sort based on the rating of that
+[27:20] category, and that would be two level
+[27:22] actions. You're selecting and then
+[27:23] you're sorting, right? And then maybe,
+[27:25] you know, you select an item under $20.
+[27:27] And then maybe you're buying a selected
+[27:29] item, right? You need to buy it, and
+[27:30] that's three lowlevel actions. You add
+[27:32] to the cart, you proceed to the
+[27:33] checkout, and you do shipping. Um, so
+[27:36] there is some sort of work right now
+[27:38] that's trying to have the planning model
+[27:40] that actually, you know, plans what you
+[27:41] need to do, and then and then you
+[27:43] execute those. So visual web arena we
+[27:46] think of it as a step towards building
+[27:48] general purpose agents all right it's
+[27:51] it's a simulator so you can evaluate
+[27:53] those models um tasks that we design are
+[27:55] not very consequential at this point you
+[27:57] know they don't really represent
+[27:58] significant economic value at this point
+[28:00] and and we've designed these tasks to be
+[28:02] simpler because the current large
+[28:04] language model agents or AI agents do
+[28:07] not even do well on these tasks the gap
+[28:08] is still fairly significant
+[28:11] um and the longerterm question is can we
+[28:13] automate productive
+[28:15] economically uh valuable tasks, right?
+[28:20] Um, one of the interesting failure modes
+[28:23] that we see this these models and and
+[28:25] again we're fixing those a lot of that
+[28:27] is sort of progresses as the models
+[28:29] become uh better and better. But one of
+[28:31] the things that we're seeing is is this
+[28:33] notion of long horizon uh reasoning and
+[28:35] planning right so models sometimes
+[28:39] oscillate between two web pages or
+[28:41] sometimes they get stuck in the loop. So
+[28:43] it's you know I'm trying to do something
+[28:44] I go to this web page and then I go back
+[28:46] and then I go forward and I go back. So
+[28:47] this is the notion of persistent memory.
+[28:50] A lot of times sort of you know memory
+[28:52] is missing. So good representation of
+[28:54] what I've done so far um is missing. Of
+[28:57] course I can concatenate every single
+[28:59] web page I visited with every single
+[29:01] HTML but that becomes fairly cumbersome,
+[29:03] right? You need to have a good
+[29:04] persistent representation of the memory.
+[29:06] A lot of times you know models would
+[29:08] correctly start on performing task and
+[29:10] then undoing them. I don't know why.
+[29:12] It's just basically means they don't
+[29:13] don't have very good reasoning
+[29:15] abilities. And a lot of times agents
+[29:18] tend to stop uh exploration execution
+[29:20] too early. So instead of exploring what
+[29:21] are the possibilities there, they
+[29:24] actually try to do something and then
+[29:25] you stop and you basically execute the
+[29:27] stop action and says like I I you know I
+[29:29] can't solve the task. I'm not seeing how
+[29:30] I can solve the
+[29:32] task. Um and there's also some failures
+[29:34] in visual processing. So sometimes you
+[29:36] can click on the wrong items identifying
+[29:39] specific items in complex web pages.
+[29:42] There is also you know they lack a
+[29:43] little bit of spatial reasoning like if
+[29:45] you're asking the question what are the
+[29:47] prices of products in the first row you
+[29:49] kind of like have to understand what the
+[29:50] first row is but the second row and like
+[29:52] what's the middle row right so certain
+[29:54] spatial you know understanding is
+[29:56] missing but I think those things will
+[29:58] potentially get better as we sort of uh
+[30:01] um can get the data for training these
+[30:04] models right so what we need to do we
+[30:06] need to do a lot more to close the gap u
+[30:09] definitely reasoning and planning over
+[30:11] long horizon And that's I'll talk a
+[30:13] little bit about this, but that's one of
+[30:14] the key failure modes. Uh we also need
+[30:17] to allow agents to search. You can think
+[30:19] of it as executing and coordinating
+[30:22] multiple instances in parallel and
+[30:24] asking for clarifications and
+[30:25] confirmations, right? So a lot of times
+[30:28] search is actually, you know, you can
+[30:29] think of it as test time inference
+[30:31] technique. Basically tries to explore
+[30:33] possibilities to figure out what's the
+[30:36] right way to solve the task and asking
+[30:38] for clarification. And this is where
+[30:39] uncertainty estimation comes in. It's
+[30:41] also fairly challenging where you
+[30:43] basically the model has to understand
+[30:44] it. is confused and then he has to go
+[30:46] and ask humans for for clarifications or
+[30:49] guidance and obviously you need strong
+[30:51] you know visual language code models and
+[30:53] also identifying appropriate levels of
+[30:55] abstractions for agents like you know do
+[30:57] you rely on screenshots what you're
+[30:59] seeing visually do you rely on HTML or
+[31:01] maybe you rely on APIs a lot of you know
+[31:04] there's a lot of websites that would
+[31:05] have API so maybe instead of actually
+[31:07] going through the web you actually go
+[31:09] through API calls right and again I
+[31:12] think that multimodel models here be
+[31:15] becomes very important because a lot of
+[31:16] real world task will require some form
+[31:18] of visual grounding right so for example
+[31:20] if you you know if you're interacting
+[31:22] with powerpoint if you're interacting
+[31:24] with Photoshop right a lot of it yes you
+[31:26] can do it through API but a lot of
+[31:28] things are also done through visual
+[31:29] grounding and visual understanding
+[31:32] um so we definitely need to train and
+[31:34] build stronger visual language
+[31:37] models so that kind of like gives me
+[31:39] this notion of of visual visual web
+[31:42] arena which is the environment that we
+[31:43] use for doing evaluation Now let's talk
+[31:45] uh about um uh the research uh or we can
+[31:51] think of it as again test time
+[31:53] inference. One interesting thing about
+[31:56] uh agentic um agents in general is that
+[32:00] you have this notion of exponential uh
+[32:03] error compounding right. So for example
+[32:06] you know uh if your model is accurately
+[32:09] can can be accurate at onestep
+[32:11] prediction at 90%. Then if you're
+[32:14] executing you know 30 actions then your
+[32:17] accuracy goes down to 4%. Right? Um so
+[32:21] you basically need to be very very
+[32:23] accurate. So you need to be very precise
+[32:25] in terms of like executing each step in
+[32:27] order to be able successfully you know
+[32:29] solving long horizon tasks and that's
+[32:31] pretty well known in anytime you have
+[32:33] sequential decision-m process uh you
+[32:36] have this issue right uh the errors do
+[32:39] compound over time uh which makes it uh
+[32:42] which makes it uh a very very difficult
+[32:44] uh difficult task. Uh so what happens
+[32:49] here? Well, local decisions have global
+[32:51] consequences, right? So, for example,
+[32:54] let's say I ask you the question, add
+[32:56] coconut milk to my cart. Well, I can
+[32:59] click on element ID 31 or maybe and that
+[33:02] gives me to the next state or maybe I
+[33:04] can click element ID 24 that gets me to
+[33:06] the next state, right? And then so
+[33:08] forth. There's sort of different
+[33:10] choices. There's a lot of actions. The
+[33:12] action space could be exponential,
+[33:14] especially if I'm doing searching as
+[33:15] well, right? So I can type text. Um and
+[33:18] so you can imagine that each one of
+[33:21] these sort of leads to a trajectory
+[33:25] right once I execute the trajectory um
+[33:28] then potentially I can evaluate you know
+[33:30] which one is right which one is wrong
+[33:32] and let's say you know basically this
+[33:34] state gives me the right outcome and all
+[33:36] the other states don't and especially
+[33:38] you know if you're executing actions you
+[33:40] know 30 40 50 actions um that becomes uh
+[33:43] very challenging and if you have a
+[33:45] policy right now that you know you can
+[33:47] think of uh uh VLM as your policy that
+[33:50] basically predicts the probability 0.5
+[33:52] you should click on this section and
+[33:53] probability 0.1 you should click on this
+[33:54] section then obviously you know finding
+[33:57] the correct path is going to be very
+[33:59] difficult right so you know you
+[34:03] basically have to you have to be able to
+[34:05] explore the environment very efficiently
+[34:08] right in this sort of exponential uh in
+[34:10] this exponential uh
+[34:13] space now one of the things that turns
+[34:16] out to work Okayish uh or at least as a
+[34:19] first step is doing search by repeated
+[34:21] sampling. All right, it's a very simple
+[34:24] idea, very easy idea. You sample action
+[34:28] from your model until you hit the stop
+[34:30] action. Okay, so let's say you sample
+[34:32] this path. Um and then you evaluate the
+[34:35] resulting trajectory. So you look at the
+[34:37] trajectory and you can say have you
+[34:38] solved the task or did you not solve the
+[34:40] task? Right? If you have a verifiers
+[34:42] that can tell you that you solve the
+[34:43] task, then you know whether it's success
+[34:45] or not success, right? And if it's a not
+[34:48] success, then you repeat, right? This
+[34:53] would be an instance of what's called
+[34:54] rejection sampling, right? You generate
+[34:56] the trajectory, you look at the outcome,
+[35:00] and if you didn't solve it, you generate
+[35:01] another trajectory, right? Um this is a
+[35:05] very simplistic you know way uh
+[35:09] rejection uh called rejection sampling.
+[35:11] You basically sample until you hit the
+[35:12] right answer. Uh it's fairly inefficient
+[35:15] but it's surprising that a lot of work
+[35:18] uh that's happening right now for
+[35:20] example in space of reasoning like
+[35:21] models like 01 03 or deepseek they're
+[35:26] essentially doing exactly this. They're
+[35:29] essentially doing rejection sampling. I
+[35:30] give you the math problem. I start
+[35:32] generating thinking tokens up until I
+[35:35] get the right answer. Right? And so I
+[35:37] start with simpler prompts. I I
+[35:39] generate, you know, sometimes right
+[35:41] answers, sometimes wrong answers. I use,
+[35:43] you know, reinforcement learning to
+[35:44] reinforce positive and then de reinforce
+[35:47] negative and sort of start scaling it
+[35:49] up. So the simple idea of rejection
+[35:52] sampling is essentially what's driving
+[35:54] uh a lot of innovation right now in in
+[35:56] reasoning capabilities, right? which is
+[35:58] amazing and and very was very surprising
+[36:01] to me that it actually works. Um so
+[36:04] we've sort of started looking at exactly
+[36:06] the same problem but for us uh in this
+[36:09] particular domain it's not that you can
+[36:11] generate you know thinking tokens and
+[36:14] then you basically get the answer here
+[36:16] you actually have to execute actions in
+[36:18] the environment and you change the state
+[36:20] of the environment right which makes it
+[36:23] uh much more uh much more difficult. So
+[36:25] here you do rejection sampling and
+[36:27] hopefully at some point you'll hit the
+[36:28] right uh the right answer. What happens
+[36:31] is that you know repeated sampling tends
+[36:35] to help right so here's the number of 10
+[36:38] runs and this is what we call passet uh
+[36:41] pass at 10 which basically means that
+[36:44] you know if you're running uh your model
+[36:46] 10 times uh one of you know like in
+[36:50] terms of like you know you you hit like
+[36:51] 15% probability of of getting the right
+[36:54] answer right so the more you sample the
+[36:57] probability that you'll hit the right
+[36:59] answer among these samples is kind kind
+[37:00] of you know is increasing and that's
+[37:02] what this graph is showing. All right.
+[37:05] And however you know the space is
+[37:08] exponentially large, right? So can we
+[37:12] guide this exploration? And the key idea
+[37:14] here is to apply the value function to
+[37:16] intermediate nodes. Um it's a very old
+[37:19] idea. Um but you know you can apply it
+[37:22] actually in this in this space as well.
+[37:25] So how does this work? Um so the idea is
+[37:29] to basically do a form of a best first
+[37:31] search algorithm with a few tweaks. So
+[37:34] what are the ingredients of the
+[37:36] algorithm? So the baseline agent
+[37:38] proposes actions. The baseline agent
+[37:40] actually says okay here's two actions
+[37:42] that I can take right these are the most
+[37:44] probable action according to uh the base
+[37:46] model according to your original policy.
+[37:50] uh you have to have a uh have a way to
+[37:52] backtrack in the environment, right? So
+[37:55] that basically means you're in this
+[37:57] state, you want to be able to backtrack
+[37:58] to the original state. Um this is
+[38:01] sometimes difficult to do especially in
+[38:04] uh web environments because some actions
+[38:07] you can't backtrack from and these
+[38:09] actions that we call destructive actions
+[38:12] like um you know if I place the order I
+[38:15] can't just go back and unplace it. Uh
+[38:18] right that's just one example. So we'll
+[38:20] talk a little bit about this. And then
+[38:21] you also have to have a value function.
+[38:23] You can think of a value function that
+[38:24] takes the input whatever your
+[38:26] representation is. Plus it takes a
+[38:29] sequence of previous observations or
+[38:32] previous steps and outputs a score. Uh
+[38:36] and you can think a value function uh
+[38:39] essentially uh looking at the expected
+[38:41] value uh expected reward. um think of it
+[38:45] as you know in our settings think of it
+[38:46] as uh the probability of successfully
+[38:48] solving the task right so it's a number
+[38:50] between zero and one that basically says
+[38:52] if I'm in this state and my value
+[38:54] function is you know 0.5 then the
+[38:56] probability of me
+[38:58] succeeding is you know 50%. And if the
+[39:01] value function of in this state is 3
+[39:03] then the probability of me succeeding is
+[39:05] 30%. Right? So maybe this state is
+[39:07] better than this state. So you have to
+[39:09] have a good value function right and
+[39:11] these are kind of values that you can
+[39:12] associate uh and what we've done in this
+[39:15] work is we basically using LLM as a
+[39:18] judge so we uh in this case you know you
+[39:21] take a GPT4 you take the full trace the
+[39:24] full trajectory and you're asking the
+[39:26] model to say you know uh is uh you know
+[39:30] how good the state is in terms of
+[39:31] solving a particular task. So there's a
+[39:34] way to sort of you know uh use use this
+[39:36] LLM as a judge. Um there's a few tricks
+[39:39] of self-consistency that you can use but
+[39:41] essentially you can just use um a large
+[39:44] language model as a judge to judge each
+[39:46] state. Ultimately I do believe that the
+[39:49] next generation models will create their
+[39:51] own value functions. You'll train your
+[39:53] own value function that basically will
+[39:55] guide this exploration. Okay. So how
+[39:58] does this work? Let's say that I give
+[40:00] you a task, right? The task instruction
+[40:02] is can you add this and the other canned
+[40:05] fruit of the same brand that looks like
+[40:07] this but red instead of brown to the
+[40:09] comparison page. Okay, so how does this
+[40:13] work? Well, you take the action, right?
+[40:16] And then at this point you have three
+[40:18] possible actions to take, right? They
+[40:19] all have a probability. They all have a
+[40:21] value function of 045, right? So you
+[40:24] pick one of them, you proceed and then
+[40:26] you go to the next kind of state and
+[40:29] your value function decreases. So you
+[40:30] basically say okay I'm actually maybe
+[40:32] I'm on the wrong path to solving this
+[40:33] task and then I backtrack and I take
+[40:37] another action right so I backtrack to
+[40:39] the previous state and I take uh the
+[40:41] other action and let's say here I go in
+[40:43] my probability increases I go in my
+[40:46] probability increases and then I hit a
+[40:48] particular state where you know I'm not
+[40:51] actually going to solve this task right
+[40:53] because you know my value of the state
+[40:54] is actually pretty small because I ended
+[40:56] up in a very long in a very wrong state
+[40:59] So then I have to be able to backtrack
+[41:01] again from this state. I have to be able
+[41:03] to backtrack back to the original state,
+[41:06] right? And then go and and sort of you
+[41:10] know again take the next states you know
+[41:13] and then if it's if it's bad backtrack
+[41:15] and eventually solve the task right so
+[41:18] you can sort of see that it's more uh
+[41:21] expensive. Um there are different ways
+[41:24] of exploring but the key here that
+[41:27] drives a lot of this exploration is the
+[41:29] value of of the state right which
+[41:32] basically is telling you how good the
+[41:33] particular state is in terms of solving
+[41:35] the task and you can kind of like you
+[41:37] know spot the errors early on and say no
+[41:39] no no backtrack and and restart uh
+[41:41] again. Um so it's a little bit better
+[41:44] than just doing random rejection
+[41:47] sampling because here you're doing
+[41:48] guided uh guided uh um
+[41:52] exploration. Um it's very similar to you
+[41:55] know some of you familiar with alpho uh
+[41:58] setting right where you basically have
+[42:00] um an environment where you have a value
+[42:03] of the state and then you know you try
+[42:05] to explore which actions to take and you
+[42:06] sort of evaluate those states given the
+[42:08] value function that that you
+[42:10] have. And so if we look at the results,
+[42:13] what we found is that you know uh for
+[42:16] web arena you know there is pretty
+[42:19] decent improvement in terms of the
+[42:21] ability to solve these tasks. For the
+[42:23] visual web arena we also see you know
+[42:26] quite reasonable improvements by using
+[42:28] this exploration. It's more expensive
+[42:30] but u uh and so so we can we we do see
+[42:34] that uh these sort of search at test
+[42:36] time actually improves uh models ability
+[42:39] to to solve the task. uh or at least to
+[42:41] solve some of the tasks. You can still
+[42:44] see that we're still very far away from
+[42:46] hitting like 90% accuracy, right? Uh but
+[42:49] nonetheless, it's actually a progress
+[42:51] where we're progressively uh uh
+[42:53] improving and we do sort of see that if
+[42:56] you look at the sub uh if you look at
+[42:58] the success rate, right? C0 indicates no
+[43:01] search and then you know the more node
+[43:04] expansions you have, the better your
+[43:06] performance is. And then you can also
+[43:08] sort of look at the success rate
+[43:10] relative to um you know how you want to
+[43:12] expand you know do you control the depth
+[43:15] uh versus the breadth and sort of again
+[43:18] how much you want to explore versus
+[43:21] what's the branching factor. Um and then
+[43:24] if we kind of you know keep exploring
+[43:27] and doing the branching then the
+[43:28] accuracy tends to go up just because the
+[43:30] model is able to explore possible
+[43:32] different uh uh different uh
+[43:35] possibilities like or different
+[43:36] environments. A lot of times what we see
+[43:38] in in sort of in these settings is that
+[43:41] you know if I ask it to buy a blue polar
+[43:43] shirt you know if if you don't do this
+[43:46] search the model let's say goes and
+[43:48] let's say it clicks on the wrong thing
+[43:49] and it ends up on a web page that only
+[43:51] has blue polo shirts right so you're
+[43:53] asking black polar shirt and gives you
+[43:55] blue polar shirts and then the model
+[43:57] says well there are no black polo shirts
+[44:00] because I'm only seeing blue polar
+[44:01] shirts I can't solve the task done right
+[44:04] and obviously this is the case that if
+[44:06] you can backtrack can sort of explore,
+[44:08] you will find the right answer, right?
+[44:10] So this notion of of search is actually
+[44:12] becomes fairly important, right? And and
+[44:15] and and such. And so and we also found
+[44:17] that having a good value function is
+[44:20] essential, right? Uh there is still a
+[44:22] lot of headroom for improving the base
+[44:24] policy. Obviously, your base policy has
+[44:26] to be good. It can't just take random
+[44:27] actions. If your base policy is if your
+[44:30] base model is actually pretty weak, then
+[44:32] you know you'll just be taking random
+[44:34] actions and there's only that much you
+[44:35] can do with with exploration. Um uh but
+[44:39] you sort of need to improve both right
+[44:42] uh and you can kind of like see if you
+[44:44] use different value functions you know
+[44:46] then the performance is actually
+[44:48] improved like with no search if you sort
+[44:50] of like say lava which is a weaker
+[44:52] version you get the improvement. If you
+[44:54] use something you know for all type of
+[44:56] models then you know you have uh so if
+[44:59] you have a better value function kind of
+[45:01] like looks at the full trajectory then
+[45:03] it's uh it's you you have improvements
+[45:05] in performance and the interesting thing
+[45:07] is that using uh LLM as a judge judging
+[45:10] whether the trajectory is good or bad is
+[45:13] much easier than predicting what the
+[45:15] next action you should take right um or
+[45:18] what what the next sort of element you
+[45:20] should click on what you should be
+[45:21] searching on and so uh That's why sort
+[45:24] of you know starting using value
+[45:26] function as an LLM initially I think
+[45:28] it's it's a reasonable thing to do but
+[45:30] obviously you want to be able to to
+[45:32] improve this. Here's just some examples,
+[45:34] right? You can basically say, I recall
+[45:36] seeing this exact item on the site. Help
+[45:38] me find the most recent post of it. I
+[45:40] recall seeing it in either collectibles
+[45:42] or antique section, right? So the models
+[45:44] would kind of like go in the starting
+[45:46] state. It would sort of explore and
+[45:48] eventually find that particular uh
+[45:50] posting. Right? Or this one where I can
+[45:53] say, hey, I like this. I need something
+[45:54] like this in my apartment. Can you add
+[45:56] one uh can you add one to my wish list?
+[45:59] So the model kind of like have to go. it
+[46:01] has to sort of like search through
+[46:03] different environments, find this
+[46:05] specific item and add it to your wish
+[46:07] list, right? Uh it would be great if you
+[46:10] have something like like like that,
+[46:11] right? You take a picture of something
+[46:12] and and you basically tell your agent,
+[46:14] hey, go and find it on Amazon, Best Buy,
+[46:17] wherever. Uh get me the best price for
+[46:20] this, right? And and you know, see where
+[46:23] I can buy
+[46:24] it. Just just as an example. Now in
+[46:27] terms of limitations of of this, well
+[46:30] search is pretty slow, right? Um so you
+[46:34] obviously need uh a fast way of doing
+[46:37] backtracking. We sort of did the
+[46:39] backtracking in a relatively naive way.
+[46:41] You store all actions in a queue and
+[46:43] then take them again to get to the
+[46:45] original state, right? So if you're
+[46:46] taking 20 kind of like actions, you
+[46:48] store what you've done so far and then
+[46:50] to go back, you re rerun uh that again.
+[46:53] So it's not very efficient uh what we've
+[46:55] done. I think it just requires sort of
+[46:57] like infrastructure uh uh work. And the
+[47:00] other interesting piece is dealing with
+[47:02] destructive actions, right? Certain
+[47:04] things on the web are very difficult to
+[47:07] undo. Um especially if you're operating
+[47:09] on the real web for testing these
+[47:11] models. Uh you can't order the item and
+[47:14] then unorder it, right? It's not like
+[47:15] you can order the item and then your
+[47:17] model says, you know what, that was
+[47:19] actually the wrong order. Let's try
+[47:21] ordering something else. You can't do
+[47:23] that, right? Um and so the other thing
+[47:26] that you can't unfortunately do in the
+[47:28] real web is it's it's very hard to um uh
+[47:32] do some form of learning in the real web
+[47:34] uh because anything that changes the
+[47:36] state of the environment is actually
+[47:37] fairly difficult, right? I can't go on
+[47:40] on United and start booking flights from
+[47:44] Pittsburgh to San Francisco to learn how
+[47:46] to book the flights, right? Because if
+[47:48] I'm sort of like exploring and I'm kind
+[47:50] of like saying, why don't I click here?
+[47:52] Well, maybe I should click here and then
+[47:54] and then maybe I should kind of like try
+[47:56] to book this flight and then maybe it's
+[47:57] wrong and try to book this other flight.
+[47:58] And so, um, it becomes a little bit
+[48:01] tricky to do because essentially United
+[48:03] will block you or or United will
+[48:05] basically say, "Oh, so many people are
+[48:07] trying to book flights from Pittsburgh
+[48:08] to San Francisco. Maybe we should like
+[48:10] increase the prices, right?" Um, so you
+[48:13] have to be careful how you actually
+[48:15] operating in in in the real world. So,
+[48:19] what's the current work? Obviously
+[48:20] search as a policy improvement function.
+[48:22] You can use search as a way of finding
+[48:25] the correct trace or the correct
+[48:27] trajectory and you can use this
+[48:28] potentially in either in reinforcement
+[48:30] type of learning algorithm or actually
+[48:32] in SFT to try to you know um um
+[48:36] fine-tune on this improving value
+[48:38] function by fine-tuning instead of
+[48:39] prompting. So if you you know if you can
+[48:42] improve the value function by using
+[48:44] Monte Carlo rollouts um you can do that.
+[48:47] um obviously exploring trade-off between
+[48:50] improving baseline agent how much your
+[48:52] base model has to be versus how much
+[48:54] more search you do you have to do at
+[48:56] inference time right and today we sort
+[48:58] of see this notion of test time
+[49:00] inference you know scaling loss where
+[49:02] well if I if I do search for more I can
+[49:04] probably get a better answer and I think
+[49:06] that it's true but it's sort of both
+[49:08] models need to improve right your base
+[49:10] model needs to be better and also search
+[49:13] needs to be more efficient
+[49:15] um and obviously
+[49:17] you know, one of the biggest questions
+[49:18] if we don't have a simulator of the web
+[49:20] environment, right? How can we collect
+[49:23] data at scale? And that's one of um uh
+[49:26] one of the interesting problems that we
+[49:27] also started looking at uh what can we
+[49:30] do and how we can collect uh the data at
+[49:32] scale because the interesting thing
+[49:34] about agentic uh models in general is
+[49:37] that it's the kind of data that's very
+[49:39] difficult to find on the web, right?
+[49:41] Like so what what we see with existing
+[49:42] LLMs is that you know I can crawl the
+[49:44] web I can scrape images and HTML and
+[49:48] then I can pre-train these model just
+[49:49] doing the next talk and prediction right
+[49:52] for Gentic work it's very difficult
+[49:54] right it's very difficult for me to say
+[49:56] hey give me a whole bunch of examples
+[49:58] and show me how am I should be booking
+[50:00] my flight from Pittsburgh to to San
+[50:02] Francisco all right or show me in this
+[50:05] setting you know I like like you know
+[50:07] hey I like something like this add me to
+[50:09] my wish list right It's not like you can
+[50:11] find a lot of these examples on the web
+[50:13] and you know uh of uh of uh examples of
+[50:18] people showing you how to solve these
+[50:19] tasks right so this notion of giving the
+[50:22] task and the full trajectory of how you
+[50:25] should take actions and solve the task
+[50:27] is actually very limited data that we
+[50:30] have today. Uh right in fact we don't
+[50:31] have any of that data. uh a lot of
+[50:34] companies they essentially collecting
+[50:35] this data in-house by asking people to
+[50:38] you know solve these tasks and do like
+[50:40] massive massive annotations. So the
+[50:43] question for us was how can we collect
+[50:45] the data at scale and that gives me to
+[50:47] the third point which is how can we at
+[50:50] least try thinking about um what we can
+[50:54] do
+[50:54] here. So, um, as I've mentioned before,
+[50:58] agents suffer from a data problem,
+[51:00] right? And you can see the gap is still
+[51:03] pretty big.
+[51:05] Um, and when we think about LLMs, the
+[51:08] way that we're training them today, a
+[51:10] lot of times they often trained online,
+[51:12] I just collect bunch of data. Um, and
+[51:15] then I deploy them as zero shots as
+[51:17] agents, right? And then, you know, I
+[51:18] collect a lot of data, I do some form of
+[51:20] supervised fine-tuning. Um, at least
+[51:23] that's what's happening in academia. And
+[51:24] then you know I try to deploy them and
+[51:26] see how they work. Uh right the question
+[51:30] is can we somehow go on the real web and
+[51:35] generate synthetic tasks to unlock this
+[51:38] largecale training of agents. Okay. And
+[51:42] uh uh you know the the question is you
+[51:46] know how can we again uh get these
+[51:49] models to generate something synthetic
+[51:51] and actually you know build something
+[51:53] that we can train on and improve our
+[51:55] improve our edges without human uh
+[51:57] intervention or without actually you
+[51:59] know task generated by humans because uh
+[52:02] it's fairly expensive to ask humans to
+[52:05] to generate or or you know create those
+[52:07] tasks. Um so one of the things that
+[52:10] we've been trying to build is we've been
+[52:12] trying to build this internet scale
+[52:13] training for agents that we call insta
+[52:16] uh which is um you know the idea here is
+[52:21] we using llama models to generate and
+[52:25] verify syn synthetic agentic tasks. So
+[52:28] we're thinking about three stages right
+[52:31] there is a data a task generation stage
+[52:34] right for example I can ask the model to
+[52:36] say find me a codebase for generating
+[52:37] images with flex one point with flex.1
+[52:40] right um that's the first task I'll show
+[52:43] you examples of how we can do that the
+[52:45] second task is
+[52:46] evaluation actually executing this task
+[52:49] and then trying to see whether you know
+[52:52] the model solved the task um and then
+[52:54] the third step is actually collection
+[52:56] big uh uh
+[52:58] basically collecting it at scale. But
+[53:00] you can think of this environment is
+[53:01] that the model proposes tasks. The model
+[53:04] executes those tasks. The model then
+[53:05] evaluates those tasks and then you know
+[53:08] if it successfully says yeah I proposed
+[53:11] the task I executed this task on the
+[53:13] real web. I evaluated I think I've
+[53:15] solved the task then that becomes a very
+[53:18] useful data for uh for training our
+[53:21] agents. Okay. So let's see how how we
+[53:25] can do
+[53:27] uh so for example given the web domain
+[53:29] uh for example you know there's a domain
+[53:32] just random domain
+[53:34] mercifaries it's a it's a website in the
+[53:37] UK and we can ask the system to propose
+[53:40] realistic task that an average user
+[53:41] could complete in one session so there's
+[53:43] a certain system prompt that we're
+[53:44] asking the model to uh to generate the
+[53:47] task and what's interesting that if you
+[53:49] look at llama 70B 3.1 I think we also
+[53:52] training on llama 3.3 which is actually
+[53:55] better has better results so these
+[53:56] models you know continue improving so if
+[53:59] I ask the model to describe what is this
+[54:00] website about it's actually pretty good
+[54:03] you know it sort of says well this
+[54:05] particular website is official website
+[54:06] for famous mercifi service in Liverpool
+[54:09] England and so forth certain things you
+[54:11] can do you can plan a journey uh you
+[54:14] know you can buy book tickets and sort
+[54:16] of you know and sort of gives you ideas
+[54:19] of what you can do with this
+[54:21] website And so that gave us this notion
+[54:24] of if the model understands what this
+[54:25] website is about maybe I can ask it to
+[54:27] actually generate generate the task. And
+[54:30] what we found is that you know we can
+[54:33] scale it across many many different
+[54:35] websites uh from common crawl uh I think
+[54:38] we started with about million websites
+[54:41] and we started thinking about like what
+[54:42] kind of tasks these models can generate
+[54:44] and a lot of tasks actually involve some
+[54:48] form of information retrieval some sort
+[54:50] of search you're finding the right
+[54:52] ticket information you're finding
+[54:54] booking uh u you know opening hours you
+[54:57] find sort of specific uh information on
+[55:01] you know a particular topic right um but
+[55:04] crucially we do not modify the state of
+[55:07] the internet so that was one of the um
+[55:09] sort of uh settings for us uh where we
+[55:12] asking the model to come up with the
+[55:14] task that don't modify the state of the
+[55:16] environment so for example booking
+[55:18] something we can do uh or clicking on
+[55:22] something that actually changes the
+[55:23] state on the of the environment uh we
+[55:25] can do uh this specifically was done you
+[55:29] to avoid any sort of complications of us
+[55:31] being blocked and as I mentioned before
+[55:34] you know we can't go on you know
+[55:35] united.com or booking.com and start like
+[55:38] you know running a lot of task like
+[55:40] booking a lot of hotels randomly right
+[55:43] um so we can only navigate to these
+[55:44] websites but we actually cannot um
+[55:47] change the state of the in state of the
+[55:50] environment what we found is that a lot
+[55:52] of tasks that the models actually come
+[55:54] up with are diverse and many require
+[55:57] multiple sets of reasoning Right? So for
+[55:59] example, you know, if I go to
+[56:01] fonts.adobe.com, some of the generated
+[56:03] task is browse fonts suitable for a
+[56:05] children's book. So I have to understand
+[56:07] like what makes a font suitable for a
+[56:09] children's book, right? Uh a lot of
+[56:12] tasks can identify facts um that's
+[56:15] likely to contain. So for example, if
+[56:17] I'm going to
+[56:19] ancient-syols.com, you know, the
+[56:21] generated task would be look up the
+[56:22] meaning of the word om symbol in ancient
+[56:25] cultures, right? So if you kind of like
+[56:28] you know you have to go on this website
+[56:30] this is the task and I have to crawl
+[56:31] through this website to actually find
+[56:33] what's the meaning of of that particular
+[56:35] symbol or I can sort of you know go to
+[56:40] this particular
+[56:42] uh obscure Scottish design studio and
+[56:45] ask view the latest fabric designs by
+[56:47] you know by this particular studio right
+[56:49] so I end up on this website and I have
+[56:51] to find uh the latest designs fabric
+[56:55] designs and kind of this This is kind of
+[56:56] like how it looks like. I actually have
+[56:58] to end up on this particular web page
+[57:00] because that lists the latest fabric
+[57:02] designs by by that particular studio.
+[57:05] Right? So these tasks are grounded even
+[57:08] for sites in the tail of the data
+[57:10] distributions. Uh right. So these are
+[57:12] kind of like we wanted to go for breadth
+[57:15] not necessarily to kind of you know only
+[57:17] cover you know 100 most commonly visited
+[57:20] websites but also going to these sort of
+[57:23] you know which gives us the diversity of
+[57:26] the environments and different websites
+[57:28] and different um uh generated tasks.
+[57:32] Okay. So that's kind of you know the
+[57:36] first step trying to generate the tasks
+[57:39] right. Um now the second state is okay
+[57:44] um how do we know when these tasks are
+[57:47] solved right and that gives us the task
+[57:50] evaluation part and the way we do this
+[57:53] is we basically say okay if we given the
+[57:56] task generate a task we can execute this
+[57:59] task using the current model let's say
+[58:01] you have a GPT model or you have your
+[58:04] llama model in this case it was a llama
+[58:06] model um that we're using you observe a
+[58:09] sequence of actions and the last
+[58:11] observation and you now estimate the
+[58:13] probability of uh a task being
+[58:15] successful. Right? So you're basically
+[58:17] asking the model given the last state in
+[58:20] a sequence of actions you're asking it
+[58:22] to estimate the probability of the
+[58:24] success. This is again the same idea as
+[58:27] using large language model as a judge.
+[58:29] uh you know here we're actually
+[58:31] evaluating the full trajectory but you
+[58:32] can think of it as you know in the
+[58:35] previous part when we were looking at
+[58:36] the search we're essentially we're using
+[58:39] the same piece but only evaluating
+[58:41] partial trajectories to sort of figure
+[58:43] out like what we should explore and what
+[58:44] we shouldn't explore. Here we're
+[58:46] actually trying to evaluate the full
+[58:47] trajectory but obviously you can combine
+[58:49] search with this technique as well. So
+[58:51] you can kind of search around and sort
+[58:53] of try to find the best uh uh the best
+[58:56] outcome. And you prompt llama to rate
+[58:58] the confidence of the task that solve
+[59:00] you know from 0 to
+[59:01] one. And what we found um is that out of
+[59:07] for example out of 150,000 tasks about
+[59:10] you know 15% are rated as success with
+[59:12] high confidence uh by llama roughly
+[59:15] 22,000 tasks. We actually did verify you
+[59:19] know how good uh you using llama as a
+[59:22] judge and I think that in terms of uh uh
+[59:26] the success it was about 90%. Right? So
+[59:29] for example you know when the model says
+[59:31] I'm pretty sure I've solved the task
+[59:34] with human evaluations we're seeing
+[59:36] close to
+[59:37] 90% accuracy among those ones. It
+[59:39] basically means whenever llama says yes
+[59:41] I've solved the task 90% of the time it
+[59:44] actually solved the task 10% of the time
+[59:46] no it didn't solve the task. So you know
+[59:47] these these verifiers are not perfect
+[59:49] but they're pretty decent in terms of
+[59:51] approximately telling you whether you
+[59:53] solve the task uh or not. Uh right so
+[59:56] that kind of like gives you this notion
+[59:58] of of of showing that you've
+[01:00:00] successfully u um found the task
+[01:00:04] executed and then verified it. Let me
+[01:00:07] give you sort of visual uh
+[01:00:08] representation of what that looks like.
+[01:00:11] Um so you know on on a different project
+[01:00:14] we have a project where we're working
+[01:00:15] with ecologists of on sort of
+[01:00:17] identifying invasive plants uh in in in
+[01:00:21] different environments. Um and uh we
+[01:00:25] basically thought that okay let's let's
+[01:00:27] look at this website invasive plants
+[01:00:30] atlas and prompt the model to generate a
+[01:00:34] task and see if the model can solve the
+[01:00:35] task. So the model basically generates a
+[01:00:37] task find invasive plant species native
+[01:00:39] to North America. Okay, so that's more
+[01:00:41] like information extraction and the
+[01:00:44] agent response is to find an invasive
+[01:00:46] plant species in North America. I will
+[01:00:48] first click on link all species to view
+[01:00:50] the list of all species. Okay, so it
+[01:00:53] takes and based on this information and
+[01:00:55] clicks on all species, right? And that's
+[01:00:57] what the action looks like. It's a
+[01:00:59] little JSON that you have an action key
+[01:01:02] click. you have an action you know
+[01:01:04] arguments that can go in and you have a
+[01:01:06] target element ID the ID that you have
+[01:01:09] you associated with that particular
+[01:01:10] click
+[01:01:12] um then it basically says to find
+[01:01:14] invasive plant species native to L
+[01:01:16] America you know I I will first click on
+[01:01:19] the link home and because it's trying to
+[01:01:21] go to the sources and it's it sort of
+[01:01:26] misses the point because you know there
+[01:01:28] is a sources here right but it's
+[01:01:30] actually insist on going home and and to
+[01:01:32] find the sources. So it's sort of
+[01:01:34] misread. So it made a mistake in this
+[01:01:36] case, right? Since the link to sources
+[01:01:39] is not on the current web page, but it
+[01:01:40] is. So it's making a mistake. I will
+[01:01:42] first click on the home and go back to
+[01:01:44] the main page. So it goes back to the
+[01:01:46] main page and then it sort of identifies
+[01:01:49] the sources, right? So it kind of you
+[01:01:52] know clicks on the sources. Um it
+[01:01:55] actually gets to the right piece to find
+[01:01:58] invasive plants native to North America.
+[01:02:00] I will first click on F on A under the
+[01:02:02] native French taxonomic references. So
+[01:02:04] it sort of execute pieces and it does
+[01:02:08] you know clicks on that on the correct
+[01:02:11] element and then once it gets to the
+[01:02:14] correct element it then basically says I
+[01:02:16] need to I need to sort based on
+[01:02:20] US you know plants that are native to
+[01:02:22] the US gets it in the JSON format and
+[01:02:25] then gives you the answer right uh since
+[01:02:28] the list is already sorted by US
+[01:02:30] nativity by sending order that's it I
+[01:02:32] can find there's the first like60 165
+[01:02:34] plant species that are native to North
+[01:02:36] America. Right? So, so these this gives
+[01:02:38] you the list and the answer is basically
+[01:02:40] I give you the web page and I tell you
+[01:02:42] the first 165 plant species on the list
+[01:02:44] invasive plant species native to North
+[01:02:45] America. Right? So, in terms of like me
+[01:02:48] finding information seeking again this
+[01:02:51] is was completely synthetically
+[01:02:53] generated task where the model proposed
+[01:02:56] the task. it's now executed the task
+[01:03:00] even though it made a mistake and then
+[01:03:02] it gave you the action and in this case
+[01:03:06] um despite sort of like reasoning some
+[01:03:08] of the reasoning failures because it
+[01:03:10] clicked on the wrong thing but then it
+[01:03:11] recovered
+[01:03:13] um it found the target information and
+[01:03:15] in this case llama verify evaluates this
+[01:03:17] trajectory successfully with confidence
+[01:03:18] one right and again whenever it does
+[01:03:21] this verification it's about 90%
+[01:03:23] accurate maybe close to maybe 85 90%
+[01:03:25] accurate when we sort of did the
+[01:03:27] studies, human studies. Uh so that sort
+[01:03:31] of gives you, you know, an interesting
+[01:03:34] synthetic generation, right? Uh where
+[01:03:38] you're proposing the task, you're
+[01:03:39] executing this task and then you're
+[01:03:41] verifying did you solve the task or not.
+[01:03:43] And again, only 14% of 15% of the task
+[01:03:47] that the model propose and executes only
+[01:03:50] 15% of them, you know, the model
+[01:03:52] basically says yes, I think I solved the
+[01:03:53] task. 85% of them you can't solve the
+[01:03:56] task, right? So, but that's okay because
+[01:03:58] it's all done uh automatically. There is
+[01:04:00] no human uh human in the loop here. Uh
+[01:04:03] let me show you some examples other
+[01:04:05] examples of what the model does. So,
+[01:04:07] here's the example. Find me the opening
+[01:04:08] hours of Sagara de Familia, right? It's
+[01:04:11] a fairly famous church in Barcelona. So,
+[01:04:14] it sort of, you know, proposes the task,
+[01:04:16] it browses the web, it finds and it
+[01:04:19] finds the answer, right? So you know so
+[01:04:23] again you know this is the task that it
+[01:04:25] proposes it goes to the website it
+[01:04:27] actually finds uh you know familia it
+[01:04:30] clicks it it finds and it basically from
+[01:04:33] the table finds what the right answer is
+[01:04:35] we find information on the European
+[01:04:36] Union's climate action uh policies so it
+[01:04:39] goes to European Union commission it
+[01:04:40] crawls the web um and then you know this
+[01:04:43] is a success where it actually finds the
+[01:04:45] documents related to uh the climate
+[01:04:48] action progress or climate action
+[01:04:50] policies
+[01:04:51] Right. And again these tasks are
+[01:04:55] completely created by model proposing
+[01:04:58] what the task should be model executing
+[01:05:01] this task and then the model is
+[01:05:02] verifying whether it successfully uh
+[01:05:05] computed the task or not. Right? So we
+[01:05:07] sort of went through these two stages
+[01:05:08] and again I'm not saying that that's a
+[01:05:11] perfect setting. I think that you know
+[01:05:14] if you incorporate search if you have
+[01:05:16] better models um and then you sort of
+[01:05:19] you know iterate it multiple times I
+[01:05:21] think the quality of generation of of
+[01:05:24] these task could improve uh could
+[01:05:26] improve su substantially. So let me uh
+[01:05:29] talk a little bit about the data
+[01:05:30] collection, right? So what happens uh
+[01:05:32] with the data collection? Now we can
+[01:05:34] scale up the data
+[01:05:36] collection. So we've used the common
+[01:05:38] crawl page rank to find the most
+[01:05:40] important websites. We start with the
+[01:05:42] top 1 million web
+[01:05:44] pages. Um we filtered it down to about
+[01:05:48] 150,000 life websites um by you know
+[01:05:52] filtering harmful content. So we're
+[01:05:54] prompting the model. So if we think that
+[01:05:55] there is a harmful content on the
+[01:05:57] website, we basically ignore it. Uh so
+[01:05:59] we're about 97% actually pretty high in
+[01:06:02] terms of detecting and filtering harmful
+[01:06:03] content. This is used using llama
+[01:06:05] models. we um about 89% success rate in
+[01:06:09] generating feasible tasks and about 80
+[01:06:12] so it's like 90% in generating feasible
+[01:06:14] task which basically means that uh you
+[01:06:17] know um when we're verifying whether
+[01:06:20] task is successful or not we 89%
+[01:06:24] uh and 82% accuracy in judging
+[01:06:26] successful task completion sorry that's
+[01:06:27] the one where 82% whether the task is
+[01:06:30] successfully uh completed or not um and
+[01:06:34] so and again we sort went through
+[01:06:37] 150,000 live websites and then we you
+[01:06:40] know attempting it and verifying it and
+[01:06:42] sort of you know creating data based on
+[01:06:45] whether we successfully generate the
+[01:06:46] task and whether we successfully
+[01:06:48] executed and then verified success.
+[01:06:51] What's interesting is that we found that
+[01:06:53] on sort of toish examples and small
+[01:06:55] examples mind the web links these are
+[01:06:57] sort of uh some of the uh data sets that
+[01:07:00] people use. We found that trading on
+[01:07:03] synthetic and human demonstrations scale
+[01:07:05] faster than just training on human
+[01:07:07] demonstrations. Uh right. So actually if
+[01:07:09] you're mixing uh what humans collected
+[01:07:12] versus if you're mixing synthetic and
+[01:07:14] humans, we can sort of see improvements.
+[01:07:17] We also see that adding synthetic data
+[01:07:19] improves step accuracy by you know um um
+[01:07:23] by uh you know certain numbers. So
+[01:07:26] that's good. We also found that if you
+[01:07:29] only use human annotations,
+[01:07:32] uh, human annotations do struggle with
+[01:07:34] generalization because a lot of times
+[01:07:36] what actually end ups happening is that
+[01:07:37] with human annotations are typically
+[01:07:39] done on on a small subset of highly
+[01:07:41] visited, you know, um, websites and the
+[01:07:46] ability to generalize to, you know, the
+[01:07:48] tail of the distribution. That's where
+[01:07:50] synthetic data really helps us because
+[01:07:52] it can help us generalize to the tail of
+[01:07:54] the distribution, right? where it's very
+[01:07:56] difficult for for humans to collect
+[01:07:58] collect the data. Obviously the ultimate
+[01:08:01] choice would be to get humans to
+[01:08:02] annotate the entire web that would be
+[01:08:05] the best because then we can just do
+[01:08:07] imitation learning. Um but we do find
+[01:08:09] that sort of you know the ability to
+[01:08:12] crawl the web and look at the stale
+[01:08:14] distribution we do see uh improvements
+[01:08:16] in in generalization.
+[01:08:19] Now there are 385 million unique domains
+[01:08:22] uh right suggesting maybe another
+[01:08:24] thousand X mode data that could be
+[01:08:26] available by scaling further right we
+[01:08:28] were constrained by compute and academic
+[01:08:30] resources when we did this work and of
+[01:08:32] course there is also sort of this notion
+[01:08:34] of moving towards online reinforcement
+[01:08:36] learning. So you can think about
+[01:08:37] settings where you sort of run this
+[01:08:39] procedure right you collect the
+[01:08:42] synthetic data and then you update the
+[01:08:44] model and do it again. So you can sort
+[01:08:46] of like you know do it in online fashion
+[01:08:49] right you crawl the web you generate
+[01:08:51] these tasks you try to solve uh some of
+[01:08:54] these tasks you update the model
+[01:08:55] parameters and do that again so if you
+[01:08:57] have an online and that could be an
+[01:08:58] online reinforcement learning but done
+[01:09:00] at scale at the internet scale I think
+[01:09:03] these models would improve uh
+[01:09:05] significantly and of course it's very
+[01:09:07] difficult to do that on the real web uh
+[01:09:10] because it's very hard to you know
+[01:09:12] change you know you can't change the
+[01:09:14] state of the environment And um so you
+[01:09:16] have to be careful how you actually uh
+[01:09:18] scaling up uh scaling scaling it uh up
+[01:09:22] uh when you go to the real world or the
+[01:09:24] real web. Okay. Um let me just in the
+[01:09:28] last 10 minutes and I I leave the uh
+[01:09:30] room for questions. I wanted to sort of
+[01:09:32] point out that this notion of agentic uh
+[01:09:36] environment is also applicable to the
+[01:09:39] physical agents or robots in general.
+[01:09:43] Right? So we've also kind of like very
+[01:09:45] parallel effort. We basically thought
+[01:09:47] okay these AI agents sort of have the
+[01:09:50] same uh uh notion whether we operating
+[01:09:53] on the web and taking actions on the web
+[01:09:55] or whether we actually have a physical
+[01:09:57] agent like a robot that takes actions in
+[01:09:59] the real world. Right? So for example
+[01:10:01] you know you can think of it you're
+[01:10:02] observing the data which is could be the
+[01:10:04] image plus maybe the depths. Um you do
+[01:10:06] some form of semantic segmentation to
+[01:10:08] understand the environment. you have an
+[01:10:09] objective, you generate a high level
+[01:10:11] plan and then you generate the low-level
+[01:10:13] actions like interacting with the actual
+[01:10:15] environment. So we have this uh this
+[01:10:17] this work on on planning learning uh
+[01:10:20] what we call plan sequence and learn
+[01:10:21] where the idea is language model
+[01:10:23] basically gives you a sequence of highle
+[01:10:27] plan what you need to do you have a
+[01:10:29] sequencing or parsing module that
+[01:10:31] basically understands the environment
+[01:10:33] sequences is and then we have a
+[01:10:35] low-level action which we learn with
+[01:10:36] reinforcement learning which a little
+[01:10:38] policy actually learns how to take a
+[01:10:40] particular action right so very much in
+[01:10:43] flavor very similar to what the web web
+[01:10:45] agents are doing but now we're actually
+[01:10:47] interacting in the real world. So for
+[01:10:49] example a planning module can say okay
+[01:10:52] uh here's the task you know get me uh
+[01:10:56] I'm I'm trying to kind of like put the
+[01:10:57] silver knot in the silver pack and the
+[01:10:59] gold nut and the gold bag and then give
+[01:11:01] me the simple plan to solve this task
+[01:11:03] and so the LLN basically produces a
+[01:11:05] fairly simple task of of how I should
+[01:11:08] how I should solve it. We have a
+[01:11:10] sequencing model uh which you know looks
+[01:11:12] at the observation there's a depth um
+[01:11:15] you know we do se segment se
+[01:11:17] segmentation and sort of a little bit of
+[01:11:19] a projection so kind of like have some
+[01:11:20] form of 3D representation of the
+[01:11:22] environment and then it goes through the
+[01:11:24] inverse kinematic and we have a motion
+[01:11:26] planner but you can think of this as
+[01:11:27] sort of like again understanding the
+[01:11:29] environment and doing a little bit of
+[01:11:32] motion planning and then the low-level
+[01:11:35] action module actually learns the local
+[01:11:37] policy right so Here you have
+[01:11:39] reinforcement learning for interactions.
+[01:11:41] You're kind of like locally learning how
+[01:11:42] to interact with much like when you're
+[01:11:44] clicking on particular element. Here
+[01:11:46] we're actually learning how to you know
+[01:11:48] control our joint angle so that we can
+[01:11:50] accomplish a low-level uh a low-level
+[01:11:53] task right and so this is how it sort of
+[01:11:55] looks like where you know a local model
+[01:11:57] is actually learning how to uh with
+[01:11:59] reinforcement learning it's actually
+[01:12:00] learning how to uh interact with the
+[01:12:02] environment. And so kind of like in the
+[01:12:04] full pipeline very much in similar
+[01:12:06] spirit you have a planning model that
+[01:12:09] plans um you know high gives you high
+[01:12:13] level plan for each highle plan you
+[01:12:16] executing this low you know lower level
+[01:12:18] actions where you basically have pose
+[01:12:21] estimation motion planning a little bit
+[01:12:23] of reinforcement learning to take the
+[01:12:24] action and then you know you have this
+[01:12:27] low-level control that actually controls
+[01:12:30] low-level actions via reinforcement
+[01:12:31] learning right and then you proceed and
+[01:12:33] just the first step and you go to the
+[01:12:34] next and then you go to the next and
+[01:12:36] sort of execute that according to the
+[01:12:37] plan
+[01:12:39] uh and so forth and we found that these
+[01:12:43] sort of models uh you know work
+[01:12:45] reasonably well you know PSL solves
+[01:12:47] about 25 long horizon robotic tasks
+[01:12:50] across you know in this case four
+[01:12:51] benchmarks
+[01:12:53] um with you know about 85% success rate
+[01:12:56] we also tried extending this to the
+[01:12:59] actual uh real uh environment So here is
+[01:13:03] the you know I give it a task put mouse
+[01:13:05] in the drawer. So the model basically
+[01:13:08] generates the plan and again it looks at
+[01:13:10] the environment parses the environment
+[01:13:11] and then executes lower level actions
+[01:13:13] right. Um and it sort of does uh a lot
+[01:13:18] of interesting things. you can you know
+[01:13:21] uh but the point I do want to make here
+[01:13:23] is that whether you operating in the
+[01:13:25] virtual space or whether you're
+[01:13:27] operating in the real world space um you
+[01:13:30] know the ideas uh are fairly uh similar
+[01:13:34] across across domain and so here you can
+[01:13:36] generalize to new object object
+[01:13:38] geometries new categories and so like
+[01:13:41] you know we've never trained on this
+[01:13:43] particular um for this particular object
+[01:13:46] but you can sort of successfully
+[01:13:48] complete it you can deal with multiple
+[01:13:50] novel objects uh with unseen
+[01:13:53] receptacles. So, you know,
+[01:13:56] um you know, these models can do um you
+[01:14:00] know, can do reasonably well. It's not
+[01:14:01] perfect by all means. I think we're
+[01:14:03] hitting success rates of about like 80
+[01:14:05] to 90%. Um uh but these models do
+[01:14:08] generalize. They can manipulate deformal
+[01:14:10] objects. You don't observe them uh when
+[01:14:12] we were training these models in the
+[01:14:14] simulator. But, you know, training in
+[01:14:15] the simulator does translate into into
+[01:14:18] the real world.
+[01:14:19] Okay, now to summarize uh we've talked
+[01:14:22] about visual web arena as a benchmark
+[01:14:25] for you know these realistic tasks
+[01:14:27] designed to evaluate the capabilities of
+[01:14:29] autonomous multimodal agents. We've
+[01:14:32] talked about inference time search
+[01:14:33] algorithm which sort of designed to
+[01:14:36] enhance the capabilities of of language
+[01:14:38] models for realistic web tasks right and
+[01:14:41] how we can you know do the search and
+[01:14:44] there's a lot of research that needs to
+[01:14:46] be done in that space and then we've
+[01:14:48] talked about the data pipeline for large
+[01:14:50] scale generation verification of sort of
+[01:14:52] these synthetic tasks that the model can
+[01:14:55] create uh powered by llama models and
+[01:14:58] the interesting thing about all of these
+[01:15:00] settings is that you know you can try to
+[01:15:02] generate these synthetic task. You can
+[01:15:04] use inference time to generate something
+[01:15:06] better. You can you know use data
+[01:15:08] collection with humans and ultimately
+[01:15:09] it's a combination of all of these
+[01:15:10] pieces um that will potentially lead to
+[01:15:14] models that can uh that can work very
+[01:15:17] well in in the real world environments.
+[01:15:19] One last thing I do want to mention is
+[01:15:22] that you know AI safety and robustness
+[01:15:26] uh becomes fairly important especially
+[01:15:28] in the age of autonomous systems and
+[01:15:31] what essentially happening today is that
+[01:15:33] these systems are not first of all
+[01:15:36] they're not very robust
+[01:15:38] um you know like if I ask it to do some
+[01:15:40] task it you know sometimes it completes
+[01:15:43] the task sometimes it doesn't right and
+[01:15:45] it's very difficult you know like if I
+[01:15:47] if I want to have a system that books
+[01:15:48] the my my flights as an example, right?
+[01:15:50] I don't want to have a system that's
+[01:15:52] only 80% correct, right? I don't want a
+[01:15:54] system that like, you know, 80% books
+[01:15:56] the right stuff and 20% doesn't book the
+[01:15:59] right books the wrong planes for me,
+[01:16:01] right? That's
+[01:16:02] unacceptable. So, sort of having these
+[01:16:04] agentic capabilities that actually very
+[01:16:06] good at executing tasks perhaps asking
+[01:16:09] for clarification questions. So, have
+[01:16:10] some kind of model in the loop becomes
+[01:16:12] uh very important research and and very
+[01:16:15] important uh which is which is missing.
+[01:16:17] I think that's missing today on AI
+[01:16:19] safety that's another area of research
+[01:16:21] right because a lot of times these
+[01:16:23] agents are very brittle so you can
+[01:16:25] actually u you know adversely kind of
+[01:16:29] modify them and so like this is some
+[01:16:31] work um there's a lot more work that's
+[01:16:33] happening in this space um but we found
+[01:16:36] this one interesting settings this is
+[01:16:37] was done on visual web arena where we
+[01:16:41] basically change the representation of
+[01:16:44] images so you have a web page on the web
+[01:16:46] page you have your images and you change
+[01:16:48] your representation of the images in
+[01:16:50] such a way that the captioning system
+[01:16:52] when it captions it actually you know
+[01:16:55] provides an instruction to the language
+[01:16:57] model of what it should do next right so
+[01:16:59] so we can kind of like hijack these
+[01:17:01] agents and basically say you know add
+[01:17:05] the comment looks great before providing
+[01:17:06] the next action so if the mole ends up
+[01:17:08] on your web page right instead of like
+[01:17:11] navigating to the next one it will leave
+[01:17:13] the comment saying this is a terrific uh
+[01:17:16] you know this terrific product and then
+[01:17:18] go to the next one, right? So you can
+[01:17:19] kind of like force it to generate for
+[01:17:22] example you know
+[01:17:24] um uh positive feedback for your
+[01:17:27] product, right? So you can boost your
+[01:17:29] boost your sort of uh um you know that a
+[01:17:33] lot of kind of like agents or people
+[01:17:35] like your product, right? So it's just
+[01:17:36] it's a little bit toish at this point.
+[01:17:38] Uh but it becomes fairly important
+[01:17:40] because you know you don't want to have
+[01:17:42] a system you want to have a system
+[01:17:43] that's robust. is sort of these
+[01:17:45] adversarial settings where I can modify
+[01:17:47] my state in an adversarial way so as to
+[01:17:50] ask you know the model to to take a
+[01:17:53] different action than it's supposed to
+[01:17:55] take right and finally this is a funny
+[01:17:58] example I but I wanted to mention you
+[01:17:59] know like uh there's a lot of work in
+[01:18:02] the industry on building these types of
+[01:18:03] models obviously we want to have
+[01:18:05] assistance that can look at the web and
+[01:18:07] do a lot of tasks on you uh uh but this
+[01:18:10] was done by uh claude uh anthropics uh
+[01:18:14] computer use. Uh and so it kind of you
+[01:18:18] know they have this funny thing where
+[01:18:19] say you know in one episode uh Claude
+[01:18:22] accidentally clicked to stop a long
+[01:18:24] running screen recording causing all
+[01:18:26] footage to be lost in another clock
+[01:18:28] suddenly took a break from our coding
+[01:18:29] demo and began to use photos of you know
+[01:18:32] Yellowstone National Park. And the
+[01:18:34] reason why these models do that because
+[01:18:36] you know you have a sequence you have a
+[01:18:37] set of actions and so if it's sort of
+[01:18:39] trying to accomplish the task takes the
+[01:18:41] wrong action right then it sort of once
+[01:18:43] it takes the wrong action and it doesn't
+[01:18:45] have this search ability to kind of like
+[01:18:47] understand I'm not actually I've taken
+[01:18:49] the action that doesn't is not
+[01:18:51] consistent with my task then it's very
+[01:18:53] hard for it to backtrack potentially
+[01:18:55] right like once you've taken the action
+[01:18:56] it's trying to take another action maybe
+[01:18:57] it's trying to recover and then
+[01:18:59] basically cannot recover back uh to the
+[01:19:01] original uh original

@@ -1,0 +1,2180 @@
+[00:00] Hello everyone. Now, let's get started
+[00:02] for the first lecture of this class,
+[00:04] Advanced Large Language Model Agents.
+[00:07] I'm Xinyun Chen. I'm a research
+[00:09] scientist at Google DeepMind, and I'm in
+[00:12] sharing this course with Professor Dawn
+[00:14] Song here at UC Berkeley and Kai-Yu Yang
+[00:16] from Meta.
+[00:18] We also have an amazing TA team who
+[00:20] helped us a lot on sort of the course
+[00:21] logistics. It was the head TA Alex, and
+[00:24] readers Tara, Ashwin, and Jason. Last
+[00:27] semester, we launched the first version
+[00:29] of this LM Agents course both here at UC
+[00:32] Berkeley and also on MOOC.
+[00:35] Last semester, we had a very amazing
+[00:37] lineup of guest speakers talking about
+[00:39] very broad topics about LM Agents. So,
+[00:43] we discuss about the fundamental
+[00:45] reasoning techniques, the agentive
+[00:48] workflows, and different applications,
+[00:50] etc. And we had around 15,000 people
+[00:54] registered on MOOC.
+[00:55] We also launched a hackathon which
+[00:57] attracted around 3,000 people
+[01:00] participated globally. And we also we
+[01:03] are very grateful for this general
+[01:05] sponsorship from our industry partners
+[01:07] who gave us around $200,000
+[01:10] support in prizes and resources.
+[01:13] We will announce the hackathon winners
+[01:15] very soon, so stay tuned.
+[01:17] Now, let's go back to LM Agents.
+[01:20] So, the core of an large language
+[01:22] model-based agent is that the the kind
+[01:25] of the brain of this agent is a large
+[01:27] language model which is going to perform
+[01:30] reasoning and planning to take action at
+[01:33] each time step. Then, with this like
+[01:35] action to interact with the environment,
+[01:38] it will receive the feedback and revise
+[01:41] its internal memory so that it can
+[01:43] better plan for the next step to take.
+[01:46] So, with this like agentive framework,
+[01:48] it allows the LM to also utilize this
+[01:50] external feedback and tools whenever
+[01:52] available so that it is going to further
+[01:54] expand its capability and to give to get
+[01:58] more informed decision in its own like
+[02:01] decision-making
+[02:02] So, some common components in the agent
+[02:04] framework include tool use and
+[02:06] retrieval.
+[02:08] Then, why do we want to empower these
+[02:09] large language models with the agent
+[02:11] framework?
+[02:12] Because solving real-world tasks
+[02:14] typically involves a trial and error
+[02:17] process. Especially, when we deploy this
+[02:20] LM agent in a like a new environment, it
+[02:23] really needs to like
+[02:25] interact with the environment to
+[02:26] understand some success or failure modes
+[02:29] in different actions so that it is able
+[02:31] to like revise its own internal memory.
+[02:34] At the same time, leveraging external
+[02:36] tools and retrieving from external
+[02:38] knowledge further expands LM's
+[02:40] capabilities.
+[02:42] And with the more like with this
+[02:45] agentive workflow design becomes more
+[02:47] mature, it also facilitates
+[02:49] facilitates the accomplishment of
+[02:51] complex tasks. This includes task
+[02:53] decomposition, allocation of subtasks,
+[02:57] division of labor for collaboration of
+[03:00] of between different specialized modules
+[03:02] and multi-agent generation.
+[03:06] Many people are saying that this year,
+[03:09] 2025, will be the year of agents.
+[03:13] So, nowadays, we have already seen the
+[03:14] explosion of LM agents for various
+[03:17] real-world applications. And in many
+[03:19] domains, actually, these LM agents
+[03:21] transformed how previous people have
+[03:23] thinking about like what these like AI
+[03:25] models can how these AI models can
+[03:27] behave. So, like some very successful
+[03:30] demonstrations and also practical use
+[03:32] cases include code generation, computer
+[03:35] use,
+[03:36] personal assistant, and robotics. And
+[03:39] this this list of applications will keep
+[03:41] like a growing in in the future as well.
+[03:43] And also, there are some like domains
+[03:45] like education, finance, etc., where we
+[03:48] already have seen an emergence of pretty
+[03:50] nice LM-based agents. Another factor
+[03:53] that further drives this excitement
+[03:55] about LM agent development is about this
+[03:58] like recent rapid progress of reasoning
+[04:00] models. Starting from September last
+[04:02] year with the release of OpenAI O1.
+[04:06] And starting from that a model, we have
+[04:08] also seen a lot of like great reasoning
+[04:11] progress during the meantime. For
+[04:14] example, last month, we saw the release
+[04:16] of the Gemini 2.0 flash thinking model
+[04:19] and also the OpenAI O3 model. And this
+[04:22] month, we saw the release of DeepSeek R1
+[04:25] and Qwen Q1.5.
+[04:27] And also, within the same model series,
+[04:29] we can see a very drastic improvement
+[04:31] from different versions of the model.
+[04:33] So, for example, there is a rapid
+[04:35] progress of performance from OpenAI O1
+[04:37] to O3. And also, if we compare the
+[04:40] current Gemini thinking model to our
+[04:42] initial version released last month,
+[04:44] there are also like a lot of improvement
+[04:46] we can see.
+[04:47] And if we think about this like progress
+[04:50] in reasoning, the most impressive
+[04:52] performance we have seen so far are in
+[04:55] math and coding, especially for solving
+[04:57] those very challenging problems.
+[05:00] For example, last year with the
+[05:02] AlphaProof and AlphaGeometry system
+[05:04] developed by my colleagues at Google
+[05:06] DeepMind,
+[05:07] they received the silver medal or nearly
+[05:09] gold medal performance in IMO last year.
+[05:13] And also, with the more recent OpenAI O3
+[05:15] model, it shows that it can be ranked
+[05:18] among top 200 among the human
+[05:20] participants on Codeforces competitive
+[05:23] programming contest.
+[05:25] If we think about these milestones,
+[05:28] probably they are even very hard to
+[05:29] imagine a couple of months ago before
+[05:32] they actually happened. So, for this
+[05:34] semester, our course is called Advanced
+[05:36] Large Language Model Agents.
+[05:38] So, we will do a deeper dive into the
+[05:40] methodology part, especially on the
+[05:42] reasoning techniques.
+[05:44] So, we will talk about fundamental
+[05:45] techniques for inference times,
+[05:49] for inference time scaling, training
+[05:51] techniques, and also search and
+[05:53] planning.
+[05:54] And for the application side, we will
+[05:57] focus more on software engineering and
+[05:59] mathematics. So, we will it is includes
+[06:02] code generation and verification, and
+[06:04] also auto formalization and theorem
+[06:07] proving.
+[06:08] After this deep dive on the methodology,
+[06:10] we will talk about
+[06:12] LM Agents use cases for real-world
+[06:14] enterprise application and also more
+[06:17] advanced
+[06:18] agentive workflow design. And also,
+[06:20] topics about safety and ethics for
+[06:22] real-world deployment of these LM
+[06:24] agents.
+[06:26] Now, I will hand over to our head TA
+[06:28] Alex to talk about course logistics.
+[06:31] Okay. So, the course is pretty similar
+[06:33] to last week's or last semester's. The
+[06:36] main difference is we are moving the lab
+[06:40] to a later due date. So, last year, the
+[06:42] lab was a bit earlier and it's so much
+[06:44] shorter. This year, the lab is going to
+[06:45] be this semester, the lab is going to be
+[06:47] more involved and it will be
+[06:49] due or it will be released later and
+[06:51] you'll have more time to work on it.
+[06:53] The other main thing, apart from not
+[06:56] having a hackathon, is we're also going
+[06:59] to sort of open up the project.
+[07:02] So, last semester, the project was sort
+[07:04] of open-ended. This time, we'll have two
+[07:07] tracks, an applications track and a
+[07:09] research track. Um I think I wrote about
+[07:12] it here. So, the applications track is
+[07:15] pretty much the same
+[07:17] content as last semester. The research
+[07:19] track is new. Basically, if you want to
+[07:22] or are interested in
+[07:24] submitting a conference publication or a
+[07:26] workshop publication, you can apply to
+[07:28] the research track. I will have a Google
+[07:31] form out shortly. And if we select you,
+[07:34] then you can sort of work with under the
+[07:36] supervision of like some of Dawn's
+[07:38] postdocs and grad students to basically
+[07:41] try to submit a workshop paper for this
+[07:44] class.
+[07:45] Other than that, everything else is sort
+[07:47] of the same as last year. I would just
+[07:49] refer to
+[07:51] um the final like everything is on the
+[07:53] semester website and we won't be having
+[07:56] a syllabus. Just keep track of the
+[07:58] changes on here and on EdStem.
+[08:01] Um so, that's it for logistics.
+[08:03] Yeah, and also like same as last
+[08:05] semester, we will also invite like a
+[08:07] very great like speakers to talk about
+[08:10] different topics of advanced like LM
+[08:12] Agents methodology and applications. So,
+[08:15] we will we are still finalizing the
+[08:17] guest speaker schedule. So, also check
+[08:19] out this course website for the most
+[08:21] up-to-date information. Um in this
+[08:23] lecture, I will talk about inference
+[08:25] time techniques for LM reasoning. So, in
+[08:27] the intro of the course, we built we
+[08:29] really talk about this like advancement
+[08:31] of reasoning models, which is kind of
+[08:34] one of the highlights of large language
+[08:35] model development in last year. And so,
+[08:38] here I will like go more into details
+[08:40] about what we can see from these
+[08:42] reasoning models.
+[08:44] So, on the slides, I'm showing these
+[08:46] like results which was like quoted from
+[08:48] the O1 blog. So, from here, we can see
+[08:51] that actually, OpenAI O1's model started
+[08:54] to achieve pretty impressive performance
+[08:56] across very various very challenging
+[08:58] tasks where previous models are really
+[09:00] struggling with. So, this includes the
+[09:03] competition level math problems like in
+[09:05] the IMO contest last year and also
+[09:08] competitive programming contest on
+[09:09] Codeforces.
+[09:13] And in the recent like O3 results, they
+[09:15] further show this like the performance
+[09:17] can further improve with more inference
+[09:20] time compute.
+[09:21] For example, here I'm showing these like
+[09:23] curves they demonstrated on a benchmark
+[09:26] called ARC-AGI. So, this is a benchmark
+[09:29] that includes a bunch of puzzles to test
+[09:31] how well humans or AI models can learn
+[09:35] some reasoning patterns given the
+[09:37] demonstration examples. So, this was a
+[09:39] very challenging task. So, for the most
+[09:42] existing models before O1, if we do not
+[09:45] apply any special inference time
+[09:47] techniques and just do the very regular
+[09:49] inference, then all existing models can
+[09:52] achieve like less than 25% accuracy. And
+[09:55] even with the O1 the O1 model, it can
+[09:57] only achieve around 30% accuracy. But
+[10:00] with the recent O3 model, if we set the
+[10:03] inference time uh
+[10:05] budget to around $20 per task, it can
+[10:08] achieve a performance that kind of
+[10:10] matching the average human annotators or
+[10:13] mechanical turkers. And if we further
+[10:15] scale out this inference time cost to a
+[10:17] crazy number like $1,000 to solve one
+[10:20] problem, then actually the model can
+[10:22] achieve 87.5% accuracy. So, uh
+[10:25] definitely this is a very expensive way
+[10:27] to solve this particular task, but it um
+[10:30] shows uh
+[10:32] how this model can perform in ideal case
+[10:34] when when we do not care so much about
+[10:36] inference time compute. Then, here on
+[10:38] the slides I'm showing a a very simple
+[10:40] like OpenAI O1 demo, where basically I
+[10:42] call the model to solve a planning
+[10:44] problem.
+[10:46] So, what is different for this O1 model?
+[10:49] So, the main difference is that for the
+[10:51] existing LLMs before the O1 model, when
+[10:54] we enter a user query, then the model
+[10:57] will directly generate this response.
+[10:59] But in the O1 interface, they include
+[11:02] this thought process. So, and basically
+[11:04] this process can take different amount
+[11:06] of time depending on the difficulty of
+[11:08] the task. Uh for example, for the
+[11:10] specific question I asked the model, it
+[11:12] takes um slightly uh more than 1 minute
+[11:16] to generate the final solution.
+[11:19] And in the O1 interface, they didn't
+[11:21] show the like a the raw thought process.
+[11:24] Instead, they show a summarized version
+[11:27] of the hidden thought.
+[11:28] So, from this hidden thought for this
+[11:30] specific planning problem, we can see
+[11:32] that it summarizes some key stages in
+[11:34] the reasoning process uh including
+[11:37] laying out initial plan, evaluate in it
+[11:40] based on the model's internal belief,
+[11:42] and then like
+[11:44] revise the plan so that it can satisfy
+[11:46] the constraints and improve the
+[11:48] optimality.
+[11:51] Then with the Gemini 2.0 thinking model,
+[11:55] we also like
+[11:57] make these thought tokens visible to
+[11:59] users.
+[12:00] So, on the slides I'm showing a demo
+[12:02] where actually this
+[12:04] question includes an image input. So,
+[12:07] this question is um the math part of
+[12:09] this question is pretty simple. So,
+[12:11] basically um there there are four balls
+[12:13] in the image, and the question is asking
+[12:15] the model to take three out of the these
+[12:17] like numbers to so that the sum is uh
+[12:20] 30.
+[12:21] Um so, the thought here, as you can see,
+[12:23] is a pretty long. So, after we we enter
+[12:25] the query, the model immediately
+[12:27] generates these thoughts. And we don't
+[12:29] need to read the reasoning process token
+[12:31] by token. I know it's pretty hard to
+[12:32] read, but the most interesting step we
+[12:35] can see from this multimodal query is
+[12:37] that there is a
+[12:39] So, at the beginning of the this like
+[12:42] image, there are there is a specific
+[12:44] number, which is nine. So, at some point
+[12:47] the model figures out a very important
+[12:49] step for this question. So, base because
+[12:52] if you want to get the sum of 30,
+[12:54] actually we need to turn this nine into
+[12:56] six by rolling this ball. So, this is a
+[12:58] very interesting like a feature of this
+[13:01] of this query when we put these numbers
+[13:03] on on some balls. And um also like the
+[13:07] this like step itself um
+[13:09] it is is not that like um
+[13:11] kind kind of uh difficult
+[13:13] mathematically, but actually it is an
+[13:14] interesting trick. And if we
+[13:16] and
+[13:17] earlier if we do not allow the model to
+[13:19] generate this long thought, this
+[13:21] specific step will be very hard to
+[13:22] figure out. And also like um
+[13:25] um
+[13:26] besides the these models from OpenAI and
+[13:29] Google DeepMind, there are other like
+[13:31] reasoning models out there recently.
+[13:33] Like at the beginning of the lecture I
+[13:34] mentioned they are also models from the
+[13:36] DeepSeek team and also the Chimney team.
+[13:39] And out of all these like breakthroughs
+[13:41] in reasoning models, one core shared
+[13:44] idea is that we need some way to trigger
+[13:46] the large language model to generate
+[13:48] long chain of thought before it actually
+[13:50] concludes with the final solution.
+[13:53] In the literature, there are different
+[13:55] approaches to trigger this chain of
+[13:56] thought generation.
+[13:58] Like in the original chain of thought
+[14:00] paper, they designed a few-shot like
+[14:02] fronting scheme, which basically
+[14:04] demonstrates this thought process in
+[14:06] examples.
+[14:08] And later on there are some works
+[14:10] showing that we can apply an instruction
+[14:12] prompting to achieve this. Like we can
+[14:14] use the instruction let's think step by
+[14:16] step.
+[14:19] And for the recent like chat models, we
+[14:21] can see that even if we do not give any
+[14:23] special instructions to the model, the
+[14:26] model also tends to generate some
+[14:27] thoughts before coming up with the final
+[14:29] answer, no matter whether the thought is
+[14:31] like a short or long.
+[14:33] So, there are different ways to train
+[14:35] the model to achieve this. Like in for
+[14:37] instruction tuning, where we actually
+[14:39] put this chain of thought data into our
+[14:41] supervised fine-tuning mixture.
+[14:44] And also like what we can see from
+[14:45] recent reasoning models, we can apply
+[14:48] reinforcement learning to achieve this
+[14:49] goal.
+[14:52] In this lecture, I will focus more on
+[14:55] inference time techniques for scaling
+[14:57] token budget. And in the future
+[14:59] lectures, we will also deep dive deeper
+[15:02] into reasoning techniques. And there
+[15:04] will be some other guest speakers who
+[15:06] will come here to share their thoughts.
+[15:11] So, for this lecture, I will discuss
+[15:13] like three parts about reasoning
+[15:15] techniques at inference time.
+[15:17] I will first discuss the basic prompting
+[15:19] techniques.
+[15:20] And the common idea among these
+[15:22] prompting techniques is that we want to
+[15:24] allow the model to use more token budget
+[15:26] to generate a single solution.
+[15:30] Then in the second part, I will talk
+[15:32] about techniques to perform search and
+[15:34] selection from multiple candidates.
+[15:36] And the common idea here is that is want
+[15:38] to increase the width to explore the
+[15:40] solution space.
+[15:43] In the last part, I will talk about
+[15:45] iterative self-improvement, where allow
+[15:48] the model to increase its depth to reach
+[15:50] the final solution.
+[15:52] Then after all these discussions of
+[15:54] different parts, we will also see how we
+[15:56] can like a best utilize different
+[15:59] combinations of these techniques to seek
+[16:01] the best
+[16:02] like way to utilize the inference time
+[16:04] compute to improve the LLM reasoning
+[16:06] performance.
+[16:09] So, let's get started on the first part
+[16:11] about basic prompting techniques.
+[16:15] Before we talk about more advanced
+[16:17] prompting techniques, let's first review
+[16:19] the background about standard prompting.
+[16:22] So, basically in standard prompting,
+[16:24] let's say we want to solve a math
+[16:25] problem as shown in the slides.
+[16:27] Before the line of works on chain of
+[16:29] thought prompting, the common practice
+[16:31] is that we just put
+[16:33] some question-answer pairs into the
+[16:35] prompt. Like here, the question is the
+[16:37] math question and the answer is the
+[16:39] final answer.
+[16:41] So, before the advancement in
+[16:42] post-training techniques, if we directly
+[16:45] apply this standard prompting, then the
+[16:47] performance is pretty poor on reasoning
+[16:49] benchmarks.
+[16:51] The fundamental issue is that if we look
+[16:53] at these standard few-shot examples,
+[16:55] they only provide information on the
+[16:57] final solution format, but it doesn't
+[16:59] tell the model about the rationale to
+[17:01] derive the solution. Now, you can
+[17:03] imagine that if we like if we are taking
+[17:05] a class and the teacher is um basically
+[17:08] just teaching you with the the final
+[17:10] like official solution without any more
+[17:12] context, then if you do not have
+[17:15] relative background knowledge yourself,
+[17:17] then it will make your teaching a lot
+[17:19] more difficult.
+[17:22] So, for the chain of thought prompting,
+[17:24] the idea is that we will we include
+[17:27] these like a few-shot examples with
+[17:29] thoughts.
+[17:30] Okay, let's let's take a look at this
+[17:32] example of solving math problems. So,
+[17:34] here instead in the examples, we will
+[17:37] provide these calculation steps to
+[17:39] basically demonstrate the model how we
+[17:40] should like like um
+[17:43] to how we should derive this like
+[17:45] solution step by step to to achieve the
+[17:47] final answer. Then after giving these
+[17:50] examples with our chain of thought
+[17:52] rationales, then the model is able to
+[17:55] solve this problem correctly.
+[17:59] In practice, how this how this like
+[18:02] these models can benefit more from chain
+[18:04] of thought prompting compared to
+[18:06] standard prompting is also dependent on
+[18:09] the model's fundamental capabilities.
+[18:11] So, here on the slides I'm showing the
+[18:13] scaling curves presented by the original
+[18:15] chain of thought papers and also some
+[18:18] other related papers about these like
+[18:20] chain of thought properties.
+[18:23] So, we can see that among like
+[18:25] different model families, one common
+[18:27] trend is that the COT performance
+[18:29] improves more significantly with the
+[18:32] increase of the model size.
+[18:35] And in particular, if we look at this
+[18:36] like gap of chain of prompting versus
+[18:39] standard prompting, then better models
+[18:41] benefit more with COT generation. And
+[18:43] there is suggesting improvement on
+[18:46] reasoning performance once the model
+[18:48] reaches a certain scale.
+[18:51] And also want to note that here for all
+[18:53] for these like curves, they are from
+[18:55] papers in 2022.
+[18:57] So, these experiments are done using
+[19:00] pre-trained only LLMs. So, this is why
+[19:02] it is important to apply some prompting
+[19:04] so that the model can generate the these
+[19:06] thoughts immediately.
+[19:08] And also with these like recent
+[19:10] post-training techniques, they might
+[19:12] show some different scaling curves. Like
+[19:14] we have seen some like
+[19:15] strong but very lightweight LLMs
+[19:17] recently. But then the main conclusions
+[19:21] will still hold. We will still see this
+[19:22] overall trend. Basically, uh uh once the
+[19:25] model becomes better, it will benefit
+[19:27] more from this like
+[19:29] this allowance of the chain of thought
+[19:30] generation. Then in the follow-up work
+[19:33] called Large Language Models Are
+[19:35] Zero-Shot Reasoners, they further find
+[19:37] that even with pre-trained only large
+[19:39] language models, we do not have to
+[19:41] provide the model with examples to
+[19:43] elicit this COT generation.
+[19:46] Instead, we can achieve this with the
+[19:48] instruction. Like in the paper, they
+[19:50] demonstrate this instruction let's think
+[19:51] step by step. Then after you apply this
+[19:54] instruction, before we ask the model to
+[19:56] generate the answer, the model can also
+[19:58] generate some thoughts before generating
+[20:00] the final solution.
+[20:04] And they empirically they demonstrate
+[20:06] that this zero-shot COT significantly
+[20:08] outperform zero-shot performance,
+[20:10] especially on harder like math and
+[20:13] symbolic reasoning tasks.
+[20:15] So, zero-shot COT is more convenient
+[20:18] than few-shot COT in the sense that we
+[20:20] no longer need to manually annotate
+[20:22] thoughts ourselves as exemplars.
+[20:26] But if we compare their performance,
+[20:28] zero-shot COT performance is still much
+[20:30] worse than few-shot COT.
+[20:33] Then a very natural question you want to
+[20:35] ask is how can we get the best of the
+[20:37] both worlds?
+[20:38] How to improve COT performance without
+[20:40] manually labeling exemplars?
+[20:44] So, this is what we want to achieve with
+[20:46] our paper large language models as
+[20:48] analogical reasoners. And this paper was
+[20:51] published at ICLR last year.
+[20:53] The idea is that instead of directly
+[20:55] providing the model with exemplars, we
+[20:57] instruct the model to first recall
+[21:00] relevant exemplars to solve the test
+[21:02] problem. Then based on this like model
+[21:05] generated exemplars, then the model will
+[21:07] try to solve the test problems as like
+[21:09] just um imagine that these are
+[21:12] self-generated exemplars are just um
+[21:14] some COT exemplars provided by external
+[21:17] sources.
+[21:20] The benefit of this design lies in two
+[21:22] folds.
+[21:24] First, these exemplars are
+[21:25] self-generated by the large language
+[21:27] models,
+[21:29] to fulfill our original goal. We don't
+[21:31] need to do any manual labeling here.
+[21:34] And on the other hand, because this
+[21:36] instruction is applied to each test
+[21:38] question, so basically for the for
+[21:40] different test question, the model is
+[21:42] able to generate different exemplars,
+[21:44] which are more relevant to the concrete
+[21:46] topics covered in the test question. So,
+[21:48] these exemplars are more tailored to
+[21:50] individual problems.
+[21:52] We call our approach analogical
+[21:54] prompting because the it this uh
+[21:56] methodology is actually can be motivated
+[21:58] by human analogical reasoning.
+[22:01] If we think about few-shot prompting, it
+[22:04] is not supernatural if we think about it
+[22:06] in the human reasoning way, because
+[22:08] humans are not explicitly given
+[22:10] demonstrations every time for for each
+[22:13] single new problem.
+[22:15] And instead, humans also intrinsically
+[22:18] recall from past relevant experience.
+[22:21] So, in a classic reasoning methodology
+[22:23] book called How to Solve It from Polya,
+[22:26] they have a very nice description about
+[22:28] this reasoning method named Do You Know
+[22:30] a Related Problem?
+[22:32] So, the idea is that when solving a
+[22:33] problem,
+[22:35] we look for a pre-formally solved
+[22:37] problem which is linked to our present
+[22:39] one by generalization, specialization,
+[22:42] or analogy. And we want to learn from
+[22:44] these like um past results or their
+[22:47] methods so that we can can help us solve
+[22:50] that new test problems better.
+[22:55] If we think about it from the human
+[22:56] reasoning perspective, then besides
+[22:59] exemplars, we can also instruct the
+[23:01] model to generate some high higher level
+[23:03] knowledge, which can be like a more more
+[23:06] like better summary of what we need to
+[23:08] solve the new problems. And this
+[23:10] generated knowledge can complement the
+[23:12] problems with broader insights.
+[23:15] So, here let's take the solving coding
+[23:17] problems as example.
+[23:20] So, given a new coding problem, we can
+[23:22] first like instruct the model to
+[23:24] self-generate some knowledge, which is a
+[23:26] more of like higher level tutorial about
+[23:28] the algorithms we need to solve the
+[23:30] problem. And also the model needs to
+[23:32] identify what are the main algorithms we
+[23:34] need so that it can come up with related
+[23:36] exemplar problems with their
+[23:38] corresponding code.
+[23:40] Then after this instruction, and also
+[23:43] once the model generate this related
+[23:45] like a background knowledge including
+[23:47] higher level tutorial and exemplars,
+[23:50] then the model goes back to solve the
+[23:51] initial test problem.
+[23:54] So, in the results, we show that
+[23:55] basically analogical prompting not only
+[23:57] outperforms zero-shot COT, but it
+[24:00] actually outperforms manual few-shot COT
+[24:02] as well. And we show this performance
+[24:04] improvement on in like um math problem
+[24:06] solving, code generation, and also like
+[24:09] Big Bench reasoning tasks.
+[24:12] If you look at these results at the
+[24:13] first time, you might be a bit
+[24:15] surprised, because knowledge here, all
+[24:17] these exemplar problems or the knowledge
+[24:20] are generated by the model. So,
+[24:22] intuitively, it might contain more
+[24:24] errors than human annotated exemplars.
+[24:28] And empirically, we indeed observe this
+[24:30] trend. We see that for example, for
+[24:32] those like examples generated by the
+[24:33] models for math problems, around 70% of
+[24:36] them are accurate and also they are
+[24:38] relevant, but the rest can have some
+[24:41] like um like issues like they are
+[24:43] completely irrelevant or there are some
+[24:45] actually wrong calculation steps.
+[24:47] But even so, there are some noises in
+[24:49] the demonstrations, the model still
+[24:51] benefits a lot from it.
+[24:56] So, given this like uh finding, you you
+[24:59] might imagine that this means at least
+[25:01] the model should be able to generate
+[25:02] some reasonable exemplars, or otherwise
+[25:04] it cannot learn from it at all.
+[25:07] So, based on this intuition, we also
+[25:09] conduct a like pretty rough like a
+[25:11] scaling like study for this analogical
+[25:14] prompting.
+[25:15] So, here we are comparing like models
+[25:17] among like um different among the
+[25:20] GPT text model families. I I know these
+[25:22] models are all shut down and deprecated
+[25:24] now, but um but uh this trend will still
+[25:27] hold.
+[25:28] So, basically, we can see that weaker
+[25:30] large language models benefit less from
+[25:33] analogical prompting.
+[25:34] Although if we compare the performance
+[25:36] to zero-shot chain of thought, it still
+[25:39] uh it's on par or still outperforms
+[25:42] their performance.
+[25:45] And with stronger large language models
+[25:47] like starting from text-davinci-002
+[25:49] in the GPT family, analogical prompting
+[25:52] starts to outperform chain of thought
+[25:53] prompting with manually designed
+[25:55] exemplars.
+[25:56] And notice that actually this approach
+[25:58] can even outperform retrieved exemplars.
+[26:01] So, for retrieval method, what we did is
+[26:03] that basically for each test problem, we
+[26:06] implement a retrieval approach so that
+[26:08] it will find those most relevant
+[26:10] problems in the in the this like GSM8K
+[26:13] uh math corpus training data.
+[26:16] So, one explanation here is that these
+[26:19] generated chain of thought by the model
+[26:21] can be more tailored to the underlying
+[26:24] reasoning style of these like
+[26:25] pre-trained or instruction-tuned large
+[26:28] language models.
+[26:29] So, this finding actually is also in
+[26:31] line with the recent trend like when we
+[26:34] are trying to develop the reasoning
+[26:35] models,
+[26:36] instead of like um putting like in
+[26:39] putting like um human-written thoughts,
+[26:41] we can have some training methods so
+[26:42] that the model is able to discover the
+[26:45] best like reasoning uh
+[26:47] strategies by itself.
+[26:50] Now, let's go back to the instruction.
+[26:52] Let's think step-by-step.
+[26:54] So, why do we have to use this sentence?
+[26:57] Is there something special about it?
+[26:59] So, in the original zero-shot COT paper,
+[27:02] they conducted this ablation study of
+[27:04] different variants of this instruction
+[27:06] to trigger the chain of thought
+[27:07] generation.
+[27:08] So, some of them do not make much sense,
+[27:10] so it is kind of um
+[27:12] um not surprising that they do not
+[27:14] perform well.
+[27:15] But if we look at those different
+[27:16] instructions in the top category,
+[27:18] instructive,
+[27:20] if we mask out these accuracy numbers,
+[27:22] it is it might be not that intuitive to
+[27:25] know which instruction should be
+[27:26] performed better. And it can be like
+[27:29] kind of um
+[27:30] not very good to see that even if you
+[27:32] just change a couple of words, then the
+[27:34] accuracy number can change very
+[27:36] dramatically.
+[27:37] So, this shows that current large
+[27:39] language models are pretty sensitive to
+[27:41] prompt design.
+[27:43] And because um and also in many cases,
+[27:46] there's no clear principle about how to
+[27:48] write optimal prompts. And this is why
+[27:51] nowadays there are still many people who
+[27:52] are try writing a lot of guidelines
+[27:54] about how to have have the best practice
+[27:57] to do prompt engineering.
+[28:00] So, given this observation,
+[28:02] a very natural question you want to ask
+[28:04] next is how we can reduce this manual
+[28:07] work for writing prompts.
+[28:12] So, our idea is that since our large
+[28:14] language models can solve like uh many
+[28:16] like um
+[28:17] challenging reasoning problems and also
+[28:19] answer the queries, so why don't we also
+[28:21] use it to help us do the prompt
+[28:24] engineering or the prompt design in
+[28:25] general?
+[28:26] So, in the ICLR 2023, there's a paper
+[28:29] called Large Language Models are
+[28:31] Human-Level Prompt Engineers.
+[28:33] So, the high-level idea is basically to
+[28:35] apply a large language model to propose
+[28:37] like prompts and so that we hope these
+[28:40] model-generated prompts can also perform
+[28:43] even better than human-written prompts.
+[28:46] So, here I'm showing the complete like
+[28:47] diagram of their method. So, there are
+[28:50] two important stages.
+[28:51] The first is this like proposal
+[28:53] generation, where we can leverage this
+[28:55] large language model to generate initial
+[28:57] instructions given our task description.
+[29:02] Then once the model generate different
+[29:03] like proposed prompts, we then we'll
+[29:06] score each instruction based on the
+[29:08] prediction correctness on a small set of
+[29:10] problems. So, here basically we will
+[29:12] hold out a small validation set, which
+[29:14] can tell us the quality of each prompt.
+[29:18] So, here the setup may be like more
+[29:21] more similar to the traditional machine
+[29:22] learning task where we have this like
+[29:24] separation of like training and test,
+[29:27] but actually we do not need to include
+[29:29] so many like um
+[29:30] example examples here for this
+[29:32] validation purpose. Like in most cases,
+[29:35] it is sufficient to include tens of
+[29:37] examples or just around 100 problems.
+[29:42] Then our work uh published at ICLR last
+[29:44] year, we go further, where we try to
+[29:47] use this large language model not only
+[29:49] just to propose some like some
+[29:51] instructions and do some kind of a
+[29:53] search and mutation. We also want to
+[29:55] apply
+[29:56] it as an optimizer to iteratively
+[29:58] improve the prompt.
+[30:00] So, so the idea of our approach is that
+[30:03] we want to instruct the LM to leverage
+[30:06] the past operation trajectory
+[30:08] represented as sorted solution score
+[30:10] pairs, so that it can learn to
+[30:12] iteratively generate better prompts with
+[30:15] more steps.
+[30:17] So, in this work we frame it as a more
+[30:19] marginal operation framework in the
+[30:20] natural language space, but in this
+[30:22] specific use case of prompt operation,
+[30:25] basically this means that we will have
+[30:27] two large language models as optimizers
+[30:29] and evaluators.
+[30:31] So, basically this optimizer is the
+[30:33] large language model which is
+[30:34] responsible for proposing a new
+[30:36] instruction given old ones and also the
+[30:39] task exemplars.
+[30:41] And the evaluator is the scholar which
+[30:43] will evaluate the accuracy or
+[30:45] performance of a given instruction.
+[30:50] Now, let's take a look at how we can
+[30:52] design a meta prompt to achieve this
+[30:54] goal.
+[30:55] So, on the slides I'm showing an example
+[30:57] meta prompt for GSM8K to solve the math
+[31:00] problems.
+[31:01] The prompt itself looks pretty long, but
+[31:03] basically there are two like a main
+[31:05] components.
+[31:07] The first one is this like trajectory
+[31:09] including the instructions we have like
+[31:12] explored in the past steps and with
+[31:14] their corresponding
+[31:16] accuracies. we will sort them in the
+[31:18] ascending order and we can remove those
+[31:21] older ones if the if the context length
+[31:23] is not enough to put all of them in the
+[31:25] history.
+[31:27] And we also provide these exemplars to
+[31:29] show what's the task we want to
+[31:30] optimize.
+[31:31] And basically here, for example for math
+[31:33] problems, we only need to include these
+[31:35] like QA pairs and with the with the
+[31:37] final answer. So again, there's no need
+[31:39] to annotate any chain of thought or any
+[31:42] explanations of how we can derive the
+[31:44] solution.
+[31:49] Now, for the results, basically again we
+[31:51] are testing all these like instructions
+[31:53] on pre-trained only large language
+[31:55] models. And we used like Palm 2 at that
+[31:58] time. And we also tried using different
+[32:00] models as the optimizers including Palm
+[32:02] model and the GPT model.
+[32:06] So, for all these like approaches, we
+[32:08] are starting from the initial
+[32:10] instruction with let's solve the problem
+[32:12] which achieves an accuracy of around 61%
+[32:15] for this GSM8K task and this is a pretty
+[32:18] general purpose instruction. It is
+[32:21] around like a 10% lower than the
+[32:23] instruction that says step-by-step.
+[32:27] And if we look at the best LM generated
+[32:30] prompt among these, these, we can see
+[32:32] that actually this instruction, take a
+[32:34] deep breath and work on this problem
+[32:36] step-by-step, achieves like around like
+[32:39] 8% like
+[32:40] like higher than this let's think
+[32:42] step-by-step instruction. And actually
+[32:44] if we compare this performance to
+[32:46] few-shot COT, it matches the performance
+[32:49] like reported in the Palm 2 paper where
+[32:51] the chain of thought exemplars are
+[32:53] written by humans.
+[32:54] So, there are two things we can we can
+[32:56] think about here. One is that basically
+[32:59] here we are seeing another way to
+[33:01] basically
+[33:02] achieve very competitive performance to
+[33:05] few-shot COT without manually writing
+[33:07] exemplars ourselves.
+[33:08] Another perspective is that is that with
+[33:11] this like LM
+[33:12] based prompt optimization, it doesn't
+[33:15] only save us time to so that we do not
+[33:17] need to spend so much time to to like
+[33:20] manually tune the prompts ourselves, but
+[33:22] actually when it comes up with new
+[33:23] prompts, it also provides some sometimes
+[33:26] surprising different angles. Like I can
+[33:29] assume that for example it's like turns
+[33:31] take a deep breath, um
+[33:33] it at least for me, um if I'm trying to
+[33:36] like
+[33:37] revise the prompt by myself, I won't
+[33:40] feel that this phrase will be so so
+[33:42] helpful, but empirically, the large
+[33:45] language model with this optimization
+[33:47] loop, actually it can
+[33:49] somehow come up with this instruction
+[33:51] that fits pretty well for this model.
+[33:57] And note that in this like
+[33:59] LM based optimization process, actually
+[34:01] this is not a real optimization in the
+[34:03] sense that we do not have any training
+[34:05] here. It is completely prompting only.
+[34:09] So, there's no guarantee that the model
+[34:11] can just keep like coming up with better
+[34:13] and better prompts.
+[34:15] But in practice, we find that actually
+[34:17] this like organization curve
+[34:20] holds
+[34:21] for different models. So, we can see
+[34:23] that basically this like
+[34:25] with more optimization steps, which is
+[34:27] basically this iterative prompting
+[34:30] steps, the accuracy increases with more
+[34:32] steps and then plateaus. So, it looks
+[34:34] pretty like similar to the traditional
+[34:37] optimization graphs.
+[34:42] Okay, now let's go back to chain of
+[34:44] thought.
+[34:45] So, from a methodology perspective, what
+[34:48] does chain of thought really bring into
+[34:50] LM reasoning? Why is it so effective?
+[34:54] If we think about it, chain of thought
+[34:55] prompting is basically giving us a way
+[34:59] so to perform this variable computation
+[35:01] of the thought process which where this
+[35:04] number of tokens used for problem will
+[35:07] be adapt to tasks of different
+[35:09] difficulty levels.
+[35:11] So, if we think about standard
+[35:12] prompting, basically it
+[35:14] for the same task, if the answer lengths
+[35:17] are the same, then basically if we just
+[35:19] provide the final answer directly, it
+[35:21] basically means that we are forcing the
+[35:22] model to use the same amount of time,
+[35:24] same amount of inference time budget to
+[35:26] solve each problem regardless of its
+[35:28] difficulty.
+[35:30] But with this like a chain of thought,
+[35:32] basically it shows that for more complex
+[35:34] questions, because it also require more
+[35:37] reasoning steps
+[35:38] to solve the problem. Like for math
+[35:40] problems, it might require more
+[35:41] calculation steps. So, basically with
+[35:43] this chain of thought idea, it allows
+[35:45] the model to
+[35:46] basically also perform more reasoning
+[35:48] steps in the token space so that it can
+[35:51] better solve the test problems. And in
+[35:55] the chain of thought paper, they also
+[35:56] show that even if the the
+[35:59] difficulty of the problems in exemplars
+[36:02] are pretty simple math problems, but
+[36:04] actually the same prompt can also
+[36:06] generalize to test problems that require
+[36:08] much more reasoning steps.
+[36:13] Then if we think about the high-level
+[36:14] reasoning strategies,
+[36:16] chain of thought also incorporates a lot
+[36:18] of
+[36:19] reasoning process that are very
+[36:20] important for us humans to reason about
+[36:23] difficult tasks such as decomposition,
+[36:26] planning, and etc.
+[36:31] So, if you want to further improve the
+[36:32] model performance, and especially if we
+[36:34] know what are some good guidelines on
+[36:36] reasoning strategies we need to use for
+[36:39] a specific task, we can also explicitly
+[36:41] instruct the LM with the desired
+[36:43] reasoning strategies for problem
+[36:45] solving.
+[36:48] So, one idea to further push this like
+[36:50] decomposition strategy is called
+[36:53] least-to-most prompting.
+[36:54] And the goal of this approach is to
+[36:57] achieve easy-to-hard generalization by
+[36:59] explicitly telling the model what's the
+[37:01] best practice to decompose the original
+[37:04] problem.
+[37:05] So, on the slides I'm showing this
+[37:07] example for solving math problems. And
+[37:10] basically in the this original
+[37:11] least-to-most prompting paper from my
+[37:13] colleagues at Google DeepMind, it
+[37:15] includes two stages.
+[37:17] So, in the first stage, it performs a
+[37:19] problem reduction. Like given a math
+[37:22] problem, it first reduces the problems
+[37:24] into simpler subproblems. So, each each
+[37:27] sub math problem can be easier to solve,
+[37:29] requires fewer calculation steps.
+[37:32] Then given these like subquestions, the
+[37:34] model will be able to to like
+[37:36] sequentially solve these subproblems and
+[37:39] combine the solutions to solve the
+[37:40] original problem.
+[37:44] The most impressive results from this
+[37:46] work is that actually with this
+[37:48] least-to-most prompting design, it shows
+[37:51] for the first time that we do not need
+[37:52] to like like design the neuro-symbolic
+[37:54] frameworks or requiring any like program
+[37:57] execution to but it can still solve
+[38:01] these like
+[38:02] compositional generalization benchmarks
+[38:04] with a nearly perfect accuracy.
+[38:06] So, the results shown in their paper is
+[38:09] on this SCAN benchmark. So, SCAN is a
+[38:12] synthetic data about like translating
+[38:15] programmatically generated natural
+[38:17] language commands into action sequences.
+[38:20] The most challenging part of this
+[38:22] benchmark is about this length split.
+[38:24] Basically in their like test splits, all
+[38:27] the action sequences are longer than the
+[38:29] training samples.
+[38:31] So, this makes it very challenging for
+[38:32] the traditional like
+[38:34] sequence-to-sequence learning. If we
+[38:35] directly do this like training on on
+[38:38] their training set and learn on this
+[38:40] length split, the test accuracy will be
+[38:42] no no more than 25% unless we apply some
+[38:44] neuro-symbolic techniques.
+[38:47] But then basically with this
+[38:48] least-to-most prompting, they show that
+[38:50] if they use the like the latest models
+[38:53] at that time, which is like Code Ocean
+[38:56] 002,
+[38:57] they're able to achieve nearly perfect
+[38:59] test accuracy. And at the same time,
+[39:02] they only need to use like 0.1
+[39:05] 0.1% of the training samples as
+[39:07] exemplars. So, it is like both like more
+[39:09] like test efficient
+[39:11] like data efficient to adapt to new
+[39:13] tasks and while also the performance is
+[39:15] very competitive.
+[39:17] Then our follow-up work published at
+[39:19] ICLR last year, we further show that we
+[39:22] can extend this least-to-most prompting
+[39:24] idea to solve like more complicated
+[39:27] compositional generalization in the case
+[39:29] of translating text to more realistic
+[39:32] programming languages. Like here on the
+[39:34] slides I'm showing this example of
+[39:36] translating natural language questions
+[39:38] to SPARQL queries.
+[39:41] So, the main challenge here is that
+[39:43] for more real-world languages including
+[39:46] natural language or program languages,
+[39:48] there are more complicated grammar rules
+[39:50] and also the vocabulary set is larger.
+[39:54] This means that especially if we we do
+[39:57] not have a model with a super long
+[39:59] context, then a single prompt will be no
+[40:01] longer enough to cover all the grammar
+[40:03] rules needed to solve the task.
+[40:06] So actually with this challenge, it
+[40:09] shows one benefit of decomposi-
+[40:11] decomposition by allowing the model to
+[40:13] use different prompts for different
+[40:15] reasoning stage. It also enables the
+[40:17] model to use customized prompts for each
+[40:20] sub problem or or each subtask in the
+[40:23] context of agent development.
+[40:25] So here is an overview of our dynamic
+[40:28] list to most prompting approach. So some
+[40:30] details do not matter too much here like
+[40:32] how we do the decomposition. But the
+[40:34] main new stage we add is this like
+[40:36] so-called dynamic selection of exemplars
+[40:39] for each sub problem. So basically here
+[40:42] for each of them like
+[40:43] test like sentence, we can discover
+[40:46] those example questions with the most
+[40:48] relevant grammar rules. So like so
+[40:50] basically we can assure that for each
+[40:52] part of the sentence, we can always
+[40:54] retrieve for the most most like useful
+[40:57] grammar rules to solve the task so that
+[40:58] the model can have enough context to
+[41:00] solve the problem.
+[41:04] So on this like compositional like
+[41:07] free base question benchmark the CFQ
+[41:09] dataset, again we show that actually our
+[41:12] dynamic list to most prompting approach
+[41:14] outperforms all these like baselines
+[41:16] which where we need to train a model on
+[41:18] the complete training set.
+[41:21] And again if we compare this like
+[41:23] dynamic list to most prompting with
+[41:24] chain of thought prompting and other
+[41:26] prompting approaches, it also scales
+[41:28] better when we increase this exemplar
+[41:31] pool to generate these future examples.
+[41:36] So far we have talked about how we can
+[41:38] instruct a model to solve the problem in
+[41:41] in some like
+[41:42] with some reasoning strategies indicated
+[41:44] by the future exemplars.
+[41:47] But we if we think about it,
+[41:49] we can assume that for different
+[41:51] reasoning tasks, they can require very
+[41:53] different reasoning structures. Like
+[41:55] there will be different ways to
+[41:56] decompose the task and plan for each
+[41:59] stage.
+[42:00] At the same time, we might not want to
+[42:02] annotate all these like best practice
+[42:04] for each type of task. Like again we
+[42:06] don't want to do this manual labeling of
+[42:08] of exemplars for every single problem.
+[42:12] So in our self-discover work we
+[42:14] published at NeurIPS last year, we
+[42:16] basically instruct a model to compose
+[42:19] task-specific reasoning structures
+[42:21] without manually written demonstrations.
+[42:24] So in practice, how we do is that
+[42:25] basically we will list list kind of tens
+[42:28] of best practice of reasoning strategies
+[42:31] including like chain of thought
+[42:32] reasoning, doing decomposition, doing
+[42:34] some self-reflection, etc. Then given a
+[42:37] different a new task, the model will
+[42:40] think about how it can like utilize the
+[42:43] reasoning strategies that are best of
+[42:45] suit for the current task and compose a
+[42:47] reasoning structure, follow it to solve
+[42:49] the problem.
+[42:52] And for evaluation, we also show that
+[42:54] with this self-discover methodology, it
+[42:57] outperforms chain of thought prompting
+[42:58] and also other base other baselines on a
+[43:01] different benchmarks including big bench
+[43:04] hard reasoning task, math benchmark and
+[43:06] also some other benchmarks for social
+[43:09] social agent learning.
+[43:13] So to summarize, in the first part, I
+[43:15] talked about I first talked about chain
+[43:17] of thought generation and the
+[43:19] fundamental idea of allowing the model
+[43:21] to perform variable computation to like
+[43:24] trigger the thought process. And this
+[43:26] thought process can adapt to task of
+[43:28] different difficulty levels.
+[43:32] And we talked about how to improve the
+[43:34] chain of thought performance at
+[43:35] inference time.
+[43:37] So in original chain of thought paper,
+[43:39] we talked about the future prompting
+[43:40] idea with labeling of thoughts.
+[43:43] And we talked about instruction
+[43:44] prompting to trigger this chain of
+[43:46] thought generation.
+[43:48] And also we talked about how we can
+[43:50] instruct the large language model to
+[43:52] automate the prompt design and discover
+[43:53] better prompts by themselves.
+[43:58] So notice that the this best practice of
+[44:01] interacting with large language models
+[44:03] can evolve over time. Like for example,
+[44:06] recently with these post-change large
+[44:07] language models, you do not have to put
+[44:10] examples for every single task for the
+[44:12] model to learn how to do it.
+[44:14] And also in for some models for example,
+[44:16] it is better for you to just provide
+[44:18] very clear guidelines and instructions
+[44:21] on what you want and then hope the model
+[44:23] can just follow your instructions. And
+[44:25] some models prefer those like
+[44:27] interactive discussion and some models
+[44:29] might prefer just a very long detailed
+[44:31] instruction at once.
+[44:34] But the principles of how to discover
+[44:36] good prompting strategies for reasoning
+[44:37] still hold here.
+[44:39] Like two very important criteria is that
+[44:43] we want this approach to encourage model
+[44:46] to generate longer chain of thought for
+[44:48] complex tasks. We want it to scale with
+[44:50] different task difficulty.
+[44:53] And also we need this like prompting
+[44:55] technique to be able to support
+[44:56] reasoning strategies required for the
+[44:58] task.
+[44:59] So now let's start the second part about
+[45:02] perform search and selection from
+[45:04] multiple candidates and increasing the
+[45:05] ways to explore solution space.
+[45:10] So after we talked about the first part,
+[45:13] what is missing so far?
+[45:15] Yeah, I guess this question is not so
+[45:17] hard since I already showed the outline
+[45:18] of these slides.
+[45:20] So basically like
+[45:22] basically from first part, we can see
+[45:24] that we should not limit the large
+[45:25] language model to generate only one
+[45:27] solution per problem. Because the mod-
+[45:29] because the model can just
+[45:31] have have some mistakes in its single
+[45:33] task solution.
+[45:36] Instead, we should allow the model to
+[45:38] explore multiple branches which will
+[45:40] allow the large language model to
+[45:41] recover from mistakes in a single
+[45:44] generation.
+[45:45] And there are two ways to basically
+[45:47] increase the width of this solution
+[45:49] exploration.
+[45:51] One is that we can generate multiple
+[45:52] candidate solutions per problem.
+[45:55] Another is that at each step, we can
+[45:57] allow the model to generate multiple
+[45:59] potential next reasoning steps.
+[46:03] It is not that hard to think that with
+[46:05] this
+[46:06] like multiple sample generation, then
+[46:09] the upper bound of the performance will
+[46:11] be definitely higher because we allow
+[46:12] the model to like kind of select an
+[46:15] alternative probably better solution.
+[46:18] But the fundamental challenge for for
+[46:20] approaches along this line is that how
+[46:23] to select the best response from
+[46:25] multiple candidates.
+[46:28] Because in the real-world use case, we
+[46:29] do not have an oracle scholar at
+[46:31] inference time.
+[46:33] So surely for example in in a chat
+[46:34] interface, we can just have the model
+[46:36] generate multiple like solutions and the
+[46:38] user can pick whatever they want. Then
+[46:40] this is kind of a best of like selection
+[46:43] case.
+[46:44] But it will be more ideal if the model
+[46:46] can just do this kind of process
+[46:49] internally so that we do not have to
+[46:51] review like tens of like solutions by
+[46:54] ourselves to see that what we want.
+[46:59] So along the line of these like ideas, I
+[47:02] want to first talk about this
+[47:03] self-consistency
+[47:05] work from my colleagues at Google
+[47:06] DeepMind.
+[47:08] So if we look at this idea nowadays, we
+[47:11] will find that this is an incredibly
+[47:13] simple idea but it is actually very
+[47:15] effective and it is
+[47:17] it it actually can can improve
+[47:20] performance a lot with all the different
+[47:23] like models.
+[47:25] So let's say we want to also solve a
+[47:27] math problem and this time we allow the
+[47:29] model to generate multiple responses.
+[47:32] So basically after we have all these
+[47:34] responses, we still do not know which
+[47:37] one is accurate. But here we have this
+[47:39] consistency-based selection criterion.
+[47:42] So basically let's say for this like
+[47:44] math problem with a single number as the
+[47:47] final answer, we will look at these
+[47:49] three solutions. Two of them have the
+[47:51] answer 18 and one of them have the
+[47:53] answer 26.
+[47:54] So basically 18 is the most consistent
+[47:57] answer. So we pick the response
+[47:59] corresponding to this like most
+[48:01] frequently appeared answer.
+[48:05] And note that here one important thing
+[48:07] is that this selection is only based on
+[48:09] the final answer. It is not based on the
+[48:11] reasoning passes. The model can like
+[48:13] come up with whatever reasoning passes
+[48:15] it wants. As long as they lead to the
+[48:17] same final answer, we consider them to
+[48:19] be all good.
+[48:21] This is a pretty simple idea but
+[48:23] actually it
+[48:24] it boosts the performance across
+[48:25] different models and benchmarks. And
+[48:28] here here in their paper, they also
+[48:31] evaluate all the models available at the
+[48:33] time and especially on math problems,
+[48:36] they show very significant performance
+[48:38] improvement.
+[48:40] Now let's talk about the list of scaling
+[48:41] effect again with the self-consistency
+[48:44] approach.
+[48:46] So for the baseline here
+[48:48] in the curves, they compare with sample
+[48:50] and and rank baseline. This is actually
+[48:53] a pretty natural baseline which asserts
+[48:56] that we can select a response with the
+[48:58] highest log probability. So then here
+[49:01] the assumption is that if the model like
+[49:03] gives like higher probability to the
+[49:05] correct response, it should be more
+[49:06] confident about it.
+[49:08] But actually if we look at these curves,
+[49:10] we can see that self-consistency
+[49:12] performance scales much better than
+[49:14] probability-based ranking.
+[49:16] So with more and more responses like
+[49:18] like up to like 40 responses,
+[49:21] self-consistency performance is still
+[49:22] improving. But this like sample and rank
+[49:25] baseline has already stopped improving
+[49:27] with with
+[49:28] as around 10 10 responses already.
+[49:33] But there is an exception. So the
+[49:35] exception is that if we train the model
+[49:37] to be a very good verifier for the task
+[49:39] we care about, we might be able to kind
+[49:42] of outperform this like a scaling curve
+[49:44] with self-consistency, and we will talk
+[49:46] about it later.
+[49:48] Another very important factor that
+[49:51] contributes to self-consistency success
+[49:53] is that we need the model to like
+[49:56] generate very diverse responses to
+[49:59] perform this consistency-based
+[50:00] selection.
+[50:02] So here, basically in this results, they
+[50:05] also compare with different like
+[50:07] baselines. So the beam search is
+[50:09] actually a very classic search algorithm
+[50:12] like in the NLP literature before the
+[50:16] like era. So basically idea is that at
+[50:18] each decoding step we will keep the top
+[50:21] K like tokens with the highest
+[50:23] probabilities. Then in the end, we will
+[50:25] we will use the like
+[50:27] sentence with the highest overall
+[50:29] probability.
+[50:32] And then they also like um
+[50:34] compare with this ensemble baselines.
+[50:36] Well, they apply greedy decoding for
+[50:39] among like different variants of how you
+[50:41] formulate the prompt, because earlier we
+[50:43] mentioned that the LLMs are sensitive to
+[50:45] different prompts. Also, they compare
+[50:47] the performance to different ways to
+[50:49] permute the exemplars orders in the
+[50:51] prompt.
+[50:54] So again, they show that
+[50:55] self-consistency using sampling scales
+[50:58] better with more samples.
+[51:00] So the important like
+[51:03] factor here is that basically for the
+[51:05] sampling method, it needs to ensure that
+[51:07] the responses are very diverse. So like
+[51:09] we can do we can do this sampling with a
+[51:12] high temperature, or we can perform
+[51:14] nucleus sampling with like by setting
+[51:17] the parameters in the right way to
+[51:19] enforce this diversity, etc.
+[51:21] One analysis from this work is actually
+[51:24] pretty interesting. It is related to
+[51:26] model calibration.
+[51:28] So this is about
+[51:30] actually how does self how does this
+[51:32] consistency-based selection like improve
+[51:35] the model performance? What does it mean
+[51:37] when the model is like
+[51:38] can
+[51:39] for given task, the the model can come
+[51:42] up with a more consistent response.
+[51:45] So here, basically they show this curve
+[51:47] about to show the correlation between
+[51:49] like the accuracy and consistency.
+[51:52] So here, basically we can see that
+[51:54] if if for those like sample responses,
+[51:57] if more of them lead to the same final
+[51:59] answer, this means that this consistency
+[52:01] percentage is higher.
+[52:03] Then there are two like conclusions we
+[52:05] can see from here. One is that this
+[52:07] large language model is more certain
+[52:09] with its final predicted conclusion,
+[52:11] even if they are like coming up with the
+[52:13] same conclusion with different reasoning
+[52:15] passes.
+[52:16] And empirically, we see that this
+[52:18] aggregated solution for this like more
+[52:20] consistent like responses can be more
+[52:23] likely to be accurate. The final
+[52:24] solution can can just be the the right
+[52:27] one for the original test problem.
+[52:29] So this can also explain why this like
+[52:31] consistency can be a very simple but
+[52:34] very powerful criterion to select the
+[52:36] final solution.
+[52:38] So in the self-consistency paper, they
+[52:39] demonstrate this like approach on those
+[52:42] like task-based reasoning problems.
+[52:44] And actually, this consistency-based
+[52:46] selection approach is also very powerful
+[52:49] for code generation.
+[52:51] And you know in our AlphaCode work at
+[52:54] Google at Google DeepMind, basically
+[52:57] this AlphaCode system itself is a pretty
+[52:59] like complicated one. It includes like
+[53:01] model training and inference time
+[53:03] techniques.
+[53:04] But here I will I will
+[53:06] mainly focus on this like inference
+[53:08] stage called filtering and clustering.
+[53:11] And especially this like clustering is
+[53:13] basically tries to like um
+[53:15] do this like code selection based on the
+[53:18] consistency on execution results.
+[53:23] So let's first briefly discuss about the
+[53:25] background, the problem setting of
+[53:27] competitive programming.
+[53:29] So basically in a competitive
+[53:31] programming problem,
+[53:32] the it in the problem description, it
+[53:34] will include a very long and complicated
+[53:37] text to tell about the background story
+[53:38] about what we want for the problem for
+[53:41] for for the corresponding code. And then
+[53:43] also includes a few input output pairs
+[53:45] as test cases.
+[53:48] Then for the solution to be considered
+[53:50] correct, the generated code needs to
+[53:52] pass both the given test cases in the
+[53:54] prompt, and also usually we will have
+[53:57] some harder test cases, and these test
+[53:59] cases are typically like of larger
+[54:02] scale, and they will be more more
+[54:04] difficult than these like example test
+[54:06] cases, and they will cover some corner
+[54:08] cases. So since we already have some
+[54:11] input examples, we can filter the
+[54:13] programs that fail the given test cases
+[54:16] already.
+[54:17] But for the remaining programs, they
+[54:18] might still fail on the harder test
+[54:20] cases. Like for those of who of those of
+[54:23] you who have like participated in these
+[54:25] like
+[54:25] coding contests, you might uh feel the
+[54:27] same way. You feel like your code is
+[54:29] great, but it just fail on some
+[54:31] mysterious holdout test cases, and you
+[54:33] didn't get the score you want.
+[54:35] So basically for this like for the
+[54:37] AlphaCode system, what we do is that we
+[54:40] will train another model to generate new
+[54:42] test inputs for for this like test
+[54:45] problems.
+[54:47] Then we will execute those like sample
+[54:49] programs on all these like
+[54:50] model-generated inputs, and then we
+[54:53] cluster all programs with the same
+[54:55] outputs together.
+[54:57] The assumption here is basically if we
+[55:00] have the model to generate like enough
+[55:02] number of test inputs, and also
+[55:07] then actually we can assume that all
+[55:09] programs in the same cluster are
+[55:11] semantically equivalent, because they
+[55:13] lead to the same execution results.
+[55:17] And then finally, we sample one program
+[55:19] from each of the 10 largest clusters.
+[55:22] In our relation, we show that this like
+[55:24] clustering provides additional
+[55:25] performance gain compared to the
+[55:27] filter-only method. But clearly, there
+[55:29] is still a gap from the oracle
+[55:31] selection, because there is still no
+[55:33] guarantee that the consistent response
+[55:35] will be just the best one out of the
+[55:37] candidate pools.
+[55:39] Now, let's revisit this self-consistency
+[55:42] decoding pipeline.
+[55:43] So one limitation here is that for the
+[55:45] original self-consistency, we need an
+[55:48] answer extraction process so that we can
+[55:50] do this aggregation among the candidate
+[55:52] responses.
+[55:54] So if you want to like apply this
+[55:56] consistency-based decoding to like
+[55:59] kind of
+[56:00] broader use cases,
+[56:02] the natural next question is how we can
+[56:04] do it for free-form generation, where it
+[56:06] is not that natural to have this
+[56:08] aggregation and answer extraction
+[56:10] process.
+[56:12] So this is what we want to achieve with
+[56:13] our work on universal self-consistency.
+[56:16] The idea is that instead of having this
+[56:18] like answer extraction process,
+[56:21] we ask the large language model to
+[56:22] perform consistency-based selection.
+[56:25] So specifically, we throw an instruction
+[56:27] to the model asking it to select the
+[56:29] most consistent response based on the
+[56:31] majority consensus, and also it needs to
+[56:33] take a look at all these candidate
+[56:35] responses.
+[56:37] So the intuition here is that clearly,
+[56:39] we know that it will be hard for the
+[56:40] model to judge the answer correctness by
+[56:42] itself, but consistency should be a
+[56:45] simpler criterion to measure.
+[56:49] Then empirically, we also evaluate this
+[56:51] universal self-consistency method for
+[56:53] different applications.
+[56:55] So for those like free-form generation
+[56:57] problems, like summarization and
+[56:59] question answering with with like with
+[57:02] like long factual like
+[57:04] uh final final answers, we see that the
+[57:06] universal self-consistency also still
+[57:09] can improve
+[57:10] over the baselines, where the original
+[57:12] self-consistency is not directly
+[57:14] applicable.
+[57:17] And on math reasoning and coding
+[57:18] problems, where we can apply this
+[57:20] original self-consistency idea, actually
+[57:23] universal self-consistency can match its
+[57:25] performance without the requirement of
+[57:27] performing this answer extraction and
+[57:29] code execution.
+[57:33] And uh notice here, clearly this
+[57:35] universal self-consistency performance
+[57:36] is bounded by the long context
+[57:38] capability.
+[57:40] So at the time, we are using like
+[57:42] earlier model, which is not super great
+[57:44] at long context reasoning. So we can see
+[57:46] that when we include more responses in
+[57:49] the in the prompt, the performance might
+[57:51] not go like up as like well as the
+[57:55] original self-consistency.
+[57:57] But we can see that with the recent like
+[57:59] development of long context models, the
+[58:01] this like will allow such kind of
+[58:04] model-based selection approach to scale
+[58:06] more with more responses. And also in
+[58:08] practice, for most tasks, it can be well
+[58:11] solved within let's say 10 responses in
+[58:13] the candidate pool. So this will still
+[58:16] showcase the the this the usability of
+[58:18] this model-based consistency selection.
+[58:21] Previously, we talked about like
+[58:23] for the model-based like selection using
+[58:26] the log probability from the original
+[58:28] model,
+[58:29] this approach of ranking doesn't scale
+[58:32] better than the consistency-based
+[58:34] selection.
+[58:35] So to improve further over this
+[58:37] consistency-based selection,
+[58:39] one idea is that we can train a large
+[58:42] language model as the ranker, and we
+[58:44] hope that at least this ranker can
+[58:46] perform
+[58:47] perform better than this like simple
+[58:49] consistency criterion, and actually it
+[58:51] can have some like kind of sense of
+[58:54] which responses are more likely to be
+[58:56] accurate.
+[58:58] So here on the slides, I'm showing this
+[59:00] like this like kind of diagram from the
+[59:03] original OpenAI paper, which introduced
+[59:05] the GSM8K dataset, and also the and also
+[59:09] they demonstrate this like method of how
+[59:11] to train a verifier to
+[59:13] show the to basically judge the
+[59:15] correctness of the math solution.
+[59:18] And also like later on, they have they
+[59:19] have this like follow-up paper called
+[59:20] Let's Verify Step by Step. So in total,
+[59:23] basically for this like line of
+[59:25] LLM-based like ranking works, there are
+[59:27] two there are two ways to basically
+[59:31] design the LLM-based method to judge the
+[59:33] answer quality.
+[59:35] The first way is the most like in the
+[59:38] initial and the most standard approach,
+[59:39] which is called outcome supervised
+[59:41] reward model. Basically, it will verify
+[59:44] the correctness at the solution level.
+[59:46] Like given a math problem, the solution,
+[59:48] the model will tell you whether the
+[59:49] solution is correct or not.
+[59:54] Another like approach introduced in this
+[59:57] let's verify step-by-step paper is
+[59:59] called process supervised reward model.
+[01:00:02] So, the idea is that instead of
+[01:00:04] verifying at the solution space, we can
+[01:00:06] also verify at the step level. We can
+[01:00:09] see whether each step is accurate.
+[01:00:13] So, in their in their work, basically,
+[01:00:15] they show that this like a process
+[01:00:17] supervised reward model actually scales
+[01:00:19] better with more samples compared to
+[01:00:21] this outcome based reward model and also
+[01:00:24] this majority voting based one.
+[01:00:27] But, clearly here the performance will
+[01:00:29] be highly dependent on the verify
+[01:00:31] quality.
+[01:00:32] And also, the same verify might not like
+[01:00:35] generalize across tasks because we know
+[01:00:36] that this consistency based criteria is
+[01:00:38] very simple and actually can be directly
+[01:00:40] applied to many tasks. But, for these
+[01:00:42] general models, you need to design a
+[01:00:44] good training like a strategy and also
+[01:00:47] design a good training data so that it
+[01:00:49] can really like work across different
+[01:00:51] domains you care about.
+[01:00:53] So far, we have talked about response
+[01:00:54] selection only at the like solution
+[01:00:57] level. So, we only perform this
+[01:00:59] selection after the full responses are
+[01:01:01] generated.
+[01:01:03] But, assuming that we have a very good
+[01:01:05] step-wise scorer, then actually this
+[01:01:08] like solution based response selection
+[01:01:09] is kind of a waste of like
+[01:01:12] using this step-wise scorer because
+[01:01:14] actually we can we can do more with such
+[01:01:17] kind of a more powerful and more
+[01:01:18] fine-grained verify.
+[01:01:21] So, if we already have this a good like
+[01:01:23] step-wise scorer function, then actually
+[01:01:26] we can perform this like a tree search
+[01:01:28] with large language model. Where
+[01:01:29] basically, instead of waiting until the
+[01:01:32] like solution becomes complete, during
+[01:01:34] the search process, we can just we can
+[01:01:37] prioritize those exploration of like
+[01:01:39] partial solutions at the step level and
+[01:01:41] we can explore those more promising
+[01:01:43] steps before exploring other passes.
+[01:01:48] So, on the slides, I'm showing these
+[01:01:50] like
+[01:01:51] like these like
+[01:01:53] diagram from the tree of thought
+[01:01:54] prompting paper. So, from this
+[01:01:56] illustration, you can clearly see what's
+[01:01:59] what are the differences of different
+[01:02:00] like multi-methods that tree of thought
+[01:02:02] prompting is basically a trend. And
+[01:02:05] this like self-consistency method is
+[01:02:07] like multiple parallel trends. And then,
+[01:02:09] for this like tree of thought,
+[01:02:10] basically, at each step, it can have
+[01:02:12] multiple branches to explore the next
+[01:02:15] step and you don't have to complete all
+[01:02:17] these like passes until the end.
+[01:02:20] So, here I will show this like how we
+[01:02:23] can apply this like a tree of thought
+[01:02:24] idea with a simple example of game of
+[01:02:26] 24. So, basically, at each step, there
+[01:02:29] are two important like stages we want to
+[01:02:32] do. One is called thought generation.
+[01:02:35] Basically, this step will try to we will
+[01:02:38] prompt the large language model to
+[01:02:39] propose possible next thinking steps.
+[01:02:42] Like in the game of 24, these like
+[01:02:43] thinking steps are pretty like simple in
+[01:02:46] format. You just need to select the two
+[01:02:48] numbers to perform this calculation.
+[01:02:51] Then, there's another stage called
+[01:02:53] thought evaluation, where again here, we
+[01:02:55] can prompt the large language model to
+[01:02:57] evaluate how promising the current state
+[01:02:59] is. Like for the for the game of 24, you
+[01:03:01] need to decide whether it is possible to
+[01:03:04] reach the final number of 24 after the
+[01:03:07] these all the manipulations.
+[01:03:10] So, previously, we showed like how we we
+[01:03:13] can show how we can like do this like
+[01:03:15] evaluation at the at the like step
+[01:03:17] level. So, it will determine the quality
+[01:03:20] of each individual step.
+[01:03:22] But, related to our previous like
+[01:03:24] consistency consistency based selection
+[01:03:26] discussion, for this like scoring a
+[01:03:29] function, we can also think about it as
+[01:03:31] a way to just select the best state
+[01:03:33] among the candidates. We don't need to
+[01:03:35] just have the model to make this like
+[01:03:37] decision at the point level.
+[01:03:39] So, idea is that basically, we can ask
+[01:03:41] the large language model to like
+[01:03:44] select the best responses among all
+[01:03:46] these like possible next like steps. And
+[01:03:49] then, basically, we can also do this
+[01:03:51] voting multiple times since all these
+[01:03:53] like selection
+[01:03:55] here is based on large language model
+[01:03:57] sampling. Then, with all these like
+[01:03:59] different votes, the model can finally
+[01:04:01] like select the
+[01:04:02] the majority vote as the final choice to
+[01:04:04] proceed.
+[01:04:08] Here for the results, I'm showing the
+[01:04:10] these like game of 24 evaluation. And in
+[01:04:13] their original paper, they also show
+[01:04:14] some other benchmarks.
+[01:04:16] So, we can see that for with tree of
+[01:04:18] thought using breadth-first search, it
+[01:04:21] scales better than the standard
+[01:04:22] prompting and tree of thought with
+[01:04:24] respect to token budget.
+[01:04:29] And going further, clearly, we can
+[01:04:30] integrate some more advanced search
+[01:04:32] algorithms. Like in this original tree
+[01:04:34] of thought paper, they just they use the
+[01:04:36] most basic B BFS and DFS algorithms.
+[01:04:40] But, in the later on, we also see
+[01:04:42] some like papers which are coming up
+[01:04:44] with these like Monte Carlo tree search
+[01:04:46] methods and some works are also trying
+[01:04:48] to train a separate evaluation function
+[01:04:50] instead of just prompting the model.
+[01:04:53] Again, here the important consideration
+[01:04:55] is that we need to design a good
+[01:04:57] language model and prompting scheme so
+[01:05:00] that it can be effective for
+[01:05:01] self-evaluation.
+[01:05:05] So, to summarize, in this second part, I
+[01:05:08] I showed that we can further scale this
+[01:05:10] inference time compute by sampling
+[01:05:12] multiple branches in the solution space.
+[01:05:16] And we talked about consistency based
+[01:05:18] selection, which is a pretty simple but
+[01:05:21] effective and general principle.
+[01:05:24] We talked about this self-consistency,
+[01:05:26] where we can marginalize out reasoning
+[01:05:28] passes and do the selection based on the
+[01:05:30] final answer.
+[01:05:31] And for code generation, we can also do
+[01:05:33] this reranking based on execution
+[01:05:35] consistency.
+[01:05:39] When these large language models
+[01:05:40] self-evaluation works well so that it
+[01:05:42] can really judge the quality of partial
+[01:05:45] solutions or judge the quality at the
+[01:05:47] step level, we can also apply this like
+[01:05:50] search method. And in this case,
+[01:05:52] sometimes it will scale better and also
+[01:05:54] it can reduce the token cost because it
+[01:05:57] can already eliminate those
+[01:05:59] non-promising passes during the
+[01:06:01] meantime.
+[01:06:02] So, finally, I will talk about iterative
+[01:06:05] self-improvement, which will try to
+[01:06:07] increase the depth to reach the final
+[01:06:08] solution.
+[01:06:12] So, even with the most recent like
+[01:06:14] advanced models, including those
+[01:06:16] reasoning models, we can see that they
+[01:06:18] can achieve pretty amazing like numbers
+[01:06:21] on those competitive like
+[01:06:24] and challenging benchmarks for solving
+[01:06:26] hard math and coding questions. But,
+[01:06:28] they can still sometimes make pretty
+[01:06:30] obvious mistakes and people are keeping
+[01:06:32] complaining about it.
+[01:06:34] But, if we think about us as humans, we
+[01:06:36] also tend to make sometimes pretty
+[01:06:38] trivial mistakes at first thought.
+[01:06:43] So, previously, we talked about we can
+[01:06:45] sample multiple solutions to help us
+[01:06:47] reduce these mistakes from a single
+[01:06:49] prediction.
+[01:06:51] But, if we think about it again, it is
+[01:06:53] actually a pretty suboptimal way to do
+[01:06:55] this error correction.
+[01:06:57] Because all these responses are
+[01:06:58] generated in parallel, so we do not
+[01:07:01] really learn from the past mistakes. We
+[01:07:03] can just
+[01:07:04] have having the model generate the same
+[01:07:06] wrong
+[01:07:06] predictions again and again.
+[01:07:11] So, basically, in this part about
+[01:07:13] inference time self-improvement, I will
+[01:07:15] talk about techniques using large
+[01:07:18] language models to iteratively improve
+[01:07:20] its own response for the given task.
+[01:07:23] And also, this will aligns better with
+[01:07:26] us humans like error correction process.
+[01:07:31] So, the first papers about these ideas
+[01:07:33] include these like reflection and
+[01:07:35] self-refine.
+[01:07:37] So, basically, in this process, there
+[01:07:39] are also like two important steps after
+[01:07:42] generating each solution.
+[01:07:44] So, basically, after the model generates
+[01:07:46] a solution, the model will also generate
+[01:07:48] some feedback based on what it observes.
+[01:07:51] And in this step, it can uses those
+[01:07:53] external evaluation when available.
+[01:07:55] So, for example, in the original
+[01:07:56] reflection paper, they focus more on
+[01:07:59] this agentic setup, where basically, the
+[01:08:02] LM as the agent will propose actions to
+[01:08:04] the environment and the environment will
+[01:08:06] basically like
+[01:08:08] like gives the model some kind of like
+[01:08:10] changes of the observations. So, this
+[01:08:13] will be external signal to tell the
+[01:08:15] model whether the current state is
+[01:08:16] promising.
+[01:08:18] Then, based on this like model generated
+[01:08:20] reflection feedback and also these
+[01:08:22] external observations,
+[01:08:24] then this large language model will
+[01:08:26] refine its like output to
+[01:08:28] revise its next prediction step given
+[01:08:31] both these internal and external
+[01:08:34] signals.
+[01:08:35] In the in the this reflection paper,
+[01:08:37] they basically show that this
+[01:08:39] self-reflection and self-refinement
+[01:08:40] works pretty well, especially when we
+[01:08:43] can have a scheme so that the so that
+[01:08:45] basically, the model can utilize pretty
+[01:08:48] high-quality evaluation or or when the
+[01:08:50] external signals are very reliable.
+[01:08:54] So, for example, in the case of ALF F
+[01:08:57] world, it is basically a agent like a
+[01:08:59] navigation task. So, there will be clear
+[01:09:02] signals about observations at each step.
+[01:09:06] And they also evaluate on their approach
+[01:09:08] on HotPotQA, but they kind of repurpose
+[01:09:12] the this like a QA task into an agent
+[01:09:14] environment in the sense that after the
+[01:09:16] model generates the solution, they
+[01:09:18] assume that this environment will give a
+[01:09:20] signal about whether the current
+[01:09:22] solution is correct or not. Then, this
+[01:09:24] is why you can keep seeing this like
+[01:09:26] improvement with more trials.
+[01:09:28] Uh we will revisit this assumption
+[01:09:30] later.
+[01:09:34] And if we think about this like
+[01:09:35] self-improvement loop for applications,
+[01:09:38] then code generation is actually a
+[01:09:40] pretty natural use case.
+[01:09:42] Because uh for when we are writing code,
+[01:09:45] if for us, for example, we also like
+[01:09:47] debug our code better within an IDE, and
+[01:09:49] we do not just uh write a code and we
+[01:09:51] stop. We actually really rely on this
+[01:09:53] like interactive loop when we are trying
+[01:09:55] to like build like of investigate all
+[01:09:58] these code execution results and see
+[01:10:00] whether it makes sense, and also which
+[01:10:02] parts we should revise later. And this
+[01:10:04] is also like this
+[01:10:06] one fundamental idea of the recent
+[01:10:08] coding agents.
+[01:10:10] So, in our paper self-debugging, we also
+[01:10:13] like the
+[01:10:14] do a deeper dive into what kind of
+[01:10:16] feedback formats will be helpful for the
+[01:10:18] model to better correct its own
+[01:10:20] mistakes.
+[01:10:21] So, for example, the the most like a
+[01:10:23] simple um feedback uh message message is
+[01:10:27] basically a short universal
+[01:10:29] um information about whether current
+[01:10:30] code is correct or not without more
+[01:10:32] information.
+[01:10:35] And then for unit test feedback,
+[01:10:36] basically we also include the execution
+[01:10:38] results, like uh whether the current
+[01:10:40] unit test has passed or whether there
+[01:10:42] are any runtime errors.
+[01:10:46] Then for code explanation, basically at
+[01:10:48] each step, we also ask the model to
+[01:10:50] self-generate some line-by-line
+[01:10:52] explanation of the implementation in
+[01:10:54] natural language. So, this idea is that
+[01:10:57] kind of a motivated by human robot dog
+[01:10:59] debugging, trying to ask the model to
+[01:11:01] see that what what it's trying to do in
+[01:11:03] the code.
+[01:11:06] And finally, in the trace feedback,
+[01:11:08] basically it we ask the model to perform
+[01:11:10] some line-by-line simulation of the
+[01:11:12] execution trace by itself. It This is
+[01:11:15] also one way of debugging by human
+[01:11:17] programmers.
+[01:11:20] Empirically, we evaluated the like the
+[01:11:23] like latest large language models at the
+[01:11:26] time of paper publication last year.
+[01:11:29] So, basically we can see that with this
+[01:11:31] self-debugging loop, it consistently
+[01:11:33] improves performance across different
+[01:11:34] large language models of different
+[01:11:36] capabilities.
+[01:11:37] And also, if we give more informative
+[01:11:39] feedback, it can further improve the
+[01:11:41] debugging performance.
+[01:11:46] Now, let's go back to this like
+[01:11:47] self-correction for question-answering
+[01:11:50] tasks.
+[01:11:51] Previously, we talked about these
+[01:11:52] results of HotpotQA.
+[01:11:54] And also, in some other works, it can it
+[01:11:57] also show this improvement of
+[01:11:59] self-correction on other reasoning
+[01:12:01] tasks, like math problem solving.
+[01:12:04] But all of these
+[01:12:06] significant improvement comes from the
+[01:12:08] assumption with an oracle verifier.
+[01:12:13] But in practice, this oracle verifier
+[01:12:15] will not be available in in many
+[01:12:17] scenarios. Especially in the case of
+[01:12:20] solving reasoning problems, you can
+[01:12:22] imagine that when you are taking a math
+[01:12:24] test, you don't really have the official
+[01:12:26] solution at hand, otherwise it will be
+[01:12:27] just trivial for you to finish the exam.
+[01:12:30] So, basically, the question here we want
+[01:12:32] to study is how do these large language
+[01:12:35] models perform if we do not give the
+[01:12:37] model such very like explicit and
+[01:12:40] accurate external feedback about the
+[01:12:42] response correctness.
+[01:12:46] So, in our paper published last year at
+[01:12:48] ICLR called Large Language Models Cannot
+[01:12:51] Self-Correct Reasoning Yet,
+[01:12:53] we actually show some negative results
+[01:12:55] from this study.
+[01:12:57] So, we compare with this oracle like
+[01:13:00] baseline, where we basically utilize the
+[01:13:02] ground truth answer for question, and
+[01:13:05] same as previous works, we show this
+[01:13:07] huge improvement.
+[01:13:10] Then we study the case of the real
+[01:13:13] self-correction, where basically we do
+[01:13:15] not allow the model to utilize any
+[01:13:16] oracle feedback. The model needs to
+[01:13:18] judge the response correctness by
+[01:13:20] themselves.
+[01:13:22] Then these are the results we show in
+[01:13:23] the bottom table.
+[01:13:25] We can see that the main issue here is
+[01:13:27] that because large language models can
+[01:13:29] only judge the correctness of its
+[01:13:31] predictions, it often turns an
+[01:13:33] originally uh correct solution into a
+[01:13:35] wrong one.
+[01:13:36] So, this is why actually in this like
+[01:13:38] self-correction without external
+[01:13:40] evaluation,
+[01:13:42] this process can lead to worse
+[01:13:43] performance after each round.
+[01:13:49] So, with this study, um one natural
+[01:13:51] question is um probably we didn't tune
+[01:13:53] the feedback prompt. Uh well, so this is
+[01:13:55] why it fails. So, to address this
+[01:13:57] question, we also kind we also like
+[01:14:01] design uh like uh
+[01:14:03] several variants of this feedback
+[01:14:05] prompt. And notice that all these
+[01:14:06] feedback prompts are pretty general.
+[01:14:08] They are not as specifically tuned for
+[01:14:11] one task.
+[01:14:12] So, we can see that if we just have this
+[01:14:13] like simple general-purpose feedback
+[01:14:15] prompt, if we do not have any more like
+[01:14:18] of the model training,
+[01:14:19] then editing this feedback prompt indeed
+[01:14:22] can affect the self-correction behavior.
+[01:14:24] But this is more about uh like adjusting
+[01:14:27] the tendency for the model to keep the
+[01:14:29] initial response. So, in some cases,
+[01:14:32] actually this like uh feedback um
+[01:14:34] after the feedback prompt update,
+[01:14:36] there's no much regression on the
+[01:14:38] reasoning performance. But then in this
+[01:14:40] case,
+[01:14:41] this also doesn't help the model to
+[01:14:43] improve over the initial performance.
+[01:14:45] So, previously we discussed about this
+[01:14:47] comparison if we just do this
+[01:14:49] self-correction over one initial
+[01:14:50] response.
+[01:14:52] And we further like uh compare with
+[01:14:53] another method where we basically would
+[01:14:55] do this like self-correction among
+[01:14:57] multiple responses.
+[01:14:59] So, for this we compare with the
+[01:15:00] multi-agent debate baseline.
+[01:15:03] The idea is that we will we will have
+[01:15:04] the model generate like several
+[01:15:06] responses in parallel once. Then we
+[01:15:08] prompt the large language model to
+[01:15:10] review these multiple responses and give
+[01:15:12] an updated one.
+[01:15:15] And for this multi-agent debate, we will
+[01:15:17] compare with self-consistency. Recall
+[01:15:19] that self-consistency is just completely
+[01:15:21] generated solutions in parallel and
+[01:15:23] select the response with the most
+[01:15:25] consistent find common answer.
+[01:15:28] So, in the previous multi-agent debate
+[01:15:30] papers, they are showing some
+[01:15:32] improvement over self-consistency, but
+[01:15:34] we find that the major issue is that um
+[01:15:37] they do not like have a very rigorous
+[01:15:39] comparison in terms of the token budget.
+[01:15:41] So, actually if we because in the
+[01:15:44] multi-agent debate, each round um for
+[01:15:46] this specific experiment has like uh
+[01:15:48] three responses.
+[01:15:49] But uh basically, if we keep the same
+[01:15:52] number of response
+[01:15:54] budgets, we will see that actually still
+[01:15:56] like self-consistency scales better than
+[01:15:59] the multi-agent debate. Because at some
+[01:16:01] point, like this again, this multi-agent
+[01:16:03] debate performance stops improving, but
+[01:16:06] with more responses, self-consistency
+[01:16:08] performance is still like
+[01:16:10] improving on this GSM8K math problem
+[01:16:12] benchmark.
+[01:16:16] So, given all this discussion, then the
+[01:16:19] question here is that how we can best
+[01:16:21] utilize the token budget by integrating
+[01:16:23] all these different methods together.
+[01:16:26] So, the fundamental question is here
+[01:16:29] basically we need to
+[01:16:30] like understand how to balance the
+[01:16:32] inference budget for generating multiple
+[01:16:34] samples in parallel or sequentially.
+[01:16:39] So, actually this is a pretty difficult
+[01:16:41] question because it really depends on
+[01:16:43] the task and the model. Um
+[01:16:46] Basically, in essence, it's about like
+[01:16:48] whether the model
+[01:16:49] uh for evaluation is good at
+[01:16:52] self-reflection and correction for your
+[01:16:54] specific task.
+[01:16:56] So, here I'm showing an example study
+[01:16:58] from my colleagues at Google, where they
+[01:17:00] are trying to like basically in these
+[01:17:02] like specific experiments, they are
+[01:17:04] trying to find the optimal way to scale
+[01:17:06] this token budget to solve the math
+[01:17:08] problems. So, actually here they train a
+[01:17:11] model which is supposed to be more
+[01:17:13] specialized at correcting math
+[01:17:16] solutions. And also, basically uh here
+[01:17:19] for for the different difficulty level
+[01:17:21] of problems, they study what's the
+[01:17:24] optimal ratio to like uh perform this
+[01:17:26] parallel generation versus sequential
+[01:17:29] generation.
+[01:17:30] So, I would say these like concrete
+[01:17:32] numbers will really vary a lot among
+[01:17:34] different models. But basically, here
+[01:17:37] the overall conclusion is that um for
+[01:17:39] simple problems, it like like actually
+[01:17:42] the model can benefit more from
+[01:17:44] self-correction because it
+[01:17:46] knows uh more clear about whether
+[01:17:48] current solution is wrong and how it
+[01:17:49] should revise. But for harder problems,
+[01:17:51] actually there is um better point in
+[01:17:55] like in the middle about how much you
+[01:17:57] should perform parallel generation and
+[01:17:59] also this like sequential refinement.
+[01:18:03] And then with this like kind of compute
+[01:18:05] optimal like factor for different task
+[01:18:09] difficulty of problems, they show that
+[01:18:11] this like compute optimal curve can also
+[01:18:13] scale better than this complete parallel
+[01:18:16] generation.
+[01:18:19] And when we think about inference time
+[01:18:21] compute, another factor we should
+[01:18:23] consider is about the model size.
+[01:18:25] Because intuitively, with the same force
+[01:18:28] budget, we can sample much more
+[01:18:30] solutions from a lighter model.
+[01:18:32] So, if if a like more expensive model
+[01:18:35] does not perform much better than a
+[01:18:37] cheaper model, then it will not be a
+[01:18:39] very optimal way to do the inference by
+[01:18:41] calling the more expensive model.
+[01:18:46] So, basically from this empirical like
+[01:18:49] study from the paper Inference Scaling
+[01:18:51] Laws,
+[01:18:52] so basically again, they will show that
+[01:18:54] with the optimal model with different
+[01:18:56] inference like different inference
+[01:18:58] budget can be like a different. Like
+[01:19:00] when you have like a smaller inference
+[01:19:01] time budget, maybe you want to call rely
+[01:19:04] more on the like lighter models. But
+[01:19:06] basically, when you have more budget,
+[01:19:07] probably you can utilize the more
+[01:19:09] expensive models, which can probably
+[01:19:11] give you some boost on those very
+[01:19:13] challenging problems, where for with the
+[01:19:15] smaller models, it might like it will be
+[01:19:17] very hard to come up with the final
+[01:19:19] solution anyway.
+[01:19:23] So, basically, in this lecture we have
+[01:19:25] covered like different ways to to
+[01:19:26] perform this like um inference time
+[01:19:28] scaling with like the more token budget.
+[01:19:31] So we talk about the basic prompting
+[01:19:33] techniques about this like um search and
+[01:19:36] selection to increase the width of
+[01:19:38] exploring solution space. Also we talk
+[01:19:40] about iterative self improvement.
+[01:19:44] And um again, the best practice to
+[01:19:47] interact with a large language model
+[01:19:49] should be adapted according to its
+[01:19:51] capabilities. So you need really need to
+[01:19:53] consider large language model capability
+[01:19:55] and also the task in your hand about to
+[01:19:58] think about how you can best like
+[01:19:59] combine all these like different
+[01:20:00] techniques and design a more like um
+[01:20:03] like um efficient and effective paradigm
+[01:20:06] for your task.
+[01:20:09] And finally I also want to talk about
+[01:20:11] the general principle of how to design
+[01:20:13] effective reasoning techniques.
+[01:20:16] And this actually will be helpful for
+[01:20:17] both inference time techniques and
+[01:20:19] training time techniques.
+[01:20:21] So I guess many of you might have heard
+[01:20:23] about this like bitter lesson from
+[01:20:25] Richard Sutton, but if not uh I highly
+[01:20:28] encourage you to read this like a web
+[01:20:30] page.
+[01:20:31] Actually I will say this is a very
+[01:20:32] important guideline of for many of the
+[01:20:35] like um this like modern machine
+[01:20:37] learning works and especially with the
+[01:20:40] recent development of large language
+[01:20:41] models and reasoning techniques.
+[01:20:43] So this like article itself has a lot of
+[01:20:46] like text, but I will quote some most
+[01:20:49] interesting like text in my opinion
+[01:20:51] here.
+[01:20:52] So basically what we really want to
+[01:20:54] develop as a master is basically those
+[01:20:56] that can continue to scale with
+[01:20:59] increased computation.
+[01:21:02] And when we want to like improve AI
+[01:21:04] agents,
+[01:21:05] we want to like uh basically teach the
+[01:21:07] model to discover like what we can't,
+[01:21:10] not which content what we have
+[01:21:12] discovered. So it is more about like um
+[01:21:15] having some like um methods so that we
+[01:21:17] can in we can kind of trigger the model
+[01:21:20] to know how it can like keep improving
+[01:21:23] itself and how to like uh have the right
+[01:21:25] way to perform the reasoning.
+[01:21:28] So this is the end of this lecture.
+[01:21:30] Thanks for listening.

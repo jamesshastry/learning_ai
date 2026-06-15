@@ -1,0 +1,2120 @@
+[00:00] GRAHAM NEUBIG: Hi, everyone.
+[00:01] I'm happy to be here.
+[00:02] Thank you for the invitation.
+[00:03] And I'd like to talk about
+agents for software development.
+[00:07] So to give my
+profile, very quickly,
+[00:09] to ground the discussion,
+I'm a professor at CMU.
+[00:15] And I've been there
+for about eight years
+[00:18] working on various
+research topics,
+[00:21] including the ones
+that Shannon mentioned.
+[00:24] I'm also chief scientist
+at All Hand AI, which
+[00:27] is a company that started very
+recently building open source
+[00:31] coding agents.
+[00:33] And it's a maintainer
+of software library
+[00:37] called Open Hands, which
+used to be called Open Devon.
+[00:42] So a lot of my discussion and
+examples will be based on this.
+[00:46] I'm also a software developer.
+[00:48] I like my GitHub to
+be green basically.
+[00:54] So today I'm very happy to talk
+about my two passions, which
+[01:00] are research for artificial
+intelligence and software
+[01:03] development.
+[01:03] And I get to talk about
+both of them in one talk
+[01:05] so I'm very happy to do that.
+[01:09] So to give some grounding
+of this discussion,
+[01:11] I'd first like to talk about
+the importance of agents
+[01:13] for software development
+in particular.
+[01:15] And this is from a
+very famous essay
+[01:17] by Marc Andreessen called Why
+Software Is Eating The World.
+[01:21] And this happened in 2011.
+[01:23] And it basically says, "More
+and more major businesses
+[01:27] and industries are
+being run on software
+[01:29] and delivered as
+online services,
+[01:31] from movies to agriculture
+to national defense.
+[01:34] Over the next 10 years I expect
+many more industries to be
+[01:37] disrupted by software."
+[01:38] So this was written in 2011.
+[01:41] I think this mostly came true.
+[01:43] I think it would be
+very weird for us
+[01:45] to think about movies not being
+delivered through software.
+[01:49] Like, how many people
+have gone and rented
+[01:51] a physical movie in
+the past five years?
+[01:56] Nobody.
+[01:57] So you can see more
+and more of our life
+[01:59] is happening through software.
+[02:03] So one of my
+motivating things is
+[02:07] if we gave everybody the ability
+to quickly write software
+[02:10] to achieve their goals, what
+would people be able to do.
+[02:14] And I think the answer,
+especially for people here
+[02:16] in computer science,
+the answer is a lot.
+[02:19] This is also timely
+because if you
+[02:23] look at the Nobel
+Prize for physics
+[02:26] and the Nobel Prize for
+chemistry this year,
+[02:31] two of these Nobel
+prizes were awarded
+[02:33] for people who wrote software.
+[02:35] And so if we think
+about this, this
+[02:39] has pretty big implications.
+[02:42] It used to be that
+this was given
+[02:43] to people who were
+using test tubes
+[02:46] and running cyclotrons and
+other things like this,
+[02:49] and those are still
+important, of course,
+[02:51] but now a lot more of our
+science and human progress
+[02:57] is going to happen in software.
+[02:59] I'm not just going to be talking
+about models for coding today,
+[03:02] although that's mostly what
+I'm going to be talking about,
+[03:05] but do people know how much
+time the average software
+[03:10] engineer spends coding in terms
+of producing new code every day?
+[03:17] It's 15%.
+[03:20] And this is from a study in--
+[03:23] from Microsoft in 2019.
+[03:25] Maybe this is more
+or less nowadays.
+[03:27] But it's not just coding
+that people are doing,
+[03:32] they also do bug fixing,
+testing, documentation
+[03:38] and reviews.
+[03:39] 36% of their time is spent on
+communication of some variety,
+[03:43] and 17% of the time is
+spent on other things
+[03:45] like going to the bathroom.
+[03:48] So another thing I'd
+like to point out
+[03:51] is how can we support software--
+[03:54] support developers.
+[03:55] And I came up with a kind of
+imprecise but maybe helpful
+[04:00] categorization of
+automation with respect
+[04:04] to things like self-driving
+where self-driving, we
+[04:09] have this well-known
+classification of no automation
+[04:12] to full automation.
+[04:15] And self-driving, we have
+manual driving at no automation,
+[04:18] and then we have things like
+adaptive cruise control,
+[04:21] braking, Tesla's autopilot
+which at the time of writing
+[04:26] was partial automation,
+conditional automation,
+[04:29] automation in certain things,
+and then high automation,
+[04:32] which would be like cruise or
+Waymo self-driving vehicles.
+[04:36] And in terms of
+software development,
+[04:38] I think there's also different
+kind of levels of automation
+[04:42] that we could think about where
+zero would be just writing
+[04:45] all your code by hand,
+one is smart autocomplete,
+[04:50] things like Copilot or Cursor.
+[04:52] Number two would be like
+Copilot or Cursor chat
+[04:56] where you refactor
+larger amounts of data.
+[05:00] Conditional automation would
+be automating particular tasks
+[05:03] that people want to do,
+and then high automation
+[05:05] would be more autonomous
+things that solve full software
+[05:10] development tasks.
+[05:11] And this time I want to be
+talking about the last one.
+[05:14] But I think if people are
+familiar with GitHub, Copilot
+[05:20] or Cursor, I think this is
+something that a lot of people
+[05:23] use.
+[05:23] It's something I use every day.
+[05:24] And basically what
+this is doing is
+[05:26] it's completing
+your next thought.
+[05:28] So as a programmer you write a
+few lines or something like this
+[05:34] and it goes in and fills
+in the next line for you.
+[05:37] Very, very useful.
+[05:39] I tried coding on the
+plane on the way over here
+[05:41] and I had no internet
+and it was miserable
+[05:43] so I stopped
+because I can't code
+[05:46] without autocomplete anymore.
+[05:48] But at the same time it works
+synchronously with developers.
+[05:52] The thing I'm going to
+talk about more this time
+[05:55] is something like a
+more autonomous agent.
+[05:59] So this is an example of
+our software Open Hands.
+[06:02] And the way it works is you
+fill in a large kind of command
+[06:07] of what you want to do.
+[06:08] This is resolving
+a GitHub issue.
+[06:12] And so basically I told it,
+it needs to go into llm.py
+[06:16] and essentially fix
+a bug in llm.py.
+[06:22] So it goes and downloads
+the GitHub repo,
+[06:25] makes additional tests-- sorry,
+this is not fixing a bug.
+[06:28] This is adding tests to a file.
+[06:30] So it makes a repo.
+[06:31] It creates some tests.
+[06:34] But it created them for the
+init function of the LLM class
+[06:37] so now it's waiting
+for a little bit.
+[06:41] So it created the tests,
+now what it's doing
+[06:46] is it's installing the
+dependencies for the project.
+[06:50] It is running the tests
+according to the directions
+[06:53] that I gave it.
+[07:01] It ran the tests,
+the tests did not--
+[07:04] sorry, you got an
+error in poetry.
+[07:06] It couldn't find the
+pyproject.toml file.
+[07:09] It ran the test, the
+tests worked so now
+[07:11] it's checking out a branch.
+[07:14] It's committing the
+branch, add unit tests.
+[07:17] It's pushing using the
+credentials that I provided it.
+[07:22] And now starting here,
+this is under human control
+[07:27] so I click on the link
+that it gave to me
+[07:31] and I open up the page.
+[07:33] I can review the code
+and stuff like this
+[07:35] and make sure it's OK and
+incorporated if it makes sense.
+[07:38] So I think you can see the
+difference between completion--
+[07:42] just completing individual
+tasks and actually solving tasks
+[07:45] end to end.
+[07:48] Another thing that
+is really popular
+[07:50] nowadays is autonomous
+issue resolution.
+[07:53] And this is another example
+of autonomous issue resolution
+[07:57] within GitHub
+where you basically
+[07:59] tag an issue with
+the words fix me,
+[08:02] the agent goes in
+and does its work.
+[08:04] And if it works, if the agent
+decided that it did a good job,
+[08:06] it would send it
+in a pull request
+[08:09] so you could go in and
+accept it or not accept it.
+[08:12] So these are some examples.
+[08:16] So there's a question of
+how promising this is.
+[08:20] And this is actually
+old data, but it's still
+[08:23] relatively compelling data.
+[08:25] And there was a study where
+GitHub Copilot did a study
+[08:31] with a sample size
+of 95 developers
+[08:34] where they had
+some developers use
+[08:36] GitHub Copilot and
+some developers
+[08:38] not use GitHub Copilot.
+[08:40] And 78% of the developers
+or 8% more of the developers
+[08:45] using Copilot finished the task.
+[08:47] And they finished it more--
+[08:50] 56% faster.
+[08:52] So basically this is
+doubling the speed
+[08:55] of coding for people using
+GitHub Copilot versus not
+[09:01] using Copilot.
+[09:02] And now we have even
+better code completion.
+[09:04] Like in my opinion, Cursors code
+completion is better than GitHub
+[09:08] so it might be even faster.
+[09:10] And that means you cut
+into a very big chunk
+[09:14] of the 15% of time developers
+spend on coding, which is great.
+[09:19] Like let's say we could make
+developers 7% more productive,
+[09:23] make them enjoy coding more,
+I think that's wonderful.
+[09:27] But that doesn't solve all
+of software development,
+[09:30] as I mentioned before.
+[09:32] So the rest of the
+time here I'd like
+[09:35] to spend talking about
+challenges in coding agents
+[09:38] and how we evaluate
+coding agents--
+[09:41] or how we build coding agents
+and how we evaluate them.
+[09:45] So some challenges
+that I see in this area
+[09:49] are, number one,
+defining an environment
+[09:51] that the agents can work
+in and be tested in,
+[09:55] designing a space of
+observations and actions.
+[09:59] So this is an agent's
+class so I think
+[10:01] you're very familiar
+with the fact
+[10:02] that one of the things
+that defines agents
+[10:04] is how they can interact
+with the environment.
+[10:06] So how do we define that for
+coding and software development
+[10:10] tasks?
+[10:12] More specifically, how do we
+specifically generate code?
+[10:15] What are the language
+models we use for code?
+[10:17] How do we build them?
+[10:19] File localization, so how do we
+identify which parts of a code
+[10:23] base that we would
+want to be editing.
+[10:25] This has parallels to
+reinforcement learning
+[10:30] because in
+reinforcement learning,
+[10:32] we have the idea of
+exploring our environment.
+[10:34] And I think file localization
+is a lot like this.
+[10:38] Another thing is planning
+and error recovery.
+[10:41] So how do we make plans
+about what we want to do
+[10:43] and how do we
+recover from errors.
+[10:45] And, finally, safety.
+[10:46] So if we're actually
+interacting with environments
+[10:48] through software, how
+do we ensure that this
+[10:50] happens in a safe way?
+[10:52] So first I'd like to talk
+about software development
+[10:54] environments.
+[10:55] And there's a number of
+types of environments.
+[10:59] If we think about the
+actual environments
+[11:01] that software
+developers act in, they
+[11:05] can be things like manipulating
+source repositories like GitHub,
+[11:10] GitLab, other things like this.
+[11:12] They can also be interacting
+with task management software.
+[11:15] So this could be things
+like Jira or Linear
+[11:18] or GitHub issues or
+other things like this.
+[11:21] So we would want agents to
+be able to do that as well.
+[11:25] Software developers also
+use office software.
+[11:28] They use like Google
+Docs or Microsoft
+[11:30] Office to exchange
+information about requirements
+[11:33] and other things like this.
+[11:34] So how could they--
+how could they
+[11:36] interact with this software?
+[11:39] Communication tools
+like Gmail and Slack.
+[11:42] So I think if I enumerate
+these four tools, that
+[11:48] covers most of the
+environments that I
+[11:51] interact with in some way
+when I'm developing software.
+[11:54] There might be other ones like
+interacting with a server,
+[11:57] logging into
+servers, manipulating
+[11:59] cloud infrastructure,
+other stuff like that,
+[12:01] but these are main ones.
+[12:04] In contrast, if we look
+at the environments that
+[12:06] are available now for
+testing, a lot of these
+[12:08] are focused mostly on
+code, on generating code.
+[12:12] So I'm going to mostly
+be talking about these.
+[12:17] I'd like to note that
+developers do more.
+[12:19] And they do things
+like browsing the web,
+[12:21] but I'm not going to talk about
+that because I know next session
+[12:24] I think you're having somebody
+talk about web browsing agents.
+[12:27] So that's super important
+for software development,
+[12:29] but I'll not focus on that here.
+[12:32] So the first thing
+is simple coding.
+[12:36] And simple coding,
+basically what this is it's
+[12:38] just testing the ability
+of language models
+[12:42] to go from a
+specification to code.
+[12:45] And the most common
+examples of this
+[12:48] are things like
+HumanEval of MBPP.
+[12:51] And these are
+things like here you
+[12:54] can look at the problem
+they have here, given
+[12:58] a non-empty list
+of integers, return
+[13:00] the sum of all of
+the odd elements that
+[13:02] are in even positions.
+[13:04] So I think these are
+kind of good in some way
+[13:10] because you should be
+able to solve these
+[13:12] if you're a good
+language model, but this
+[13:16] is kind of like asking LeetCode
+questions on a coding interview.
+[13:21] I'm sure everybody if you've
+done a coding interview,
+[13:24] you've done LeetCode
+questions and you've
+[13:26] been thinking, why
+am I doing this?
+[13:28] I never do this in my
+everyday coding experience.
+[13:31] It's testing algorithmic
+knowledge, but not
+[13:34] necessarily knowledge of
+software development or software
+[13:37] engineering.
+[13:40] But, yeah, anyway, these
+include the examples
+[13:42] of usage of the Python standard
+library, docstring, other things
+[13:45] like this.
+[13:46] This is probably a
+necessary condition
+[13:47] for being a good coding model,
+but not a sufficient one.
+[13:50] There's also some work on
+building coding benchmarks
+[13:53] for broader domains,
+and both of these
+[13:55] are papers that I
+did at some point.
+[13:59] But the first one is CoNaLa.
+[14:02] And this is broader data that
+was scraped from Stack Overflow.
+[14:05] And so basically what we
+did is we scraped data
+[14:09] from Stack Overflow
+by getting questions
+[14:11] from the Stack Overflow titles
+context in the code snippet that
+[14:16] answered--
+[14:18] that basically
+solved this context.
+[14:21] And originally we
+just measured this
+[14:25] using the overlap between
+the generated code,
+[14:28] but we also recently added
+execution-based evaluation.
+[14:33] And this covers a relatively
+wide variety of libraries
+[14:37] that people use in actual kind
+of data science or other things.
+[14:43] So you can see it covers like
+Pandas, NumPy, Regex, OX,
+[14:47] Collections, other
+stuff like this.
+[14:49] And that's in
+contrast two things
+[14:51] like apps or
+HumanEval or something
+[14:55] like that basically use only
+very standard libraries.
+[14:58] So this moves a step beyond
+the existing ones and says, OK,
+[15:02] can you interact with the
+whole Python ecosystem?
+[15:05] Another thing is data
+science notebooks.
+[15:08] And so this is another--
+[15:10] this is a great paper
+by people at Google.
+[15:14] And basically they use
+data science notebooks
+[15:17] to allow for incremental
+implementation and evaluation
+[15:21] of code in context.
+[15:23] And so you have a
+notebook and you
+[15:27] have people going
+through the notebook
+[15:29] and then you need to
+generate the next cells
+[15:30] based on the context
+you have already.
+[15:32] So this moves another
+step, adding context,
+[15:36] adding practical
+long implementations.
+[15:40] Then another data set
+that's relatively recent
+[15:43] compared to these other
+ones is called SWEBench.
+[15:45] It's a very popular
+data set nowadays
+[15:48] so I think a lot of
+people have heard of it.
+[15:50] But the way it works
+is they scraped issues
+[15:53] from GitHub and the code bases.
+[15:56] And the output of the
+model is a pull request.
+[16:02] So it's very similar
+to the situation
+[16:06] that I talked about
+before where we
+[16:07] have agents who actually go in
+and send a pull request to solve
+[16:11] your GitHub issues.
+[16:12] But basically here's an
+example, you have data leak
+[16:15] and GDBT due to warm start.
+[16:19] This is about non-histogram
+based version of dadadadadada.
+[16:22] You get a code base
+and then you want
+[16:25] the language model to go
+in and modify a few files.
+[16:28] And then your
+evaluation is measured
+[16:32] based on whether you can pass
+tests that were introduced
+[16:36] together with the pull request.
+[16:39] So this is a really, really
+nice benchmark in some ways.
+[16:43] It requires long
+context understanding.
+[16:47] It requires you to understand
+the whole code base.
+[16:49] It requires you to implement
+things in a very precise way
+[16:52] so that they can pass tests.
+[16:55] There are some problems
+with it though.
+[16:57] So one problem is that
+it's kind of limited only
+[17:03] to high quality repos
+where on PRs where
+[17:07] they introduced new tests.
+[17:11] And so these are very
+heavily biased towards,
+[17:13] for example, bug fixing PRs.
+[17:15] They're very heavily biased
+towards non-documentation
+[17:19] or non-refactoring or
+other stuff like this.
+[17:23] So it's a great data set and
+people should definitely use it,
+[17:27] but it does have its limitations
+in covering software development
+[17:31] tasks.
+[17:34] Another problem is
+a lot of the data
+[17:35] has leaked into language models
+because the language models are
+[17:39] trained on data from GitHub
+so, actually, there's
+[17:42] some concerns about
+leakage there too.
+[17:45] So given these
+environments, if we
+[17:47] look at how we measure success,
+some of the most common metrics
+[17:52] are something called
+Pass@K. So this is basically
+[17:56] if we generate K examples,
+will at least one of them
+[17:59] pass unit tests?
+[18:02] And this is a little
+bit of a small detail
+[18:05] but if you generate only K, it
+will result in high variance
+[18:09] because you might get--
+[18:11] if you generate only
+one, you might get it
+[18:12] right like 70% of the time
+and wrong 30% of the time,
+[18:15] or something like this.
+[18:17] So what they actually
+do is they generate n
+[18:19] and then they use
+statistics to figure out
+[18:22] what it would be at K.
+[18:25] So this is, I think,
+by far the most common.
+[18:28] The only disadvantage to this
+is it requires unit tests
+[18:31] so you're limited
+to doing things
+[18:34] where you have unit tests.
+[18:36] So there's also
+other methods based
+[18:38] on lexical or semantic overlap.
+[18:41] And what this means
+is you basically
+[18:46] look at how well
+the generated code
+[18:50] overlaps with gold standard
+code created by programmers.
+[18:53] And there's a bunch of
+different ways to do this.
+[18:56] There's a method
+called BLUE, which
+[18:57] has been used for a long time
+in machine translation, which
+[19:00] basically looks at
+the n-gram overlap
+[19:02] between the generated code
+and the reference code.
+[19:07] And then you also have embedding
+based methods like CodeBERTScore
+[19:10] or something like this.
+[19:11] But these are details.
+[19:15] So as I mentioned in
+SWEBench, leakage of data sets
+[19:19] is a big problem for things that
+were created on public code.
+[19:26] Nobody has really convincingly--
+[19:29] or, no, actually, sorry.
+[19:30] There's a paper
+very, very recent
+[19:32] called SWEBench Plus which
+evaluated this on SWEBench.
+[19:37] But I only learned about it
+since I created my slides
+[19:40] so it's not on my slides.
+[19:42] But another compelling
+example of this is in ARCADE.
+[19:47] And ARCADE basically,
+it's the data science
+[19:52] notebook problem data set
+that I talked about before.
+[19:56] And they demonstrated that when
+they evaluated on existing data
+[20:01] sets from the internet, they got
+kind of like scores in the 30s
+[20:06] or 40s, but then they created
+new data sets just by getting
+[20:13] people at Google to create
+data science notebooks.
+[20:17] And the accuracy dropped
+by like 20% or 40%
+[20:22] or something like this.
+[20:23] So leakage is definitely
+a big issue there.
+[20:27] Another example is
+LiveCodeBench which
+[20:31] shows that some
+code LMs outperform
+[20:35] on particular data sets that
+are very widely benchmarked on.
+[20:40] So HumanEval is a very
+widely used data set.
+[20:45] And so if you look at the scores
+on a HumanEvel on the y-axis
+[20:50] and compare them to
+LiveCodeBench on the x-axis,
+[20:54] you can see a
+cluster of data sets
+[20:56] where the scores on a HumanEvel
+and the scores on LiveCodeBench
+[21:01] correlate.
+[21:02] And then you can
+see another cluster
+[21:04] where the scores on a
+HumanEvel are very high
+[21:06] but the scores on LiveCodeBench
+are not very high.
+[21:08] So these ones are ones
+that maybe in some way
+[21:14] overfit to the data
+set and managed
+[21:17] to get a very high score on it.
+[21:18] A final exciting direction that
+people are working on recently
+[21:21] is multi-modal coding models.
+[21:23] And there's a data set by people
+at Stanford called Design2Code.
+[21:28] And the way it works is they do
+code generation from websites.
+[21:33] So they have a bunch of websites
+that have various designs,
+[21:38] like the ones down here.
+[21:40] And based on that need to--
+[21:43] they generate output code.
+[21:45] And also very recently, again--
+[21:48] so recently that I haven't been
+able to add it to my slides--
+[21:51] there's a multimodal
+version of SWEBench
+[21:53] that is also
+similar in that way.
+[21:57] One interesting
+thing that they do
+[21:59] in this data set
+for design to code
+[22:03] is they measure the visual
+similarity of the websites.
+[22:06] So they generate
+the websites, they
+[22:09] take screenshots
+of the websites,
+[22:11] and then they do
+visual similarity
+[22:13] both on the high
+level, according
+[22:15] to embeddings over
+the whole image,
+[22:16] and then on the low level,
+recalling each elements
+[22:21] visual similarity.
+[22:22] So this is kind of
+a whirlwind tour
+[22:24] of how people are
+evaluating models
+[22:27] and what environments people are
+testing these sorts of coding
+[22:31] agents in.
+[22:32] So now we'll move on to
+the actual modeling part.
+[22:35] And I'd like to start out
+by talking about observation
+[22:38] in action spaces.
+[22:40] And so if we think about
+what coding agents must do,
+[22:46] they must do things
+like understanding
+[22:49] repository structure,
+read an existing code,
+[22:54] modify or produce code,
+and run code and debug.
+[22:58] And this is separate from
+all of the other stuff
+[23:00] that software engineers do which
+might require a web browsing
+[23:03] or other things like this.
+[23:06] And I'd like to give-- there's
+a bunch of coding agents.
+[23:09] I'd like to give just a few
+examples of the observations
+[23:12] in action spaces that are used
+in some of the popular ones.
+[23:15] So one of the popular ones
+that's used pretty widely
+[23:20] is one that I mentioned here.
+[23:23] It's called CodeAct.
+[23:24] It's a method that essentially
+interacts with environments
+[23:30] by writing code.
+[23:32] This is also the one we use
+in Open Hands, our coding
+[23:35] model, our coding
+platform, by the way.
+[23:39] But the way it works
+is traditional agents,
+[23:43] which I think you
+have probably talked
+[23:46] about multiple times
+in this class already,
+[23:49] one of the things
+they do is tool use.
+[23:51] And typically when
+you use a tool,
+[23:54] the idea is that at every
+time step, you call a tool
+[23:59] and you get the result back.
+[24:00] And then based on that
+you make the next action.
+[24:02] So this is the
+traditional paradigm.
+[24:05] And so if we look
+at an example--
+[24:07] sorry, this is very small on the
+screen so I'll read it aloud.
+[24:10] It says, determine the
+most cost effective country
+[24:13] to purchase the smartphone
+model CodeAct 1.
+[24:17] The countries to consider
+are the US, Japan, Germany
+[24:20] and India.
+[24:21] And so if you have
+these available APIs,
+[24:24] what a traditional model would
+do is it would do look up rates
+[24:27] Germany, it would do
+look up phone price
+[24:30] Germany, convert in tax,
+look up rates Japan.
+[24:36] And then it would step
+like over and over
+[24:38] and over again to
+try to generate--
+[24:42] do all of these APIs calls.
+[24:44] And you might need 15
+API calls before you
+[24:47] can get the final answer.
+[24:49] The idea of what
+CodeAct proposed
+[24:52] is basically moving beyond just
+individual step by step tool use
+[24:56] and actually allowing the models
+to act by writing programs.
+[24:59] And if you do this, you can
+essentially write a for loop
+[25:06] over all of the
+countries that you're
+[25:08] supposed to be examining, and
+run for loop and get the answer.
+[25:12] And this doesn't mean you can't
+get intermediate feedback,
+[25:15] of course.
+[25:16] Like, for example,
+let's say this for loop
+[25:18] didn't work because
+instead of USA, you
+[25:23] would need to write U.S.A. You
+would get an error when you
+[25:28] tried to run the code and
+you could go back and modify
+[25:30] the code and then run it again.
+[25:32] So you can get
+multi-step feedback,
+[25:35] but it's at a much
+less granular level
+[25:37] so you can do more
+things in fewer steps.
+[25:41] In the original formulation
+of this, it did--
+[25:44] it executed bash commands
+and Jupyter commands.
+[25:48] And they found that this
+gave a faster resolution,
+[25:51] higher success rate
+than direct tool use.
+[25:54] So this kind of sets the
+stage for coding agents.
+[25:58] It allows you to run bash, it
+allows you to generate code.
+[26:03] But one other important
+thing that we need to do
+[26:06] is not just generate
+code, but actually go in
+[26:07] and modify code because
+most coding tasks are--
+[26:12] like any serious
+code repository,
+[26:13] you spend much more
+time modifying code
+[26:15] than you do generating
+code de novo.
+[26:18] And SWE-Agent, which was kind
+of the follow up modeling work
+[26:23] after SWEBench,
+basically did this
+[26:26] by defining
+specialized tools that
+[26:28] make it possible to efficiently
+explore repositories and edit
+[26:32] code.
+[26:34] So what it does is
+you have the LM agent,
+[26:40] it is given a set of
+LM friendly commands.
+[26:44] The LM friendly commands
+interact with the computer
+[26:47] and terminal and
+file system and you
+[26:49] get LM friendly
+environmental feedback.
+[26:53] And if you want to look
+at all the details,
+[26:55] you can go through the
+paper but here's an example.
+[26:58] So you could get a
+observation, which is--
+[27:05] you would get this
+observation from one
+[27:09] of the commands like show file.
+[27:11] And let's say you called show
+file and then 405 for line 405.
+[27:19] If you do this,
+basically you will
+[27:22] have a program that will
+go in and parse the file.
+[27:26] It will get lines
+from 401 to 409
+[27:28] because you get a
+window around the file--
+[27:33] window around the line that
+you selected within the file.
+[27:36] And this will be
+returned back to the LM.
+[27:40] And in reality this isn't
+like four lines above
+[27:45] and four lines below.
+[27:46] It's actually like 50
+lines above and 50 lines
+[27:49] below or 100 lines above
+and 100 lines below.
+[27:51] But what this allows you to do
+is even if you have files that
+[27:55] are like thousands of lines
+in your code repository,
+[27:57] you can still parse them in
+a reasonable size in the LM
+[27:59] context window without
+expanding your entire context
+[28:05] length without spending too much
+money, other things like this.
+[28:11] Then the basic response after
+doing this is you get a thought.
+[28:19] So it's like chain
+of thought reasoning.
+[28:21] You get a thought about
+what you need to do next.
+[28:23] And then you need to go
+in and edit the files.
+[28:28] So you now call an edit command
+where you edit lines 404 to 407,
+[28:35] and then you have an
+end of edit thing here.
+[28:40] So then this will edit the lines
+and insert this information
+[28:44] here.
+[28:45] And there's actually a bunch
+of different ways to do this,
+[28:48] like the SWE-Agent
+way is just one way,
+[28:52] and then there's
+other ways as well,
+[28:55] which I'll probably
+talk about in a second.
+[29:00] So within OpenHands, we
+do something very similar.
+[29:05] It's kind of like a
+combination of CodeAct
+[29:07] and the SWE-Agent kind of
+editing and observation actions.
+[29:15] So we execute all of the
+actions as calling code.
+[29:23] So you can do something like
+let's say you run an observation
+[29:28] action or you run
+a find command,
+[29:30] and you find that there is a--
+[29:34] you find that there's
+10 examples of something
+[29:37] that you want to replace in
+various places in your code
+[29:41] base, it could then execute
+10 of the SWE-Agent actions
+[29:46] and go in and replace all
+of the lines of the file.
+[29:49] So this essentially gives
+you a programmatic interface.
+[29:53] You call it by calling Python
+programs, which all LLMs are
+[29:56] very familiar
+with, and it allows
+[29:58] you to do things write a for
+loop over file editing commands
+[30:01] and other stuff like this.
+[30:03] So that's the general
+way that we do this.
+[30:07] And then you run this and
+then you get a observation
+[30:12] from this that is like
+the results of executing
+[30:15] the commands and other
+things like this.
+[30:18] So I've talked a little
+bit about the observation
+[30:21] in action space.
+[30:22] One really, really
+important thing
+[30:23] in order to make
+these models work
+[30:25] well is to have
+good code-based LLMs
+[30:28] because all of the
+success of these models
+[30:32] depends on the
+ability to write code.
+[30:35] And so I'd like to talk a
+little bit about the methods
+[30:38] that people use for generating--
+[30:41] or for creating code-based LLMs.
+[30:45] So, yeah, the basic method is
+you feed in the instructions
+[30:49] or input code into the LLM.
+[30:52] Recently, virtually
+all serious LLMs
+[30:55] are trained on code
+nowadays, so it
+[30:56] doesn't matter if you're talking
+about GPT or Claude or Gemini
+[31:00] or Lama or whatever else.
+[31:03] But some are more specialized.
+[31:06] And unfortunately
+for closed models
+[31:09] and even for some open
+models, there's not
+[31:11] a whole lot of
+information about what
+[31:14] goes into training
+these models, but I
+[31:18] can tell you about some things
+that they definitely are doing.
+[31:21] So the first thing
+that everybody is doing
+[31:24] is training on lots
+and lots of code data.
+[31:27] So lots of code is added
+to the data mixtures.
+[31:30] This is both to
+improve coding ability
+[31:32] and because some prior
+research has demonstrated
+[31:35] that adding code
+improves the reasoning
+[31:36] ability of models in general.
+[31:39] But just to give one
+example of coding data
+[31:43] set that we know that's
+open and has actually
+[31:46] been used in training open
+models, this is The Stack 2.
+[31:50] And this is a code
+pre-training data set.
+[31:53] They also looked carefully
+into licensing considerations.
+[31:58] And the reason why is because
+a lot of code is licensed,
+[32:02] and if people don't want you to
+be using the code in training
+[32:06] language models, it
+could theoretically
+[32:07] cause legal problems later.
+[32:09] So they basically went through
+and did the license cleansing
+[32:14] and other stuff like this.
+[32:16] So they checked if the licenses
+are available and other things.
+[32:21] And, again, this is
+really tiny over here.
+[32:23] I'm sure you probably
+can't see this
+[32:25] on the right side
+of the page well,
+[32:27] but one interesting
+thing to look at
+[32:28] is the distribution of
+the programming languages
+[32:30] that are included in
+data sets like this.
+[32:33] And the first thing
+is if you look
+[32:37] at the largest number of
+data that's included in here,
+[32:43] the data sets that--
+[32:45] or the languages that are most
+well represented are Python,
+[32:50] PHP, Markdown, JavaScript,
+Java, C++, C sharp and C,
+[32:59] which is great.
+[33:01] These are popular programming
+languages that a lot of people
+[33:03] want to work on.
+[33:05] There's a lot of less
+well represented languages
+[33:09] that are really important,
+like Docker files.
+[33:12] A lot of deployment
+works on Docker files.
+[33:16] I don't even see
+Terraform represented here
+[33:19] and Terraform is a
+really important thing
+[33:21] for deploying cloud
+infrastructure
+[33:24] and stuff like this.
+[33:25] So there's kind of a
+very large difference
+[33:28] between the availability of
+data for different programming
+[33:30] languages.
+[33:31] Another one is COBOL.
+[33:33] Nobody programs in COBOL
+anymore but a lot of banks
+[33:35] have legacy systems
+written in COBOL
+[33:37] that they would love to have
+translated to new programming
+[33:40] languages and stuff.
+[33:41] So that's a very low resource.
+[33:44] So another method that's kind
+of specific to code language
+[33:48] models that is really,
+really important for code
+[33:51] but maybe a little bit less
+important for other places
+[33:53] is infilling.
+[33:54] And in code generation,
+because we're not
+[33:58] generating stuff de novo,
+we're doing lots of editing,
+[34:01] we often want to fill in code.
+[34:03] And so the way that
+this is done is
+[34:06] you can take original documents,
+like the documents here.
+[34:12] And you can take
+a coherent section
+[34:15] of this document and basically
+mask out that section.
+[34:19] And then move that mask zero
+to the end of the document
+[34:23] and generate the
+masked data there.
+[34:26] So this is kind of like
+a pre-training method
+[34:28] that people use to train models
+to be good at infilling data.
+[34:32] And so this is super
+important for code.
+[34:34] Every code model
+does this nowadays--
+[34:37] or every model that seriously
+wants to handle code
+[34:40] does this nowadays so
+this is pretty important.
+[34:43] Another thing that's
+done in every code model
+[34:47] and also more and more models--
+almost every model is doing this
+[34:50] now-- is some variety of
+long context extension.
+[34:53] And so language
+models, they typically
+[34:58] train on relatively short
+contexts for efficiency reasons.
+[35:04] So they'll train on like 4,000
+token chunks when they actually
+[35:07] do the pre-training
+of the model.
+[35:11] But when you try
+to take the model
+[35:14] and generalize beyond the
+context that was trained on
+[35:17] at training time, it does a
+really poor job at generalizing.
+[35:20] So part of the reason why is
+because in transformer models
+[35:25] we have positional encodings.
+[35:26] I think many people
+have heard of these,
+[35:28] but just in case
+you haven't, there
+[35:31] are things that you
+append to each token
+[35:34] based on the position of
+the token in the sequence.
+[35:37] And the most common variety of
+this is something called rope.
+[35:40] And the way rope
+works is essentially
+[35:43] you have a theta where
+the theta depends
+[35:48] on the length of the output.
+[35:50] And so if you train
+here, you would have 40--
+[35:54] like let's say you were
+training on 4,096 context links,
+[35:57] you would have one half of that.
+[35:59] So it'd be 2048 different
+kind of theta values.
+[36:04] But then if you
+expanded beyond that
+[36:06] you would get a
+whole bunch of theta
+[36:07] values that you've
+never seen before.
+[36:09] So there's methods
+that fix this.
+[36:12] And one way they do this
+is by multiplying this
+[36:15] by a constant scaling factor.
+[36:17] And what this does is this makes
+sure that all of this, the theta
+[36:21] values that you've seen
+before, get scaled in a range
+[36:26] that it saw at
+pre-training time.
+[36:28] And then another
+method is something
+[36:30] called the neural tangent
+kernel-based method.
+[36:33] And basically what
+this does is these
+[36:35] are like cosine and sine values.
+[36:37] So you have some high
+frequency components
+[36:39] and some low
+frequency components.
+[36:41] And so they scale the
+low frequency components
+[36:43] but maintain the high
+frequency components, which
+[36:45] makes a tension
+over long distances
+[36:48] work, work well but
+keeps the local context.
+[36:54] So there's a lot of
+examples like this.
+[37:00] And this paper, Lu et al,
+goes into much more detail.
+[37:03] It's a paper on long
+context extension,
+[37:05] and you can take a look.
+[37:07] So another thing I'd
+like to point out
+[37:10] is that there's lots of context
+that's available for coding.
+[37:14] And coding models, specifically
+like in the Copilot setting
+[37:19] where you're interacting
+with a model within your IDE,
+[37:23] pull in lots of
+different information.
+[37:26] So some examples of information
+that you could be pulling in
+[37:30] are things like current coding
+context, the description
+[37:33] of an issue to fix, context
+about the repo in some way,
+[37:38] also open tabs in an IDE
+or something like this.
+[37:43] And so what
+information should you
+[37:45] be using to generate
+the next code?
+[37:47] It depends a lot if
+you're working on agents
+[37:49] or working on code like
+Copilot style models,
+[37:56] but agents at the
+moment largely use
+[38:00] the things that are like in the
+SWEBench, SWE-Agent style tools.
+[38:08] But separately
+from this, there's
+[38:10] this really good blog
+post on deconstructing
+[38:13] Copilot and what information
+Copilot is pulling in.
+[38:17] And basically the
+way it works is
+[38:18] it extracts a prompt from a
+current doc in cursor position,
+[38:23] identifies the relative
+path in language
+[38:26] that the model is occurring in.
+[38:28] It finds the most
+recently accessed
+[38:30] 20 files of the same language.
+[38:33] So if you've been
+programming in Python,
+[38:34] it will look at the most
+recently accessed 20 files.
+[38:39] It includes text before and text
+after the cursor, similar files,
+[38:45] imported files, metadata
+about the language in path.
+[38:47] And basically, long
+story short, they
+[38:49] did a bunch of
+prompt engineering
+[38:51] to pull in all of the relevant
+context into the prompt,
+[38:55] and that seems to work
+well for recommending code
+[38:58] to human coders who
+are working on it.
+[39:01] I think the agent
+space has not quite
+[39:04] gone this far in
+prompt engineering
+[39:06] based on the current contexts
+and things like this.
+[39:09] So I think that's an area
+for potential improvement
+[39:12] in our models going forward.
+[39:14] So another thing I'd like to
+talk about is file localization.
+[39:18] So file localization
+is a big problem.
+[39:20] It might even be
+the biggest problem
+[39:22] in coding agents nowadays.
+[39:24] And what I mean
+by this is that we
+[39:26] want to find the correct
+files given a user intent.
+[39:31] So let's say we have an
+intent that looks like this.
+[39:38] So this is an actual example
+of an issue from our repos.
+[39:43] And I think it's a reasonably
+good example the level of detail
+[39:46] that people actually
+write issues in.
+[39:49] So it says, when in
+confirmation mode,
+[39:52] it's not possible to give
+instructions in between steps.
+[39:54] You have to reject
+an action, and it
+[39:56] seems like it doesn't know
+that the action was rejected.
+[40:01] And then describe the UX of
+the solution that you'd like.
+[40:04] We'd like to have a third
+option confirm action in wait.
+[40:08] This action is
+confirmed but before it
+[40:09] tries to take the next step, you
+are able to give some feedback.
+[40:12] So this is a feature request.
+[40:14] Basically it's a request
+to add another option that
+[40:17] doesn't exist already.
+[40:19] But it doesn't tell you anything
+about where confirmation mode is
+[40:21] implemented, it doesn't
+tell you whether this
+[40:23] needs to be implemented in the
+front end code, the back end
+[40:26] code or both, or other
+things like this.
+[40:28] And models and agents
+really struggle
+[40:32] to do very well at this.
+[40:36] And I think one
+interesting thing
+[40:38] is that this is analogous to
+understanding the environment
+[40:41] and embodied agents.
+[40:43] So embodied agents,
+let's say you
+[40:46] have a robot that needs to work
+in your kitchen or something
+[40:50] like this, the
+first thing that it
+[40:52] should do before it starts
+solving any problems that you
+[40:54] have in your kitchen is go
+in like open all the kitchen
+[40:57] drawers or drawers or
+cabinets or whatever else.
+[41:02] And I feel like this
+localization problem
+[41:06] is that, it needs to go in
+and either go in and open
+[41:11] all the kitchen drawers
+or all the files
+[41:13] and understand what's
+going on in them,
+[41:15] or it needs to have
+a really good system
+[41:17] to retrieve at retrieval time.
+[41:21] But, anyway, so solution one,
+this is offload to the user.
+[41:26] And basically what
+this requires is
+[41:29] this requires that
+you have a user that's
+[41:30] very familiar with the
+capabilities of agents
+[41:35] and what they can do and
+how you can help them out
+[41:38] in doing their job well.
+[41:40] Which I think is
+reasonable if it's somebody
+[41:42] who interacts with agents.
+[41:43] So this issue was written by me.
+[41:46] And I'm very familiar
+with how agents
+[41:48] can work so I told it
+specifically which files
+[41:51] it should be manipulating.
+[41:53] But this isn't obviously
+a final solution
+[41:55] because not all
+users are like that.
+[41:57] They might not
+know the code base.
+[41:58] They might know
+that there's a bug
+[42:00] but not know where
+the bug is-- what
+[42:02] is causing the bug and
+other stuff like this,
+[42:03] so this is limited
+in its value even
+[42:06] though it is helpful in
+cases where it's applicable.
+[42:09] So the next is to prompt
+the agent with search tools.
+[42:14] And so SWE-Agent is one example
+of something that does this,
+[42:19] it provides a tool for
+searching repositories.
+[42:22] And specifically this
+tool is named Search.
+[42:27] So it will search for the
+thing that says PV system.
+[42:36] As a result of that it
+will list out all the files
+[42:38] that had PV system in them.
+[42:42] Then if it doesn't find
+the thing it wants,
+[42:44] it will click like next and
+search for the next one.
+[42:48] Another thing is you can search
+and then summarize the search
+[42:51] results for the
+agent and provide
+[42:53] the information as necessary.
+[42:55] So I think this is good.
+[42:58] I think it's actually very nice
+for agent-based systems that
+[43:02] have the ability to
+use tools as well.
+[43:05] But it's not like the equivalent
+to going in and opening
+[43:09] all the cabinets
+before you start,
+[43:11] and so there's other methods
+that do something like this.
+[43:16] So the first thing
+is creating a map
+[43:19] of the repository that
+you're working in,
+[43:21] of the code base that you're
+working in and prompting
+[43:24] the agent with it.
+[43:26] So there's a tool
+that a lot of people--
+[43:30] it's kind of an open source
+tool that people use called Ada.
+[43:33] And the way Ada does this is
+it creates a tree structured
+[43:37] map of the repository a priori.
+[43:40] The human user has the
+ability to add files
+[43:43] to the map to make
+them more prominent,
+[43:44] and then it summarizes the
+maps so it's a decent size.
+[43:51] And then taking
+this a step further,
+[43:53] there's a method
+called agentless.
+[43:55] And this does a hierarchical
+search for every issue.
+[43:59] So the way this looks is
+you essentially start out
+[44:04] with a project code
+base, you feed the agent
+[44:08] a very, very simple tree
+of all of the code that's
+[44:12] in the code base.
+[44:13] And this is fed into
+the language model.
+[44:16] Then based on this, the
+agent basically will--
+[44:19] or the language
+model will respond.
+[44:21] I want to open this file, and
+it will open all of the files.
+[44:25] And in each of the
+files it will get
+[44:26] a summary of the
+methods and classes that
+[44:29] are implemented in that file.
+[44:31] And then after it
+does that, the agent
+[44:34] then needs to localize
+to specific functions.
+[44:37] It will say the functions
+it needs to edit or modify,
+[44:42] and then those functions
+will be displayed
+[44:44] in full to the agent
+in order for it
+[44:46] to finally generate the code.
+[44:49] So this is a pretty
+effective approach.
+[44:54] The final thing is retrieval
+augmented code generation.
+[44:58] And the way this works is you
+basically retrieve similar code.
+[45:01] So you have an
+embedding based model,
+[45:03] and you can feed in the
+retrieved code to the model
+[45:09] and then just
+generate the outputs.
+[45:12] Particularly in code
+there's also documentation
+[45:16] which can be retrieved.
+[45:17] So one difficulty in
+retrieval-based code generation
+[45:21] is that the code
+itself is in Python
+[45:24] where the natural language
+description is in English.
+[45:26] And there can be a disconnect
+between the two of them
+[45:29] and so sometimes it's more
+effective to directly try
+[45:32] to retrieve the documentation
+and generate the output based
+[45:35] on that.
+[45:35] So there are some
+references for this.
+[45:39] My impression is
+that there aren't
+[45:41] a lot of approaches that have
+really effectively used this
+[45:45] in the agentless setting yet.
+[45:47] I think people will probably
+be moving in this direction,
+[45:51] and it's possible that
+there's some new archive
+[45:53] papers that I've missed.
+[45:54] But I think leveraging
+this appropriately
+[45:57] is kind of like an
+unsolved problem
+[45:59] and we'll want to work
+towards improving that.
+[46:04] So the next thing I'd
+like to talk about
+[46:05] is planning and error recovery.
+[46:07] So solving coding
+tasks can be difficult.
+[46:12] And in order to
+solve the tasks, you
+[46:15] want to have some concept of--
+[46:17] you might want to have some
+concept of a plan and keeping
+[46:21] track of when you're
+on track with your plan
+[46:23] or other things like this.
+[46:26] And a lot of the top coding
+models or a lot of the top code
+[46:32] agent models that have
+high scores on leaderboards
+[46:36] like SWEBench have a hard
+coded task completion process.
+[46:41] And, for example, agentless
+is an example of this.
+[46:46] It's not actually
+so much of an agent
+[46:51] because it mostly just
+goes through this process,
+[46:54] but it just contains
+three steps.
+[46:58] So file localization,
+like I talked about
+[47:01] before, it has this hierarchical
+localization process.
+[47:06] And then function localization,
+it then generates patches.
+[47:10] And it generates a
+whole bunch of patches,
+[47:13] runs them against a linter
+or runs tests against them
+[47:18] to make sure that they are
+appropriately formatted,
+[47:21] don't have syntax errors,
+pass existing tests.
+[47:25] And then they take the best one,
+the one that passes the tests
+[47:28] and they apply it.
+[47:31] And if there's multiple
+ones that pass the test,
+[47:33] they use a similarity
+metric to try
+[47:35] to pick the one that looks the
+best compared to the others.
+[47:38] So this is very
+effective, actually.
+[47:44] Agentless gets good results
+for how simple of a method
+[47:47] it is, it also costs less
+than some agent style planning
+[47:51] methods, but the problem
+is it's very inflexible.
+[47:54] So let's say now you wanted
+to go online and read
+[47:57] the documentation before
+you solve the task.
+[47:59] In some cases you wouldn't
+be able to do this
+[48:01] because this is hard coded.
+[48:03] Another thing that's a
+little bit less inflexible
+[48:07] are multi-agent style
+methods or methods
+[48:13] that use an LLM generated
+plan beforehand.
+[48:16] Actually, it doesn't
+need to be multi-agent.
+[48:18] It could be just a
+single agent that
+[48:19] generates a plan beforehand and
+then steps through the plan.
+[48:24] This is an example from a
+multi-agent system called coder.
+[48:27] And basically the way it
+works is it generates a plan.
+[48:31] This plan is based on the
+fact that this manager has
+[48:35] a whole bunch of subagents like
+a reproducer, a fault localizer,
+[48:42] an editor and a verifier.
+[48:44] And it has a semi-hard
+coated structure
+[48:49] between all of these
+agents where you first
+[48:52] generate a plan that includes
+the reproducer step, the fault
+[48:56] localization step, editor
+step, verifier step.
+[48:59] And then you have a
+hard coded control flow
+[49:02] where the reproducer runs it.
+[49:04] If they're able to
+reproduce it, then
+[49:07] they send it to the
+fault localizer, if not,
+[49:09] they send it directly
+to the editor.
+[49:11] Other things like this.
+[49:12] So there's a lot of works that
+have this kind of thing that's
+[49:15] highly tailored towards
+solving GitHub issues.
+[49:19] One problem with this
+sort of thing, though, is.
+[49:27] I've noticed that language
+model agents very often they'll
+[49:30] generate a plan.
+[49:31] And then after they've
+generated the plan,
+[49:33] they realize that their
+plan was not the greatest
+[49:35] plan in the first place.
+[49:37] Like, their underlying
+assumptions were not correct.
+[49:40] Like, the test directory that
+they were supposed to use
+[49:43] doesn't exist in the
+first place so they
+[49:45] need to go back and modify
+it, or other things like this.
+[49:48] So there's an
+example of a work--
+[49:51] this was tested on web
+agents, not coding agents
+[49:54] but I think it's applicable
+to coding agents as well
+[49:56] and we've tried it
+out a little bit.
+[49:58] But basically it has the
+ability to kick the plan back
+[50:01] to the planners.
+[50:01] So if the agent that's
+executing the plan
+[50:05] fails at doing any of
+the steps in the plan,
+[50:08] it can kick it back to the
+planner and the planner can say,
+[50:11] I need to generate a new plan.
+[50:13] I think if you're
+going to have this kind
+[50:16] of structured architecture,
+this is really, really important
+[50:20] in doing a good job.
+[50:22] Another really important
+thing is having the ability
+[50:26] to fix outputs based
+on error messages.
+[50:31] And one of the advantages of
+using the agents versus using
+[50:35] an agent list framework is
+that the agents can actually
+[50:40] run the code, see the
+results of the code
+[50:42] and go back and fix
+the code appropriately.
+[50:46] And there's not a whole
+lot of work on doing this,
+[50:52] especially with the strong
+modern language models,
+[50:55] as far as I can tell.
+[50:57] I kind of hope that there's more
+work in this general direction.
+[51:00] This inter code is
+one example of this.
+[51:03] But even our strongest models
+are not super great at this.
+[51:08] Just to give an example, GP
+4.0, one of the issues we found
+[51:12] is it will attempt
+to fix an issue,
+[51:16] it will fail at
+fixing an issue, then
+[51:18] it will attempt to fix
+the issue in the same way
+[51:20] and get stuck in a loop and
+just do this over and over
+[51:22] and over again until
+you run out of turns.
+[51:25] For some reason Claude is better
+at not doing this and trying
+[51:29] different approaches.
+[51:30] I don't know why
+because the cloud
+[51:32] people have not told
+me what they did.
+[51:34] So if any of the cloud people
+are listening, please tell me.
+[51:39] But I think methods that
+train models to do really
+[51:45] well at error recovery are
+going to be a big research
+[51:47] topic going forward.
+[51:49] And I think people are
+working on this now as well.
+[51:52] A final thing I'd like
+to talk about is safety.
+[51:55] And this is really important
+because coding models
+[51:58] can cause harm.
+[52:01] Right now at the moment
+I'm most worried about--
+[52:05] because I use coding models in
+my everyday coding experience,
+[52:09] I'm most worried about them
+causing harm by accident
+[52:12] because I told it
+to do something
+[52:15] it either made a mistake or
+it misinterpreted my commands
+[52:19] and it fixed--
+[52:21] and it did some damage.
+[52:26] So to give some examples
+that have actually
+[52:29] happened to me before,
+you have a coding model
+[52:32] and you ask it to commit it
+to your GitHub repository.
+[52:36] And you never said you want
+it to push it onto GitHub,
+[52:40] but it just assumes that you
+want to push it onto GitHub
+[52:42] so it will commit things
+and push them directly
+[52:46] to your main branch
+on GitHub and then you
+[52:47] need to go clean up
+your code repository.
+[52:51] You're in the worst case,
+let's say there's bugs,
+[52:53] it causes major
+issues for people
+[52:55] who would be using the
+repository downstream.
+[53:00] This was a really crazy one
+that I was very surprised by,
+[53:04] which was I told the model
+that the tests needed to pass.
+[53:09] And it was having trouble
+making the test pass
+[53:13] so it just deleted the tests.
+[53:15] And this is a little bit scary.
+[53:19] It's doing something
+that's pretty obviously
+[53:21] harmful in order to
+obtain its objectives,
+[53:25] so we don't want to do that.
+[53:29] Another thing is
+intentional misuse.
+[53:32] And there have been
+essentially papers
+[53:37] that have demonstrated
+that coding agents can
+[53:38] be used for hacking and
+other things like this.
+[53:42] And I think this is--
+[53:44] we need to be careful
+in making sure
+[53:48] that we have tools that are
+able to mitigate these risks.
+[53:52] I don't think that
+means don't build tools
+[53:55] because if we don't build
+tools, then only hackers will
+[53:57] have these tools,
+but we do need to be
+[53:59] very conscientious of that.
+[54:02] So the first safety
+mitigation, one
+[54:04] that I think is absolutely
+essential if you're
+[54:06] using coding agents in your
+everyday life is sandboxing.
+[54:09] And we can improve
+safety by basically
+[54:12] limiting the environment
+that the agent has access to.
+[54:17] Just to give one
+example, Open Hands
+[54:21] executes all actions
+within a Docker environment
+[54:24] that's isolated
+from the main system
+[54:25] that you're using right then.
+[54:27] So it only has
+access to the files
+[54:35] that you put into that
+Docker environment
+[54:36] and other things like this.
+[54:39] Also with Docker you can
+limit access to the internet,
+[54:41] you can limit access to any
+other variety of things.
+[54:44] So one general theme with
+respect to safety is that we
+[54:49] shouldn't--
+[54:50] according to my
+philosophy anyway
+[54:52] is we've already thought a
+lot about safety of software
+[54:55] in non-agent scenarios, and so
+we can reuse a lot of the tools
+[55:00] that we already know
+are important and useful
+[55:03] in those sorts of code
+security, in non-agent scenarios
+[55:08] and kind of reuse
+them for safety.
+[55:11] And Docker is one
+example of that.
+[55:15] The next thing is credentialing.
+[55:18] And there's a very important
+concept in security
+[55:21] that I think many
+or most people have
+[55:24] heard of called the
+principle of least privilege,
+[55:26] which is that people should
+only have privileges that
+[55:30] are necessary to do their job.
+[55:31] Services should only
+have privileges that
+[55:33] are necessary to do their jobs.
+[55:35] And just to give
+an example, there
+[55:38] are GitHub access
+tokens that now
+[55:44] have very fine
+grained privileges
+[55:46] and allow you to only do certain
+things on GitHub repositories.
+[55:51] The example on the
+right is very small
+[55:53] so let me read it out loud.
+[55:57] The first thing it says
+is repository access.
+[56:02] So you can either
+make it a public--
+[56:06] give it access to all public
+repositories with only
+[56:08] read only access.
+[56:10] You can give it access
+to all repositories
+[56:12] that you have access to or
+only select repositories.
+[56:14] So you can decide which
+like GitHub repositories
+[56:17] it's allowed to access.
+[56:19] You can also figure out whether
+it can run GitHub actions,
+[56:22] do administration, for example,
+modify content, open issues
+[56:28] and other things like this.
+[56:29] So what you can do here is you
+can basically prevent agents
+[56:32] from having access
+to more privileges
+[56:36] than they need but still
+give them the privileges
+[56:38] that they need.
+[56:38] And actually one
+thing I forgot to say
+[56:41] is it's very easy to create
+a completely useless agent.
+[56:44] You just put it in a sandbox
+and don't give it access
+[56:46] to anything.
+[56:47] And you'll have an
+agent that can't really
+[56:50] do anything other than
+work as a calculator
+[56:53] or something like this.
+[56:55] But at the same time
+we want to build
+[56:58] agents that are helpful while
+also not causing undue harm,
+[57:03] so this is another thing
+that we need to think about.
+[57:07] So another thing that
+we have looked at
+[57:13] is creating post-hoc
+auditing, auditing for models.
+[57:20] And post-hoc
+auditing for models,
+[57:24] the way you can do this
+is can generate actions.
+[57:26] And then based on
+the actions, you
+[57:29] can either decide to
+execute them if they're
+[57:32] deemed to be harmless actions.
+[57:35] And if they are deemed
+to be harmful actions,
+[57:38] you don't execute them and
+you return basically a,
+[57:41] like, this is dangerous.
+[57:42] You shouldn't be executing
+that action message back
+[57:44] to the agent.
+[57:46] And so this can
+use LLMs, this can
+[57:50] use static analysis tools,
+vulnerability detection tools
+[57:53] or other things.
+[57:55] And I should mention
+that this is actually
+[57:57] joint work with people at
+invariant labs and ETH.
+[58:02] But this is a conclusion.
+[58:05] In summary I think we've
+already demonstrated
+[58:08] that Copilots are very useful,
+code agents are getting there.
+[58:12] I have repositories
+where I have done
+[58:15] half of the commits with a
+coding agent or at least it's
+[58:18] drafted half of the
+commits and then I've
+[58:20] gone in and fixed them,
+and other stuff like this.
+[58:22] So I think in the
+next one or two years
+[58:26] there's going to be the ability
+to use coding agents in many
+[58:31] of our mundane tasks, ones
+that don't require very much
+[58:34] thought and they'll
+gradually get better
+[58:36] at doing things that require
+more thought and more care.
+[58:38] I think current challenges
+include coming up
+[58:42] with good code, LLMs, editing
+methods, localization, planning
+[58:46] and safety.
+[58:49] In terms of future
+directions, I think
+[58:51] there's a lot of interesting
+directions in this area.
+[58:55] In addition to all of
+the current challenges,
+[58:58] the first one is agentic
+training methods.
+[59:01] Training on agent style data
+that will give us the ability
+[59:06] to adhere to agent formats,
+do kind of better planning,
+[59:10] recover from errors better.
+[59:13] Another thing is
+human in the loop
+[59:16] methods for evaluating agents.
+[59:19] So one of the nice
+things about agents
+[59:21] is they can communicate
+with humans.
+[59:23] And I'm much more
+effective at solving tasks
+[59:26] if I'm willing to spend the
+time interacting with the agent
+[59:28] than just asking it
+to do it on the fly.
+[59:31] I can do things like watch the
+agent do its work and pause it
+[59:34] when it seems to
+be making a mistake
+[59:35] and just go in and push
+it in the right direction
+[59:38] and it will correct course.
+[59:39] But we really don't know like
+the best modality for this
+[59:42] and we don't have any
+good evaluation benchmarks
+[59:44] to evaluate how well models
+are able to do at this,
+[59:48] so I think that's
+another big thing.
+[59:52] Also broader software
+tasks than coding.
+[59:54] I think there's basically
+no or at least very
+[01:00:00] few benchmarks that tell
+us how good we're doing
+[01:00:03] at this in the first place.
+[01:00:05] And software toolkits like Devin
+and Open Hands can do this.
+[01:00:09] They can do web browsing, they
+can do other stuff like this,
+[01:00:13] but it's not clear how well they
+can do at any of these tasks
+[01:00:17] and how much work there
+is still to be done.
+[01:00:22] So, yeah, that's my summary.
+[01:00:24] Sorry, this is a
+very broad field.
+[01:00:26] I know I went through a
+lot of stuff in an hour.
+[01:00:29] But if you want to
+try it out yourself,
+[01:00:31] you can download our
+software toolkit.
+[01:00:33] And it does all the things
+I talked about here.
+[01:00:35] And we'd love to have feedback
+or collaborate with people
+[01:00:38] and things like that as well.
+[01:00:39] So, yeah, thank you.

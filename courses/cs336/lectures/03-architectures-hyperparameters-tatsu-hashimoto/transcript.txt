@@ -1,0 +1,2649 @@
+[00:05] So today we're going to talk about
+[00:06] architecture, which at least to me has
+[00:09] always been pretty inscrutable.
+[00:12] Um and so I'm going to take the approach
+[00:13] of just telling you kind of everything,
+[00:16] right? I'm going to go through all of
+[00:17] the modern papers.
+[00:19] Um and we're going to just look through
+[00:20] what has everyone done? Um and so I've
+[00:22] titled this everything you didn't want
+[00:24] to know about architectures and
+[00:26] hyperparameters because I think we all
+[00:27] wished we lived in a world where the
+[00:29] only things you had to know were like VC
+[00:31] dimension or something, right? Like very
+[00:32] simple, you know, theoretical tools, but
+[00:34] that's not really where we are.
+[00:36] So okay. What we are going to do is we
+[00:39] are going to try to understand
+[00:41] architecture from kind of like a survey
+[00:43] lens, right? The best thing to do, you
+[00:46] know, better than listening to this
+[00:47] lecture even is for you to go out and
+[00:49] like train your own models and try
+[00:50] different architectures, right? That's
+[00:51] by far the best thing to do. That's part
+[00:53] of the philosophy of the course. But
+[00:56] we're not going to be able to cover the
+[00:57] whole design space of all the different
+[00:59] architectures that are out there, right?
+[01:01] Like that's not something that we have
+[01:02] the compute or the time to do.
+[01:04] So my opinion is the second best thing
+[01:06] that we could do is to try to learn from
+[01:08] the experience of others, right? What
+[01:10] has What has everyone else done? What
+[01:12] are the choices that they are making,
+[01:13] right? And by looking at kind of a
+[01:15] broader, somewhat zoomed out picture,
+[01:17] maybe we can start to understand, oh,
+[01:19] these are the kinds of parameters and
+[01:20] choices that are sort of fixed across
+[01:22] all effective architectures and these
+[01:24] other ones can be sort of varied without
+[01:26] impacting
+[01:27] how the model performs, right? So I'm
+[01:29] going to talk about, you know, basically
+[01:31] transformer variants. Like what is the,
+[01:33] you know, modern transformer starting
+[01:35] with, you know, the Vaswani paper and
+[01:37] then, you know, as we go to more modern,
+[01:40] more recent architectures, what do they
+[01:41] have in common? And then what are we
+[01:43] allowed to vary? Or not allowed, but
+[01:45] what do people vary as they go through
+[01:47] this, right?
+[01:48] So
+[01:49] I think many of you have taken an NLP
+[01:51] course of some kind or at least seen a
+[01:53] transformer, so you've probably seen,
+[01:55] you know, the very vanilla transformer
+[01:57] from Vaswani et al. Um you know, there
+[02:01] there are some fairly standard choices
+[02:03] that you make. You say, oh, transformers
+[02:04] don't have positional dependence, so
+[02:06] we're going to add a position embedding.
+[02:08] And what do we do? We're going to add
+[02:09] some sines and cosines.
+[02:11] Um we're going to have information
+[02:12] processing through a ReLU. Um and then
+[02:15] we're going to have a a post norm. I'll
+[02:17] talk about what exactly that is later.
+[02:19] Um and when you look at your assignment,
+[02:20] your A1, you're going to notice some
+[02:22] differences between the standard or the
+[02:25] vanilla transformer and what we've asked
+[02:27] you to implement. Well, we're going to
+[02:28] ask you to move the layer norm to the
+[02:30] front of each transformer block or the
+[02:32] non-residual layers. We're going to ask
+[02:34] you to implement something called rope.
+[02:36] Um
+[02:36] and we're going to ask you to implement
+[02:38] something called SwiGLU and not ReLU.
+[02:41] Right? Why do we pick these? Um one
+[02:43] reason is we've, you know, copied a lot
+[02:45] of this over from LLaMA, but so did
+[02:47] everyone else. Really, I think if you
+[02:49] were to train on your own language
+[02:50] model, I think you'll quickly run into
+[02:52] this question of, oh, there's so many
+[02:53] choices, right? Like what do I choose
+[02:55] for all these things?
+[02:57] And so let's now sort of walk through
+[02:59] all these different models.
+[03:01] The way I kind of think about
+[03:02] architectures is to think about to look
+[03:05] at all the different things people have
+[03:06] done and say, what are the things that
+[03:08] people have done? Can we pick and choose
+[03:09] from those?
+[03:11] Um Percy always makes fun of me for this
+[03:13] a little bit, but you know, I try to
+[03:14] look at all the the different models
+[03:16] that come out each year to try to make
+[03:18] this lecture.
+[03:19] Um and last year I thought, oh, there's
+[03:21] just a couple papers. It's going to be
+[03:22] fine. It's going to be fine. And then I
+[03:23] look through all the things and there's
+[03:24] a lot of papers. There's Qwen 2 and
+[03:26] Gemma 3
+[03:27] and InternLM2.
+[03:29] Um
+[03:30] and then there were even more. There's
+[03:31] like NeMo Tron 4 and Qwen 2 and oh oh my
+[03:33] goodness, there were 19 new dense
+[03:35] models. And so last year I had my work
+[03:37] cut out for me.
+[03:38] And then this year, you know, I thought,
+[03:40] well, there can't be that many new LM
+[03:42] releases. Like it's got to be slowing
+[03:44] down, right? Like people can't keep
+[03:45] training 20 dense LMs per year. Um and
+[03:47] that's technically right. There aren't
+[03:49] that as many dense LMs. Initially, you
+[03:50] know, I was like, oh, there's Qwen 3,
+[03:52] Gemma 4 just came out last Thursday, so
+[03:54] I put that in there. And almost 3. You
+[03:56] know, there's only a couple. And of
+[03:57] course I have to give a shout-out to
+[03:59] Percy's own 8B model trained with
+[04:01] Marine. And I was like, oh, we'll just
+[04:02] have a few things to cover. Um but it
+[04:04] turns out if you start looking, there's
+[04:05] a lot of different models. Um and so the
+[04:08] fact that we have so many different
+[04:10] models, most of these actually are MoEs,
+[04:12] mixtures of experts, and I'll be talking
+[04:14] about that tomorrow rather than today.
+[04:16] Um because we have such a big diversity
+[04:17] of models, we actually get a pretty good
+[04:20] picture of all the different choices
+[04:22] that we can make. Um
+[04:24] so I I made this like little table.
+[04:25] We'll come back to this little table at
+[04:27] the end of the lecture.
+[04:28] Um but basically at this point, you
+[04:30] know, starting with, you know, the
+[04:32] original transformer, there's been
+[04:33] actually quite a few autoregressive
+[04:36] language models kind of trained on the
+[04:38] same class of things.
+[04:40] Um and you can ask questions like, what
+[04:42] are the different vocabulary sizes? Or
+[04:44] what kind of layer norms do we use? Or,
+[04:47] you know, what kind of position
+[04:48] embeddings do people use? And we see
+[04:49] some fairly clear trends. I'll be
+[04:51] talking about this as we go.
+[04:53] Okay.
+[04:54] Um so
+[04:56] the goal here is that we're going to
+[04:58] cover couple different things. We're
+[05:00] going to cover common architecture
+[05:01] variations. So these are different
+[05:03] building blocks of the transformer.
+[05:05] Um and after we've established what the
+[05:07] standard building blocks are, like, you
+[05:09] know, what do we use for the the
+[05:10] nonlinearities or what do we use for
+[05:12] position embeddings, then we're going to
+[05:14] talk about hyperparameters. We're going
+[05:15] to go down even lower detail and say
+[05:17] like, you know, what is FF dim? Um
+[05:20] should we make that a multiple of four
+[05:22] or like multiply the the hidden by four
+[05:24] to get FF dim? How many vocab elements
+[05:26] should I have? Um
+[05:28] and then after that, we're going to talk
+[05:29] about very low-level tricks of how to
+[05:33] get models to train stably. And the
+[05:34] reason why I'm going to talk about that
+[05:36] in this lecture is because these
+[05:38] stability tricks have a pretty close
+[05:40] connection with the architecture
+[05:41] variation, right? Um one of the things
+[05:44] that, you know, higher level I want to
+[05:45] sort of impress upon you is that
+[05:47] architectures are actually a a very
+[05:49] complex set of tradeoffs, right? Like
+[05:51] what does a architecture have to do?
+[05:53] Well, it has to learn from data, so it
+[05:55] has to generalize. It has to train
+[05:57] efficiently on GPUs. And it has to not
+[06:00] blow up, right? Like halfway through
+[06:01] training, if your, you know, training
+[06:03] losses just go like down like this and
+[06:05] then suddenly blow up, that's no good at
+[06:07] all, right? So all these different
+[06:08] requirements end up getting baked
+[06:10] straight into the architecture. And
+[06:12] that's why these things are a little bit
+[06:13] messy and a little bit complex.
+[06:15] Um but you should keep that in mind and
+[06:17] that's why, you know, things aren't in
+[06:18] many ways not so elegant.
+[06:21] Okay.
+[06:22] So we're going to start with the core
+[06:24] architecture piece. And as a high-level
+[06:26] view, you know, I think the the way that
+[06:29] I see a lot of the architecture stuff,
+[06:31] you know, looking basically
+[06:32] historically, is kind of in the early
+[06:34] days of, you know, starting with the
+[06:36] transformer until, you know, GPT-3 or
+[06:38] so, there's a lot of experimentation
+[06:40] that happens. People try lots of
+[06:41] different things. There's no like gold
+[06:43] standard that everyone has unified on.
+[06:45] And then, you know, LLaMA 2 comes out
+[06:47] and everyone's like, wow, LLaMA 2 is
+[06:49] great. I want my own LLaMA 2. And so
+[06:51] everyone starts training LLaMA 2-alikes
+[06:53] with, you know, minor variation
+[06:56] that people have. And then finally, you
+[06:58] know, last year we saw really big
+[07:00] differences or or sort of a trend
+[07:03] towards architecture modifications that
+[07:05] make training more stable. And this year
+[07:07] we see lots of trends towards
+[07:10] architecture variations that enable
+[07:12] longer context dependence. So there are
+[07:14] these big themes that are happening, but
+[07:16] really I think, you know, you see this
+[07:17] like big point when LLaMA 2 comes out
+[07:19] and everyone's like, wow, I want to
+[07:20] train something with that. And then
+[07:22] suddenly, or not suddenly, but after
+[07:23] that, people are starting to explore
+[07:25] once again. So it's kind of cool to see
+[07:27] all these different changes.
+[07:29] Okay.
+[07:30] Um I think people can disagree about a
+[07:33] lot of things on architectures, but
+[07:35] there is one thing that everyone agrees
+[07:37] on, you know, like if you take the
+[07:38] transformer paper, I think a lot of
+[07:40] people will say like the transformer
+[07:42] people got like most of the things
+[07:44] right, except this. And the thing that
+[07:46] they really did not get right or like I
+[07:48] think most people agree they did not get
+[07:50] right is where you put the layer norm,
+[07:52] right? So in the original um
+[07:55] uh transformer paper, you know, the
+[07:57] layer norm goes in what you would call
+[07:59] the residual path, right? So in the
+[08:01] transformer, you know, you have the
+[08:02] residual stream, this X that kind of
+[08:04] runs through the whole network. And
+[08:11] sort of a delta back into this residual
+[08:14] stream.
+[08:15] And then in order to make sure that
+[08:17] these gradients are sort of stable
+[08:19] across layers, you know, a layer norm is
+[08:21] placed at the end of each of these
+[08:23] components.
+[08:24] Now, um
+[08:26] instead of putting the layer norms in
+[08:28] the residual stream, there's an
+[08:29] alternative. Um I'll refer to this as
+[08:32] pre-norm,
+[08:33] um in which you can put the layer norm
+[08:36] outside of the residual stream, but
+[08:38] before each of the computations. So you
+[08:40] can put it before the multi-head
+[08:41] attention, you can put it before the
+[08:42] FFN, right? Um we'll call this pre-norm.
+[08:45] Um
+[08:46] the nomenclature will get a little bit
+[08:47] confusing. Um You can call this uh
+[08:50] post-norm for now, but let's call this
+[08:52] sort of residual norm, right? Cuz you're
+[08:53] putting the norm in the residual layer.
+[08:56] Um basically all modern language models
+[08:59] uh push the layer norm outside of the
+[09:02] residual stream. This is just like a
+[09:03] thing that basically everybody does.
+[09:06] Um there is one funny exception, but it
+[09:09] is OPT-350M.
+[09:11] And if you all are familiar with sort of
+[09:13] language models, we kind of know OPT in
+[09:15] general was, you know, kind of a mess of
+[09:18] a language model, right? And OPT-350M
+[09:21] um is even more so because I don't know
+[09:22] why only that model uh has a post layer
+[09:26] norm in the residual stream.
+[09:28] Okay. So this is one of the things that
+[09:30] like everyone agrees on. And so you
+[09:32] might wonder like why is this like such
+[09:35] a, you know,
+[09:36] uh like a uni- unified thing across all
+[09:39] the different models?
+[09:42] Um and if you look at some of the early
+[09:44] works studying like where do you place
+[09:46] the layer norm style research, um what
+[09:49] you really see is that, you know, the
+[09:52] early motivation for a lot of this was
+[09:55] when you train a transformer, you need
+[09:56] to do a warm-up. Actually, you know,
+[09:58] modern transformer training still does
+[10:00] warm-ups as well. But you definitely
+[10:02] need to do warm-up when you train.
+[10:04] Now, wouldn't it be nice if we could
+[10:06] remove the warm-up, right? So, that was
+[10:08] kind of the initial motivation for a lot
+[10:09] of this research.
+[10:11] But people quickly realized that
+[10:12] removing the warm-up had very serious
+[10:15] issues in terms of the stability and
+[10:16] convergence
+[10:18] of these things, right? So, if you did
+[10:20] post norm plus layer norm, which is, you
+[10:22] know, basically the original transformer
+[10:23] thing, you got this purple dash line.
+[10:25] Oh, you just don't converge as well
+[10:28] compared to doing something like pre
+[10:30] norm. You can ignore the other terms.
+[10:32] You would get much nicer convergence
+[10:34] even without warm-up, right? So, this
+[10:36] was the original motivation.
+[10:38] But really what people kind of quickly
+[10:40] realized is that, you know, moving the
+[10:43] layer norms outside the residual stream
+[10:45] has some pretty important implications
+[10:48] as you make your network deeper and as
+[10:50] you start to grapple with stability
+[10:52] issues.
+[10:54] To me, I think the gradient attenuation
+[10:56] issues are kind of the most clear.
+[11:00] When you sort of talk to people who do
+[11:02] architecture design, I'm not really one
+[11:04] of the the people that deeply engages in
+[11:06] this. But one of the things that people
+[11:07] often say is keep your residual stream
+[11:10] clean, right? So, in this case, you have
+[11:12] your X's coming in from the bottom on
+[11:13] the pre norm side, and this X propagates
+[11:16] all the way up to the top, right? All
+[11:17] the way up to your your final output.
+[11:20] And that allows gradients to propagate
+[11:21] if you in the backward pass straight
+[11:23] through this, right?
+[11:25] Um that makes gradient propagation very
+[11:27] simple,
+[11:28] which improves both stability and signal
+[11:31] propagation. And that's sort of what
+[11:33] people realized very, very quickly, that
+[11:35] if you do something like pre norm in
+[11:38] blue
+[11:39] initialization, sort of the gradient
+[11:41] size is kind of remains the same, right?
+[11:43] Because you have this nice straight
+[11:45] through propagation in the backward
+[11:46] pass. On the other hand, if you have
+[11:48] post layer norm, you have these kind of
+[11:50] complicated effects that happen because
+[11:53] you're layer norming each time you're
+[11:55] going through a transformer block. And
+[11:56] that's going to change the norm of your
+[11:57] gradients as you go backwards through.
+[12:00] So, you can kind of see,
+[12:03] you know, from the principle of keep
+[12:05] your residual stream clean, that pre
+[12:07] norm makes a lot of sense.
+[12:09] People also realized through
+[12:10] experimentation that this also improves
+[12:12] stability in general, that the sizes and
+[12:15] frequencies of gradient spikes
+[12:18] were improved under pre norm compared to
+[12:21] post norm. And, you know, this is a
+[12:22] figure from Salazar and UN, who were one
+[12:24] of the first ones, I think, to to study
+[12:26] this phenomena carefully.
+[12:28] I think this is the reason why it stuck
+[12:30] around, right? Stability and the ability
+[12:33] to go deep are both very, very important
+[12:35] for modern large language models. And
+[12:37] so, this idea of moving your layer norm
+[12:40] outside of the residual stream is one
+[12:42] that basically everyone has adopted.
+[12:45] Um so now, you know, if putting layer
+[12:48] norms in residual streams is bad,
+[12:52] why does layer norm have to be at the
+[12:54] start? Of course, we have pre norm,
+[12:55] which is, you know, before our
+[12:57] computation, but we could have it after
+[12:58] computation as well, right? That's
+[12:59] equally good at least under that
+[13:01] knowledge logic.
+[13:02] Um and that's exactly right. Many recent
+[13:06] models like Grok or Gemma 2 or Olmo 2
+[13:10] have the structure where they moved the
+[13:11] layer norm after the computation. So,
+[13:13] it's a post norm of a kind, but it's
+[13:15] outside the residual stream.
+[13:17] Other models still actually just put
+[13:19] layer norms everywhere. They put a layer
+[13:20] norm here, they put a layer norm after.
+[13:23] I'll get to this later as we talk about
+[13:25] stability, but one of the other lessons
+[13:27] that it seems to have held up very well
+[13:29] is if you have stability issues, you can
+[13:31] kind of sprinkle in layer norms
+[13:32] everywhere, and that will generally
+[13:34] improve stability.
+[13:36] It's almost very strange to be saying
+[13:37] this cuz it's so ridiculous. And yet,
+[13:39] that statement has actually been proven
+[13:41] right. Every time, you know, people have
+[13:43] encountered stability issues, they say,
+[13:44] "Oh, but what if we just throw a layer
+[13:46] norm into attention?" Turns out that
+[13:48] works, too. We'll get to that later. So,
+[13:49] okay, that's post norm
+[13:51] or double norm in this case where you
+[13:52] have two layer norms here.
+[13:55] Okay. The other thing that you can do is
+[13:58] in the original transformer, you have
+[14:00] the layer norm, which is this operation
+[14:01] right here. So, you have your
+[14:03] activations X.
+[14:04] You're going to mean subtract, divide
+[14:06] the variance, and then scale it back up,
+[14:07] right? And this works just fine, right?
+[14:09] It's not like this is wrong. And many
+[14:12] models have successfully trained on this
+[14:13] scheme.
+[14:15] But basically, most or all modern
+[14:17] models, I think,
+[14:19] use RMS norm, which doesn't subtract the
+[14:21] mean or add a bias term, right? So, it's
+[14:24] just a scaling down and scaling back up,
+[14:26] right? So, you can see this in the
+[14:27] equation here.
+[14:28] Um and really, layer norm is more
+[14:31] expressive than RMS norm. So, there's
+[14:33] really representationally no reason why
+[14:36] you have to use RMS norm.
+[14:38] But RMS norm is nice because in
+[14:40] practice,
+[14:42] there's really no expressiveness loss.
+[14:44] RMS norm models just as well as layer
+[14:46] norm. But more importantly, it is, you
+[14:49] know, faster, right? This is the part
+[14:51] where kind of the systems and sort of
+[14:53] architecture co-design starts to come
+[14:55] in.
+[14:56] Percy mentioned, you know, in the
+[14:57] previous lecture, this idea of
+[14:59] arithmetic intensity, right? We want to
+[15:00] keep our GPUs hot by doing, you know,
+[15:03] matrix multiplies and other very intense
+[15:05] computations. We do not want to be
+[15:07] wasting our GPUs by having them move
+[15:09] little tiny bits of memory back and
+[15:11] forth, right? That's a very inefficient
+[15:12] use of our, you know, very powerful GPU.
+[15:16] And so, what we want is to remove
+[15:18] operations that are small and involve
+[15:20] memory movement, but don't give us much
+[15:22] expressive power, right? So, by that
+[15:24] view, what we really want to be doing
+[15:26] here is, you know, if the mean
+[15:28] subtraction and addition isn't really
+[15:30] doing much for us, just get rid of it,
+[15:32] right? Um
+[15:34] you might think, "Okay, why does this
+[15:36] matter? We're just optimizing this
+[15:38] teeny, tiny operation that accounts for,
+[15:41] you know, in this case, something like
+[15:43] 0.17%
+[15:45] of the total floating point operations
+[15:47] of our system."
+[15:49] But, you know, as Percy mentioned, it's
+[15:51] not really about the flops, right? The
+[15:53] flops are the the floating point
+[15:55] operations we do, that's sort of
+[15:56] multiplying matrices, but that's not
+[15:58] runtime, right? Runtime is a much more
+[16:01] complicated object. And, you know,
+[16:03] statistical normalizations, things like
+[16:05] layer norms, even though they're only
+[16:07] 0.17% of the flops, depending on your
+[16:10] workload and depending on the setup, can
+[16:11] be up to 25% of the runtime, right?
+[16:13] That's kind of crazy. On tiny models,
+[16:15] this can be really, really big because
+[16:17] you're still having to move all these
+[16:19] parameters back and forth from fast to
+[16:21] slow memory and vice versa
+[16:23] when you're doing these operations. So,
+[16:25] data movement is really, really
+[16:26] important, and RMS norm can still matter
+[16:29] a lot because of this, right? So,
+[16:32] um
+[16:32] you can see kind of the difference here.
+[16:34] The arithmetic intensity is in white,
+[16:37] and then you can kind of see the flops
+[16:39] involved in black. And you see that
+[16:40] layer norm has a very low arithmetic
+[16:42] intensity, which is the operation we try
+[16:44] to want to remove as much as possible.
+[16:46] Yeah, question over there.
+[16:48] Data movement for normalization is so
+[16:50] disproportionate compared to arithmetic
+[16:52] contraction
+[16:54] So, for a ten- Something like tensor
+[16:56] contraction, which is, in this case,
+[16:58] matrix multiplies,
+[16:59] the majority of the workload is, you
+[17:02] know, multiplying. Whereas for stat
+[17:04] normalization, the majority of the
+[17:05] workload is memory movement. And memory
+[17:07] movement is quite slow. So, imagine the
+[17:09] case where like moving something is like
+[17:11] almost all of the compute, then you're
+[17:13] still paying quite a bit here, right?
+[17:14] Cuz activations can be quite large.
+[17:18] Yeah, I think the percent runtime in
+[17:19] this case is quite extreme. This is like
+[17:21] in the, you know, tiny models with like
+[17:23] matrices that don't really generally
+[17:25] make sense in modern workloads, but this
+[17:26] is, you know, giving you a sense of why
+[17:28] this is a free optimization.
+[17:31] Um and you do see this, right? This is
+[17:32] another paper in which people were
+[17:35] evaluating different architecture
+[17:36] interventions. They're on Get All in
+[17:37] 2020.
+[17:38] I think this was a Google paper, and
+[17:40] they show, you know, for teeny, tiny
+[17:41] transformer of a 200 million parameters,
+[17:43] you got more steps per second. That's
+[17:45] the third column over here when you
+[17:46] switch to RMS norm. And in fact, you
+[17:48] actually get better performance, which I
+[17:50] don't think is something that you're
+[17:51] guaranteed, but it's a nice bonus
+[17:53] regardless, right? So, you got a free
+[17:55] systems win by just moving to RMS norm.
+[17:57] And so, basically, everyone has has
+[17:59] decided to move over to this now.
+[18:02] And in general,
+[18:04] there's a more general version of this.
+[18:06] There's no guarantee to any of the
+[18:07] things I'm saying, but bias terms in
+[18:10] transformers and neural networks
+[18:12] are generally not that useful. So, in
+[18:14] the original transformer, the linear
+[18:16] terms all have biases,
+[18:19] but most implementations actually just
+[18:21] drop the biases entirely, right? Once
+[18:23] again, this is another example of
+[18:25] something that's not very arithmetically
+[18:26] intense, but fairly memory
+[18:28] intensive, relatively speaking. And so,
+[18:31] you might as well just drop these,
+[18:32] right? And get the free systems win.
+[18:35] There's also some cases, I'll just
+[18:36] mention this offhand, where the bias
+[18:38] terms can also induce stability issues.
+[18:40] So, they're useful in other ways, but
+[18:42] really, I think the primary reason these
+[18:44] are dropped is just to simplify things
+[18:46] from the systems perspective.
+[18:49] Cool.
+[18:51] Okay. So, I think layer norms, the story
+[18:54] is pretty easy.
+[18:55] Um it's easy in the sense that what
+[18:57] people do is fairly standardized. Our
+[18:59] our understanding, not at like a deep
+[19:01] theoretical level, but our understanding
+[19:03] of like what layer norm does is fairly
+[19:06] good, right? Everyone moves the layer
+[19:08] norm outside the residual stream,
+[19:10] often pre norm, but I think this might
+[19:12] partially be be because Llama 2 did
+[19:14] that. Um and we roughly have a sense of
+[19:17] how to use layer norm to control things
+[19:19] like
+[19:20] gradient spikes
+[19:22] and keep signal propagation nice.
+[19:25] Related to that, we also now, you know,
+[19:27] basically always use RMS norm, and you
+[19:29] hopefully understand the general
+[19:30] principles here
+[19:32] of basically just dropping bias terms.
+[19:34] And that allows us to to keep our system
+[19:37] more arithmetically intense
+[19:39] while keeping the expressive power the
+[19:41] same.
+[19:42] Um I think the unsatisfying thing about
+[19:44] a lot of architectures is that, you
+[19:46] know, you can't really reason about this
+[19:48] beforehand, right? Like we don't know
+[19:49] beforehand that dropping the bias terms
+[19:51] is okay, but from a lot of
+[19:53] experimentation and now collectively
+[19:54] acquired knowledge, we roughly know that
+[19:57] dropping the bias terms on both the
+[19:58] linear and RMS norm is okay for typical
+[20:01] language modeling workloads, right? Um
+[20:03] this is the kind of statement that we
+[20:04] can make on the basis of of what we do
+[20:06] when we look at a variety of different
+[20:07] models.
+[20:09] Okay, any questions uh for layer norm
+[20:11] stuff?
+[20:13] Good. Okay. So, now I'm going to talk
+[20:16] about activations. Um
+[20:18] and there's a whole zoo of activations.
+[20:20] There's just a lot, right? Like ReLU,
+[20:21] GELU, Swish ELU, GeGLU,
+[20:25] SeLU, SwiGLU, LiGLU.
+[20:27] Um and what are these things?
+[20:29] Um I think at what point one point of
+[20:31] my, you know, more stats ML training, I
+[20:33] thought to myself I will never learn
+[20:35] these things. I will make it a point of
+[20:36] pride to never know what a SwiGLU is. Um
+[20:38] but now it's actually very important for
+[20:40] us to to actually like have a general
+[20:42] sense of what these objects are um and
+[20:45] which parts of these names actually kind
+[20:47] of matter for performance, right?
+[20:50] Um So, you can build and train a
+[20:53] language model on just a fairly vanilla
+[20:56] activation. Um
+[20:58] even, you know, I guess Chinchilla is
+[21:00] probably the best model out of that
+[21:01] group, but even if you just want a ReLU,
+[21:04] you know, you can train a reasonably
+[21:05] performant language model using just
+[21:07] that activation. There's nothing wrong
+[21:08] with that, right? And if we move to
+[21:10] GELU, which is a Gaussian error unit,
+[21:12] and really the only difference is this
+[21:14] tiny divot at the bottom here, which
+[21:17] really, you know, for the most of the
+[21:19] activation doesn't change anything, but
+[21:20] changes the gradients right near zero,
+[21:22] um then you can train models like GPT-3,
+[21:25] right? That's a perfectly good large
+[21:26] language model, not, you know, modern by
+[21:28] modern standards, but perfectly fine.
+[21:31] Um but then, you know, we get to the
+[21:33] gated linear units like SwiGLU and
+[21:35] GeGLU, and these are really where most
+[21:37] of the action is. You know, this is very
+[21:39] similar to layer norm in that I think
+[21:42] almost all credible modern language
+[21:45] models use a gated linear unit of some
+[21:48] kind.
+[21:49] Okay, so what is a gated linear unit?
+[21:52] So, these are gated activations. So, if
+[21:54] we want to look at something like a feed
+[21:56] forward layer, um we can just look at
+[21:58] this first part. This is, you know, a
+[21:59] very standard ReLU feed forward, right?
+[22:01] I have my X, I hit it with a W1, you
+[22:04] know, I I entry-wise threshold at zero,
+[22:06] and then I hit it with another W2, I get
+[22:08] my output, right? Very straightforward
+[22:10] ReLU network.
+[22:12] Um
+[22:13] Another thing, um I don't say this as my
+[22:15] personal experience, but another thing
+[22:17] that is often said in architecture
+[22:18] design is that gating is often very
+[22:21] helpful. So, if you apply that very
+[22:22] general heuristic, what you might get is
+[22:25] to say, "Okay, well, instead of just
+[22:27] having, you know, this entry-wise ReLU,
+[22:30] why don't we also have a gate? And the
+[22:32] second gate, the second term here, this
+[22:34] is just going to multiply the output of
+[22:36] my ReLU entry-wise, and I have a second
+[22:40] matrix V, okay?"
+[22:42] Now, this is just going to modulate the
+[22:43] output of my ReLU.
+[22:45] Um and then I'm going to do everything
+[22:47] else the same, right? So, instead of,
+[22:49] you know, just having XW1W2, I have XW1,
+[22:53] and I'm going to gate that with XV. This
+[22:55] is another
+[22:57] uh activation the same size as this, and
+[22:59] then I'm going to, you know, down
+[23:00] project it back with W2.
+[23:03] Okay, so what is this? Now, this is a
+[23:04] RegLU. This is a you you make these
+[23:07] names by adding the first activation, in
+[23:08] this case ReLU, and GLU, right? So, the
+[23:11] ReLU gated linear unit.
+[23:13] Um and gating has been a, you know, very
+[23:15] effective other primitive in
+[23:18] architecture design, and it turns out
+[23:20] that this is very effective in language
+[23:21] modeling as well.
+[23:23] So,
+[23:24] um if you take something like a GELU,
+[23:26] we've already talked about that, right?
+[23:28] That's like the ReLU, but with a little
+[23:29] divot at the bottom here, um you will
+[23:31] get a GeGLU. Um and if you take a
+[23:34] SwiGLU, which is X times a sigmoid, then
+[23:37] you will get a SwiGLU. So, this is a
+[23:39] Swish times, you know, the rest of it.
+[23:42] Um and this really covers a lot of the
+[23:45] modern models, right? Um generally the
+[23:47] Google folks have used GeGLU, so like
+[23:50] the Gemma models, the T5 models are
+[23:52] those. Um and everything that's kind of
+[23:54] like a LLaMA descendant uses a SwiGLU.
+[23:57] Um so, PaLM and the LLaMA descendants
+[23:59] are all kind of SwiGLU models. Um
+[24:03] I would say that SwiGLU is probably the
+[24:04] more dominant one, but honestly amongst
+[24:07] the gated units, doesn't really matter.
+[24:10] Now, here's a side note that will uh be
+[24:12] a semi-important piece of trivia later.
+[24:16] Um if you look up here, right? Um you
+[24:19] will notice that there are more
+[24:20] parameters for the gated uh model,
+[24:22] right? Cuz I have this parameter of V.
+[24:25] And so, if you do a little bit of math,
+[24:26] right? I now have three matrices instead
+[24:29] of two matrices,
+[24:31] right? What you should do is you should
+[24:33] maybe use a smaller feed forward
+[24:35] dimension by a factor of 2/3 in order to
+[24:38] keep the total parameter count the same,
+[24:40] right? So, this is roughly the idea of,
+[24:42] "Well, I want to keep the same number of
+[24:44] total parameters as my original MLP, but
+[24:46] I now want to make it gated, so I'm
+[24:48] going to make the feed forward
+[24:49] dimension, which is the output dimension
+[24:51] of this W, a little bit smaller by 2/3,
+[24:54] right?" So, this is a general rule of
+[24:56] thumb that people have followed, but
+[24:57] it's not really an iron rule.
+[25:00] Um
+[25:01] You know, the original Noam Shazeer
+[25:03] paper that, you know, proposed this,
+[25:05] um
+[25:06] had some, you know, very small deltas
+[25:09] originally, but they're consistent
+[25:12] deltas, and I think to his credit, um
+[25:15] I think a lot of his papers have these
+[25:17] like error bar assessments of like
+[25:18] training multiple replicates and
+[25:20] checking to see if they're better. Um
+[25:22] and if you look, the GLU variants are
+[25:25] almost always consistently better than
+[25:27] the non-GLU variants. And this is a
+[25:29] parameter matched comparison because um
+[25:32] Noam Shazeer is always doing this 2/3
+[25:34] adjustment to make sure that all of the
+[25:36] models have the total same total number
+[25:38] um of parameters.
+[25:40] So, this is quite nice. It's in some
+[25:43] ways a free win. Um almost everyone uses
+[25:46] a GLU. There have been other sort of
+[25:48] more controlled systematic comparisons.
+[25:50] This is uh the same paper I was talking
+[25:52] about before, Noam et al. in 2020.
+[25:54] Um Google actually in the 2020s did
+[25:57] quite a few nice large-scale
+[26:00] architecture comparison papers, um
+[26:02] although with a T5 architecture and not
+[26:04] uh autoregressive uh language model. Um
+[26:07] and they, you know, basically
+[26:08] comprehensively compare things like
+[26:09] GLUs, and you see once again, um if we
+[26:11] look at the SwiGLU or the GeGLU or the
+[26:13] GLUs in general, they do significantly
+[26:16] better at loss or the other downstream
+[26:18] metrics, right?
+[26:20] Fairly compelling on paper uh on these
+[26:21] papers, also clear from now a lot of
+[26:24] model training runs that SwiGLU and GLU
+[26:28] are good, right?
+[26:30] So, there's a lot of variations in
+[26:31] gating, but really the important single
+[26:33] axis to know is that gating uh for these
+[26:37] nonlinearities is actually quite
+[26:38] important, gives you
+[26:40] uh nice boost without much of a
+[26:42] computational cost. Um you know, that's
+[26:44] not to say that gated linear units are
+[26:46] necessary. I mean, GPT-3 was that. Um I
+[26:49] think the NeMo Tron 340B model used a
+[26:52] squared ReLU, which is a kind of a crazy
+[26:54] choice, but that works, too. Um both of
+[26:56] these models are perfectly performant,
+[26:58] but it's actually quite rare to see
+[27:00] anything that's not trained on a gated
+[27:02] linear unit, right? So, evidence is
+[27:04] pointing towards consistent gains on
+[27:06] using these gating tricks.
+[27:09] Okay.
+[27:10] So, those are I think the the more
+[27:12] consensus choices for things that we can
+[27:15] do in architecture. Um now, this one I
+[27:17] think is a really fun idea, but one that
+[27:19] I think now the test of time has shown
+[27:22] maybe is not quite as good or maybe not
+[27:24] as popular of an idea.
+[27:26] Um normally, we do our transformer
+[27:28] blocks serially, right? We compute our
+[27:30] attention, then we compute the MLP,
+[27:32] right? One after the other.
+[27:34] Um if you're very systems-minded, you
+[27:36] might say, "Well, this introduces a
+[27:37] bottleneck, right? I have to wait for
+[27:39] the computation of one to do the other.
+[27:42] If they were instead in parallel, I
+[27:43] could bring to bear some new and cool
+[27:45] systems optimizations, potentially,
+[27:47] right?" So, you might ask, "Could we
+[27:48] parallelize the transformer block?"
+[27:51] And um this was originally an idea that
+[27:55] was in GPT-J, which is the open-source
+[27:57] attempted replication of GPT-3.
+[28:00] Um and kind of very interestingly, I
+[28:03] think GPT-J has been surprisingly
+[28:06] influential in sort of propagating a lot
+[28:09] of ideas. I mean, PaLM as well. Google
+[28:12] um is actually surprisingly bold with
+[28:14] the architectures that they do. Um but
+[28:16] the description in uh PaLM, uh which you
+[28:18] can see in their report, is kind of the
+[28:20] following. Instead of nesting this,
+[28:22] which is the sequential format at the
+[28:23] top, you know, you're just going to add
+[28:25] together the output of the MLP and
+[28:27] attention layer, and just add both of
+[28:29] those back into the residual stream.
+[28:32] Um if you implement this right, you can
+[28:34] actually share a lot of the components.
+[28:36] Like, you can share the layer norms, you
+[28:37] can fuse the matrix multiplies. This
+[28:40] allows you to potentially get additional
+[28:42] systems optimizations. Um
+[28:45] And I think a lot of the people that
+[28:46] have been influenced by Google, so
+[28:48] Cohere, you know, was founded from one
+[28:50] of the former
+[28:51] uh transformer authors, they do a lot of
+[28:54] Google-inspired optimizations. They
+[28:55] followed kind of this architecture. Um
+[28:58] but not very many others. Um this has
+[29:00] been a approach that has really fallen
+[29:01] out of popularity over the past, I
+[29:03] think, 2 years. Um I think mainly
+[29:05] because optimization of the serial form
+[29:08] has gotten sufficiently good that the
+[29:09] systems gains from the second one just
+[29:11] isn't worth the small hits to uh
+[29:14] representation power that you end up
+[29:16] getting going from uh parallel to
+[29:18] serial.
+[29:19] Effectively, you can think about it as
+[29:21] you've lost half of your depth, right?
+[29:23] And that can be
+[29:24] uh a deleterious
+[29:26] uh thing to do to your model.
+[29:29] Okay.
+[29:30] So, in terms of the architecture things,
+[29:32] actually, you know, the fact that this
+[29:34] is so short should kind of suggest to
+[29:36] you how much the original transformer
+[29:39] formulation has somewhat stood the test
+[29:41] of time, right? Cuz the only thing I'm
+[29:42] really talking about changing here
+[29:45] um is, you know, where the norms go, or
+[29:48] you know, whether we have bias terms, or
+[29:50] whether we gate the MLPs, but those are
+[29:52] actually pretty minor changes compared
+[29:54] to all the things that you can do.
+[29:56] Now, uh, those of you that are, you
+[29:58] know, sort of carefully paying attention
+[29:59] might say, but wait, you know, there's a
+[30:01] lot of transformer alternatives that
+[30:03] change the attention. Um, yes, you'll
+[30:05] have to wait until next lecture because
+[30:07] today I'm just only going to cover sort
+[30:09] of core attention based methods. Um, and
+[30:12] next lecture I'll throw in a little bit
+[30:13] of a state space model stuff, but as
+[30:16] long as you're in this like dense
+[30:17] attention land, actually the
+[30:19] architecture from the original
+[30:20] transformer paper is pretty close to
+[30:22] what we do.
+[30:23] So, you see, uh, quite a bit of this,
+[30:25] right? So, uh, just now going back to
+[30:27] this, blue here is RMS norm block as
+[30:29] layer norm. You see most of the modern
+[30:31] models are sort of RMS norm models.
+[30:34] Serial versus parallel layers, the blue
+[30:35] one's parallel, the rest is serial. You
+[30:37] see mostly serial layers. Um, pre-norm
+[30:40] versus post-norm. Some of these, uh,
+[30:42] ones that I marked as post-norm are
+[30:43] actually pre and post-norm.
+[30:45] Um, and then these ones on the right,
+[30:48] these are GLUs, uh, almost always with
+[30:50] the exception of things like, uh,
+[30:52] Falcon, which use a gated linear unit,
+[30:54] but almost all of these are really, uh,
+[30:56] gated linear units for modern models.
+[30:59] So, you can see the trends quite
+[31:00] visually, um,
+[31:02] from what I'm telling you.
+[31:04] Okay. So, really the thing that is very
+[31:07] different across implementations, and I
+[31:09] think a place where a lot of the
+[31:10] architecture stuff is still in flux, is
+[31:13] how you do kind of position dependence
+[31:16] and incorporate information from other
+[31:17] positions, right? So, the core attention
+[31:19] component in some sense.
+[31:21] Um, so there are lots of different ways
+[31:24] that you can encode position into a
+[31:26] transformer.
+[31:27] And just so you know, to to remind you,
+[31:29] right? This is very, very important
+[31:31] because attention is positionally
+[31:33] independent, right? They're just inner
+[31:34] products, so you can just shuffle them
+[31:36] and attention would be the same if you
+[31:38] don't have a position embedding.
+[31:40] The original transformer had sine and
+[31:41] cosine embeddings, kind of like a
+[31:43] Fourier transform intuition that if you
+[31:44] have sines and cosines, then you can
+[31:46] kind of recover position from that no
+[31:48] matter what.
+[31:49] Um, a number of other sort of large
+[31:51] models that, you know, followed soon
+[31:53] after that used absolute embeddings,
+[31:55] where each position had its own
+[31:57] different embedding.
+[31:59] Um, and then, uh, several other sort of
+[32:02] Google models like to use relative
+[32:04] embedding. So, in here you're not
+[32:05] adding, um, embeddings into the into the
+[32:08] embedding, uh, like word vector
+[32:10] embeddings, but instead you're adding a
+[32:12] vector to the attention computation
+[32:13] itself, right? So, if you're three
+[32:15] positions off, sort of the attention
+[32:16] matrix gets a different offset added to
+[32:19] it. And and, you know, models like T5
+[32:21] and Chinchilla use kind of this scheme.
+[32:23] Um,
+[32:24] the thing that has really become pretty
+[32:27] dominant in terms of position embedding
+[32:29] is this class of embeddings called rope,
+[32:32] which some of you may be familiar with.
+[32:34] Um, most models past 2024 use this type
+[32:36] of embedding. And it's kind of
+[32:37] remarkable given that rope, you know, in
+[32:40] some ways came out of nowhere.
+[32:42] Um, originally I think this was also a
+[32:44] GPT-J innovation, um,
+[32:46] from I think, uh, sort of not very well
+[32:49] known sort of blog post and, uh, paper
+[32:51] combination, uh, from an author in
+[32:53] China. Um, but really it has some really
+[32:56] interesting ideas for for why you would
+[32:59] do something like rope.
+[33:01] So, rope, you know, is a relative
+[33:03] position embedding. And a relative
+[33:05] position embedding, let's make an
+[33:07] opinionated stance that I should not
+[33:10] care about the absolute position of any
+[33:12] words. So, if, you know, A uh, an apple
+[33:15] appear together, even if it appears at
+[33:17] the start or at the end, right? In rope
+[33:20] embeddings, they should kind of get the
+[33:21] same, uh, sort of result. Um, and we do
+[33:25] know that, you know, or and we want to
+[33:28] sort of represent it in this way, right?
+[33:30] So, I have an embedding F, and I have
+[33:33] another embedding F, and these are going
+[33:35] to take in the identity of the words X
+[33:36] and Y and the positions absolute of I
+[33:39] and J.
+[33:40] And I want this to be equal if I take
+[33:42] the inner product of these embeddings to
+[33:43] be equal to a function that only depends
+[33:47] on the relative difference.
+[33:49] Right? Um, and every existing embedding
+[33:51] before it didn't really fulfill this
+[33:53] equality. Like sine is not relative
+[33:55] because it has these absolute cross
+[33:57] terms that are not relative. Absolute
+[33:59] position embeddings, just by the the
+[34:01] name of it, is obviously not relative.
+[34:03] And then relative embeddings,
+[34:05] technically these are relative, but
+[34:07] they're not kind of embeddings because
+[34:09] they're just adding to the attention
+[34:10] matrix, right? So, there's no inner
+[34:11] product structure that, you know, you
+[34:13] can extract out of the
+[34:16] So, given this, you might ask, is there
+[34:18] a nice way that we can truly have this
+[34:21] relative embedding?
+[34:23] And the idea is very cool. Um, it's
+[34:25] really just looking at kind of uh,
+[34:27] properties about angles and cosines. So,
+[34:31] we want our embeddings to be invariant
+[34:33] to absolute positions, and we know that
+[34:35] inner products of any kind are invariant
+[34:37] to arbitrary rotation, right? So, the
+[34:40] idea is to say, I'm going to take my
+[34:42] semantic word vectors, the ones that are
+[34:45] are independent of any position. So,
+[34:47] this is my starting point. And then I'm
+[34:49] going to rotate each of these vectors,
+[34:51] in this case in 2D, um, based on the
+[34:54] position that the words appear. So, you
+[34:57] know, just as a
+[34:59] uh, simple example, we, let's say we
+[35:01] have the uh, sentence, we know that,
+[35:04] right? We appear at position zero, so
+[35:06] I'm not going to touch that at all,
+[35:07] right? I'm just going to keep that where
+[35:09] it is.
+[35:10] The word know is at position one, so I'm
+[35:12] going to rotate it by some angle, right?
+[35:14] And that's my my one position rotation.
+[35:17] Now, what happens if I apply the same
+[35:19] idea to, uh, the following sequence, of
+[35:23] course we know, right? In this case, we
+[35:25] and know are still adjacent, they're
+[35:27] right next to each other, but their
+[35:28] absolute position is shifted, right? Of
+[35:30] course, you know, comes before we know
+[35:32] now. In this case, I'm going to rotate
+[35:34] the word we by two positions because
+[35:36] it's two index, right? 0 1 2. So, the
+[35:39] word we is in the second, uh, position
+[35:41] number two, so I rotate by two. I rotate
+[35:44] know by three positions cuz it's in
+[35:46] position number three, and what do you
+[35:48] know, the relative angle between these
+[35:49] two is still separated by one, right?
+[35:52] So, this is a very, very simple idea of
+[35:55] just using rotations, uh, to represent,
+[35:58] um,
+[35:59] position. And if we do that, then
+[36:00] anytime we take an inner product, those
+[36:02] inner products are going to be invariant
+[36:04] of absolute positions.
+[36:06] Now, you might say, well, in two
+[36:08] dimensions that's pretty easy cuz you've
+[36:10] only really got one choice, you got
+[36:11] clockwise and counterclockwise, but in
+[36:13] high dimensions, there's an infinite
+[36:16] space of ways that you can rotate
+[36:17] vectors. So, what do you do in D
+[36:19] dimensions? Um, well, you do the
+[36:21] simplest possible thing and it works.
+[36:22] The simplest possible thing is to reduce
+[36:25] it to the 2D case repeatedly. So, you
+[36:27] have a D-dimensional vector, just cut it
+[36:29] up into chunks of two, and each pair of
+[36:32] two dimensions gets rotated. And the
+[36:35] theta at which these things rotate vary,
+[36:37] right? Some of them are very low
+[36:39] frequency, so they rotate very slowly,
+[36:41] so they uh, they can capture long-range
+[36:43] dependence. Some of them rotate very
+[36:45] quickly, so they capture things like,
+[36:46] are they neighbors to each other, right?
+[36:48] Um, and then at the end, you know, after
+[36:51] I've rotated every pair of vectors, I
+[36:53] get sort of my final embeddings. So,
+[36:55] this is the, you know, rope approach.
+[36:58] Um,
+[36:58] the paper, if you read it, has a very
+[37:01] complex motivation about complex
+[37:03] numbers, but really I think the
+[37:05] intuitive way, at least to me, to think
+[37:06] about it, is to just you want to rotate
+[37:09] by reducing to the two-dimensional case,
+[37:11] and you're just rotating every pair of
+[37:12] coordinates.
+[37:14] Um,
+[37:15] Gemma 4 just came out on Thursday, and
+[37:18] they have like another different kind of
+[37:19] fun thing that they do, which they call,
+[37:21] um, I think proportional rope or P-rope,
+[37:24] um, which is a really strange way to
+[37:26] just say that the only thing they rotate
+[37:27] is the first two coordinates, but that's
+[37:29] another valid thing that you can do as
+[37:31] well. So, there's a lot of different
+[37:32] things that you can do in this space
+[37:33] that end up working.
+[37:35] Okay. In practice, what you're going to
+[37:38] end up doing is, you know, you can take
+[37:41] your vector and you can make a sparse
+[37:43] multiply with sines and cosines, and
+[37:45] this is going to be giving you some way
+[37:47] of rotating your input vectors X's,
+[37:49] right? So, X times, uh, W times R, this
+[37:53] is going to be your final embedding that
+[37:54] you get.
+[37:56] Okay.
+[37:57] Um, and finally, you know, this is a
+[37:58] sine and cosine, which looks a little
+[38:00] like sine embeddings, but it's really
+[38:02] important that I'm multiplying with
+[38:04] these sines and cosines rather than
+[38:05] using them as embeddings cuz that means
+[38:07] that there are no cross terms. Um, and
+[38:09] this is purely relative, right? There's
+[38:11] no absolute position information that
+[38:12] you'll get out of inner products.
+[38:15] Um, if we really, really wanted to get
+[38:17] into low-level details and you ask like,
+[38:18] how do I actually implement this thing,
+[38:20] you know, you're going to have to do
+[38:21] that. Um, you have your usual attention
+[38:24] stuff, and then what you do is you
+[38:25] generate cosine and sine angles, um,
+[38:27] based on the position IDs of sort of
+[38:29] where your sequence is, and then you're
+[38:32] going to apply those cosines and sines
+[38:34] onto both your queries and keys for your
+[38:36] sort of attention computation, um, and
+[38:38] you can either apply them as a matrix
+[38:39] multiply or you can go through and apply
+[38:41] them manually, uh, just as a rotation,
+[38:43] right? Fairly straightforward, and you
+[38:44] would do this at the attention level
+[38:46] rather than at the very bottom to sort
+[38:48] of enforce position invariance every
+[38:50] time you're doing attention
+[38:51] computations.
+[38:53] Okay. So, that was rope. Um, it is a
+[38:55] little bit confusing, but once you
+[38:56] understand the geometry of just rotating
+[38:58] things, it's actually fairly, uh,
+[39:00] straightforward.
+[39:02] Okay. I'm going to pause here for one
+[39:04] moment, um, in case anyone has any
+[39:06] questions about the various like
+[39:08] architecture bits. Um, we're going to
+[39:10] then talk about even lower-level details
+[39:13] about hyper parameters. So, yes.
+[39:16] Do you know about any papers that do a
+[39:17] higher-dimensional rotation?
+[39:19] Higher-dimensional rotation never
+[39:21] worked?
+[39:22] It's a good question.
+[39:23] I don't think so. By a
+[39:24] higher-dimensional rotation, like any,
+[39:26] you know, 2D rotation in the space would
+[39:28] just be kind of a variant of this. You
+[39:31] could certainly do like any one manifold
+[39:33] that like is a closed loop. I have not
+[39:35] seen that.
+[39:36] Yes. What do you recommend for this?
+[39:39] What do you think is the best way to
+[39:40] distill this kind of knowledge problem.
+[39:43] People who are back to work boards.
+[39:45] It's a good question. Um
+[39:49] I don't know if there's a way beyond
+[39:51] some combination of like looking broadly
+[39:53] enough to get a to get to get a pattern,
+[39:55] which is what I the procedure I'm trying
+[39:56] to do in this lecture here. And then the
+[39:58] other one is to try it yourself even a
+[40:00] much smaller scale to form an intuition
+[40:02] and like a theory for how these things
+[40:03] come together. I think those two are
+[40:05] really the right ways. I think reading
+[40:07] any single paper in isolation is very
+[40:08] very difficult especially now because no
+[40:11] single paper seems to give any full
+[40:13] detail for a lot of language models
+[40:15] these days.
+[40:17] Oh, lots of questions now. Okay, good.
+[40:19] We'll go in Yeah. Um so I have a
+[40:21] question about the question on the
+[40:22] parallel layers and the the serial
+[40:24] layers. Yeah, I understand the modern
+[40:27] models are
+[40:28] thinking of the resource efficiency. So
+[40:30] they will use the parallel layers. They
+[40:32] have the
+[40:33] idea but there's there's a difference
+[40:34] there's a there's a big difference
+[40:35] between the accuracy um for these two
+[40:38] patterns, right? I want to know like
+[40:39] what's the What's the
+[40:41] What's the difference of of the
+[40:42] accuracy? Is it big enough to Is it
+[40:44] small enough to allow the current model
+[40:46] trainers to ignore that or is there any
+[40:49] problem? Yeah, I think you know, the
+[40:52] that's actually really mixed. So if you
+[40:54] read the original Palm paper, I think
+[40:55] they're like very confident about the
+[40:57] use of parallel layers like no
+[40:59] performance drop 15% systems utilization
+[41:01] improvement. So if you read just that
+[41:03] you'll kind of say like oh, it's just as
+[41:04] good. Um but I think a lot of the the
+[41:07] later Google models have stopped using
+[41:09] this, which you can take on as an
+[41:11] implicit signal that actually there
+[41:12] might be some losses. And once again,
+[41:14] this one is a little bit hard to um to
+[41:17] get precise numbers on because no one's
+[41:19] done the ablations as far as I know on
+[41:20] parallel versus serial um controlled
+[41:22] nice ablations at least.
+[41:25] Yeah.
+[41:26] So yeah, so
+[41:27] what's the difference between like Eagle
+[41:29] and RoPE?
+[41:34] Yeah, yeah. I mean this difference is
+[41:36] really just like which of the
+[41:37] coordinates you're rotating.
+[41:39] Like you don't rotate most of them
+[41:40] because a lot of the I mean the argument
+[41:42] originally I think is that the low
+[41:45] frequency parts just aren't rotating
+[41:47] very much. And so you can drop them if
+[41:49] you're really strapped for you know,
+[41:52] sort of extra space. And these this is
+[41:54] really a optimization for teeny tiny
+[41:56] models where like you don't have very
+[41:57] much like hidden dimensions to to have
+[41:59] activations for.
+[42:02] Yeah.
+[42:03] For the relative embeddings not having
+[42:06] an inner product,
+[42:08] um is that cuz it only applies to keys
+[42:10] specifically? I'm trying to understand
+[42:12] the logic. Yeah, so they applied both
+[42:13] the the keys and values, which is kind
+[42:15] of why you know, you get this like
+[42:17] relative effect from where you are. Um
+[42:21] you want to not have cross terms, right?
+[42:23] So so if you look at the sine and cosine
+[42:24] embeddings, then you'll not only get
+[42:27] sort of the you know, the original
+[42:29] vectors, you'll kind of get these weird
+[42:31] cross terms between the position
+[42:32] embeddings and the word embedding
+[42:34] themselves and so on and so forth. And
+[42:37] then you can kind of back out what the
+[42:38] absolute position is. So even sine and
+[42:40] cosine embeddings are not like pure
+[42:42] relative position embeddings. Um
+[42:45] you know, you have to accept the premise
+[42:46] that you know, the relative embedding is
+[42:48] what you want. But once you do kind of
+[42:50] you end up at the RoPE solution somewhat
+[42:52] naturally.
+[42:57] Yeah.
+[42:59] Yeah.
+[43:00] So what's the issue with So the issue
+[43:02] with this is that it just can't be
+[43:03] factorized as an inner product. That's
+[43:05] more of an aesthetic problem, right?
+[43:06] Like if if your constraints are I need
+[43:08] it to be uh relative and I need it to
+[43:11] factorize as f of xi and f of yj, then
+[43:14] this is not a solution in that class. Um
+[43:17] to be fair, there's a lot of um
+[43:19] embeddings that work this way that do
+[43:21] work like Alibi and other kinds of like
+[43:23] approaches like do do this kind of
+[43:25] inject into the attention matrix and
+[43:27] they do reasonably well. Um it's not
+[43:30] necessarily the one that's become the
+[43:32] dominant approach is what I can say.
+[43:36] Cool. Okay.
+[43:37] Great.
+[43:40] Okay.
+[43:41] Now we'll talk about hyperparameters um
+[43:43] and I think hyperparameters are really
+[43:44] something that you start to engage with
+[43:46] once you like actually have to train a
+[43:48] model, right? When your knowledge about
+[43:50] language models are abstract, you don't
+[43:52] have to care about any of these. But
+[43:53] once you have to instantiate it, you
+[43:54] start to ask questions like well, how
+[43:57] big should the feed forward size be?
+[43:59] Um how many heads should I have?
+[44:01] Um what should my vocab size be, right?
+[44:04] Um
+[44:05] and you might also have questions of
+[44:06] like what should my weight decay or
+[44:07] dropout be? Like do I even need to
+[44:09] regularize? I I have a lot of tokens,
+[44:11] right? So do I need regularization?
+[44:13] Um and do I need very deep models or
+[44:15] very wide models? Like what are the the
+[44:17] right kinds of things to do here, right?
+[44:19] Um and all of these if you start out
+[44:21] with no knowledge, it's actually very
+[44:22] daunting because you have to search this
+[44:24] like very big high dimensional space.
+[44:26] Um but the space of things that people
+[44:28] try is actually pretty small. And from
+[44:30] that maybe you can start to think about
+[44:31] you know, smarter search processes of
+[44:33] like where you want to vary things.
+[44:36] Um
+[44:37] One of the things that's a really
+[44:38] consensus hyperparameter
+[44:40] um is this idea of the uh
+[44:43] ratio between the feed forward size,
+[44:45] which is kind of the output of your
+[44:46] first matrix multiply in an MLP, and the
+[44:49] model dimension, right? So this is
+[44:51] really the the uh ratio of the two
+[44:53] dimensions of your W1 and your as well
+[44:55] your W2 matrix.
+[44:57] Um this seems like a thing that's very
+[44:59] important and controls kind of the
+[45:00] richness of your MLPs. So what should it
+[45:03] be? Well, for whatever reason, it should
+[45:06] maybe be four times your hidden
+[45:08] dimension, right? Um and this is a rule
+[45:11] of thumb that works remarkably well and
+[45:14] I will show you some data on like why
+[45:16] maybe this is a fine number to choose.
+[45:18] There's a few exceptions um and funnily
+[45:20] enough, the really extreme exceptions
+[45:22] kind of backtrack on that.
+[45:25] Okay.
+[45:26] Um exception number one is variants of
+[45:29] the gated linear unit. I already told
+[45:31] you about this. So if you were thinking
+[45:32] about it, this is probably cached in
+[45:33] your head, right? GLUs have more
+[45:36] parameters, right? If you keep the same
+[45:37] dimensions. So if you want to keep the
+[45:39] parameter size of your MLPs the same,
+[45:42] well, you need to scale down by 2/3,
+[45:44] right? So most GLU variants, this means
+[45:47] that you're going to end up with
+[45:48] something like 2.67-ish,
+[45:51] right? So everyone that's uh down here
+[45:54] 2.67 to 2.5, this is roughly applying
+[45:57] this like 2/3 correction.
+[46:00] Um and then for whatever reason, um the
+[46:03] Llama 2 folks decided, well, we actually
+[46:07] have very efficient um attention heads
+[46:10] with like um
+[46:11] uh
+[46:12] uh MQ A, which I'll talk about later. Um
+[46:15] and because of that, we can multiply
+[46:17] this ratio by an arbitrary 1.33 and
+[46:20] we'll get roughly 3.5. And so the Llama
+[46:22] people kind of like arbitrarily chose a
+[46:23] slightly different ratio, which
+[46:25] essentially emphasizes the MLPs a little
+[46:27] bit more. Um but really if you actually
+[46:29] look through all of the the papers,
+[46:31] you'll find you know, either 2.6-ish or
+[46:33] 3.5 for GLUs um or four if you're doing
+[46:37] uh non-GLU models.
+[46:41] Okay. There's another exception, which I
+[46:43] find to be very funny but also very very
+[46:45] cool, which is um
+[46:47] you know, throughout as you read these
+[46:49] like technical reports, you'll find that
+[46:51] most people are just very boring in
+[46:53] their choice of architectures. They're
+[46:54] like we did Llama but we changed one
+[46:56] thing. Um but you know, folks at Google
+[46:59] are very bold sometimes um and T5 is one
+[47:02] of my favorite ones because they have
+[47:04] some really bold settings. Uh they
+[47:06] decided that um instead of following
+[47:08] this like 4x rule of thumb, they decided
+[47:11] that they want to have a 64x
+[47:13] multiplier, which is like way bigger
+[47:15] than four. Um and they have a reasonable
+[47:18] argument for this as well. This is
+[47:19] another like systems-based argument,
+[47:21] right? They said, well, you know, if the
+[47:23] bigger my matrix multiplies, the more
+[47:25] efficient I can keep my hardware. So if
+[47:27] I make this, you know, multiplier really
+[47:29] big, then you know, my matrix multiplies
+[47:33] can potentially be sort of more
+[47:35] efficiently utilized, right?
+[47:37] Um and some others like Gemma 2 have
+[47:40] also tried to really push a little bit
+[47:42] higher on this. But really uh T5 is an
+[47:46] kind of astounding exception at 64. I
+[47:48] don't think any other model has really
+[47:50] gone that high in the feed forward
+[47:51] multiplier.
+[47:53] Um
+[47:54] and empirically, if you look at other
+[47:57] sort of works that try to do more
+[47:59] controlled comparisons of this ratio, um
+[48:01] I've taken this one from Kaplan in 2020.
+[48:03] This is the classic uh neural scaling
+[48:06] laws paper um where they they do sort of
+[48:09] various controlled uh studies on
+[48:11] language models. You'll see, you know,
+[48:13] this wasn't the point of the study,
+[48:14] right? It was a scaling laws study. But
+[48:16] you'll see in one of the panels that
+[48:17] they actually have a sort of ablation or
+[48:20] sweep where they change the feed forward
+[48:21] ratio and they look at the loss, right?
+[48:24] Um for a very small model here, right?
+[48:26] But what they what they find in this
+[48:28] paper is there's a basin where you start
+[48:30] at about one and you end up about maybe
+[48:32] 10 where this hyperparameter is like
+[48:34] pretty good and very very flat. You lose
+[48:37] very little relative to the optimal loss
+[48:39] down here, right? Um and then if you get
+[48:42] it really wrong, like you get, you know,
+[48:43] above 10 to 100 or something like that,
+[48:46] you know, then your loss starts really
+[48:47] shooting up quadratically.
+[48:49] Um and so a lot of these choices that
+[48:51] range between like 2.6 to four, they're
+[48:53] all kind of falling into this relatively
+[48:55] nice basin. So you're fine choosing
+[48:57] those numbers, right?
+[48:59] Okay. So what can we learn about this
+[49:02] hyperparameter? Well, the default
+[49:03] choices have worked very well for nearly
+[49:05] all modern language models. So you can
+[49:07] safely choose that. Um T5 was a fine
+[49:10] model or the Virgin 1 T5 was a fine
+[49:12] model, right? Like it wasn't a bad
+[49:13] model. Um and so even radical choices
+[49:15] can technically work, but it's probably
+[49:18] going to be compute inefficient. And I
+[49:20] think the funniest part of the saga of
+[49:21] this kind of the punchline of the T5
+[49:23] saga to me is that they have a follow-up
+[49:25] model T5 1.v v1.1 um that's like
+[49:29] supposed to be the improved version of
+[49:30] T5 and they kind of go back to the
+[49:32] standard 2.5 multiplier, you know? So
+[49:34] there's nothing explicitly stated here,
+[49:36] but clearly, you know, when they tried
+[49:38] to to update T5, they decided that they
+[49:40] wanted to go back to a more standard
+[49:41] multiplier, which I find to be a little
+[49:43] bit funny.
+[49:45] Okay. So, that's the, you know,
+[49:47] feed-forward ratio,
+[49:49] um which now you have like a rough sense
+[49:51] of like what the right order of
+[49:52] magnitude is.
+[49:53] Now, let's talk about a different
+[49:55] consensus hyperparameter. Um I always
+[49:57] found this to be very strange when sort
+[49:59] of teaching uh 224N and, you know, just
+[50:02] sort of teaching students about this,
+[50:04] which is, if you have a multi-head
+[50:06] attention, where you have multiple heads
+[50:08] for your attention in your transformer,
+[50:10] um the canonical thing to do, the thing
+[50:12] that almost everyone does, is if you
+[50:14] have multiple heads, you make sure that
+[50:17] the size of those heads, the head
+[50:19] dimension, is such that you sort of have
+[50:21] the same dimension as a single-head
+[50:23] transformer, right? So, you always make
+[50:25] sure that you sort of divide the hidden
+[50:28] dimension to basically multiply with H.
+[50:31] So, in this case, right, you have H, the
+[50:32] number of heads, and the dimension of
+[50:34] each head is D over H, so you multiply
+[50:36] the two and you get D, right? For some
+[50:37] reason, this is kind of the rule of
+[50:38] thumb.
+[50:39] Um of course, this doesn't have to be
+[50:41] true. We can arbitrarily change the the
+[50:43] ratios between head dimensions and model
+[50:45] dimensions, but most models do follow
+[50:47] this guideline, and it turns out to work
+[50:49] pretty well. Um
+[50:51] You know, we can look at a variety of
+[50:52] different models, classic and new. I,
+[50:54] you know, have the latest and greatest
+[50:56] quad as well, and you kind of find,
+[50:57] yeah, the ratios are roughly around one
+[51:00] a model head. Um you know, notable
+[51:02] exception of T5, um and even Lambda,
+[51:05] which is another Google model, um but
+[51:08] really everyone sticks around one. And I
+[51:09] think this is
+[51:11] kind of an interesting one.
+[51:13] Um I think the thing about head
+[51:14] dimensions uh that I'll that I'll end
+[51:16] with here is I think this is yet another
+[51:18] kind of forgiving hyperparameter. Um
+[51:20] there's a couple of ablations that
+[51:22] people have done. There's once again a
+[51:23] pretty wide basin around one that you
+[51:25] can sort of get away with.
+[51:27] Okay, but that one's maybe not the most
+[51:29] critical uh hyperparameter.
+[51:31] I think maybe one of the most critical
+[51:33] and interesting ones, I think
+[51:34] conceptually, is this idea of an aspect
+[51:37] ratio, right? Um and then sort of to add
+[51:39] an extra point here,
+[51:41] um when you scale models up or down, the
+[51:43] way you usually do that is you fix an
+[51:45] aspect ratio, like how wide your model
+[51:47] is versus how deep it is, and then you
+[51:48] make the whole model bigger, right? So,
+[51:50] the aspect ratio in some sense controls
+[51:52] the entire depth-to-width tradeoff as
+[51:54] you make models bigger, right?
+[51:57] Now, you might wonder how deep should my
+[51:59] model be. Like, if you've been following
+[52:00] all this stuff on like reasoning and so
+[52:02] on, you might think I need a really deep
+[52:04] model or really shallow model if I want
+[52:06] systems utilization. You might think
+[52:08] that there's a lot of sort of variation.
+[52:10] And there is a lot of variation, um much
+[52:12] more so than other hyperparameters, but
+[52:14] there's actually like a fairly clear
+[52:16] sweet spot that most modern models fall
+[52:18] into.
+[52:19] Um you don't really see models go like
+[52:22] too uh too deep, um and you also don't
+[52:25] see models go too wide uh in either
+[52:28] direction, right? You see most models
+[52:30] have a ratio about a hundred um D model
+[52:32] over N layers. Um so, about hundred sort
+[52:36] of width for every layer that you have.
+[52:39] I mean, this is true for like GPT-3 or
+[52:40] LLaMA or any one of these models.
+[52:43] Um
+[52:44] and really, I think the considerations
+[52:47] are partly a tradeoff between
+[52:48] expressiveness and hardware, right? If
+[52:50] you have an extremely extremely deep
+[52:52] model, um they get very very annoying to
+[52:55] deal with systems-wise. The deeper your
+[52:57] model, like, what is the ways that you
+[52:58] have for parallelizing them? Well, you
+[53:00] might have to cut up your layers. If you
+[53:02] cut up your layers,
+[53:04] we'll talk about this in the systems
+[53:05] lecture. Once you start cutting up your
+[53:06] layers um depth-wise, you have very
+[53:09] serious issues in parallelization.
+[53:11] Pipeline parallel, which is what this is
+[53:13] called, is something that like most
+[53:14] people really really do not want to deal
+[53:16] with. Whereas width is much easier to
+[53:19] parallelize. If you have a really wide
+[53:20] model, you know, you can cut that up
+[53:22] very easily in your GPUs. Uh tensor
+[53:25] parallel is what it's called is much
+[53:26] much simpler to deal with.
+[53:28] Um
+[53:29] and so, in some sense, you know, there's
+[53:31] systems reasons to go wide, and maybe
+[53:32] there's expressiveness reasons to go
+[53:34] deep, and you end up at roughly a
+[53:37] hundred. Um and I think one of the
+[53:40] really interesting things about um
+[53:43] transformer hyperparameters is there are
+[53:45] a lot of hyperparameters that seem quite
+[53:46] important, but they're also fairly
+[53:48] forgiving, and people have converged
+[53:50] roughly on the minimum. This is yet
+[53:52] another plot from Kaplan et al., um
+[53:54] which shows another sweep over
+[53:55] hyperparameters for differently sized
+[53:57] models.
+[53:58] Um and once again, you see, regardless
+[54:00] of kind of the size of your model,
+[54:02] roughly speaking, the optimum aspect
+[54:04] ratio is fairly similar, and they live
+[54:07] at about a hundred, maybe a little bit
+[54:09] less depending on how you want to do the
+[54:10] accounting, but really, you know,
+[54:12] anywhere near a hundred is a pretty safe
+[54:14] bet for aspect ratios.
+[54:17] Um ETA and others uh did a number of
+[54:21] really interesting sort of like
+[54:22] architecture um
+[54:24] uh
+[54:25] architecture variation experiments, in
+[54:27] which their general conclusion on this
+[54:29] was that let's look at the top panel
+[54:31] here. You have a lot of different kinds
+[54:33] of
+[54:34] uh models that you can have in terms of
+[54:36] depth-to-width tradeoffs, um but as you
+[54:38] sort of sweep the depth-to-width
+[54:40] tradeoffs, you find that really, um the
+[54:42] only thing that matters in some sense is
+[54:44] FLOPs. As you increase the FLOPs, the
+[54:46] models get better, and that's really
+[54:47] controlling the majority of the effects,
+[54:49] not necessarily uh the aspect ratio. And
+[54:52] so, I think what has really emerged from
+[54:54] this is the sense that there's a general
+[54:56] forgiving band of hyperparameters that
+[54:58] people tend to choose, and then you
+[55:00] really worry about primarily your
+[55:01] systems utilization rather than sort of
+[55:04] expressiveness concerns, which are hard
+[55:06] to reason about.
+[55:08] Cool.
+[55:09] Um okay. And then maybe the last
+[55:12] hyperparameter thing uh that I want to
+[55:14] mention is vocabulary sizes. Um
+[55:18] and this one's kind of interesting to me
+[55:20] because there's a really clear
+[55:21] difference between two classes of
+[55:23] models. Um I think in the early days of
+[55:26] a lot of, you know, um
+[55:28] uh early days of open-source model
+[55:30] training, um
+[55:32] there were a lot of monolingual models
+[55:34] whose only goal was to be good on
+[55:35] English. And for those models, you had
+[55:38] these like much smaller vocab size, in
+[55:40] the 30,000 range. Um and then,
+[55:43] post-LLaMA, a lot of people were really
+[55:45] interested in multilingual or like
+[55:47] production systems. So, these include
+[55:48] closed-source models like GPT-4. Um all
+[55:51] these have much much larger vocab sizes,
+[55:53] and these are roughly in the hundred to
+[55:55] 200,000
+[55:56] um vocab range.
+[55:58] And you see generally that, you know,
+[55:59] Google models have a ton more vocab. Um
+[56:02] LLaMA derivatives roughly range at about
+[56:04] a hundred uh thousand tokens, and then
+[56:06] the the sort of monolingual models are
+[56:08] about 30,000.
+[56:10] Um this is somewhat clear. The
+[56:12] multilingual models really do need much
+[56:13] larger vocab to cover the whole space.
+[56:16] Generally, the models on the right are
+[56:17] also bigger. There have been scaling law
+[56:19] studies showing that the bigger your
+[56:20] model, the larger the vocab it can
+[56:22] handle, and so this is also partially
+[56:24] driven by uh modern scaling trends,
+[56:27] where the models on the right are
+[56:28] generally bigger. No one's training
+[56:29] small uh sorry, large monolingual models
+[56:32] uh anymore.
+[56:35] Okay. So, um yeah.
+[56:48] Sorry, uh the question was like, if you
+[56:50] have Sorry, multilingual models or
+[56:52] sorry? Multimodal. Multimodal. Yeah, so
+[56:55] I guess it depends on the way that your
+[56:57] tokens are encoded, but, you know, if
+[56:59] you're tokenizing your images and things
+[57:00] like that, then you need to, you know,
+[57:01] have many more tokens to account for
+[57:03] those. Um if you look at like various
+[57:05] open-source releases, they'll have like
+[57:06] a different image tokenizer with its own
+[57:08] vocab, which is quite large.
+[57:10] Yeah.
+[57:11] Uh how valid is it to
+[57:13] compare
+[57:15] um
+[57:16] bits uh bits per byte for different for
+[57:19] different tokenizers?
+[57:20] Um
+[57:21] how valid is it to compare bits Oh, that
+[57:23] is a great question. Okay, yeah. Uh
+[57:25] that's not a hyperparameter question,
+[57:26] but that is a good question. Um so,
+[57:28] uh
+[57:29] what is the right way? Okay, so so, let
+[57:30] me let me like
+[57:32] step back a moment and like put us in
+[57:33] the right mindset. So, if we think about
+[57:36] language modeling, language modeling is
+[57:38] is a generative modeling task, right? We
+[57:40] are modeling the probability of a
+[57:41] sequence.
+[57:42] Now, as long as your sequence is fixed,
+[57:44] right? It's the same. You have you know,
+[57:45] adulterated it anyway, and you provide a
+[57:48] probability over all strings, that's
+[57:50] always valid to compare, right? At that
+[57:52] level of things, it's always valid.
+[57:54] Now, when you ask the question, is it
+[57:56] valid to compare the bits per byte of uh
+[57:59] arbitrary token or or two arbitrary
+[58:01] tokenizers?
+[58:02] Really, there's two things at play. The
+[58:04] one thing is, you know, did you touch
+[58:06] the sequence at all? Like, if you look
+[58:07] at some tokenizers in the past, before
+[58:09] subword tokenizers, they would drop some
+[58:11] tokens or drop some words. That changes
+[58:14] that makes the comparisons invalid. But
+[58:16] modern tokenizers are complete. They can
+[58:17] model any sequence, so that's not a
+[58:19] concern. Um the other thing that you
+[58:21] have to worry about is, are we like
+[58:23] length normalizing it in any way, right?
+[58:25] But for bits per byte, you're always
+[58:26] normalizing with the same number, which
+[58:28] is the number of bytes, and so this is
+[58:30] always a valid comparison, right? So,
+[58:31] that's kind of how to think about, you
+[58:33] know, tokenizer comparisons. So, for
+[58:34] example,
+[58:35] uh I think they had the results showing
+[58:37] that
+[58:39] comparing perplexity for fixed
+[58:40] tokenizers
+[58:42] is is is is um
+[58:44] always leads to to better actual
+[58:46] performance.
+[58:47] On on downstream network tasks.
+[58:49] Is the same thing they were looking for?
+[58:52] Um perplexity and BPD are kind of dual
+[58:54] to each other, so yes, if that's what
+[58:56] you're asking.
+[58:58] It's only yes and only no, cuz if you're
+[59:00] comparing
+[59:04] you could two frame compare the
+[59:06] perplexity as compared
+[59:08] but you're changing it different splits.
+[59:10] Changing it different [snorts]
+[59:12] Okay, we'll have to we'll have to talk
+[59:13] later cuz I'm not sure I understand the
+[59:14] question, but I think that that's an
+[59:16] interesting set of questions. Okay,
+[59:17] good.
+[59:18] Okay.
+[59:20] All right.
+[59:21] So, um you know, we're we're going
+[59:23] through really the the the low-level
+[59:26] lowest levels of details of language
+[59:28] modeling, which I think has really
+[59:29] exposed a lot of interesting ideas while
+[59:31] we sort of talk through this. And I
+[59:33] think dropout is one of the end
+[59:34] regularization, I think is another very
+[59:37] interesting class of ideas. Also one
+[59:39] that I think is very counterintuitive
+[59:41] from your machine learning 101
+[59:43] intuition.
+[59:44] So, let's uh
+[59:46] go through what I think is like the the
+[59:48] standard argument for, you know,
+[59:50] regularization. Um well, if I'm doing
+[59:52] language modeling, I have a lot of data,
+[59:54] right? I have more data than I can
+[59:55] process most of the time, right? Unless
+[59:57] you're at, you know, Google, maybe even
+[59:59] then, there is more internet data than
+[01:00:01] there is flops. So, you know, I'm
+[01:00:04] probably not even going to see the same
+[01:00:05] data twice, right? Um so, I'm only going
+[01:00:08] to do a single pass on a corpus, and
+[01:00:10] there's very good reasons and arguments
+[01:00:12] to believe that a single pass of SGD or
+[01:00:14] other optimizers is never really going
+[01:00:17] to memorize my data very much, right?
+[01:00:19] So, this means overfitting is not really
+[01:00:21] a problem uh almost ever during compute
+[01:00:24] constrained language modeling.
+[01:00:26] Now, you know, some people even actually
+[01:00:29] only look at training loss because they
+[01:00:31] believe so strongly that overfitting
+[01:00:33] doesn't happen in single pass SGD.
+[01:00:35] Now, given this, you know, you can sort
+[01:00:36] of sit and think about this. Should I
+[01:00:39] use dropout or weight decay in language
+[01:00:41] model training, right?
+[01:00:43] Okay, you can think about it a bit.
+[01:00:46] Um
+[01:00:47] you know, one unfortunate thing is that
+[01:00:49] a lot of recent models don't talk about
+[01:00:51] this stuff at all. Um it's really
+[01:00:53] lower-level details than like tech
+[01:00:55] reports are willing to expose.
+[01:00:57] Um but if you look, actually you find a
+[01:01:00] lot of models um do both. Especially
+[01:01:03] weight decay actually is a fairly
+[01:01:05] popular intervention even for modern
+[01:01:08] high-performance language models. Um
+[01:01:11] this is very, very surprising, you know?
+[01:01:14] I mean, some of the dropout things um
+[01:01:17] you know, maybe
+[01:01:19] uh have gone out of favor, but weight
+[01:01:21] decay actually remains fairly popular.
+[01:01:23] And this is very mystifying. Like, why
+[01:01:25] is this?
+[01:01:26] Um and this is, you know, one of the
+[01:01:27] reasons why I think deep learning is
+[01:01:29] hard and this architecture lecture is
+[01:01:31] very strange and hard. Um it's because
+[01:01:33] these things interact in very strange
+[01:01:35] ways. So, there have been papers that
+[01:01:38] have argued um and shown nice evidence
+[01:01:41] that weight decay is actually not a
+[01:01:43] regularizer sometimes. It actually
+[01:01:46] interacts with the optimizer to
+[01:01:49] essentially um
+[01:01:51] make optimization better. Um so, if you
+[01:01:55] look at the training versus validation
+[01:01:57] loss across different weight decay
+[01:01:59] settings on, you know, language model
+[01:02:01] training for single pass SGD, you don't
+[01:02:03] really see any difference. Like, weight
+[01:02:04] decay isn't shifting things so the
+[01:02:06] validation loss is better. There's
+[01:02:07] already no overfitting. We're on the x
+[01:02:08] equals y line here, right? So, doesn't
+[01:02:11] control overfitting,
+[01:02:12] but if we kind of look at different
+[01:02:15] levels of weight decay, and not only
+[01:02:18] just different levels of weight decay,
+[01:02:19] we look at weight decay combined with
+[01:02:22] learning rate decay, um what we find is
+[01:02:25] that the stronger weight decay runs,
+[01:02:27] these blue dash lines on the bottom, you
+[01:02:30] know, do significantly better because
+[01:02:32] they start out slow, but they
+[01:02:34] essentially end up um converging to a
+[01:02:37] much better minimum later. And this is,
+[01:02:39] you know, generally true when we decay
+[01:02:41] learning rate, not necessarily true when
+[01:02:44] we're in constant learning rate, which
+[01:02:45] is maybe somewhat more of where your
+[01:02:47] intuition is coming from.
+[01:02:49] So, you know, this is part of why it's
+[01:02:51] very difficult to reason sort of a
+[01:02:53] priori or like from scratch, you know,
+[01:02:55] the behavior of all these different
+[01:02:57] choices and why, you know, I think Percy
+[01:02:59] and I have designed this class so that
+[01:03:01] you interact with stuff because, you
+[01:03:03] know, you might come upon this thing
+[01:03:05] that where basically weight decay is
+[01:03:06] actually an optimization intervention
+[01:03:08] and not necessarily a regularization
+[01:03:11] intervention, which is, you know, what
+[01:03:12] you would expect here, right? So, always
+[01:03:14] keep that in mind that these kinds of
+[01:03:16] unexpected effects can really start to
+[01:03:18] kick in
+[01:03:19] uh for these kinds of uh settings.
+[01:03:24] Cool.
+[01:03:26] All right. So, to put everything
+[01:03:27] together for hyperparameters, there's
+[01:03:30] actually for, you know, a lot of the the
+[01:03:31] maybe more hairy-looking
+[01:03:33] hyperparameters, actually just fairly
+[01:03:35] standard choices that have worked well
+[01:03:37] for everybody, right? You know, factor
+[01:03:39] of four rule of thumb, keep your head
+[01:03:41] dim and your number of heads uh equal to
+[01:03:43] the model dimension, um pick an aspect
+[01:03:46] ratio roughly around 100, um
+[01:03:48] and, you know, if you ask about
+[01:03:50] regularization, right? You want to maybe
+[01:03:52] try a couple things cuz regularization
+[01:03:53] actually does interact with optimizers
+[01:03:56] in ways that are quite counterintuitive,
+[01:03:58] right? So, this is the thing that some
+[01:03:59] people uh still do even though you you
+[01:04:01] don't need the regularization at all.
+[01:04:04] Actually, maybe I'll stop here in case
+[01:04:05] yeah.
+[01:04:07] Are there any significant differences
+[01:04:09] maybe for like um
+[01:04:10] the future models?
+[01:04:12] Ooh, diffusions.
+[01:04:14] That I have not looked into enough, to
+[01:04:16] be honest. Um there aren't that many
+[01:04:17] people training big diffusions is one
+[01:04:19] issue. Um and many of the models that
+[01:04:21] have been trained are retrofitted cuz I
+[01:04:23] think the architectures are actually the
+[01:04:24] same as the, you know, like a Lama-like
+[01:04:26] model. Um but if you're asking the
+[01:04:27] question of like, what's the optimal
+[01:04:29] architecture if you were to train from
+[01:04:30] scratch, I don't know what that is
+[01:04:32] actually off the top of my head.
+[01:04:34] Yeah. Do you have any explanation for
+[01:04:35] why regularization works in some cases?
+[01:04:39] Well, I guess it's not that
+[01:04:40] regularization in general affects
+[01:04:41] optimization. I don't think people do
+[01:04:42] dropout anymore because, you know, it
+[01:04:44] doesn't really uh interact well with
+[01:04:46] optimization. But for example, weight
+[01:04:47] decay, you know, which is shrinkage to
+[01:04:49] zero, um that might allow you to use a
+[01:04:51] higher learning rate or it might allow
+[01:04:53] you to decay faster. There are lots of
+[01:04:55] ways in which all these terms are
+[01:04:56] interrelated.
+[01:04:59] Cool. Okay.
+[01:05:01] Now, I've talked a lot about how to
+[01:05:03] design um expressive models by sort of
+[01:05:07] looking at all these other models that
+[01:05:08] have been trained.
+[01:05:09] Um one of the things that I'll I'll
+[01:05:11] highlight now is over the last few years
+[01:05:14] um a really big emphasis has not been on
+[01:05:16] performance alone. It has actually been
+[01:05:18] on stability. And this becomes an
+[01:05:21] increasingly important concern as your
+[01:05:23] models get more and more expensive to
+[01:05:25] train, right? Um we've kind of seen that
+[01:05:27] a lot of these choices are forgiving,
+[01:05:29] right? Everyone's kind of doing similar
+[01:05:30] stuff. And so, you know, you can mess
+[01:05:32] with these, but you're not going to get
+[01:05:33] a big performance difference. That's
+[01:05:35] fine. But if your model, you know,
+[01:05:37] suddenly blows up some part into
+[01:05:39] training, like you get these like
+[01:05:40] horrible-looking spikes all over the
+[01:05:42] place, um you know, you might end up
+[01:05:44] with a model that is, you know, actually
+[01:05:46] not very good quality, right? Or it
+[01:05:48] might be unrecoverable. You might have
+[01:05:49] spent, you know, millions of dollars in
+[01:05:51] training, and, you know, you get to a
+[01:05:52] point where the model is no longer able
+[01:05:54] to be trained any further, right? That
+[01:05:56] would be a horrible thing to happen if
+[01:05:57] you have a lot of compute that you want
+[01:05:58] to spend.
+[01:06:00] So, you don't want to train models that
+[01:06:01] look kind of like this blue curve with
+[01:06:03] like spikes everywhere and these, you
+[01:06:04] know, big gradient norms happening. Um
+[01:06:07] so, what do we do to fix these stability
+[01:06:09] issues? I mean, this is really, I would
+[01:06:11] say, like a core core issue.
+[01:06:13] And, you know, if you have stability
+[01:06:15] issues in language models or in general
+[01:06:19] neural networks, there's a few, you
+[01:06:21] know, usual suspects that you've got to
+[01:06:23] start looking at.
+[01:06:24] Um one of them is the soft maxes, and
+[01:06:27] the soft max has two things that are
+[01:06:28] both really bad for stability. One of
+[01:06:30] them is an exponential, right? We can
+[01:06:32] see how that blows up very quickly. Um
+[01:06:34] you also divide two numbers, and that's
+[01:06:36] also a potentially very dangerous
+[01:06:38] operation, right? So, a soft max is one
+[01:06:41] place where you got to be extra, extra
+[01:06:42] careful.
+[01:06:44] And where are the soft maxes in a
+[01:06:45] language model? Well, there's two of
+[01:06:47] them. There's one on the output side
+[01:06:49] when we output our probability
+[01:06:50] distribution, and then in attention when
+[01:06:52] we normalize the attention, there's
+[01:06:54] going to be another soft max, right? So,
+[01:06:56] we can think of both of those as really
+[01:06:57] kind of danger zones for our model, um
+[01:07:01] especially the attention.
+[01:07:05] But okay.
+[01:07:06] Let's start with thinking about the
+[01:07:07] output soft max. The output soft max can
+[01:07:10] blow up on us. Um
+[01:07:12] and one of the things that we can do is
+[01:07:14] we can try to control
+[01:07:16] um sort of the the normalizer problem.
+[01:07:19] So, you know, let's sort of think about
+[01:07:21] the soft max calculation. We want to
+[01:07:22] compute a log probability to compute the
+[01:07:24] loss. Now, what is a log probability?
+[01:07:26] Well, it's, you know, the output of your
+[01:07:28] model U, and then you've got this log
+[01:07:31] normalizer, right? This U is
+[01:07:33] well-behaved because in some sense this
+[01:07:35] is the output of your model, right? This
+[01:07:36] is just the output of your residual
+[01:07:38] stream with all the things that are
+[01:07:39] added in. So, if U is well-behaved, then
+[01:07:41] log P, the first term, is well-behaved,
+[01:07:43] right? If the model is being okay.
+[01:07:45] Now, the second term, this log Z, this
+[01:07:48] might not be so okay, right? If Z is
+[01:07:50] really big or really small, even if the
+[01:07:52] output of your model is somewhat
+[01:07:54] well-behaved, it could blow up. And what
+[01:07:55] is Z? Well, it's an exponential, right?
+[01:07:57] So, it could potentially blow up very
+[01:07:59] quickly on you.
+[01:08:00] Or if this is zero, it could also blow
+[01:08:01] up on you, right? So, both of those
+[01:08:02] directions are very, very bad.
+[01:08:04] Now, we would ideally like our Z to be
+[01:08:07] somewhere near one, right?
+[01:08:09] Um or log Z to be somewhere near zero.
+[01:08:13] Um what can we do? Well, one of the
+[01:08:15] things that you notice, right? If you
+[01:08:17] sort of thought about the action of the
+[01:08:18] soft max, is this whole thing is
+[01:08:20] overparameterized, right? Um I could
+[01:08:23] sort of push things in and out. So, if I
+[01:08:25] add a constant to U, I can manipulate
+[01:08:28] the Zs without really affecting the
+[01:08:30] output of the soft max, right? You can
+[01:08:31] cancel out between the normalizer and
+[01:08:33] sort of the output of my model.
+[01:08:35] So, because of that property, one thing
+[01:08:37] that I could do is I could add a
+[01:08:39] regularizer. Um this is from from Jacob
+[01:08:41] Devlin's paper 2024, uh sorry, 2014, um
+[01:08:44] in which he adds sort of this squared
+[01:08:46] log Z term. Um
+[01:08:49] and what this is doing is it's just
+[01:08:50] penalizing how far away your log Z is
+[01:08:54] from zero. And if log Z is near zero,
+[01:08:56] that's nice because this whole
+[01:08:58] expression is kind of numerically
+[01:09:00] stable.
+[01:09:01] This is called the Z loss trick. Um it's
+[01:09:03] been used by a number of papers. Um
+[01:09:06] Jacob Devlin and others uh sort of
+[01:09:08] popular or initially pioneered this back
+[01:09:10] in 2014, and then it's become popular
+[01:09:13] again through a number of open-source
+[01:09:14] models. Like, Baichuan I think was the
+[01:09:16] first open-source model to do it, but
+[01:09:18] then DCLM and Almo and others have been
+[01:09:20] using this trick to stabilize their
+[01:09:22] output soft maxes.
+[01:09:23] So, this is this is a surprisingly
+[01:09:25] effective thing.
+[01:09:27] Now, okay. So, let's say we've handled
+[01:09:29] the instability issues on the output
+[01:09:31] soft max.
+[01:09:32] Now, we have to sort of turn our
+[01:09:34] attention towards the other potential
+[01:09:35] problem, which is attention, right? And
+[01:09:37] this is a a place where lots of
+[01:09:40] degeneracies happen. Lots of techniques
+[01:09:42] have been developed to control the
+[01:09:44] instability that attention operations
+[01:09:46] generate.
+[01:09:47] Um and really the, you know, the
+[01:09:49] high-level thing that I'll say
+[01:09:52] is
+[01:09:53] if you have instability, if you can
+[01:09:54] throw a layer norm in there somehow, it
+[01:09:56] might control it. And that's really in
+[01:09:58] some sense the the design philosophy
+[01:10:01] behind this idea called the QK norm. Um
+[01:10:04] so, what you do is remember that we
+[01:10:06] have, you know, our Qs and Ks um that
+[01:10:09] are going to be multiplied together, and
+[01:10:11] then they're going to go into the soft
+[01:10:12] max, right? So, in the standard
+[01:10:13] attention operation, I'm going to layer
+[01:10:15] norm as a pre-layer norm, multiply with
+[01:10:18] a QKV, and then I'm going to get my Qs
+[01:10:19] and Ks. Those will get multiplied by a
+[01:10:21] matrix multiply, I'll soft max them, and
+[01:10:24] I'll multiply that with V to get the
+[01:10:26] weighted average, and then I'll output
+[01:10:27] whatever comes after, right? So, this is
+[01:10:29] our usual attention. Now, what happens
+[01:10:32] if we just throw in a layer norm before
+[01:10:35] we multiply the Qs and Ks? If we do
+[01:10:38] that, then we know that the inputs to
+[01:10:40] this matrix multiply, and therefore the
+[01:10:42] inputs to the soft max, roughly have the
+[01:10:45] same scale. They're always going to have
+[01:10:47] a scale of roughly one because we've,
+[01:10:49] you know, used RMS norm to divide the
+[01:10:52] size of those Qs and Ks.
+[01:10:54] Okay. If we do that, then, you know,
+[01:10:57] we're kind of going to keep this soft
+[01:10:59] max operation stable. Tons of different
+[01:11:01] models do this. It's originally from
+[01:11:03] the multimodal world.
+[01:11:06] You know, some folks who were doing
+[01:11:08] making multimodal models sort of
+[01:11:09] initially discovered QK norm.
+[01:11:11] E to fix and chameleon really, you know,
+[01:11:14] used this and like proved it out. And
+[01:11:16] then a number of other open-source
+[01:11:18] language models, you know, realized that
+[01:11:20] the same tricks are entirely applicable
+[01:11:22] to
+[01:11:23] stabilizing attention for language
+[01:11:25] models, and I think this is now very,
+[01:11:27] very standard. Like QK norm is actually
+[01:11:29] a very standard intervention that most
+[01:11:31] of the large models now introduce. Um it
+[01:11:34] doesn't seem to affect performance um
+[01:11:36] from lots of different training runs,
+[01:11:38] but it does definitely prevent the kinds
+[01:11:40] of um attention degeneracies. Um and,
+[01:11:43] you know, I I'm really
+[01:11:44] >> [laughter]
+[01:11:45] >> the the way that I've seen this is, you
+[01:11:47] know, we have layer norms initially in
+[01:11:49] the pre-norm. Now, we add them after the
+[01:11:51] the
+[01:11:52] nonlinearities in each block, and now
+[01:11:54] we're throwing them in both the Qs and
+[01:11:56] the Ks. And really, I think this is is
+[01:11:57] is kind of getting at
+[01:12:00] the stabilization tricks that people
+[01:12:01] apply to this world. Okay.
+[01:12:04] Now,
+[01:12:05] um the final set of things that I'll
+[01:12:06] talk about as a stability intervention.
+[01:12:08] And frankly, this one is not as popular
+[01:12:12] and more of a of a Google-specific trick
+[01:12:14] that I've seen. Um but uh logit soft
+[01:12:18] capping is a much harder intervention
+[01:12:20] that some people apply. So, this one, um
+[01:12:23] you know, in QK norm, what we're doing
+[01:12:25] is we are controlling the inputs to the
+[01:12:27] soft max and sort of hoping that the
+[01:12:29] outputs are well-behaved. If we really,
+[01:12:31] really want to enforce
+[01:12:33] um well-behaved outputs, what we can do
+[01:12:36] is we can kind of take the logits, the
+[01:12:37] things that go straight into the soft
+[01:12:39] max, and we can just cap them off so
+[01:12:41] they can never be too large or too
+[01:12:43] small, right? This is a hard almost a
+[01:12:44] hard constraint. Um it's called a soft
+[01:12:46] cap, of course, but a tan H, you know,
+[01:12:47] is bounded at some value.
+[01:12:50] Um and so uh this is in the Gemma
+[01:12:53] models. Um I think both Gemma or like
+[01:12:55] Gemma's two, three, and four all use the
+[01:12:58] logit soft cap trick. Um and what they
+[01:13:01] do is they take all of their logits from
+[01:13:03] the attention layers, and then they soft
+[01:13:05] cap them at some value.
+[01:13:07] Um some Nvidia folks have done actually
+[01:13:10] quite nice work doing systematic
+[01:13:11] comparisons of these stability
+[01:13:13] interventions. Um and what they find is
+[01:13:17] um if you start with a baseline model,
+[01:13:19] you can do all sorts of different
+[01:13:20] interventions, and QK norm is here, and
+[01:13:23] it does slightly better due to the fact
+[01:13:25] that you can crank up the learning rate
+[01:13:26] a little bit. Um but if you do soft
+[01:13:29] capping alone, you actually end up
+[01:13:31] losing performance. So, there is a a
+[01:13:33] quality degradation that happens. This
+[01:13:35] is a very strong intervention. You can
+[01:13:36] never express very confident uh signals
+[01:13:39] in your soft max beyond a certain point.
+[01:13:41] Um so, it does have some negative
+[01:13:43] consequences, but this is a very safe
+[01:13:44] way of stabilizing the outputs of your
+[01:13:47] attention. Or sorry, the the inputs to
+[01:13:49] your attention, the logits that go into
+[01:13:50] the soft max.
+[01:13:52] Okay.
+[01:13:53] So, that's kind of the end of the
+[01:13:54] stability components. Um I can pause for
+[01:13:57] a moment here. Um and I'll talk about
+[01:13:59] sort of various attention things um
+[01:14:02] after that.
+[01:14:06] Cool.
+[01:14:07] Okay.
+[01:14:08] All right. So,
+[01:14:10] the last thing I want to talk about
+[01:14:11] today is various interventions that you
+[01:14:13] can make to your attention head.
+[01:14:15] Um and as I was saying at the beginning
+[01:14:17] of this lecture,
+[01:14:18] um I'm only going to talk about all the
+[01:14:20] things that you can do to sort of dense
+[01:14:22] all by all attention today. So, if you
+[01:14:24] if you were interested in hearing about
+[01:14:25] state space models or linear time
+[01:14:27] attention, um sadly today is not the day
+[01:14:29] for you.
+[01:14:30] Um the things that I do want to talk
+[01:14:32] about, which are really commonly
+[01:14:34] implemented um attention interventions
+[01:14:37] today, are uh group query attention,
+[01:14:40] which really saves inference cost by
+[01:14:41] reducing the number of heads, um and
+[01:14:44] sparse or sliding window attention, um
+[01:14:46] which really originally came from the
+[01:14:48] GPT-3-ish
+[01:14:50] family, but have now really been adopted
+[01:14:52] widely by most models that are looking
+[01:14:55] to do uh long context unless they're
+[01:14:57] doing exotic uh SSM stuff.
+[01:15:01] So, I'll start with um group query
+[01:15:03] attention or GQA or MQA. Um
+[01:15:06] this I'm going to first set up the need
+[01:15:09] for these kinds of things, and then
+[01:15:10] you'll kind of hopefully see what the
+[01:15:12] what the trick is um and why it's fairly
+[01:15:14] natural.
+[01:15:16] So, for the moment, we've been talking
+[01:15:18] about, you know, training and modeling
+[01:15:19] and all these things, but like let's
+[01:15:21] take a pause, and now let's think about
+[01:15:23] deployment, right? You train this very
+[01:15:25] big model, and now you need to serve it
+[01:15:27] to lots of users, and you're going to
+[01:15:29] pay a cost for serving.
+[01:15:31] And you're going to have to, in abstract
+[01:15:33] sense, pay for two different resources,
+[01:15:35] right? You're going to have to pay for
+[01:15:36] your flops, right? The computation that
+[01:15:39] you're performing, but you also have to
+[01:15:40] pay for another thing. You have to pay
+[01:15:42] for your memory accesses, right? Because
+[01:15:44] the memory accesses are also going to
+[01:15:46] impact, you know, your system's
+[01:15:47] characteristics, your latency, your
+[01:15:49] utilization, right? So, you want both of
+[01:15:51] these things to be small.
+[01:15:53] Now, let's think about what happens
+[01:15:55] during training or alternatively prefill
+[01:15:58] when you're looking at your prompt where
+[01:15:59] someone gives you the stuff. In this
+[01:16:01] case, you know, the total arithmetic
+[01:16:03] operations you have is, you know, order
+[01:16:06] of magnitude batch size sequence length
+[01:16:09] hidden dim squared, right? That's
+[01:16:10] roughly the size of things that you get.
+[01:16:12] And of course, you know, we're doing
+[01:16:13] quadratic attention, so we've got D
+[01:16:14] squared.
+[01:16:16] Um
+[01:16:17] we've got uh
+[01:16:18] total memory accesses. Like what is our
+[01:16:20] memory access that we have here? Um we
+[01:16:22] have batch times sequence length times
+[01:16:24] uh hidden dim plus um
+[01:16:27] the sort of cost of the soft max, which
+[01:16:28] has a N squared component, and then
+[01:16:30] we've got a D squared component um for
+[01:16:32] the for the projections. So, the
+[01:16:34] arithmetic intensity here is pretty
+[01:16:36] good. Um
+[01:16:37] it's going to be one over K. This is the
+[01:16:39] number of heads, so you need to have um
+[01:16:41] uh sorry, head dims. So, your head dims
+[01:16:42] need to be big enough that you're
+[01:16:43] multiplying some reasonably sized
+[01:16:45] matrices. And you've got a one over BN,
+[01:16:47] so your sequences need to be long enough
+[01:16:49] or your batch sizes need to be big
+[01:16:51] enough. As long as both of these are
+[01:16:52] true, your GPUs are going to be fully
+[01:16:54] utilized. Great, right? You're You're
+[01:16:56] using all of your resources.
+[01:16:59] Now, you know, we have done we have
+[01:17:01] finished training, and now we're serving
+[01:17:03] our users. How do we serve our users?
+[01:17:04] We're going to generate tokens and send
+[01:17:06] it to them, right? Now, for doing that,
+[01:17:09] um I can't parallelize the generation
+[01:17:11] process. What I'm going to do is I'm
+[01:17:12] going to generate a token, I'm going to
+[01:17:13] condition on it, I'm going to generate
+[01:17:15] the next token, and I'm going to repeat
+[01:17:16] this process one by one, right? This is
+[01:17:18] just sort of the the curse of
+[01:17:19] autoregressive language modeling. We
+[01:17:21] have to do this.
+[01:17:22] Um in order to do this, the efficient
+[01:17:24] way to do it is to maintain all of the
+[01:17:27] sort of past keys and queries that I've
+[01:17:29] had in what's called a KV
+[01:17:36] over the past, and then whenever I need
+[01:17:38] to compute something new, I can reuse
+[01:17:41] sort of the the submatrices that I've
+[01:17:43] already had from the past. And I only
+[01:17:45] really need to compute sort of the new
+[01:17:48] um query key interactions that I need to
+[01:17:51] fill out the rest of this matrix, right?
+[01:17:54] So, every submatrix I've computed
+[01:17:56] before, I can keep. I only need to
+[01:17:58] compute my new ones. So, this saves a
+[01:17:59] lot on compute, right? That's great.
+[01:18:02] But,
+[01:18:03] the issue here is now our arithmetic
+[01:18:06] intensity is not so good, right? As you
+[01:18:08] might sort of intuit, this KV cache
+[01:18:10] approach is going to be reading and and
+[01:18:13] reading um parameters all the time,
+[01:18:16] right? Each time I have a new step,
+[01:18:18] right? I'm going to have to read in my
+[01:18:19] parameters. I'm going to have to take
+[01:18:20] these dot products, and I'm going to do
+[01:18:22] this once every step.
+[01:18:24] And so, now what do I have? Well, you
+[01:18:26] know, my total memory Oh, sorry. My
+[01:18:28] total arithmetic operations are the
+[01:18:30] same. I'm multiplying the same matrices
+[01:18:32] still, right? Just incrementally rather
+[01:18:33] than all at once. But because I'm doing
+[01:18:36] this incrementally, you know, now I have
+[01:18:39] um a a memory access pattern of batch by
+[01:18:42] sequence squared by hidden dim plus um
+[01:18:45] sequence by hidden dim squared. And the
+[01:18:47] second term is not so pleasant, right?
+[01:18:50] It used to be that it was just D
+[01:18:53] squared, but now we've got N times D
+[01:18:56] squared. And if we compute the
+[01:18:58] arithmetic intensity, which is the ratio
+[01:18:59] of these two guys, um now we have N over
+[01:19:03] D plus one over B. So, now what we need
+[01:19:06] is large batches plus short sequence
+[01:19:08] length, or we need really big model
+[01:19:10] dimensions. So, if we want to serve a
+[01:19:12] small model efficiently, this is not so
+[01:19:15] good.
+[01:19:16] Right? Um this is really difficult to
+[01:19:18] deal with, right? This N over D term,
+[01:19:20] this first term over here, which is
+[01:19:22] sequence length over hidden dim, is very
+[01:19:25] difficult to reduce if we're doing this
+[01:19:27] incremental computation. This is just a
+[01:19:29] hard thing to deal with.
+[01:19:32] So, this leads to this idea of MQA or
+[01:19:35] multi-query attention. Normally, you
+[01:19:37] have multiple heads in your attention
+[01:19:39] operation, and you're going to have
+[01:19:41] different keys, different values, and
+[01:19:43] different queries. That's normally how
+[01:19:44] you do things.
+[01:19:46] But, one thing that we could do is maybe
+[01:19:48] we can keep the keys and the Vs the same
+[01:19:51] across all the heads, and the only thing
+[01:19:53] that's different across the heads are
+[01:19:54] the queries. If we do this, then this
+[01:19:57] drastically removes the amount of items
+[01:20:01] that need to be moved in and out of
+[01:20:02] memory, right? Because the KV cache,
+[01:20:04] right? Are now significantly smaller.
+[01:20:07] These are all shared across all the
+[01:20:08] heads. Um this significantly reduces the
+[01:20:11] total memory access as well as the
+[01:20:13] arithmetic intensity, and we're kind of
+[01:20:16] the key term that we were talking about
+[01:20:17] here, we had the N over D term. Now, we
+[01:20:20] have uh H multiplying this, right? And
+[01:20:23] so, this H term allows us to
+[01:20:25] significantly reduce the the I sorry,
+[01:20:29] increase the arithmetic intensity if we
+[01:20:31] have a lot of heads, right? This is a
+[01:20:32] significant gain over what we had
+[01:20:35] before.
+[01:20:36] So, this gets us significant efficiency
+[01:20:39] improvements,
+[01:20:40] but the issue with MQA is
+[01:20:44] this is on the right here, you have one
+[01:20:45] value and one key for all these queries.
+[01:20:48] You do in fact lose significant
+[01:20:50] expressive power if you do this.
+[01:20:53] And so, there's this trade-off between
+[01:20:54] system's efficiency and expressiveness,
+[01:20:56] and you might wonder, is there sort of a
+[01:20:58] sweet spot in which we can avoid trading
+[01:21:02] off, you know, quite a significantly
+[01:21:05] expressive power and computation. And
+[01:21:07] that's where GQA or grouped query
+[01:21:09] attention comes in. You know, the
+[01:21:11] original transformer is multi-head. We
+[01:21:12] have queries and keys for each head. In
+[01:21:15] multi-query, we have one key and value
+[01:21:17] for each for all the heads. In grouped
+[01:21:20] query, we reduce the amount of keys and
+[01:21:22] values, but we keep the number of
+[01:21:24] queries the same. So, we now have this
+[01:21:25] ratio that we can play with, which is
+[01:21:27] kind of the number of key heads or the
+[01:21:29] number of value heads
+[01:21:30] while keeping the total number of heads
+[01:21:32] much larger than that. So, this allows
+[01:21:34] us to very simply control the
+[01:21:36] the trade-off between expressiveness and
+[01:21:38] inference efficiency.
+[01:21:40] Um there are other sort of tricks from
+[01:21:42] DeepSeek-V2, multi-head latent
+[01:21:44] attention, that I'll sort of mention
+[01:21:46] briefly next time,
+[01:21:48] which sort of have a different kind of
+[01:21:50] factorization structure and a different
+[01:21:52] set of trade-offs. But really,
+[01:21:54] the nice thing about GQA is that in
+[01:21:57] practice the trade-off is quite
+[01:21:58] favorable. So, if you have multi-head,
+[01:22:01] your performance, this was you know, in
+[01:22:02] the I think T5 days if I remember right.
+[01:22:05] This is your downstream model
+[01:22:07] performance. This is your time per
+[01:22:09] sample. You want to reduce this as much
+[01:22:11] as possible.
+[01:22:12] With multi-head attention, you have best
+[01:22:13] performance but very high cost.
+[01:22:16] With MQA, you know, you have
+[01:22:19] lower cost but much lower performance.
+[01:22:22] Similarly, if you make your model
+[01:22:23] smaller to try to hit your performance
+[01:22:25] targets, you get much worse performance.
+[01:22:27] GQA really does get the best of both
+[01:22:29] worlds, you know, very low inference
+[01:22:31] cost, nearly the same performance as
+[01:22:34] your full multi-head.
+[01:22:36] Um and you see sort of this like GQA
+[01:22:39] group structure where if you have
+[01:22:42] a small reduction in the number of
+[01:22:44] heads,
+[01:22:45] you basically have most of the gains in
+[01:22:47] your performance, which allows you to
+[01:22:49] sort of keep most of the expressive
+[01:22:50] power
+[01:22:51] while getting significant inference
+[01:22:53] improvements. And Percy will talk a
+[01:22:55] bunch more about sort of the inference
+[01:22:56] mechanics later,
+[01:22:58] but sort of this should give you a
+[01:22:59] flavor of like why models today almost
+[01:23:02] all adopt this GQA structure because it
+[01:23:04] gives you a lot of this inference cost,
+[01:23:06] which is really critical, without very
+[01:23:08] much of a
+[01:23:11] expressiveness hit.
+[01:23:14] Cool. Any questions for for GQA or KV
+[01:23:17] cache? Yeah.
+[01:23:19] Given
+[01:23:21] that you have so many
+[01:23:23] like rules of thumb for what
+[01:23:24] hyper-parameters are good, like to what
+[01:23:26] extent are you still searching over
+[01:23:28] hyper-parameters versus exploiting these
+[01:23:31] rules of thumb that you
+[01:23:33] I think it's a mix of both. I think
+[01:23:35] every sort of model training run has
+[01:23:37] some theses about what can be varied.
+[01:23:40] And so, you see this in a lot of the
+[01:23:41] reports where I think the
+[01:23:42] hyper-parameters are often not where
+[01:23:44] people are touching too much.
+[01:23:46] But you see like architecture changes
+[01:23:47] like one at a time in a lot of these
+[01:23:49] reports. But it's very rare to like go
+[01:23:52] and change everything up. I think Google
+[01:23:53] is one of the only orgs that seems to
+[01:23:55] like really spice things up in a
+[01:23:57] significant way.
+[01:23:58] The Gemma series has done some pretty
+[01:24:00] interesting things.
+[01:24:02] The most recent Gemma 4 release, for
+[01:24:04] example, now has like individual
+[01:24:06] embedding for every layer
+[01:24:08] in a way to control the trade-offs
+[01:24:09] between like memory use and flops.
+[01:24:11] They're very interesting set of things
+[01:24:12] that they've done.
+[01:24:14] Oh, yeah, back there.
+[01:24:16] Do you experiment with like data all
+[01:24:18] things of these parameters
+[01:24:21] during training?
+[01:24:22] During training,
+[01:24:23] let me think.
+[01:24:26] Weight decay, yes. Weight decay, people
+[01:24:28] change in concert with like learning
+[01:24:31] rate.
+[01:24:32] That is actually a heuristic that people
+[01:24:33] do that works very well.
+[01:24:35] Um other than that, I don't know if
+[01:24:38] there's a lot of different hypers that
+[01:24:40] people change during training,
+[01:24:42] especially because the architecture ones
+[01:24:44] just make training incompatible. So, you
+[01:24:46] can't really, you know, change them
+[01:24:47] while you're you're training.
+[01:24:49] Yeah, so I think I think weight decay is
+[01:24:50] probably the one that I can think of.
+[01:24:52] The others are usually fixed.
+[01:24:54] Yeah.
+[01:24:56] Yeah, MQA is uh
+[01:24:58] uh
+[01:24:59] it's not just inference time fixed. It's
+[01:25:01] a pleasure to train. That's right, yeah.
+[01:25:03] You you you train with a certain number
+[01:25:04] of keys.
+[01:25:08] Okay. The last thing I'll talk about is
+[01:25:11] sliding window attention, which is a
+[01:25:12] really old idea. Like, you know, GPT-3
+[01:25:15] used actually this you know, if you read
+[01:25:17] the paper, they'll say we alternate
+[01:25:19] between full attention, which where
+[01:25:21] every position can attend to everyone in
+[01:25:23] the past, and a banded matrix style
+[01:25:25] attention where you can attend to
+[01:25:27] everyone within a fixed window.
+[01:25:30] And you know, OpenAI has some early work
+[01:25:32] on these kinds of like different kinds
+[01:25:34] of attention patterns that you can use.
+[01:25:36] But actually, this has become really
+[01:25:38] really popular over the past year.
+[01:25:41] This idea of alternating, you know, the
+[01:25:44] big full attention and a more local
+[01:25:47] attention actually hits a sweet spot for
+[01:25:50] how to manage like long context
+[01:25:51] performance while not paying too much
+[01:25:54] for inference.
+[01:25:56] Um I think, you know, the more recent
+[01:25:59] revival in open models, I would maybe
+[01:26:01] say Cohere Command A was the first one I
+[01:26:04] saw do it, where they, you know, had
+[01:26:07] this like structure where every four
+[01:26:09] layers they would have a full attention
+[01:26:10] that attended to everything. The three
+[01:26:12] layers in between would use a sliding
+[01:26:14] window attention that would only be able
+[01:26:16] to look at local structure. And of
+[01:26:17] course, you know, as you go up sorry, in
+[01:26:20] this case down cuz they ordered the the
+[01:26:22] diagram the other way. As you go down
+[01:26:24] sort of these blocks, you know, you're
+[01:26:26] aggregating local information into
+[01:26:27] global ones. The local attentions at the
+[01:26:29] end can of course access more global
+[01:26:31] information, but this, you know, allows
+[01:26:33] you to manage the
+[01:26:35] the the cost of having a really long
+[01:26:38] context without having to go for
+[01:26:40] something like a state-space model or
+[01:26:42] more exotic intervention. And that's
+[01:26:44] worked quite well.
+[01:26:46] Um there's also some innovation where
+[01:26:49] people change the embedding format for
+[01:26:51] the long range information where they
+[01:26:53] get rid of things like rope, so you have
+[01:26:55] no position embeddings at all. So,
+[01:26:57] you're really looking almost at bags
+[01:26:59] where the short range information still
+[01:27:01] gets position information. So, people do
+[01:27:03] all sorts of you know,
+[01:27:05] kinds of interventions involving these
+[01:27:07] these
+[01:27:08] both the embeddings and alternating
+[01:27:10] local and global structure.
+[01:27:12] Um I'll say that this is a
+[01:27:14] you know, attention and in general how
+[01:27:16] to manage the trade-off between long
+[01:27:18] context and sort of long context cost
+[01:27:21] and performance is a still an active
+[01:27:23] area of investigation. It's a place
+[01:27:24] where the most architecture work and
+[01:27:27] changes are still being done. Um we see
+[01:27:30] essentially a bunch of other models
+[01:27:31] adopt this idea. Llama 4, most recently
+[01:27:34] Gemma 4, Omo 3, they all do this
+[01:27:37] combination of sliding window attention
+[01:27:38] and full attention, in their case using
+[01:27:40] full rope instead of nope as the
+[01:27:44] embedding.
+[01:27:45] So, as I said, this is becoming really
+[01:27:47] really popular.
+[01:27:48] Qwen 3.5, which I put on the right,
+[01:27:51] they're actually a little bit different
+[01:27:52] because they alternate a state-space
+[01:27:54] model
+[01:27:55] called a gated DeltaNet and a full
+[01:27:57] attention every sort of, you know, one
+[01:28:01] one full attention every four layer
+[01:28:02] every four layers.
+[01:28:04] So, it's the same alternating structure,
+[01:28:06] but they're using a different sort of
+[01:28:08] cheap layer. In their case, they're
+[01:28:09] using a state-space model. I'll explain
+[01:28:10] what that is next lecture instead of a
+[01:28:13] sliding window sort of local attention.
+[01:28:15] But you see this is like I think a new
+[01:28:17] theme over the past year where, you
+[01:28:19] know, open models are really trying to
+[01:28:21] grapple with long context performance,
+[01:28:23] and the way to do that, at least so far,
+[01:28:25] is to have these hybrid models that
+[01:28:27] aren't just global attention, aren't
+[01:28:29] just cheap attention. They're some sort
+[01:28:30] of mix in between. And that's that seems
+[01:28:32] to have worked very well so far in a lot
+[01:28:35] of these models.
+[01:28:37] Okay, cool. So, as I was sort of trying
+[01:28:40] to emphasize, when you look across all
+[01:28:42] of these models, you start to see a lot
+[01:28:44] of patterns and hopefully a sense of
+[01:28:46] general understanding about what things
+[01:28:48] you can do and what things are good to
+[01:28:49] folks. Um we also see a lot of
+[01:28:52] differences in how we handle context and
+[01:28:54] how we handle position embeddings.
+[01:28:56] Even tokenization, there's some
+[01:28:57] differences, right? So, there are
+[01:28:59] differences across these models, but
+[01:29:00] there's also commonalities that
+[01:29:01] hopefully now give you some intuition as
+[01:29:03] you go out and do your assignments and
+[01:29:05] and sort of mess with the leaderboard
+[01:29:07] and so on.
+[01:29:08] Thanks.

@@ -1,0 +1,1904 @@
+[00:00] I'm super excited here today to talk
+[00:02] about a topic that is really close to my
+[00:04] heart language agents I'm very excited
+[00:07] about this topic in the past two years
+[00:09] also like it's really fascinating and
+[00:12] I've devoted most of my time thinking
+[00:14] about this so I have to share some
+[00:16] thoughts here today right whether you
+[00:18] like it or not well since you in this
+[00:21] lecture so most likely you like it that
+[00:23] but you probably have heard about the
+[00:25] term agents a lot um many people are
+[00:29] super in take about it like Bill Gates B
+[00:32] said that it will bring about the
+[00:34] biggest Revolution since essentially GUI
+[00:38] um then Andrew n said that the agend
+[00:41] workflows will drive massive air
+[00:43] progress and then Sam timman said that
+[00:46] 2025 is the year when agent will
+[00:49] work however there's definitely also a
+[00:52] lot of voice from the other side of the
+[00:56] aisle I many people think that the
+[00:59] current LM are just thing wrappers
+[01:02] around lrm agents are just thing
+[01:04] wrappers around LM so there is nothing
+[01:07] fundamental here well others think Auto
+[01:11] regressive LMS can never truly reason or
+[01:15] plan um and then um Auto gbt was one of
+[01:20] the early uh prototypes of these agent
+[01:22] systems but it didn't it was like very
+[01:25] popular so it's U the fastest growing
+[01:29] Repository in did have a history in
+[01:31] terms of number of stores but it didn't
+[01:33] take long for people to realize that it
+[01:35] was at at least at the time mostly more
+[01:38] of a prototype and there was a lot of
+[01:41] limitations for from a production
+[01:44] system if we take one step back and
+[01:47] think about hey what is Agents it's
+[01:49] really not a new thing right uh it's um
+[01:53] one of the very first topic we cover in
+[01:56] ai11 right agents and especially using
+[02:00] this classic schematic illustration from
+[02:03] Russo and noic and it has been part of
+[02:06] the core core pursuit of AI since the
+[02:09] very beginning so why all of a sudden it
+[02:11] became so much more popular
+[02:15] again so let's try to Define This Modern
+[02:19] agents many people hold this view that
+[02:22] hey you have an Dage model uh it has a
+[02:24] text in text out interface so the kind
+[02:27] of things it can do is quite a limited
+[02:30] it's still a lot but it's limited it's
+[02:32] not connected to external environment
+[02:35] and then once you connect that toone
+[02:38] environment you can perceive information
+[02:40] from the environment and it can exert
+[02:43] impact on the environment then it
+[02:45] becomes an
+[02:48] agent that that seems reasonable but at
+[02:51] the same time it also seems a bit
+[02:53] oversimplified and incomplete right we
+[02:56] often heard things like hey
+[02:58] self-reflection that that uh the an
+[03:01] agent or lrm looks at its own uh
+[03:04] reasoning process and then decide to do
+[03:06] autonomously decide to do something else
+[03:09] or like you can do multi-agent
+[03:11] simulation or some lot of other things
+[03:13] that don't necessarily involve in
+[03:16] external environment or at least that's
+[03:18] not part of the the core defining
+[03:22] trait fundamentally I think there are
+[03:25] two main competing views in the
+[03:28] community the dominant view I call it an
+[03:32] LM first view so we have first have an
+[03:36] LM it's amazing it's very powerful it
+[03:39] knows a lot of things so let's make that
+[03:41] into an
+[03:42] agent then if you take this view
+[03:44] naturally the implications are you think
+[03:47] of like building a scaffold on top of an
+[03:50] l and it will be a lot of prompting and
+[03:53] it will be heavy on engineering and I I
+[03:56] think that's also um a lot of the where
+[03:59] a lot of the sentiment that the agents
+[04:01] are just thing wers around L come
+[04:05] from I tend to take a different view I
+[04:08] take an agent F right so as I said AI
+[04:12] agent have been the core pursuit of AI
+[04:14] since the very beginning now this just
+[04:17] now they got an upgrade now we integrate
+[04:20] one or more LMS into this a agents so
+[04:23] they gain a new capability so use
+[04:26] language with reasoning and
+[04:28] communication
+[04:31] if you hold this view then the
+[04:32] implications are all the same challenges
+[04:35] faced by the F with a agents like how to
+[04:38] perceive the environments how to reason
+[04:40] about the environmental States how to
+[04:42] build World models to model the state
+[04:45] the uh State transition Dynamics in the
+[04:48] environment and how to use that for
+[04:50] better planning all of these challenges
+[04:52] still remain but we need to reexamine
+[04:55] them through the new dance of
+[04:58] LMS and also we need to tackle the new
+[05:01] challenges and opportunities like now we
+[05:03] can do synthetic data at a scale we can
+[05:06] do s reflection and we can also do 01
+[05:09] style internal
+[05:12] search okay if we agree on that view and
+[05:16] agent first view then we can look at
+[05:19] what's really fundamentally different
+[05:21] now once we're integrating uh these LMS
+[05:24] I think it's really the capability of
+[05:26] using language as a vehicle for
+[05:28] reasoning and
+[05:31] communication the power of using the
+[05:33] language for communication is probably
+[05:35] more clear um like all of us remember
+[05:39] the vividity the viral success of chbt
+[05:42] um it was the the fastest app to grow to
+[05:45] 100 million users in human history and
+[05:48] um but we also know that in terms of the
+[05:51] fundamental capabilities trity was not
+[05:54] significantly better than previous
+[05:55] generation but open I decided to tune it
+[05:59] uh to be be more chatty and releas it to
+[06:01] the public so I think that that really
+[06:04] shows you the power of using language
+[06:06] for
+[06:07] communication um you get instruction
+[06:09] following you get in context learning
+[06:12] and you can easily customize the output
+[06:16] format but perhaps a bit more unique
+[06:18] this time around you know because using
+[06:21] language of communication we have been
+[06:22] doing that in decades uh in dialogue
+[06:26] systems but this new capability of using
+[06:29] language reasoning is probably a bit
+[06:31] more unique this time around um it used
+[06:36] it used to be the case that have to do a
+[06:38] lot of justification about why why this
+[06:40] is unique but now with all these new
+[06:42] reasoning models I think this has become
+[06:44] much easier um so but let's still
+[06:47] consider this example right most of
+[06:50] people would look at this example and
+[06:52] think gb4 was being stupid and
+[06:55] contradicting Itself by first thought
+[06:57] answer is no but there was a lot a bit
+[07:00] more thinking then it realize that the
+[07:02] answer is actually yes um but the way I
+[07:05] see this example it really shows the
+[07:07] power of using language for reasoning so
+[07:11] you can decide the agent the model can
+[07:14] decide on the fly to use adaptive the an
+[07:18] Adaptive amount of computes for
+[07:20] different problems so it got a second
+[07:23] chance unlike in traditional ml models
+[07:26] where you pay a fixed amount of computes
+[07:28] for any decision
+[07:30] right so you only have one shot and you
+[07:31] have to commit to
+[07:33] it and it's specifically in the context
+[07:36] of Agents reasoning is not just for the
+[07:38] sake of reasoning right it's not just
+[07:40] for math or coding reasoning is for
+[07:42] better acting so you can use reasoning
+[07:45] to infer about the environmental States
+[07:48] you can do self-reflection you can do
+[07:50] Dynamic replanning like all for the same
+[07:52] purpose of to for better acting better
+[07:55] planning in the environment
+[07:59] right now we're ready to reconcile this
+[08:03] new generation of language agents with
+[08:05] the previous
+[08:07] agents all we need to do is to add a new
+[08:11] type of action called reasoning by
+[08:13] generating tokens this in contrast with
+[08:16] actions in external
+[08:19] environments then for that we also need
+[08:21] to add an internal environment just like
+[08:24] an inner monologue where reasoning
+[08:26] happens
+[08:29] with that uh change now we can also
+[08:32] reconcile things like self-reflection
+[08:35] now it becomes just a meta reasoning
+[08:37] action like it's a reasoning over the
+[08:40] reasoning process just like meta
+[08:42] cognitive
+[08:44] functions and reason is for better
+[08:46] acting and at the same time due to the
+[08:48] power of these LMS the percept and
+[08:51] external action spaces are just toally
+[08:53] expanded as
+[08:55] well okay before proceed let me just
+[08:59] provide a little bit justification of
+[09:01] the use of reasoning here um because
+[09:04] this is such an overloaded term if we
+[09:06] don't properly Define it then people
+[09:09] will frown upon
+[09:10] it so um I'm sympathetic of the position
+[09:15] of you calling all of these as reasoning
+[09:18] because for people who are familiar with
+[09:20] like the um the due process mental model
+[09:25] of human cognition like by the uh famous
+[09:28] like late
+[09:30] Daniel conman in Thinking Fast and Slow
+[09:32] you be familiar with Concepts like hey
+[09:34] perception then intuitive inference and
+[09:37] then symbolic reasoning right the intu
+[09:40] of inference is fast effortless and then
+[09:43] symbolic reasoning is slow and
+[09:45] effortful but LMS they don't have all of
+[09:49] those
+[09:51] different cognitive substates for this
+[09:54] different type of uh Cal functions all
+[09:57] it has is mostly just one mechanism
+[10:00] which is token generation it's mostly we
+[10:04] will talk about this later because we
+[10:06] will talk about intrinsic like implicit
+[10:08] reasoning but mostly reasoning happens
+[10:11] through token generalization through
+[10:13] explicit language production right so if
+[10:16] you look at this example from G4 all
+[10:19] when you looks at this image its
+[10:21] generation incorporates all of these
+[10:24] different mental uh processes like what
+[10:27] we would call perception like what's in
+[10:29] it there and intuitive inference like
+[10:31] what you immediately infer from what you
+[10:33] see and also some symbolical reasoning
+[10:36] some more complex reasoning so I think
+[10:39] for this reason because uh LS really
+[10:41] only have this one mechanism um and that
+[10:45] b blend all this together so I think
+[10:47] it's proper to call this reasoning uh
+[10:51] and then one may alternatively call
+[10:54] these thoughts to avoid this overloaded
+[10:56] term but then the risk is that with
+[10:59] further anthrop mories these machines so
+[11:02] I prefer reasoning over
+[11:05] thoughts right another thing that I want
+[11:09] to get behind us before we proceed is
+[11:12] the name uh there are so many different
+[11:14] names where this agents right now there
+[11:16] AI agents autonomous agents LM agents
+[11:20] and so on so forth but I truly think
+[11:23] like language agents is probably the uh
+[11:25] most um descript uh like characteristic
+[11:29] name for this current generation of
+[11:31] Agents because the language is really
+[11:33] their most sedent
+[11:36] traits and what about multi agents well
+[11:39] there is perception in other modalities
+[11:42] and they're very important but language
+[11:44] is still doing the heav lifting like the
+[11:46] reasoning and communication
+[11:48] part and what about LM agents that's
+[11:51] probably the most popular name out there
+[11:54] I think what's really needed here or
+[11:57] characteristic of this generation of
+[11:58] agent
+[11:59] is
+[12:00] this capability of universal language
+[12:04] understanding and production which turns
+[12:06] out to be extremely important for agents
+[12:09] and but this capability doesn't have to
+[12:13] come from an Ln right maybe in a few
+[12:15] days we will go beyond LM but this need
+[12:19] this capability will remain so LMS could
+[12:22] be a means to an end in that sense is
+[12:25] that's as fundamental so language agents
+[12:28] are still a more um appropriate
+[12:33] name right if we take one step back and
+[12:35] think about the evolution of AI um I
+[12:39] think we're really entering a new evolu
+[12:41] evolutionary stage of machine
+[12:44] intelligence so human intelligence is
+[12:46] truly a model made by Nature somehow our
+[12:49] brain can take raw inputs from different
+[12:52] sensory organs and represent them in a
+[12:55] unified neural representation to
+[12:58] reconstruct the world around us and also
+[13:00] to support symbolic reasoning and
+[13:02] decision making right so that's truly
+[13:06] fantastic then throughout the history of
+[13:09] AI we have made many attempts to
+[13:12] approach human intelligence and manifest
+[13:15] machine intelligence into these AI
+[13:17] agents but earlier generations of AI
+[13:20] agents were only able to capture some
+[13:22] limited facets of human intelligence
+[13:25] like symbolic reasoning like perception
+[13:28] in single
+[13:30] modalities only recently with this
+[13:32] multimodal LMS and the language agent
+[13:35] built on top of them for the first time
+[13:38] we have a model that can encode
+[13:42] multisensor inputs into a unified new
+[13:45] representation that is also conducive to
+[13:48] symbolic reasoning and communication so
+[13:51] this drastically improve the
+[13:54] expressiveness the reasoning ability and
+[13:57] the adaptivity of a agent
+[14:01] and that's I think what makes this kind
+[14:03] generation of Agents so
+[14:06] exciting we can do a more detailed
+[14:08] comparison of these different
+[14:09] generations of Agents but for in the
+[14:11] interest of time I will just quickly go
+[14:13] through this and just focus on language
+[14:16] agents and the expressiveness is pretty
+[14:19] high for example you can compare with
+[14:21] the logical agents where the
+[14:23] expressiveness is founded by The Logical
+[14:25] language we use here we can the agent
+[14:29] the model can essentially encode almost
+[14:31] everything um especially the
+[14:33] verbalizable parts of the world but for
+[14:36] the non verbalizable Parts like how to
+[14:38] recognize a face we still have like M
+[14:40] model uh like inputter is to capture
+[14:44] those and then for reasoning now we do
+[14:47] language based reasoning uh instead of
+[14:49] like logical inferences so it's spudy uh
+[14:53] and it's uh flexible and it's uh
+[14:57] semiexplicit so it's not entirely
+[15:00] implicit you still have this chain of
+[15:01] thoughts that you can see what's going
+[15:03] on and fness I want to emphasize that
+[15:07] it's not necessarily a bad thing because
+[15:09] the world around us it has a lot of
+[15:11] fness in it um if we resort to like
+[15:15] something strictly very sound and very
+[15:18] rigid then it comes as a cost of uh
+[15:22] sacrificing the extractives a lot and
+[15:26] then the adaptivity which is a homework
+[15:28] of intelligence is also very high in
+[15:31] language agents because this a strong
+[15:33] prior captured by an LM and the language
+[15:36] use in general is very
+[15:39] flexible right so before we proceed let
+[15:42] me share with you my own concept of
+[15:44] framework for language agents this is
+[15:47] what I have been using to guide my own
+[15:48] research agenda in the past two years or
+[15:51] so um the most important things are the
+[15:55] what what I call Core competencies and I
+[15:59] to arrange them in loose hierarchy so
+[16:01] each box here you can roughly find the
+[16:04] corresponding cognitive function in a
+[16:06] human brain and then the bottom ones are
+[16:09] the more uh fundamental ones like
+[16:11] perception memory and embodiment and the
+[16:14] upper ones buil on top of the bottom
+[16:16] ones like planning built on top of
+[16:19] reasoning and World models and reasoning
+[16:21] buil on top of perception and memory and
+[16:23] so so Force we also have many cross
+[16:26] cutting issues like safety evaluation
+[16:29] synthetic data is both a challenge and
+[16:32] an opportunity and efficiency and many
+[16:35] new applications so with this framework
+[16:38] now you can look at any new paper about
+[16:41] agents and try to map it map its main
+[16:44] claims and uh main contributions into
+[16:47] this
+[16:50] framework all right so that's the
+[16:53] introduction and for the rest of the
+[16:55] talk we will cover try to cover three
+[16:59] aspects of language agents um how we
+[17:02] model longterm memory for which I will
+[17:05] use our recent work heac um then how do
+[17:09] these language models fully reason and I
+[17:12] will use our work on gra Transformer and
+[17:15] then finally I will talk about planning
+[17:17] especially World basic planning using a
+[17:19] word model okay so that's Sol is
+[17:25] memory um we'll talk about hi the main
+[17:29] content will be from hipac but we'll
+[17:31] talk about a lot of other things as well
+[17:34] um it's a neurobiologically inspired
+[17:36] lter memory mechanism for lar language
+[17:38] models is Le by my um student B and in
+[17:42] collaboration with Mii from
+[17:46] Stan right so if we look at how humans
+[17:50] or really most other animals that have a
+[17:53] nervous system how they learn like it's
+[17:57] really fascinating that that we are all
+[17:59] like these
+[18:00] 247 non-stop lifelong Learners right and
+[18:05] all we learn is stored in our
+[18:09] memory so the um Eric kandall the uh
+[18:14] Nobel priz winner who uh got the priz
+[18:16] for his contribution in um in the study
+[18:20] of memory especially the neurobiological
+[18:22] foundation of memory one said that
+[18:25] memory is everything without it we are
+[18:28] nothing which I think is uh very
+[18:31] profound because really anything we
+[18:35] learn has to be encoded in our memory
+[18:39] and through a process called synaptic
+[18:43] plasticity right so basically we can
+[18:45] change our synapsis to capture to
+[18:48] memorize things and to capture all the
+[18:50] things we're experiencing and we're
+[18:51] learning and there are different ways of
+[18:54] uh changing the synapsis like for
+[18:57] example you could change the strength of
+[19:00] a synapsis by uh uh either adding more
+[19:04] receptors here U or or releasing more
+[19:08] like
+[19:10] neurotransmitters or you can do
+[19:13] structural changes to the synapsis um
+[19:16] like by growing new synapses uh for the
+[19:19] same uh neuron for example so this is
+[19:23] used more often in forming long-term
+[19:26] mem right so we are really 24 four seven
+[19:29] Learners even when we are sleeping we
+[19:32] are uh replaying what happens during the
+[19:35] day right that's what how this longterm
+[19:38] memory gets
+[19:40] Consolidated right ideally we want that
+[19:43] the same kind of learning capacity in
+[19:46] machines or especially in agents as well
+[19:49] because these agents they are supposed
+[19:51] to explore the world do things and and
+[19:55] then accumulate a lot of learning from
+[19:57] that and self-improve in some sense
+[20:00] right however that's very hard for the
+[20:03] current
+[20:05] Technologies um for these neuron
+[20:08] networks in general and lrm this
+[20:11] gigantic lrms in particular they are um
+[20:15] very they have the notorious issue of
+[20:18] catastrophic forgetting um so when
+[20:21] you're learning new things because of
+[20:22] this highly distributional uh
+[20:25] representation of these mod in these
+[20:27] models when you you're learning a new
+[20:29] things it often has unintended side
+[20:32] effects like some other things um like
+[20:36] unexpectedly got changed during that new
+[20:39] learning
+[20:40] process right and to illustrate this we
+[20:44] can use um and in in the lrm context we
+[20:47] can consider what people have doing been
+[20:50] doing trying to edit an LM to inject or
+[20:55] alter a specific effect so that's called
+[20:58] uh knowledge model editing right and a s
+[21:03] Topic in model LM model editing is the
+[21:06] so-called repo effects right so if you
+[21:10] want to change just this one fact in a
+[21:14] comp factual change like you want to say
+[21:17] hey uh the no is a citizen of Syria
+[21:22] instead of uh United States right and
+[21:25] you want you have some expected uh repo
+[21:28] effect
+[21:29] right because now the citizenship T
+[21:31] changed so may so he should speak Arabic
+[21:35] instead of English but if you actually
+[21:37] look at what uh what has changed after
+[21:41] this edit you will see that a lot of
+[21:43] other unexpected things have changed or
+[21:46] the things that should have changed but
+[21:49] didn't change right so if you look at
+[21:52] the negation of these original
+[21:54] statements you will see that uh it will
+[21:57] still predict which is wrong you want it
+[22:00] to the United States because of the
+[22:03] mutation and then there is this
+[22:06] um uh like the the language here also
+[22:10] becomes seral uh but you want it to be
+[22:12] Arabic and so on so forth so all of
+[22:15] these just tell you that because of this
+[22:18] uh highly distributional representation
+[22:21] of these artificial new networks that
+[22:23] makes continual learning very hard um
+[22:28] the human brain and animals somehow uh
+[22:32] figure out a way to do that but we don't
+[22:34] quite understand how how that happens
+[22:36] yet uh so cannot replicate that in
+[22:39] machines but that's highly desired this
+[22:42] kind of contining learning is highly
+[22:44] desired for agents and for lrms so what
+[22:47] can we do um a good news is that for
+[22:53] lrm it's possible to use an alternative
+[22:57] form of memory called
+[22:59] nonparametric memory so instead of like
+[23:02] CH directly changing the parameters of
+[23:05] an a model with the new experiences we
+[23:08] can just hold the new experience
+[23:10] external to the model so it's
+[23:13] nonparametric and then just retrieve
+[23:15] them uh using some mechanism as we
+[23:19] go but for that to work then of course
+[23:23] this is called uh rack which augmented
+[23:26] generation but for that to work there is
+[23:29] a prequisite condition right that is
+[23:33] when you retrieve something some
+[23:35] external
+[23:36] information and you say hey this is your
+[23:39] memory so you should you should take it
+[23:42] you should all your decision making
+[23:43] should be based on it then it's based on
+[23:46] the condition that these
+[23:48] lrms actually will be receptive to such
+[23:53] external information right um so we did
+[23:56] this study uh called
+[23:59] adaptive comedian or stub thoughts um
+[24:02] where we specifically study this
+[24:04] behavior when you have this external
+[24:07] evidence like from rack and then when
+[24:10] that directly conflict within lm's
+[24:13] parametrial memory what would happen
+[24:15] will they resist that or will they be
+[24:18] receptive to that um perhaps not not too
+[24:22] surprisingly at this point but what's
+[24:24] very surprising at the time is that this
+[24:27] LM turn out to be highly receptive to
+[24:31] external evidence even when that
+[24:33] conflict with their parametri memory so
+[24:36] for the two examples here you have a
+[24:38] question and the ground truth answer in
+[24:40] this case the parametric memory of the
+[24:43] LM is correct but if you give it a
+[24:46] coherent counter memory like this then
+[24:49] Ln will happily accept this and change
+[24:52] it answer and in this case the parimal
+[24:55] memory was wrong and you can correct
+[24:57] that by giving is the correct content
+[25:00] memory but that kind of paves the way
+[25:03] for non-parametric memory for LMS
+[25:06] because of their um being highly
+[25:09] receptive to this external evidence of
+[25:12] course this has other implications like
+[25:14] safety like maybe this that this means
+[25:17] that these LMS could be highly Gable but
+[25:20] that's not uh that's not the focus
+[25:24] today okay right now let's talk about
+[25:28] how to really make longterm memory work
+[25:30] for
+[25:31] LMS most people know that rag is the
+[25:35] defao solution today right you uh given
+[25:40] something that is for example the the LM
+[25:42] doesn't know or uh Beyond its knowledge
+[25:45] cut off dat then it will retrieve from
+[25:47] the internet and then user retrieve the
+[25:49] information as a kind of longterm memory
+[25:52] uh to uh answer the
+[25:55] question but if you think about how R
+[25:59] works okay you embed this evidence uh
+[26:02] into vectors then you do Vector based
+[26:04] similarity to retrieve them that seems
+[26:08] far
+[26:09] simpler uh far less sophisticated than
+[26:12] the human memory system where we can
+[26:15] recognize patterns uh in massive data ma
+[26:19] raw experiences we can create a lot of
+[26:23] associations of cross them and we can
+[26:25] dynamically retrieve them uh to to for
+[26:28] the current context and so on so forth
+[26:31] so to illustrate some of the limitations
+[26:34] of the current in backing based R system
+[26:37] let's consider this
+[26:39] example let's say you have a query uh
+[26:43] which is Stanford Professor works on the
+[26:45] Neuroscience of Alzheimer's so you have
+[26:48] two stting concepts Stanford and
+[26:51] Alzheimer's then let's assume just
+[26:54] hypothetically you have a bunch of
+[26:57] passages if each passage only contains
+[27:00] part of the information so you don't
+[27:03] happen to have a passage that tells you
+[27:06] uh like this person is both a stample
+[27:09] professor and works on Alzheimer instead
+[27:12] what you have is this separate passages
+[27:16] okay this passage says this person works
+[27:18] at Stamper this passage says that this
+[27:21] person works on Alzheimer and then you
+[27:24] will see like there is one person who
+[27:27] works at
+[27:28] and on alimer but it's in separate
+[27:32] documents you don't happen to have one
+[27:34] document that tells you all right so
+[27:37] what would happen if you just use
+[27:39] embeding B
+[27:41] rout now you Ed each of these passages
+[27:45] into a vector you embed your query into
+[27:48] a vector you do compare the similarities
+[27:50] one by one then you will find all of
+[27:53] these passages are equally likely
+[27:57] because each of them captures precisely
+[28:00] 50% of the information right and as a
+[28:05] result the model has to manually go
+[28:09] through all of these passages to figure
+[28:11] out uh which ones are the correct
+[28:14] ones right and you can imagine there
+[28:16] could be thousands of professors working
+[28:19] at stur and even more people working on
+[28:22] asers right so it's a one to many many
+[28:25] to one
+[28:26] relationship but our human memory
+[28:29] doesn't work that way somehow when if we
+[28:33] have come across like this like this
+[28:36] person works on Alzheimer's this person
+[28:38] also works at Stanford then we will
+[28:40] build some sort of Association among
+[28:42] them such that when this query comes we
+[28:46] can very easily and quickly find that
+[28:48] hey this person is connected with both
+[28:51] Stanford and isms so it's the answer we
+[28:54] don't have to go through recall all of
+[28:57] these other information to derive at
+[29:00] that uh
+[29:02] conclusion right so in that sense ining
+[29:05] based R works very differently from
+[29:07] Human
+[29:10] memory now to study how this exactly how
+[29:16] the human Works in this regards so we
+[29:19] turn to this wellestablished theory of
+[29:22] human L memory called the hipocampo
+[29:24] indexing Theory it basically goes like
+[29:27] this I I'll summarize it in an overly
+[29:31] simplified way um it says that your raw
+[29:34] memory is Sor on your near cortex
+[29:39] particularly uh like the in where the
+[29:42] memory was first generated right so when
+[29:46] episodi memory like the auditory part of
+[29:49] it will be stored in auditory cortex the
+[29:52] V qual will be stored in the v cortex
+[29:55] and so on so forth that's why when you
+[29:57] are trying to record something you were
+[29:59] like relieving the moment like um
+[30:02] because it's just re triggering the same
+[30:05] neurons as if you were perceiving them
+[30:09] right but importantly you also have an
+[30:12] structured index stored in the
+[30:16] hippocampus that creates a much closer
+[30:19] much uh essentially shortcuts that
+[30:22] associate all these disparate memory
+[30:25] units together right um and that's what
+[30:29] we are trying to mimic
+[30:33] here this kind of separation and
+[30:35] structure index give you two important
+[30:38] uh faculties of human memory it allows
+[30:41] you to do pattern separation so you can
+[30:45] differentiate memories in very funu way
+[30:49] certainly Beyond just vectors at least
+[30:52] at the concepts level right if you think
+[30:54] about your episodi memory the second
+[30:58] second and the second before they are
+[31:00] very similar to each other how can you
+[31:02] differentiate the differences that
+[31:04] requires a very fying gr separation of
+[31:07] patterns um but more importantly which
+[31:10] is more relevant here is pattern
+[31:12] completion right we can in recover
+[31:15] complete memories uh using just partial
+[31:18] cues like the previous example the
+[31:21] partial cues are Stanford and isers and
+[31:24] then you can quickly recall this whole
+[31:27] uh fact that this person is associated
+[31:29] with both of them and that's due to this
+[31:32] um structure index in a hioc
+[31:36] campus right so that's what we're trying
+[31:39] to mimic in h hippo we're trying to
+[31:44] build a similar structured index for rec
+[31:47] systems to enjoy some of the same
+[31:50] benefits of the human launter memory
+[31:54] system um I won't get into too much
+[31:58] details so just like at a high level um
+[32:03] but this in the hipocampo indexing
+[32:06] Theory there are three main parts right
+[32:08] there there is the ne cortex and hpoc
+[32:10] campus and then there is the Paro
+[32:12] regions that connect the two so the H
+[32:16] the new cortex is more about uh pattern
+[32:19] separation so you will process the raw
+[32:22] experience extract patterns out of this
+[32:25] concept and so on so forth and then then
+[32:28] the hioc campus is more like the
+[32:30] structure index so it's the indexing
+[32:32] Auto Association and then theoc campus
+[32:35] regions is more like the the working
+[32:37] memory that connects to then do some
+[32:39] more uh um like iterative thinking
+[32:42] around
+[32:44] there so to mimic this process um we
+[32:49] have two spaces we have the offline
+[32:52] indexing phase and the online F phase
+[32:55] for offline indexing I say you have
+[32:58] these passages as inputs we use an LM to
+[33:02] serve as a new cortex that will do open
+[33:05] information extraction to extract these
+[33:09] tripletes like the concepts non phrases
+[33:13] and their relationships like the verb
+[33:15] phrases so extract this uh triplets then
+[33:20] we do try to build a Knowledge Graph
+[33:23] particularly this a this is a schema
+[33:25] that's Knowledge Graph so we don't have
+[33:27] a ology or the predefined schema or
+[33:30] anything like that everything is
+[33:32] extracted by an LM from the raw
+[33:35] experiences right so we built a n graph
+[33:39] by uh consolidating all this uh new
+[33:42] extracted Concepts and phrases as nodes
+[33:45] and edges that's the offline indexing
+[33:49] phas and this becomes our artificial uh
+[33:52] hipocampal
+[33:55] index then the the this we use an dense
+[33:59] retriever here as an encoder to
+[34:01] consolidate things like to identify like
+[34:04] which concepts are uh similar to other
+[34:07] or synonymous to each
+[34:09] other then in the online retrieval phase
+[34:13] when a query comes in like the Stanford
+[34:16] as example then we'll identify the
+[34:19] concept we use named entty recognition
+[34:22] so now we got Stanford and isomers we
+[34:25] still use a dance uh
+[34:28] to find the similar nodes in my
+[34:34] Index right and then those noes become
+[34:38] the C the noes for the graph search
+[34:41] process so we will use this as seed to
+[34:44] do a search process on the graph to uh
+[34:47] to find like the most related things
+[34:50] right and this particular Graph Search
+[34:53] algorithm we're using here is
+[34:55] personalized the page rank
+[34:58] okay so for people who don't quite
+[35:01] remember what a personalized P brand uh
+[35:04] Works um I I'll do a quick recap right
+[35:07] so it's a random work process on the
+[35:09] graph where you start with some C the
+[35:11] notes so those start with probability uh
+[35:14] one then you use a random walks uh
+[35:17] stting from the C not to disperse the
+[35:20] probability Mass to their neighboring
+[35:23] notes so the nodes that are closer to
+[35:27] this C no or like especially those are
+[35:30] in intersection of multiple C the nodes
+[35:32] will naturally end up with a higher
+[35:34] weights then in this case Professor
+[35:38] Thomas who is connected to both Stanford
+[35:40] and RM will naturally stand out and
+[35:43] getting the highest weights now we can
+[35:46] use these weights over concept to
+[35:48] reweight the original passages then to
+[35:52] retrieve the most uh highly weighted
+[35:55] passage right so that's how people rap
+[35:58] Works in a nutshell of course there are
+[36:00] a lot of details that we're not covering
+[36:03] but this is the main
+[36:07] chest and it turns out like some simple
+[36:11] uh strategy like this uh biologically uh
+[36:15] fible strategy works also extremely well
+[36:18] in practice right it's not enough I
+[36:21] think it is of course a neat idea like
+[36:24] hey this is biologically inspired uh how
+[36:27] cool is that but I think it's equally
+[36:30] important for it to actually work to
+[36:33] work very well and better than existing
+[36:36] Solutions in practice and that's what we
+[36:39] showed with hippach so compare hippach
+[36:42] with the state of the art Dan retrievers
+[36:46] uh at the time and show that on multip
+[36:49] uh QA data sets three standard mop QA
+[36:53] data sets uh is much uh it performs much
+[36:56] better uh by Marin and also you can you
+[37:00] can compare Hipp with this iterative
+[37:03] retrieval methes like
+[37:05] IRC and it also works better than this
+[37:09] iterative method and also because H the
+[37:13] nature of it really this structured
+[37:16] index and the graph search though it can
+[37:18] it's highly complimentary to all these
+[37:21] existing methes you can easily integrate
+[37:24] it with other methes like IRC and then
+[37:27] you get a big boost as
+[37:32] well okay and to better understand where
+[37:37] does this power of Hippo comes from we
+[37:40] can consider a type of questions what we
+[37:43] call Path finding questions like the
+[37:47] example running example we have been
+[37:49] working with so if you think about the
+[37:52] in this information space like the this
+[37:55] huge graph of everything connected to
+[37:57] everything what's the solution path um
+[38:01] of structure for this question looks
+[38:03] like you will see it's like uh it's not
+[38:08] just like a one to one to one kind of
+[38:10] path it first has start with a one to
+[38:13] many religion like Stanford there are
+[38:15] many professors working at Stanford then
+[38:19] among those is our answer Professor
+[38:21] Thomas and uh from this and then for the
+[38:25] people to seares to alzheimer's that's
+[38:29] also a many to one relationship so there
+[38:32] are many people working on Alzheimer if
+[38:35] you don't have like PRI knowledge about
+[38:38] your the answer you're looking for then
+[38:40] naturally you'd have to search through
+[38:42] all this um hundreds of thousands of
+[38:46] candidates for you to find uh Professor
+[38:48] Thomas and hipak by explicitly building
+[38:52] extracting and building these
+[38:54] associations from the raw uh inputs that
+[38:57] allows you to kind of create this
+[38:59] shortcut to quickly find the true answer
+[39:03] well if you use cober or like I then
+[39:06] they won't be able to find it
+[39:10] efficiently okay so that that was hio um
+[39:14] that was published in neurops which is
+[39:16] just two months ago but it in today's
+[39:20] pace is still like ages ago um so as a
+[39:25] um I'm very excited to share that hipak
+[39:29] V2 is coming very soon and um so a
+[39:33] problem with hipak or all these recent
+[39:36] structured augmented rack message like
+[39:39] graph rack light rack Raptor and so on
+[39:41] so for the if you so the compare favor
+[39:47] body with to this like uh simpler
+[39:51] baselines like this small dense
+[39:54] retrievers like Cobra V2 or cont
+[39:58] but recently there have been many large
+[40:00] embedding models like a g like a m BS
+[40:04] and if you actually compare this
+[40:06] structured augmented rack method with d
+[40:09] you will see that they are much worse
+[40:11] including Hipp rack um they are working
+[40:15] compare compare okay on this multihop QA
+[40:19] husks because they they they were mostly
+[40:23] uh designed for these kind of tasks but
+[40:25] if you just look at all other scenarios
+[40:28] like just some very simple QA or some
+[40:30] discourse understanding and so on so
+[40:32] forth like they don't work that well so
+[40:35] as a result it's very hard for this
+[40:37] message to become just a dropping
+[40:39] replacement of uh like inag based
+[40:43] message then in hpor V2 we did a bunch
+[40:47] of clever uh upgrades to hia V1 and the
+[40:53] result is that now V2 is comparable or
+[40:57] than the best loging Bing models across
+[41:01] the board so then it's much more
+[41:04] plausible to just use g r V2 as a
+[41:07] dropping placement uh replacement for
+[41:10] your rag
+[41:11] system we hope to release this uh very
+[41:15] soon right so for memory part the
+[41:19] takeaways um so memory is really Central
+[41:22] to human learning um and long-term
+[41:26] memory through parametric Contin
+[41:28] learning for LMS is very hard but
+[41:31] fortunately non-parametric memory like
+[41:34] rack could be a promising solution but
+[41:37] and the reason trending in rag is to add
+[41:39] more structures to embeddings like hi
+[41:41] rag or graph rag to enhance like the
+[41:44] sense making capability of these models
+[41:47] like the ability to integrate larger
+[41:49] more complex and uncertain contacts and
+[41:52] the associativity of this memory like
+[41:55] the capacity to draw for multiple
+[41:58] connections between this parot pieces of
+[42:03] information okay so that's memory and I
+[42:07] think we're still quite far away from uh
+[42:10] developing a very sophisticated memory
+[42:12] system uh but we are on well getting
+[42:16] there um there are still many gaps like
+[42:19] how to handle like episodia memory like
+[42:22] the spal temporal aspects of things
+[42:24] which is Central to human memory uh
+[42:27] don't have a good solution yet hey so
+[42:31] memory is the most fundamental aspects
+[42:33] in my opinion um then uh let's get back
+[42:37] to get to another very fundamental
+[42:40] aspect which can be can be built on top
+[42:43] of re memory which is
+[42:45] reasoning and our discussion today will
+[42:48] be mainly based on this paper gring of
+[42:50] implicity relations in Transformers uh
+[42:53] is that by um the student from our group
+[42:56] b one and it's published in neops this
+[42:59] year last
+[43:02] year right so we will be talking about
+[43:06] implicit reasoning um in implicit
+[43:10] reasoning we don't do chain of thoughts
+[43:12] so there is no verbalized chain of
+[43:14] thoughts explicitly we ask the LM to
+[43:18] directly predict the answer like in this
+[43:22] example of compositional reasoning you
+[43:25] let's say the language the langage model
+[43:27] has memorized or know these two Atomic
+[43:31] facts that Bar's wife is Michelle and
+[43:34] Michelle was born in
+[43:36] 1964 then the model will be given this
+[43:40] input like bar wife born in and is asked
+[43:44] to directly predict the answer 1964 in
+[43:48] this compositional reasoning fashion
+[43:51] right um so if you do change of thoughts
+[43:54] of course you can try to recall head the
+[43:57] Bark's wife is Michelle Michelle was
+[43:58] born in this so therefore Dan is this
+[44:01] but we want to push the model to
+[44:04] implicitly just using his parameters in
+[44:06] a single forward PA to do this
+[44:09] reasoning why like C like especially
+[44:13] this long C is all the rage right now
+[44:17] like in R1 or o1 then why why does
+[44:20] implicit reasoning mat um that's this is
+[44:24] also what I would means uh in the
+[44:26] beginning like why this um the reasoning
+[44:29] mechanism of these LM is mostly just uh
+[44:32] token generation but implicit reasoning
+[44:35] is still part of the reasoning
+[44:38] repertoar um so why does implicit
+[44:41] reasoning matter first of all this is
+[44:44] the default mode of training or
+[44:49] pre-training because during training
+[44:51] time when the model is asked to predict
+[44:54] the next token with cross ENT loss
+[44:58] there's no coot right at least not for
+[45:00] now so in training time model has to
+[45:05] compress the data has to do inut
+[45:08] reasoning in order to uh reasonbly
+[45:12] predict the next token so no matter what
+[45:16] I think it's important to understand the
+[45:19] implicit reasoning capability of langage
+[45:22] models also that increas reasoning
+[45:25] fundamentally determines how well this
+[45:27] models acquire structure representations
+[45:30] of the facts and the rules from their
+[45:32] training data um and
+[45:34] finally like there's a lot of uh
+[45:37] speculation about how this this o1 or R1
+[45:41] style long coot emerge from a um I think
+[45:46] one possible hypothesis as it is in my
+[45:48] mind is like this like you start with a
+[45:53] capable base model right if the base
+[45:55] model is not capable enough then I won't
+[45:57] do much so you start with a capable
+[46:00] based model like DC V3 and it probably
+[46:03] has already learned all of these basic
+[46:06] constructs or strategies for reasoning
+[46:09] right so like self-reflection like
+[46:12] analogical reasoning and so on so forth
+[46:14] then and maybe in an implicit reasoning
+[46:17] fashion like just some kind of reasoning
+[46:20] circuits in the
+[46:21] parameters then reinforcement learning
+[46:24] with this verifiable rewards is just to
+[46:27] incentivize the model to learn to use
+[46:30] the right combination of strategies but
+[46:33] it's not learning new reasoning
+[46:35] strategies through I and then it also
+[46:38] encourages the model to keep trying
+[46:40] don't be lazy right so if we uh if this
+[46:44] hypothesis is true then understand how
+[46:47] these models how these re different
+[46:50] reasoning strategies work within the
+[46:51] model becomes even more
+[46:55] important right
+[46:57] um so back to inut reasoning um before
+[47:00] our work there were a bunch of work a
+[47:02] great work that shows that LMS truly
+[47:05] struggle with implicit reasoning I some
+[47:09] people show that it struggles with
+[47:11] compositional reasoning like this uh
+[47:14] there is a famous compositionality Gap
+[47:17] and then some other people show that LM
+[47:20] even like G4 at the time strugle was
+[47:23] simple things like comparative reasoning
+[47:25] or comparison like Trump is 78 Biden is
+[47:30] 82 then Trump is younger or older than
+[47:36] Biden
+[47:39] so that was like the the uh previous
+[47:42] conclusions but we have we had different
+[47:46] opinions um it seems to us like these
+[47:50] all like kind of um contribute to like
+[47:53] this autor regressive lrms and never
+[47:57] truly reason or plan kind of narrative
+[48:00] um but we had uh some different belief
+[48:05] we have more faith more confidence in
+[48:08] language models and Transformers so we
+[48:11] we want to more carefully study uh this
+[48:15] um problem then to see whether we can
+[48:16] get some new insights so we started with
+[48:19] this research questions first can
+[48:22] Transformers learn to reason implicitly
+[48:25] or are there fundament limitations that
+[48:28] prohibit robust acquisition of this
+[48:31] skill and then what factors like is that
+[48:35] the scale of the train data the
+[48:36] distribution of the train data or the
+[48:38] model architecture that control the
+[48:40] acquisition of implicit implicit
+[48:43] reasoning okay so with these two
+[48:46] questions let's discuss the
+[48:50] setup the model and optimization are
+[48:54] pretty standard but we want to um I
+[48:57] don't want to introduce questions here
+[48:59] so it's just like a standard decoder
+[49:01] only Transformer intive 2 architecture
+[49:05] and we also show that the results are
+[49:07] pretty robust to different model skills
+[49:09] so you can have a deeper model but the
+[49:11] conclusions are the same then the
+[49:14] authorization is also pretty
+[49:17] standard then for the data will be using
+[49:22] will be synthetic data because we want
+[49:24] to carefully control all the factors uh
+[49:27] in this investigation so that we can
+[49:29] separate out the uh the problem we want
+[49:32] to
+[49:33] study so you can imagine like let's just
+[49:36] consider composition we study both
+[49:38] composition and comparison but let's
+[49:40] focus on composition for now the data
+[49:43] will look like just a random n graph it
+[49:45] has each s of entities and our relations
+[49:49] we set R to 200 um so then it's a bunch
+[49:53] of nodes and then this different ration
+[49:56] C
+[49:58] then it has these are the atomic facts
+[50:01] right like uh Superstition the scener is
+[50:05] Ste and then we can use this Atomic fact
+[50:09] to get some infert facts or this two
+[50:12] half compositions following the
+[50:15] composition rule like if the head entity
+[50:18] R1 Bri entity and then Bridge entity r
+[50:22] two tail entity then we have this
+[50:25] composition effect like head entity R1
+[50:28] R2 T entity so it's
+[50:30] like bar um wife uh born in
+[50:36] 1964 right so this composition and you
+[50:40] can think uh like comparison the data
+[50:42] for comparison is
+[50:45] similar okay then the important setup
+[50:48] here is that we want to study inductive
+[50:52] learning of deduction rules right um a
+[50:56] fancy phrase but let me just decompose
+[50:58] this for
+[50:59] you first of all we want the model which
+[51:02] is the the decoder only Transformer to
+[51:04] learn inductively so just give a bunch
+[51:07] of training examples you want it to
+[51:09] learn these rules and particularly these
+[51:12] are deduction rules so um this is a
+[51:15] typical deduction rule right you start
+[51:17] from some premises and then you uh can
+[51:20] deduce a new fact right so this is
+[51:23] inductive learning of deduction rules
+[51:28] then um there are
+[51:30] two generalization settings what I would
+[51:34] call the in distribution setting and the
+[51:37] out of distribution setting or this
+[51:39] setting can also be called systematic
+[51:42] generalization so it goes like this for
+[51:46] the atomic facts like those edges in the
+[51:48] N graph we split it into two sets the ID
+[51:53] set and the O set then they all go
+[51:57] through the same rule like the
+[51:59] composition rule you get the
+[52:01] corresponding infert facts right then
+[52:05] for this set of infer facts from the ID
+[52:08] Atomic facts we split into two sets the
+[52:12] training uh uh the training set and the
+[52:15] te ID test set right so this for this
+[52:19] infer
+[52:20] facts um but in the ID test sets even
+[52:26] though we have not seen this exact infer
+[52:30] fact in our training data so it's an
+[52:33] unseen infer fact but we have seen all
+[52:36] of its constitutes like those atomic
+[52:39] effects being composed in with other
+[52:42] Atomic effects in this ID training sets
+[52:46] right I know it's a it's a bit of
+[52:48] mouthful but just bear with me so for
+[52:52] any of these infert fact in the ID test
+[52:55] set like um Barack uh wife born in
+[53:01] 1964 maybe you have you have not seen
+[53:04] that exact in fact in your training data
+[53:07] but you have seen like for example the
+[53:09] relation um like bar wife Michelle you
+[53:15] have seen this Atomic facts being
+[53:17] composed with other relations also
+[53:20] similarly you have seen the other uh
+[53:22] Atomic facts like Michelle born in 1964
+[53:26] being composed with other Atomic facts
+[53:29] you just haven't happened to see that
+[53:32] exact INF fact like bar uh wife born in
+[53:37] 1964 so that so that you still need some
+[53:40] generalization to capture
+[53:42] them but for the O test set then you
+[53:47] still have seen all of the atomic
+[53:49] effects because otherwise the model
+[53:51] doesn't know that this Atomic these
+[53:53] Factor exist um but you have never seen
+[53:56] any any of those atomic facts uh being
+[53:59] composed in a compositional fashion like
+[54:02] being composed with other relations
+[54:04] right so that's in that sense it's a
+[54:06] stronger generalization setting so
+[54:08] that's why it's called a systematic
+[54:10] generalization if the a model can do
+[54:12] this then essentially it means that the
+[54:14] model has truly learned this rule this
+[54:16] deduction rule so that you can just
+[54:19] apply it to any arbitrary new facts
+[54:23] right um so that's really the goal for
+[54:26] uh this uh learning of detection
+[54:30] rules now with all this lengthy setup in
+[54:33] mind let's look at some fun Parts look
+[54:36] at some interesting takeaways from our
+[54:40] investigation the first surprising
+[54:43] conclusion we found is that Transformers
+[54:47] can learn to reason implicitly but only
+[54:51] through a process called
+[54:54] gring what is gring
+[54:57] um so let's look at the this uh figure
+[55:00] for now this curve is the training
+[55:04] accuracy you can see it quickly goes to
+[55:06] 100% that means uh the model the
+[55:09] training has overfit at these points but
+[55:13] if you look at the T the ID test curve
+[55:17] right when the model first overfits here
+[55:21] the test accuracy was still very
+[55:23] low and if you keep training the model
+[55:27] Way Beyond um like the saturation or
+[55:30] overfitting like the overfitting happens
+[55:33] around like 10,000 steps and if you
+[55:35] train it like uh two 20 times more
+[55:40] optimization steps like to to these
+[55:43] points this is log scale for example
+[55:46] like keep in mind then all of a sudden
+[55:50] um generalization happens right this at
+[55:53] least the ID generalization happens
+[55:56] right so the model gets to 100% test
+[55:58] accuracy on composition in the ID
+[56:02] split similarly for
+[56:05] comparison the overfeeding happens very
+[56:07] early on but it takes about 20 more
+[56:10] times um of train optimization steps for
+[56:14] generalization to happen and
+[56:16] interestingly for comparison all the
+[56:18] test accuracy also get to 100% so that's
+[56:22] a problem we're looking into
+[56:24] dat right um so that's quite interesting
+[56:30] right this Transformers three can learn
+[56:32] to reason implicitly but only through
+[56:37] rocking and it's one of the first
+[56:39] studies that establishes this connection
+[56:42] between rocking and implicit reasoning I
+[56:46] believe and we will uh investigate why
+[56:49] that happens in a
+[56:51] second another take immediate takeaway
+[56:54] here is that as we just said that the
+[56:57] level of
+[56:59] systemicity of generalization varies by
+[57:02] the reason type for compositional
+[57:05] reasoning there is NE it never managed
+[57:08] to learn to generalize o well for
+[57:11] comparative reasoning uh o
+[57:13] generalization did happen so we want to
+[57:17] understand why there is such a
+[57:19] difference as
+[57:21] well then another in interesting
+[57:24] takeaway here is that
+[57:26] so before this study there were already
+[57:29] some studies that look at graphing and
+[57:32] then I'll try to understand why gring
+[57:36] happens and under what conditions would
+[57:39] uh gring happen then one common belief
+[57:42] in the literature was that there is a
+[57:45] critical data size like once your your
+[57:49] total amount of data surpasses a certain
+[57:51] threshold then graphing happens
+[57:54] otherwise it won't happen but in our
+[57:57] study we try to study this uh this
+[58:01] hypothesis very carefully then we find
+[58:03] that actually it's not the data size but
+[58:07] the data distribution that matters so in
+[58:11] this experiments on the rights we um we
+[58:16] keep the the so there is two F two
+[58:19] variables there is the total data size
+[58:22] which is controlled by the number of
+[58:23] entities and it's proportional to the
+[58:26] total data number of training examples
+[58:28] and then there is um by which is the
+[58:32] ratio of infert versus um Atomic facts
+[58:36] right so if this number is larger that
+[58:39] means that you have more infer facts
+[58:41] than uh then you have Atomic effects
+[58:44] right so on the right we keep the ratio
+[58:47] fixed and increase the number of
+[58:50] entities or the total data size then you
+[58:52] will see the speed of generalization is
+[58:56] roughly the same when you increase the
+[59:00] total data
+[59:01] size right um it's more or less the same
+[59:05] however when you keep the uh data size
+[59:10] fixed so it's the same number of
+[59:12] entities um you just change the ratio
+[59:16] five like from 3.6 to
+[59:19] 18 then you see the speed of
+[59:23] generalization um
+[59:26] strongly positively correlates with this
+[59:29] ratio if you have a higher ratio then
+[59:32] the generalization will happen uh faster
+[59:35] and at some points it will be as fast as
+[59:38] uh the overfeeding of the training
+[59:41] data right so this really shows that
+[59:43] it's the critical data distribution that
+[59:45] matters not the sheer size of your
+[59:47] training
+[59:50] data with all those take interesting
+[59:54] takeaways um I would job is not done
+[59:57] here yet because there are still some
+[59:59] very important questions we have not
+[01:00:02] answered right so why does grocking
+[01:00:05] happen what exactly happens during this
+[01:00:08] long grocking process what's going on
+[01:00:11] with in the within the model and why
+[01:00:14] does the level of systematicity in
+[01:00:17] generalization vary by the reasoning
+[01:00:19] type so all of these questions require a
+[01:00:22] deeper look inside the model
+[01:00:26] that's the mechanistic interpretation
+[01:00:28] part of this
+[01:00:31] study so we will use some uh popular and
+[01:00:35] now this very standard uh mechanistic
+[01:00:37] interpretation tools one is uh logic
+[01:00:40] lens so here we apply the internal
+[01:00:45] States at uh some uh position in within
+[01:00:49] the Transformer uh and multiply it with
+[01:00:52] the output embedding Matrix so that we
+[01:00:55] can get a distribution over with output
+[01:00:58] of vocabulary so we kind of get a peak
+[01:01:01] into what this internal representation
+[01:01:04] uh is about right then we we will also
+[01:01:08] use so-called costal tracing
+[01:01:12] um like in a nutshell this allows you
+[01:01:17] this technique allows you to
+[01:01:20] um measure quantitatively measure the
+[01:01:24] amount of impact of a certain internal
+[01:01:27] state to um the
+[01:01:31] output right so it's a it ranges from
+[01:01:34] zero to one if it's closer to one that
+[01:01:37] means that this position uh this
+[01:01:40] internal state has a larger impact on
+[01:01:43] the final decision right I won't get
+[01:01:46] into the the very details because that
+[01:01:48] that will take too much
+[01:01:50] time um so with this uh mechanistic
+[01:01:54] interpretation technique
+[01:01:56] now we can try to find or discover
+[01:02:00] rather that um the corresponding
+[01:02:03] generalizing circuit formed for
+[01:02:06] different reason types then this is what
+[01:02:10] we found uh very very beautiful we find
+[01:02:13] that for
+[01:02:14] composition after gring the Transformer
+[01:02:18] will learn a generalizing circuit like
+[01:02:21] this it's a kind of stage circuit right
+[01:02:25] so this is the input to Transformer you
+[01:02:27] have the head entity R1 and R2 and then
+[01:02:30] this is layer Z layer zero this is layer
+[01:02:32] eight the final layer um then the first
+[01:02:38] few layers of the Transformer will
+[01:02:41] essentially do two
+[01:02:42] things for these parts it will process
+[01:02:46] the first hop essentially so look at H
+[01:02:49] and R1 and then find the bridge entity B
+[01:02:53] here we're using logical Dan here um
+[01:02:56] so it has memorized this Atomic fact in
+[01:03:00] the first few layers to the extent that
+[01:03:03] it can reliably predict B at the year
+[01:03:07] five
+[01:03:09] then the another thing that needs to be
+[01:03:12] done here is that it needs to defer the
+[01:03:15] processing of R2 so you cannot forget
+[01:03:18] about R2 because R2 needs to be used L
+[01:03:22] even though it doesn't need to use R2 in
+[01:03:25] the earlier day
+[01:03:26] it needs to use R2 when it has found B
+[01:03:29] the bridge entity okay so once the
+[01:03:32] bridge entity is identified is then in
+[01:03:35] in the internal States then it can be
+[01:03:37] combined with R2 and then it has
+[01:03:40] memorized the atomic fact that b R2 is T
+[01:03:46] so then you can combine the bridge
+[01:03:48] entity B and the delay the processing R2
+[01:03:51] to predict t right so that's the
+[01:03:55] generalizing circuit for composition it
+[01:03:58] has two clear stages and that will also
+[01:04:01] determine its generalization behavior
+[01:04:03] that will analyze
+[01:04:05] later well on the other hand the
+[01:04:08] comparison relationship or reasoning has
+[01:04:11] a different circuit what we call a
+[01:04:13] parallel circuit remember for comparison
+[01:04:17] it's like you have two entities E1 and
+[01:04:19] E2 you have you know some value of some
+[01:04:22] attributes of this entity like this is
+[01:04:25] uh um Trump this is Trump this is Biden
+[01:04:28] and then Trump is V1 is 78 Biden is 82
+[01:04:34] then the prediction is uh who is older
+[01:04:38] is like Trump is younger or um older or
+[01:04:42] equals um than uh Biden right then the
+[01:04:47] circuit here is more of a parallel CC
+[01:04:50] okay so the first few layers of the
+[01:04:52] Transformer were learn to in parallel
+[01:04:55] retrieve the attribute values like 78
+[01:04:59] and
+[01:05:00] 82 then the uper dat years we'll use
+[01:05:04] this retrieved values to do the
+[01:05:06] comparison and then to predict um the
+[01:05:10] final answer whether is smaller than
+[01:05:12] equal or
+[01:05:14] larer okay so different the reason
+[01:05:18] through mechanic interpretation we can
+[01:05:20] find the generalizing circuit
+[01:05:23] configuration of different reason types
+[01:05:26] and they are indeed different and this
+[01:05:29] different configuration will determine
+[01:05:32] their level of systematicity of
+[01:05:37] generalization but before that um let me
+[01:05:41] share like a simple way to fix or to
+[01:05:44] improve this uh systematic
+[01:05:46] generalization uh especially for for
+[01:05:50] composition right um so as we showed
+[01:05:53] earlier for composition o generalization
+[01:05:56] never happened um why if you think look
+[01:06:00] at this circuit and think about it that
+[01:06:03] becomes kind of uh um off ofus right so
+[01:06:08] for the O generalization to
+[01:06:11] happen the model needs to do a few
+[01:06:14] things it needs to First memorize a copy
+[01:06:19] of the first half Atomic effects like H
+[01:06:22] r1b in the lower lers of the transform
+[01:06:26] right so that you can find the bridge
+[01:06:28] entity at the ler five then it also
+[01:06:31] needs to store a copy of the second hop
+[01:06:36] Atomic effect but in the
+[01:06:39] operaters right because the second hop
+[01:06:41] has a delayed the processing so it needs
+[01:06:44] to somehow store effect the atomic
+[01:06:47] effect B r2t here not in the lower layer
+[01:06:51] but in the upper
+[01:06:53] layer however for the old generalization
+[01:06:56] remember our definition of l is that
+[01:07:00] none of these Atomic facts has been seen
+[01:07:02] during training to be composed with
+[01:07:05] other
+[01:07:06] facts in that situation the model has no
+[01:07:10] incentive to store this second H Atomic
+[01:07:14] fact in the oper
+[01:07:16] layers it only seen this uh fact Atomic
+[01:07:19] effect individually so it it can easily
+[01:07:22] memorize them in the lower L years but
+[01:07:25] it doesn't have the in incentive to
+[01:07:27] store another copy in The Operators
+[01:07:31] because that requires actual effort
+[01:07:34] that's why all de generalization of
+[01:07:37] composition never happens well for
+[01:07:40] comparison you don't have this stage
+[01:07:42] processing so you only need to store one
+[01:07:45] copy of the atomic effects and you can
+[01:07:48] retrieve that the value in the uh lower
+[01:07:51] day years here for the comparison so you
+[01:07:54] don't have that issue and that's why o
+[01:07:56] generalization of comparison does happen
+[01:08:00] okay if and to further validate this
+[01:08:03] hypotheses we can do a we did an
+[01:08:06] intervention here so if that is inde the
+[01:08:09] case that is because the model doesn't
+[01:08:11] have incentive to store the this Atomic
+[01:08:14] effect in oper layers then we just need
+[01:08:17] to do some parameter sharing some cross
+[01:08:20] year prish sharing so you kind of tie
+[01:08:24] the weights of the lower layers with the
+[01:08:27] weights of the upper layer so it's a
+[01:08:29] parameter sharing and then if the lower
+[01:08:32] layer has memorized an atomic effects
+[01:08:34] then the uper ler will get a copy of it
+[01:08:36] as well so we did that intervention and
+[01:08:39] turns out boom all de generalization
+[01:08:43] start to happen for composition right so
+[01:08:46] this further validates the hypothesis
+[01:08:49] it's a bit dense but I think that this
+[01:08:51] is probably one of the most interesting
+[01:08:52] slides of this uh or analysis of this
+[01:08:55] work
+[01:08:57] um
+[01:08:59] so remember we um try to do or try to
+[01:09:05] understand what exactly is going on
+[01:09:09] during gring we said that the gring
+[01:09:13] process is when this um like this
+[01:09:16] generalizing circuit start to form but
+[01:09:19] in what exact way that's still unclear
+[01:09:23] so through um like costal tracing we can
+[01:09:27] actually identify like what exactly is
+[01:09:31] going on during
+[01:09:32] rocking
+[01:09:34] um let's
+[01:09:36] first
+[01:09:38] um let's first focus
+[01:09:40] on this
+[01:09:44] speaker
+[01:09:49] um or let me first say this so we
+[01:09:54] believe bling is the phase transition
+[01:09:58] from root learning to
+[01:10:00] generalization
+[01:10:02] so
+[01:10:04] brocking starts when the model has
+[01:10:07] overfit the train data right so but in
+[01:10:10] that Pro in at that point the model has
+[01:10:13] only done root uh root learning so it
+[01:10:16] just BR forcely memorized all the
+[01:10:19] training data including the infer facts
+[01:10:22] but not actually in a generalizable way
+[01:10:25] but the train because it has memorized
+[01:10:27] all of them so the training loss will be
+[01:10:29] zero right um but it doesn't mean that
+[01:10:32] it has capture this generalizing circuit
+[01:10:35] then the blocking process is essentially
+[01:10:38] the F transition from the initial Road
+[01:10:42] learning to the generalization is where
+[01:10:46] this generalizing circuit gets formed
+[01:10:49] and now let's analyze like how exactly
+[01:10:52] it gets formed um the first thing we
+[01:10:56] will look at is this
+[01:10:58] figure right we look at uh two things so
+[01:11:04] S5
+[01:11:06] R1 is this
+[01:11:10] position right so this is the fifth this
+[01:11:13] is s stands for state so this is a state
+[01:11:16] of dayer five as the position of R1 so
+[01:11:20] it's this one S5
+[01:11:23] R1 then we can use logic dance to decode
+[01:11:29] what's captured in that um state
+[01:11:32] representation in that state you can see
+[01:11:36] the grocking
+[01:11:38] process and similarly we can do that for
+[01:11:40] s five R2 so this
+[01:11:44] position so once brocking
+[01:11:47] starts the model already has and this is
+[01:11:52] mrr so is the main re reciprocal r but
+[01:11:55] basically it just tells you like the
+[01:11:58] like this bridge ENB the ranking of the
+[01:12:01] bridge ENB in the logic logic
+[01:12:05] L if it's one it means that the state
+[01:12:08] here will all always predict the bridge
+[01:12:11] entity B uh so that means that it has
+[01:12:13] encoded this information so when the
+[01:12:15] gring starts B is already there the m
+[01:12:20] equals one so that means this state here
+[01:12:23] always predict the bridge and B which is
+[01:12:26] what we want right we want the first H
+[01:12:29] to get us the bridge entity that is
+[01:12:32] great but remember we also need the
+[01:12:36] model to do a delayed processing of R2
+[01:12:40] so that at this point you can combine B
+[01:12:43] and R2 to predict the tail an the
+[01:12:46] T but if you look at mrr of R2 at this
+[01:12:52] uh
+[01:12:53] position when brocking
+[01:12:56] starts it does not have R2 there so it
+[01:13:01] has a b here but it doesn't have R2
+[01:13:04] here despite that the model has a train
+[01:13:09] so this is on the training set so the
+[01:13:11] model has a training loss of one of zero
+[01:13:14] so the model has can perfectly predict
+[01:13:18] the tail and the T despite not using R2
+[01:13:21] here uh to combine with B that means the
+[01:13:25] model is just doing root um learning so
+[01:13:29] you just learn memorize that Hey
+[01:13:31] whenever I see HED R1 or R2 then I will
+[01:13:34] predict t but it's not actually using
+[01:13:38] doing this stage thing like getting the
+[01:13:40] bridge entity and then combine with R2
+[01:13:42] to get another use another Atomic fact
+[01:13:45] and do the
+[01:13:46] reasoning but through the grocking
+[01:13:49] process you can see R2 gradually
+[01:13:53] increases so at the end of a gring it
+[01:13:58] always predicts R2 then you have B here
+[01:14:01] you have R2 here then you can actually
+[01:14:04] do uh recall the atomic effect here to
+[01:14:07] predict the
+[01:14:09] TT so this is further
+[01:14:14] corated by the cost of tracing results
+[01:14:17] here so remember through Cal tracing we
+[01:14:21] can quantify the Cal strength of each
+[01:14:25] state to the final prediction and this
+[01:14:29] is the um caal strength of each state at
+[01:14:33] the beginning of gring and this is of
+[01:14:36] gring then we can do we can calculate
+[01:14:40] the difference between the two and find
+[01:14:42] their
+[01:14:43] diff you can see the diff mainly happens
+[01:14:46] here at uh S5
+[01:14:51] R1 so that means in the beginning of GRA
+[01:14:55] roing even though the model has be has
+[01:14:57] the bridge entity B here it does not use
+[01:14:59] it right he just do did a road learning
+[01:15:03] so it directly predict the tail entity
+[01:15:05] but the grocking process is the process
+[01:15:08] of the model learning to use this bridge
+[01:15:10] entity property so giving it a stronger
+[01:15:13] caal strength to the final prediction
+[01:15:16] and this combined with the fact that the
+[01:15:20] um we just shown that through logic Den
+[01:15:23] that R2 the groing process is where this
+[01:15:26] R2 start to emerge right this combines
+[01:15:31] give us um validates the hypothesis that
+[01:15:35] um now this gring process is really the
+[01:15:38] process of forming this generalizing
+[01:15:40] circuit that this stage stage circuit
+[01:15:43] that we just shown for
+[01:15:45] composition and we can actually explain
+[01:15:48] uh even though not we didn't do any
+[01:15:50] proof of any sort but you can roughly
+[01:15:53] understand why this kind of gring
+[01:15:55] Behavior happens through the circuit
+[01:15:57] deficiency and the
+[01:15:59] regularization um the generalizing
+[01:16:01] circuit is much more efficient than the
+[01:16:05] memorizing circuit the circuit for root
+[01:16:08] learning um so and because you also have
+[01:16:13] regularization right the L2
+[01:16:15] regularization term for example then if
+[01:16:18] you just keep training even after
+[01:16:20] overfitting the regularization term will
+[01:16:23] decrease and then we'll gradually favor
+[01:16:27] the circuit with higher efficiency which
+[01:16:30] is the generalizing circuit so that's
+[01:16:33] why you find this still beneficial to
+[01:16:35] claim way over Beyond overfitting
+[01:16:38] because that's when the regularization
+[01:16:39] start to kick in and gets you the more
+[01:16:43] efficient
+[01:16:44] circuit but I think at least let me give
+[01:16:47] you the definition of planning because
+[01:16:49] that's in itself is a very confusing
+[01:16:51] thing for various reasons um so in the
+[01:16:54] context language agents who will work
+[01:16:56] with this simplified definition of
+[01:16:58] planning given a go g decides on a
+[01:17:01] sequence of actions a z to a n that will
+[01:17:04] lead to a state that will pass the go
+[01:17:07] test uh gen right so of course this is
+[01:17:11] over simplified because we don't talk
+[01:17:13] about the state space the observation
+[01:17:15] Spa uh space and then the actions have
+[01:17:19] they are not just Atomic actions they
+[01:17:20] have prec conditions uh that have to be
+[01:17:23] met before they can be taken and so on
+[01:17:25] so forth but for this um purpose I think
+[01:17:28] that it's enough to have this definition
+[01:17:31] then um with this definition we can
+[01:17:35] analyze this General Trends in planning
+[01:17:38] settings for language agents compared
+[01:17:41] with the classic planning setting which
+[01:17:43] has been studied in for decades um
+[01:17:47] generally I think the
+[01:17:49] expressiveness in goal specification is
+[01:17:52] drastically increasing so now can can
+[01:17:55] express our goal in natural language as
+[01:17:58] opposed to some formal language which is
+[01:18:00] usually much more limited in
+[01:18:03] expressiveness and also we have a
+[01:18:06] substantially expanded or open-ended
+[01:18:08] action space um so instead of like some
+[01:18:11] their constraint action space like hey
+[01:18:13] you have a robot you can move forward
+[01:18:15] you can turn left and so on so forth now
+[01:18:18] you can you have an even open-ended
+[01:18:20] action space and we will see some
+[01:18:22] examples soon
+[01:18:23] later then and because of those it
+[01:18:27] becomes increasing hard to do automated
+[01:18:30] go test um imagine you have a web agent
+[01:18:34] that is just doing things on the web
+[01:18:36] then a lot of the time you just simply
+[01:18:38] cannot just write a go test beforehand
+[01:18:42] like what what the go state will be
+[01:18:45] like but that's fine uh because fness is
+[01:18:48] really a inherent part of this world
+[01:18:52] I'll skip this one um so I just give
+[01:18:55] some examples like uh for web agents um
+[01:18:58] like from our M web you'll
+[01:19:01] see like in terms of the task uh the
+[01:19:04] goal specification right the uh user can
+[01:19:07] say ask for anything on an opal websites
+[01:19:11] um so it's very broad um and in natur
+[01:19:15] language and then in terms of the action
+[01:19:17] space right yeah you have some broad
+[01:19:20] actions like types like you can type you
+[01:19:23] can click you can drag you can hover on
+[01:19:26] some elements but the actual actions
+[01:19:31] like what elements you click on these
+[01:19:34] actual actions are
+[01:19:37] dynamically
+[01:19:38] populated on each web page so if you go
+[01:19:41] to a different web page your action
+[01:19:43] space will be different right so and
+[01:19:45] it's a very big action space you have to
+[01:19:49] discover on the Fly and of course the go
+[01:19:52] test is also very hard but um
+[01:19:55] and then there's another example of
+[01:19:57] travel planning that has some similar
+[01:19:59] characteristics but we will skip here um
+[01:20:02] so the I think these are some the of the
+[01:20:05] general trends for language agent
+[01:20:07] planning and that these are I think
+[01:20:10] these are good Trends yeah it makes
+[01:20:11] things more challenging but for for the
+[01:20:13] batter because it now we can support
+[01:20:16] much more realistic and useful
+[01:20:19] application scenarios um with these Dage
+[01:20:22] agents so let's see what what can want
+[01:20:26] to talk about this um maybe very quickly
+[01:20:30] um but for people who are interested in
+[01:20:34] web agents or computer us agents I
+[01:20:36] encourage you to look at this series of
+[01:20:38] work like M web the first hour based web
+[01:20:41] agents and then CX where we first
+[01:20:43] introduce a visual perception into web
+[01:20:45] agents and then ound that where for the
+[01:20:48] first time we make a human like
+[01:20:50] embodiment for computer use agents so it
+[01:20:53] only perceiv environment visually
+[01:20:55] there's no HTML or anything like that
+[01:20:58] and then you directly do pixel level
+[01:21:00] operations on the screen um and that's
+[01:21:04] um that this minimal this design
+[01:21:06] actually works the best across the board
+[01:21:09] and then we will talk about web dreamer
+[01:21:12] which is model basic planning for web
+[01:21:16] agents okay so let's consider the
+[01:21:19] different planning paradigms for
+[01:21:21] language agents the most common one is
+[01:21:25] reactive planning or react right imagine
+[01:21:28] each note here is a web page then at
+[01:21:32] each state you have several candidate
+[01:21:34] actions you can take that will result in
+[01:21:36] a different state for reactive planning
+[01:21:38] you just at each state observe the
+[01:21:40] environment reason about it then make a
+[01:21:43] decision and commit to the decision and
+[01:21:46] then that gets you to another state then
+[01:21:48] you just keep doing this right so it's
+[01:21:50] fast it's easy to implement but the
+[01:21:53] downside is that it's great and it's
+[01:21:55] sting so you often find yourself stuck
+[01:21:58] in some bad State and there's no way
+[01:22:01] out then naturally when talk about
+[01:22:04] planning we just think about search or
+[01:22:06] tree search um so you for Tre search
+[01:22:10] compare with reactive planning you can
+[01:22:12] do backtracking you maintain a value uh
+[01:22:17] assignment for the states on your search
+[01:22:21] Frontier then you explore the most
+[01:22:23] promising uh Branch at some points if
+[01:22:26] you find that not promising you can
+[01:22:29] backtrack and then to find to explore
+[01:22:32] another Branch right so that gives you
+[01:22:34] more systematic
+[01:22:36] exploration but the downside here is
+[01:22:40] that it's in real world environments
+[01:22:42] like the internet um there are a lot of
+[01:22:45] irreversible actions that makes
+[01:22:47] backtracking impossible or as is very
+[01:22:50] hard and then it a lot of this
+[01:22:53] exploration could also be unsafe or slow
+[01:22:56] to just show you how P pervasive this
+[01:22:59] state changing and irreversible actions
+[01:23:02] are in real world environments let's
+[01:23:05] consider just amazon.com right on these
+[01:23:07] single websites you can have men dozens
+[01:23:11] if not hundreds of these State changing
+[01:23:12] actions like you can place an order you
+[01:23:15] can uh make a return you can create an
+[01:23:17] account that you will agree to the terms
+[01:23:20] and use and then that that has legal
+[01:23:22] implications you can change your privacy
+[01:23:24] settings and so on so forth right if it
+[01:23:27] it's there is no like this Universal
+[01:23:30] magical uh undo button that you can just
+[01:23:33] try bunch of things and then magically
+[01:23:35] undo and then go back to the uh initial
+[01:23:38] States um so that makes treech in real
+[01:23:42] world environments hard uh and then
+[01:23:44] there's also the safety and costly
+[01:23:46] issues so ideally we want to do model
+[01:23:50] based
+[01:23:51] planning imagine you have a word model
+[01:23:54] that that at each stat it can you can
+[01:23:57] trigger the world model to simulate the
+[01:24:01] outcome of each candidate
+[01:24:03] action then that gives you a chance to
+[01:24:09] um to evaluate the long-term value and
+[01:24:14] safety of each candidate action before
+[01:24:18] you have to commit to it right then you
+[01:24:21] find the most promising candidate action
+[01:24:23] through simulation then you commit to it
+[01:24:26] take it uh assuming it to safe and then
+[01:24:28] you get to another state then given to
+[01:24:30] this all over
+[01:24:31] again right so it's faster and safer
+[01:24:35] compared with Tre search and you can
+[01:24:37] also do still do systematic exploration
+[01:24:40] but the downside is really how to get
+[01:24:42] this magical world
+[01:24:44] model let's start with what is a world
+[01:24:47] model uh because this is another
+[01:24:49] overloaded term for our purpose here
+[01:24:52] we'll take this definition is a
+[01:24:53] computation model of environment
+[01:24:56] transition Dynamics so basically if I do
+[01:25:00] this right now what would happen next
+[01:25:04] right very
+[01:25:05] simple then if it's that simple and so
+[01:25:07] good what hasn't been done for language
+[01:25:10] agents
+[01:25:11] yet well the issue here is
+[01:25:15] that if you think about world models in
+[01:25:17] the classic uh deep learning literature
+[01:25:20] that that's usually started in
+[01:25:22] reinforcement learning right e that
+[01:25:24] where you have these simple simulated
+[01:25:27] environments that you can do millions of
+[01:25:29] times of uh trials and then you you can
+[01:25:32] use that to learn a world model for that
+[01:25:35] simple
+[01:25:36] environment what we're dealing with here
+[01:25:39] is much more complicated even just for a
+[01:25:42] single website right there could be
+[01:25:44] hundreds of different web pages on a
+[01:25:46] single web page there could be hundreds
+[01:25:48] of different actions and they can be
+[01:25:50] constantly changing uh because the
+[01:25:53] backhand database is changing
+[01:25:55] and then this complexity quickly
+[01:25:57] compounds if you consider that there are
+[01:25:58] billions of other websites out there
+[01:26:01] right in that sense we need a kind of
+[01:26:04] generalist word model for the internet U
+[01:26:08] that seems very
+[01:26:10] hard fortunately we find that LMS can
+[01:26:14] actually reasonably predict these State
+[01:26:16] transitions so in this example if you
+[01:26:19] ask an nowm if I click this icon what
+[01:26:22] would happen then you can recog that hey
+[01:26:24] this is a shirt uh then this probably a
+[01:26:27] product so the next stage will probably
+[01:26:29] be about some product details and
+[01:26:32] because it's a shirt so there will be
+[01:26:34] sizing options and other things right
+[01:26:37] because LM have this word knowledge
+[01:26:40] commense knowledge is trained on the
+[01:26:42] internet so it can uh do a reasonable
+[01:26:45] job far from perfect but
+[01:26:48] reasonable so we web dreamer leverages
+[01:26:51] exactly that we stimulate a world model
+[01:26:54] for the internet using an LM in this
+[01:26:57] case gbt 4 um then when you have you're
+[01:27:01] at a state you have a few candidate
+[01:27:03] actions you can use the world model to
+[01:27:05] simulate the outcome of each candidate
+[01:27:08] action you can even do multi-step
+[01:27:09] simulation you have another value
+[01:27:12] function which is also simulated by RM
+[01:27:15] to tell you how much progress you would
+[01:27:18] have made going down that path and then
+[01:27:21] you can choose the uh the highest valued
+[01:27:23] action you take that action get to the
+[01:27:26] next state and then do this all over
+[01:27:28] again right so that's model basic
+[01:27:30] planning for web agents it's far from
+[01:27:32] perfect but it's um it's a reasonable
+[01:27:35] starting
+[01:27:36] point in terms of results we evalu on V
+[01:27:40] Arena you so that um model based
+[01:27:44] planning is more accurate than reactive
+[01:27:46] planning and slightly Trails three
+[01:27:49] search but remember Tre search is only
+[01:27:51] possible because we are working in a
+[01:27:54] sandbox environment which is real web
+[01:27:56] Arena uh if it's on the real websites
+[01:27:58] then backtracking in research will
+[01:28:00] become hard and also the modelbased
+[01:28:03] planning is much cheaper and much
+[01:28:06] faster okay so the take aways for
+[01:28:09] planning I think langage agents are
+[01:28:11] expanding into this new planning
+[01:28:13] scenarios categorized by the expressive
+[01:28:16] but fuzzy goal specifications the
+[01:28:18] open-ended action spaces and the more
+[01:28:21] difficult go tests um but the language
+[01:28:25] for reasoning enables new capabilities
+[01:28:27] planning abilities like the world models
+[01:28:30] model basic planning and what we we
+[01:28:33] didn't talk about today but the
+[01:28:35] hierarchical planning and dynamic
+[01:28:36] replanning is also very
+[01:28:38] important um and the best planning
+[01:28:41] strategy is dependent on the lrm if you
+[01:28:43] have a stronger based LM that it may
+[01:28:46] require less scaffolding so you can your
+[01:28:48] planning strategy could be more
+[01:28:51] reactive um but generally how to improv
+[01:28:54] planning in L is still largely an open
+[01:28:57] question it's I think many people are
+[01:29:00] trying the recipe for o style reasoning
+[01:29:04] um try to see whether that works for
+[01:29:06] planning but that's still a big open
+[01:29:09] question okay so I think we're really
+[01:29:12] just standing at the dawn of a long
+[01:29:14] journey um we talked about planning
+[01:29:17] reasoning World models and memory uh but
+[01:29:19] there are a lot of other things we
+[01:29:21] didn't talk about and there's a lot to
+[01:29:23] be done
+[01:29:24] um just a few immediate future
+[01:29:27] directions uh I find interesting think
+[01:29:31] uh memory personalization and continue
+[01:29:33] learning we're really just scratching
+[01:29:35] the surface there is a whole lot to be
+[01:29:38] done how to enable agent to continue the
+[01:29:41] learn from use and
+[01:29:42] exploration um the reasoning like how to
+[01:29:47] uh make o1 or R1 style reing work for
+[01:29:50] language agents where you need to deal
+[01:29:53] with this fuz the world without reliable
+[01:29:55] rewards and how to integrate these
+[01:29:58] external actions and environmental
+[01:29:59] States and that's a big open question
+[01:30:02] and I expect there will be a lot of
+[01:30:04] study on this in
+[01:30:05] 2025 then planning how to build better
+[01:30:08] World models instead of just like
+[01:30:10] simulator one and how how to balance the
+[01:30:13] reactive and model based planning
+[01:30:14] because they don't really want to do
+[01:30:16] simulation at every single step that's
+[01:30:19] very costly even though humans can do
+[01:30:21] simulation we don't do that every single
+[01:30:24] for every single decision right only for
+[01:30:26] those difficult ones but how to balance
+[01:30:29] this reactive and model based planning
+[01:30:31] is a still an open question um how to
+[01:30:34] sustain a long Horizon then for safety I
+[01:30:37] think that's a very pressing issue that
+[01:30:40] keeps me really keeps me up at night um
+[01:30:43] I think the attack surface of language
+[01:30:46] agents is scarily Brad right for web
+[01:30:49] agents the tax surface is essentially
+[01:30:52] the entire internet like some can ined
+[01:30:54] something on a a Sim benign website and
+[01:30:58] you're like for example open AI deep
+[01:31:00] research agent can go there visit there
+[01:31:02] and get tricked by it and then maybe
+[01:31:05] release your reveal your private
+[01:31:07] information and so and things like that
+[01:31:09] so there are two general types of safety
+[01:31:12] issues there's the endogenous risk so
+[01:31:15] these are the safety risks originat from
+[01:31:18] within from the agent itself usually
+[01:31:21] because of the incompetency of the agent
+[01:31:24] so you can mistakenly take some
+[01:31:26] irreversible actions that do harm and
+[01:31:29] then there there are exogenous risks
+[01:31:32] right so this the risk from the Eastern
+[01:31:35] environments okay so but there are also
+[01:31:37] a lot of exciting applications uh the
+[01:31:41] probably the the um the one with the
+[01:31:44] most clear business case is atic search
+[01:31:48] or deep research if you have not use
+[01:31:51] like clex Pro or Google open deep
+[01:31:54] research I highly encourage you to try
+[01:31:56] that and I think something big is being
+[01:32:00] uh uh baked here um I think this will
+[01:32:03] become a huge thing in
+[01:32:04] 2025 then also like workflow a
+[01:32:07] Automation and personally I'm very
+[01:32:09] excited about uh developing agents for
+[01:32:12] Sciences um these are all very
+[01:32:14] exciting so for more um uh a more
+[01:32:18] comprehensive coverage on language agent
+[01:32:20] I encourage you to check out our
+[01:32:21] tutorial with de and we just did at MLP
+[01:32:25] like two months ago and all the
+[01:32:27] materials like slides and uh videos are
+[01:32:31] available on our
+[01:32:33] website U I thank all of my sponsors and
+[01:32:37] be happy to take any questions

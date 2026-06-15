@@ -1,0 +1,2395 @@
+[00:00] CHI WANG: OK, so yeah,
+here's the agenda.
+[00:03] It's very simple.
+[00:04] You have two parts,
+as a general,
+[00:06] and then we'll dive into
+the AutoGen framework.
+[00:11] For the both parts, there are
+two big motivating questions
+[00:14] I want to cover.
+[00:16] Number one is, what are the
+future AI applications like?
+[00:19] And then number two is, how
+do we empower every developer
+[00:22] to build them?
+[00:23] So let's start with
+the first question.
+[00:26] What are the future
+AI applications like?
+[00:29] So starting from
+around the year 2022,
+[00:32] we see the big power
+of the language models
+[00:35] and other generative models.
+[00:37] So the generative
+AI, people have
+[00:40] seen a superior capability
+of generating content
+[00:42] like text and images.
+[00:45] They are much better than
+the generative techniques
+[00:48] 20 years ago or 15
+years ago, where
+[00:50] I was doing my PhD and
+the study like topic
+[00:54] modeling and other older
+generative modeling techniques.
+[00:57] Apparently, these
+days the new technique
+[00:59] has passed the bar
+that we can think
+[01:02] about more creative
+applications, higher level of AI
+[01:05] capabilities.
+[01:06] And so what's the next?
+[01:08] What are the best
+way to leverage
+[01:10] these generative AI techniques?
+[01:13] So starting from last
+year, early last year,
+[01:15] we started to think
+about that question.
+[01:17] And we made a lot of
+technical bets along the way.
+[01:21] The most important bet would
+be that we think the future AI
+[01:24] applications can be agentic.
+[01:27] And the agents can be
+a new way for human
+[01:30] to interact with
+the digital world
+[01:32] and help us execute more complex
+tasks on behalf of a human
+[01:38] and get to higher and
+higher level of complexity.
+[01:43] And at that time,
+many people still
+[01:46] have doubts about
+whether agentics AI can
+[01:49] be a viable notion.
+[01:50] But as time goes
+by, we are seeing
+[01:52] more and more
+confirmation and evidence,
+[01:54] including earlier
+this year, there's
+[01:56] an article published
+by Berkeley talking
+[01:59] about how we are observing more
+and more AI results shifting
+[02:06] from using a simple language
+model to building compound AI
+[02:10] systems.
+[02:11] So that's one of the similar
+observations and technical bets
+[02:17] we made.
+[02:18] So if we think about the
+examples of agentic AI,
+[02:22] you'll notice that building AI
+agents like personal assistants,
+[02:27] autonomous bots,
+or gaming agents,
+[02:30] there's the notion of
+agent AI is not new.
+[02:35] But what's new is that with the
+power of the new generative AI
+[02:38] techniques and the language
+models, for example,
+[02:41] we're able to build some of
+the old agentic applications
+[02:46] much easier and
+much more capable.
+[02:49] And at the same time, we are
+also seeing some very new novel
+[02:54] agentic applications that
+go beyond the imagination we
+[03:00] had before, such as
+some science agents that
+[03:03] can do science
+discovery automatically,
+[03:05] web agents that can automate
+some web browsing and web
+[03:09] automation tasks, and
+also software agents
+[03:11] that can build even software
+from beginning to the scratch.
+[03:16] I bet you have seen a
+lot of demos before.
+[03:18] But today, let me show you
+a very recent demo I just
+[03:21] got this morning from a
+[INAUDIBLE] called Zinley.
+[03:25] This is an example
+of building a website
+[03:28] to extract the models
+from Hugging Face
+[03:31] and download automatically.
+[03:33] So after you give the
+request to the AI,
+[03:36] they started working on
+them automatically, starting
+[03:39] from analyzing the task,
+looking for information,
+[03:43] and installing the
+necessary dependencies.
+[03:48] They do use a
+multiagent framework
+[03:50] to have agents of different
+roles to finish the task
+[03:53] and can do multistep of tasks.
+[03:57] Now, we are seeing that AI
+is creating different files.
+[04:05] All the reasoning
+between the agents
+[04:07] are done automatically using
+both language models and tools.
+[04:16] The agents are talking
+to each other now.
+[04:18] They are developing the website.
+[04:33] And finally, they are trying to
+build and compile the website.
+[04:45] OK, here we go.
+[04:46] This is a website
+built by the AI.
+[04:49] It looks like functioning.
+[04:51] There are many models already
+listed in the website.
+[04:53] And users can search model
+and export model data
+[04:57] and download the data,
+download the models.
+[05:09] It looks like the video
+is playing in the slower
+[05:14] speed than normal.
+[05:16] I'm not sure if that's
+because of the internet issue.
+[05:20] And furthermore, if you
+happen to make some mistakes,
+[05:25] for example, if you remove
+the very critical line of code
+[05:28] from the files that are
+created, let's see what happens.
+[05:36] So we are running the AI again
+for executing the same task.
+[05:41] So this time, the
+AI is able to--
+[05:44] trying to also
+perform the same task.
+[05:48] But because of that removal
+of the critical lines of code,
+[05:51] we're supposed to
+hit some error.
+[05:59] Yeah, so we see our
+error message there.
+[06:01] It's missing script.
+[06:03] So let's see what AI will do.
+[06:07] So just within a
+few steps, the AI
+[06:10] is able to correct
+the mistake and finish
+[06:13] the exact line we just removed.
+[06:15] So complete the task.
+[06:17] So that shows some self-healing
+and self-recovery ability
+[06:21] of AI agents.
+[06:24] So that would give us an
+idea about the potential kind
+[06:27] of promise the
+agents can give us.
+[06:30] In future, we may
+build the software
+[06:32] in a totally different way.
+[06:34] So to summarize the key
+benefits of agentic AI,
+[06:37] number one is many
+people understand
+[06:40] that AI is able to use more
+natural interface to talk
+[06:44] with humans.
+[06:45] So you can tell them
+what you want exactly.
+[06:47] In this case, we
+just tell them we
+[06:49] want to build a website
+with certain requirements.
+[06:51] And then you can iterate
+over the natural language.
+[06:55] And also, by giving the
+agents more capability,
+[06:59] they are able to
+operate and finish
+[07:01] more complex tasks with
+minimal human supervision.
+[07:04] So that has tremendous value
+in terms of automation.
+[07:08] And the third point, I think--
+[07:10] it's less talked
+about among people.
+[07:12] But I have a strong
+[? emphasis-- ?]
+[07:14] that is, agentic AI can be
+also a very useful software
+[07:19] architecture to enable us to
+build software in a totally
+[07:23] different way so that you can
+have multiple agents working
+[07:27] with each other
+and to finish much
+[07:29] more tasks in a recursive way.
+[07:31] So I will use a simple example
+to go over these benefits.
+[07:36] So let's look at one
+particular example
+[07:38] application about
+solving some supply chain
+[07:41] optimization on cloud.
+[07:44] This application was built
+by my former colleague
+[07:46] from Microsoft Research.
+[07:47] It allows users like
+coffee shop owners
+[07:50] to answer questions like,
+what if we change the shipping
+[07:53] constraints?
+[07:55] How would that affect
+my operating cost?
+[07:58] So this is a difficult question.
+[07:59] They can't get
+answers from ChatGPT
+[08:02] because the AI needs to
+understand the user's
+[08:05] specific data constraints and
+even some optimization tools
+[08:10] to be able to understand the
+question and get the answer.
+[08:14] But in this case,
+they used AutoGen
+[08:17] to build three agents that can
+solve this question very nicely.
+[08:22] The three agents are commander,
+writer, and safeguard.
+[08:26] So let's see how that works.
+[08:28] So initially, the
+user sends a question.
+[08:30] What if we prohibit shipping
+from supplier 1 to roastery 2?
+[08:34] The commander received
+that question.
+[08:36] Before it tries to
+answer that question,
+[08:38] it will hold the
+current conversation
+[08:40] and initiate another nested
+chat between the commander
+[08:43] and the writer.
+[08:45] The writer, in this case, is
+using a large language model
+[08:48] as a backend, try to
+understand the question
+[08:51] and proposes some code that can
+be used to answer this question.
+[08:56] In this case, it
+suggests some Python code
+[08:58] of adding a specific constraint
+into the optimization problem.
+[09:02] And the returns that
+code to commander.
+[09:06] The commander sees that code.
+[09:07] Again, it holds the
+conversation with writer
+[09:11] and starts another nested
+chat between the commander
+[09:14] and the safeguard.
+[09:15] The safeguard is another
+agent using language model
+[09:18] to check whether
+the code is safe.
+[09:21] So in this case, it turns safe.
+[09:23] The commander will finish that
+conversation with the safeguard
+[09:26] and start executing the code.
+[09:28] So here's that code
+execution result.
+[09:30] It runs the optimization
+program with updated constraint
+[09:34] and checks the new result.
+[09:36] So the commander
+will then go back
+[09:39] to the previous conversation
+with writer, sends the execution
+[09:42] result back to the writer.
+[09:44] Here are the execution results.
+[09:46] And after the
+writer sees that, it
+[09:48] tries to come up with
+the final answer.
+[09:51] This is a simple
+example of using
+[09:54] multiple agents and multiple
+steps to finish the task.
+[09:57] In general, there can be
+all sorts of problems,
+[10:00] like the code can be unsafe.
+[10:02] In that case, the commander
+will not execute the code.
+[10:05] And in case there's
+an execution error,
+[10:07] the commander will return
+the execution error back
+[10:09] to the writer, and the writer
+needs to rewrite the code.
+[10:12] So in general, there can be
+multiple turns back and forth
+[10:15] to finish the complex task.
+[10:17] But here, we're just
+showing one simple use
+[10:19] case that is at a smooth trace.
+[10:24] And you can tell
+how the end user now
+[10:26] is able to still use a
+relatively simple [INAUDIBLE]
+[10:30] to know there are multiple
+agents running at the backend.
+[10:34] They just ask a simple
+question and then get an answer
+[10:37] in natural language back.
+[10:38] The user doesn't need
+to know and understand
+[10:40] any knowledge about the
+coding or optimization.
+[10:45] So this is an example of
+using multiple agents.
+[10:48] We allow the end user
+to achieve tasks that
+[10:51] are much harder than before.
+[10:54] Now, if you look at the
+programming perspective,
+[10:56] how do they construct
+such a program?
+[10:59] The way they do
+this is also very
+[11:00] different from
+traditional programs.
+[11:03] There are several steps.
+[11:04] The first step is to create
+these several agents.
+[11:07] So in this case, they're
+creating the writer, safeguard,
+[11:10] commander, and user
+using one line for each.
+[11:13] And then they need to define
+the interaction patterns
+[11:16] among these agents.
+[11:18] So here, they registered two
+nested chats to commander.
+[11:22] For each [? nested ?]
+chat, we need
+[11:24] to define, who are the
+agents involved in the chat?
+[11:27] Who are the sender?
+[11:28] Who are the receiver?
+[11:29] And what's the summarization
+method from that conversation?
+[11:32] And then their behavior patterns
+are defined in this way.
+[11:37] And finally, we just initiate
+the chat from the user proxy
+[11:41] agent to the commander agent
+by sending the initial task
+[11:45] requirements.
+[11:47] And then every other steps
+autofollow automatically.
+[11:51] So the framework will handle all
+the steps and the nested chats
+[11:56] and eventually return
+the result back.
+[11:59] So hopefully, that gives
+us a intuitive idea what
+[12:03] the agentic programming means.
+[12:06] And also, I'm using two slides
+to summarize their benefits.
+[12:12] Number one is to enable us
+using these multiple agents who
+[12:16] handle more complex tasks and
+improve the response quality
+[12:20] for multiple reasons.
+[12:22] You see that the multiagents
+talking to each other
+[12:25] can be a very natural
+way to make improvement
+[12:27] over interactions.
+[12:29] And we can divide and
+conquer a complex task
+[12:32] to decompose that
+to smaller tasks
+[12:34] and have more quality
+result for each step.
+[12:39] And finally, we can define
+agents that are not necessarily
+[12:43] depending on language models.
+[12:44] We can have special
+purpose agents
+[12:46] that perform grounding or
+validation using knowledge
+[12:53] outside of the
+models so that we can
+[12:55] address the weakness
+inherent in the models.
+[12:59] If you look at the
+chart on the right,
+[13:01] this is the experiment
+result about if we decompose
+[13:05] the task into two agents
+for the right-hand safeguard
+[13:08] versus if we put all
+the interactions in one
+[13:11] single agent, how
+is the performance
+[13:14] on the safeguard side?
+[13:15] So if we compare
+the performance,
+[13:18] we see that for GPT4,
+the multiagent setup
+[13:21] has a 20% higher recall
+than single agent setup.
+[13:25] And for GPT3.5, the
+difference is even higher.
+[13:28] So this indicates that,
+for certain scenarios,
+[13:31] it's beneficial to
+decompose the tasks
+[13:34] and have agents to perform
+relatively simple tasks compared
+[13:39] to just asking the agent to
+do too much work in one try,
+[13:45] and this especially
+depending on the task
+[13:48] complexity and the
+model capacity.
+[13:51] So in general, the
+more complex the task
+[13:54] and the weaker
+the model, there's
+[13:56] a stronger need to have
+this multiagent workflows.
+[14:01] And another perspective is from
+the programming perspective.
+[14:05] So in general, it's easier to
+understand, maintain, and extend
+[14:09] the system if you
+have a modular design.
+[14:13] For example, if you
+want to keep most
+[14:16] of the agents unchanged
+but just change,
+[14:18] for example, how you change the
+safeguard's behavior, if you
+[14:21] want to switch from using
+language model to using tools
+[14:24] or using human,
+it's very easy to do
+[14:27] that with a modular design.
+[14:29] And this allows natural
+human participation
+[14:32] because human can take over
+any of the agent in the system.
+[14:36] And by having natural
+conversation with other agents,
+[14:39] there's no need to
+change how human interact
+[14:41] with other agents.
+[14:42] So combining these benefits, we
+see that the agentic programming
+[14:48] has a promising
+potential to enable
+[14:52] fast and creative
+experimentation
+[14:54] and build novel applications.
+[14:57] But it's not easy to
+design a framework that
+[15:00] can meet all these promises.
+[15:03] In general, we need to
+consider several factors
+[15:06] to design such a framework.
+[15:08] We want to have a unified
+agentic abstraction that
+[15:12] can unify all these
+different types of entities.
+[15:15] And we want to accommodate
+all the flexible needs
+[15:18] for multiagent
+orchestrations and satisfy
+[15:21] all the different
+application needs.
+[15:23] And we also need to
+make sure we have
+[15:25] effective implementation of all
+the agentic design patterns.
+[15:29] Let me use the next few
+slides to explain them.
+[15:33] So first of all, for
+agentic abstraction,
+[15:36] we want to unify the
+notion so that we
+[15:39] don't need to have a hard
+time to reason about all
+[15:41] these different type of
+entities, such as humans
+[15:44] of different roles,
+tools, or language models
+[15:47] from different providers.
+[15:49] In general, these are all
+needed for building a common AI
+[15:52] systems.
+[15:53] But if we can have a single
+concept to think about them,
+[15:58] it will really make it
+easier to reason about them.
+[16:03] So let me explain more
+in the rest of the talk.
+[16:09] One immediate benefit
+of that is now we
+[16:12] can use multiagent
+orchestration for building
+[16:15] [INAUDIBLE] complex applications
+of common AI systems.
+[16:21] But to do that, we
+also need to think
+[16:22] about all the different
+requirements of different AI
+[16:27] agentic patterns
+of interactions.
+[16:29] For example, sometimes
+the developer
+[16:31] want a more static workflow
+so that they can clearly
+[16:35] find each step and the order
+of agents performing the tasks.
+[16:39] But in other cases,
+if it's hard to know
+[16:42] all the possible situations
+that the agent needs to handle,
+[16:47] then we want to give
+the agents more autonomy
+[16:50] and enable them to create
+more dynamic workflows.
+[16:54] And similarly,
+sometimes they want
+[16:56] to use natural language to tell
+the agents to perform the tasks.
+[17:00] And at the other times, they
+want to use programming language
+[17:03] to have a more precise control.
+[17:06] So there's a tradeoff
+between the flexibility
+[17:08] and the controllability.
+[17:11] And there are many other
+tradeoffs to consider.
+[17:14] For example, when do you share
+the context among the agents?
+[17:17] And when do we isolate them,
+have a hierarchical setup,
+[17:21] for example?
+[17:22] And when do we want
+the agent to cooperate?
+[17:24] When do we want them
+to compete to finish
+[17:28] [AUDIO OUT] the task better.
+[17:32] And there's also consideration
+about the centralized versus
+[17:35] decentralized and automation
+versus intervention.
+[17:40] So a good framework should
+be able to accommodate all
+[17:43] these different requirements.
+[17:45] And also, as people develop
+agents more and more,
+[17:49] there are all sorts of
+design patterns emerging.
+[17:54] And we need to also check
+whether a framework can
+[17:57] meet all these design
+patterns requirements.
+[18:01] There's a conversation.
+[18:02] We want the agent
+to be able to deal
+[18:04] with flexible conversations.
+[18:06] There's also prompting and
+reasoning techniques like ReAct,
+[18:09] Reflection, Chain of Thoughts,
+the Tree of Thoughts, and so on.
+[18:13] So there are more of
+such emerging reasoning
+[18:16] techniques, including like Monte
+Carlo tree search-based methods.
+[18:19] Tool using is a very important
+part of the agentic design
+[18:22] patterns, and so is
+planning and integrating
+[18:26] with multiple models,
+modalities, and memories.
+[18:30] And it looks like a lot, right?
+[18:33] So it's hard to have
+a framework that
+[18:36] can consider all these different
+factors in the beginning.
+[18:39] But if you think about this
+from the first-order principle,
+[18:43] you may wonder like, is it
+possible to have a single kind
+[18:47] of design point to start with
+and have all the other patterns
+[18:52] to be able to--
+[18:54] so that we can derive all
+the other patterns from that?
+[18:58] So yeah.
+[18:59] So among all these
+different design patterns,
+[19:03] can we think of using just one
+single design pattern of them
+[19:06] to accommodate
+all of the others?
+[19:10] Yeah, I believe that
+different people
+[19:12] will have maybe different
+ideas and starting
+[19:15] from the different parts.
+[19:17] Again, you may pick
+either one of them.
+[19:21] So here, I want to mention
+one personal kind of design
+[19:25] [INAUDIBLE] view that
+is a conversation.
+[19:27] So this has a long history.
+[19:31] Back in college, I
+learned that conversation
+[19:33] is a way of making progress
+in learning and [? prove ?]
+[19:37] theorems.
+[19:39] And that's a takeaway.
+[19:40] And when I see the
+power of ChatGPT,
+[19:42] I immediately relate that
+back to my personal experience
+[19:45] and decide, OK,
+so let's consider
+[19:48] trying to use the
+multiagent conversation
+[19:49] as the central mechanism
+and see how far we can go.
+[19:53] So it turns out we
+can go very far.
+[19:56] So here, I'm listing some
+examples of agentic AI
+[19:59] frameworks, like AutoGen,
+and as I mentioned,
+[20:02] is based on this multiagent
+conversation programming.
+[20:06] And it turns out to be very
+comprehensive and flexible
+[20:10] that's able to integrate
+with all the different design
+[20:12] patterns I mentioned and
+also other frameworks.
+[20:16] And you will hear more from
+Jerry about LlamaIndex.
+[20:20] And there are also some other
+LangChain-based frameworks
+[20:23] such as LangGraph and CrewAI.
+[20:25] They focus on different also
+starting reasoning points.
+[20:30] LangGraph, for example,
+focuses on providing
+[20:32] some graph-based control flows.
+[20:34] And CrewAI focus on providing
+some high-level static
+[20:37] agent-task workflows.
+[20:39] Yeah, so that's a very brief
+overview of the agentic AI
+[20:44] frameworks in general.
+[20:46] Next, I will go
+into the specific
+[20:49] AutoGen. I will try to
+explain more about that.
+[20:54] So AutoGen is a programming
+framework for agentic AI.
+[20:57] It was initially divided inside
+another open-source project
+[21:01] called FLAML.
+[21:03] FLAML is for automated machine
+learning and hyperparameter
+[21:05] tuning.
+[21:06] And later, we spined
+off the standalone repo.
+[21:09] And this year, recently, we
+also created a standalone GitHub
+[21:14] organization to have an
+open governance structure.
+[21:18] So everyone is welcome
+to join the build.
+[21:21] And here's a brief
+history about the journey.
+[21:25] In early last year,
+we started prototyping
+[21:28] this agentic frameworks.
+[21:29] And initially, we just built
+a multiagent conversation
+[21:32] framework with the
+capability of code execution.
+[21:36] And in August, we
+published the first version
+[21:38] of the research paper.
+[21:42] In October, we moved to this
+repo to standalone GitHub repo.
+[21:46] And it got a lot of
+recognition from the community.
+[21:49] And such as this
+year, we got also
+[21:52] a Best Paper at the ICLR
+2024 LLM Agents Workshop.
+[21:57] And we're seeing more
+and more interesting
+[21:59] use cases from community,
+including both enterprise
+[22:03] companies and startup companies.
+[22:06] We also offered a online
+course on deeplearning.ai
+[22:09] about AI agentic design
+patterns with AutoGen. So that's
+[22:15] just [INAUDIBLE] about it.
+[22:17] In general, AutoGen
+has very rich features
+[22:20] about all the different AI
+agentic design patterns.
+[22:24] But today, I mainly want to
+focus on the most essential
+[22:27] concept because this
+is a key to understand
+[22:30] all the other patterns.
+[22:32] So we want any developer
+to [? listen ?]
+[22:35] about a very complex
+workflow in simply two steps.
+[22:39] The first step is to
+define the agents,
+[22:42] and the second step is
+to get them to talk.
+[22:44] So here, we see
+two key concepts.
+[22:48] One is the conversable
+agent, and the other
+[22:50] is conversation program.
+[22:51] So the agent concept
+in AutoGen is
+[22:55] very generic, can abstract
+a lot of different entities.
+[22:58] You can choose to
+use a language model
+[23:00] as a backend for
+the agent, or you
+[23:03] can use a tool or human
+input at the backend.
+[23:07] And you can also mix multiple
+types of entities together.
+[23:11] And furthermore, if you use
+these multiagent conversation
+[23:15] patterns, like you see
+on the right-hand side,
+[23:18] you can build agents that can
+contain other agents inside it,
+[23:24] have inner conversations, and
+then wrap them up as a interface
+[23:31] to talk to other agents.
+[23:32] So in this way, you can nest
+multiple chats inside an agent,
+[23:36] have inner conversations, and
+build more and more complex
+[23:39] agent in a recursive way.
+[23:42] And the examples of
+conversation patterns
+[23:44] include the sequential chats,
+nested chat, and group chat.
+[23:48] I will explain a few of
+them in the next few slides.
+[23:51] The simplest one is the
+two-agent conversation.
+[23:54] Even though this is a very
+simple conversation pattern,
+[23:58] it already allows us to form
+some advanced reasoning,
+[24:01] such as Reflection.
+[24:03] For example, we can
+construct a writer
+[24:05] for writing blog post
+and another critic agent
+[24:09] to make suggestions
+to the blog post.
+[24:12] And you can have these
+two agents iterate
+[24:14] and improve the quality of
+the blog post in this way.
+[24:20] And now if you think
+that's not good enough,
+[24:22] you can add other advanced
+reasoning techniques
+[24:29] using this nested chat.
+[24:30] For example, instead of
+using a single language model
+[24:33] to do the critic, we
+can use the nested chat.
+[24:36] And in the nested chat, we
+construct sequential chats
+[24:40] that contain multiple
+steps of chats.
+[24:42] We first send the message
+to the SEO reviewer.
+[24:46] And then we send it to a legal
+reviewer, ethics reviewer,
+[24:51] and so on.
+[24:52] And finally, you can
+have a meta reviewer
+[24:54] that summarizes
+all the reviewer's
+[24:56] comments in different areas
+and gives the final comment.
+[25:00] And from the writer's
+point of view,
+[25:02] it's still talking to a single
+writer, a single critic agent.
+[25:06] But underneath, the critic agent
+uses multiple other agents.
+[25:10] So that's the idea, how
+we can use a nested chat
+[25:13] to potentially extend the agent
+capability using conversations.
+[25:18] And think about how do we enable
+tool using, using conversations?
+[25:23] Here is the example of building
+a game of conversational chess.
+[25:27] We want the AI to
+be able to play
+[25:30] the chess while
+chitchatting with each other
+[25:31] and making fun of each other.
+[25:33] So if you just ask two
+language model agents
+[25:35] to play the chess
+directly, they often
+[25:37] make mistakes and
+form random moves
+[25:40] on the board, which
+are not legal.
+[25:42] So the game is not
+watchable at all.
+[25:47] Now, the solution can be that
+we can add a third agent called
+[25:51] chess board.
+[25:52] This agent is a
+tool-based agent.
+[25:55] It uses some Python
+tools, Python library
+[25:58] to manage the chess board
+and provide the tools
+[26:01] to other language model agents.
+[26:03] So the language model agents
+can only make legal moves.
+[26:06] And otherwise, they need to
+iteratively refine their moves
+[26:11] until the moves are legal.
+[26:13] In that way, we can make sure
+the game can carry on nicely.
+[26:16] And again, we're using
+nested chat between a tool
+[26:21] [INAUDIBLE] agent using language
+model and tool execution
+[26:24] agent that's using
+tool as a backend
+[26:26] and having them
+talk to each other
+[26:28] to finish that tool
+execution functionality.
+[26:32] And there can be other more
+complex workflow patterns
+[26:37] and solving more complex tasks
+using planning and using more
+[26:40] dynamic way, like group chat.
+[26:42] In group chat, the
+users only need
+[26:46] to define the agents
+of different roles
+[26:48] and then can put
+them in a group chat.
+[26:50] And they can
+automatically decide
+[26:52] which agent to
+speak next depending
+[26:54] on the current
+progress of the task.
+[26:57] There will be a
+group chat manager
+[26:59] which can monitor
+the progress and make
+[27:02] the selection of the speakers.
+[27:04] And furthermore, you
+could add more constraints
+[27:08] or finite-state machine
+translation logic
+[27:10] about what others should
+the agents follow.
+[27:15] You don't have to make
+a very strict order.
+[27:18] You can just give some
+candidates about after agent
+[27:21] A speaks, only agent
+B and C can speak
+[27:24] and all the other
+agents, things like that.
+[27:26] So there's still some decision
+made by the language model
+[27:30] and some autonomously there.
+[27:32] But you can add
+certain constraints
+[27:35] to make sure at least the
+selection is within the scope.
+[27:41] And you can further add
+some transition logic
+[27:43] to tell the agent, when
+you see certain situations,
+[27:47] you should go this route.
+[27:48] Otherwise, you go
+to the other paths.
+[27:50] And you can use either natural
+language or programming language
+[27:53] to specify that.
+[27:56] Yeah.
+[27:57] In general, there
+are many other types
+[27:59] of conversation and applications
+enabled by these conversation
+[28:03] patterns.
+[28:05] If you're to check our website
+for more notebook examples,
+[28:09] they are nicely tagged.
+[28:10] So you can search for
+anything, a question.
+[28:12] For example, you can
+search for how to integrate
+[28:15] AutoGen with LlamaIndex.
+[28:16] And there are notebook
+demos like that.
+[28:19] And in the paper, we just showed
+a few very simple examples
+[28:23] using simple
+conversation patterns.
+[28:25] But in general, you can
+build many more complex tasks
+[28:28] using these building blocks.
+[28:30] I've seen developers
+building all kinds
+[28:32] of sorts of complex tasks.
+[28:35] So here's an overview of
+the categories of domains
+[28:40] that we are seeing
+from the community.
+[28:43] The top two categories are
+software development and agent
+[28:46] platforms, consulting,
+research, data processing,
+[28:50] getting a
+[? long tail. ?] There's
+[28:51] web browsing tasks,
+finance, health education,
+[28:54] and even blockchain, which
+is not shown in the list.
+[28:59] And here, I want to select
+a few interesting examples.
+[29:04] The first one is in the
+science and engineering domain.
+[29:09] Professor Markus
+Buehler from MIT
+[29:12] has done multiple work in
+different science domains,
+[29:15] including protein design
+and material design,
+[29:19] using AutoGen to build teams
+of agents that simulate
+[29:23] the behavior of a scientific
+team or engineering team
+[29:26] all the way from collecting the
+data, generating hypotheses,
+[29:30] and then conduct experiments
+and verify the hypothesis.
+[29:33] They have also built a very
+recent work called SciAgents,
+[29:37] which can use knowledge
+graph to reason
+[29:40] about any scientific domain and
+make interesting connections
+[29:43] and do advanced reasoning
+using that knowledge graph.
+[29:46] They contract a team of
+agents of multiple roles.
+[29:50] And they can start from
+understanding ontology
+[29:53] and then make multiple
+signs and [? critiques ?]
+[29:56] to finish the very complex
+workflow, including
+[29:59] generate all the
+different concepts
+[30:01] and possible
+hypotheses, and then
+[30:03] select the best out of them.
+[30:05] So this is very
+promising use case.
+[30:08] I see that, in the
+future, has a potential
+[30:10] to accelerate our
+science discovery.
+[30:14] And maybe soon after, we will
+have some AI-designed medicine
+[30:19] or AI-designed architectures
+and so on, or interesting alloys
+[30:28] and materials.
+[30:29] Here's another
+domain of web agents.
+[30:33] This is a agent called Agent-E,
+developed by a startup called
+[30:37] Emergence AI.
+[30:38] They use AutoGen to build
+a hierarchical agent team
+[30:42] so that they can perform some
+very complex tasks on the web,
+[30:48] like automatically
+booking flight tickets
+[30:51] or automatically fill a
+form for medical clinics.
+[30:59] This is leveraging some planning
+agent, some web browsing agent
+[31:05] and have some deep understanding
+of the content from HTML DOM.
+[31:09] They haven't used any
+multimodal models.
+[31:12] So they are only
+leveraging the HTML content
+[31:16] and not leveraging the
+images and the vision models.
+[31:20] But they already
+achieved the state
+[31:22] of the art performance on
+this WebVoyager benchmark
+[31:26] and other forms of
+previous techniques
+[31:29] using multimodal models.
+[31:32] There's still a large
+room for improvement.
+[31:34] You can see the overall
+success rate is just 73%.
+[31:37] So by combining multimodal
+models and the more agentic
+[31:41] workflows, there's a potential
+to get it higher, even higher.
+[31:46] But there's some very good
+foundational design principles
+[31:51] we can learn from that work.
+[31:53] And I also want to share
+a very recent quote
+[31:57] I learned from a company
+doing construction.
+[32:01] They're trying to
+use AutoGen to help
+[32:04] the users without special
+knowledge or expert knowledge
+[32:09] to be able to finish their
+construction projects.
+[32:12] And they mentioned
+the benefit of AutoGen
+[32:15] as being able to rapidly explore
+many different agentic design
+[32:20] patterns, configurations, and
+conducting experiments at scale.
+[32:27] And then to summarize, we have
+seen a big enterprise customer
+[32:30] interest from pretty much
+every vertical domain
+[32:32] and got contributors or
+users from universities,
+[32:36] organizations, or companies
+from all over the world,
+[32:40] including some
+contributions from Berkeley.
+[32:44] There's a word called MemGPT
+created by Berkeley students.
+[32:48] And they also have integration
+of AutoGen, very nice work.
+[32:53] So we see that there's a lot of
+changes and progress in AutoGen.
+[32:58] And here are a few examples
+in several categories,
+[33:04] including evaluation, interface,
+learning/teaching/optimization.
+[33:10] In the evaluation
+category, we are
+[33:11] building agent-based
+evaluation tools
+[33:14] to help developers understand
+how effective their application
+[33:18] is, how good their agent are.
+[33:20] It's a really difficult
+task because there
+[33:24] are a lot of texts generated.
+[33:25] And it's hard to understand
+what exactly is going on.
+[33:29] But using agents, they're
+able to automatically come up
+[33:34] with success criteria based
+on the application and task
+[33:37] and then suggest the
+scores for each dimension.
+[33:44] And furthermore, we
+can extend that idea
+[33:46] to improve agents
+over time by providing
+[33:51] the feedback to the
+agents themselves
+[33:53] and have agent-based
+optimizations or learning
+[33:57] or teaching capabilities.
+[34:00] One centerpiece of
+AutoGen is still
+[34:02] to improve the program
+interface to make
+[34:04] it even easier for
+people to build
+[34:07] all sorts of agentic
+applications.
+[34:10] So I want to talk about
+one particular research
+[34:13] that excites me.
+[34:16] This is called AutoBuild.
+[34:18] So one remaining question
+for many developers
+[34:22] is, what is the most
+effective multiagent
+[34:26] workflow I should use?
+[34:27] What agents should I create
+for my particular task?
+[34:30] So AutoBuild is designed
+to address that issue
+[34:33] as an initial attempt.
+[34:35] So it works in this way.
+[34:37] The user first provide
+a task to describe
+[34:40] the high-level requirements.
+[34:42] And the system will suggest
+agents of different roles
+[34:47] automatically.
+[34:48] And these agents can be put
+together in a group chat
+[34:50] to solve the task.
+[34:51] And for a [? new ?] task, a more
+specific task, the other task,
+[34:55] we can review this
+created agent teams
+[34:59] to solve that without users need
+to specify which agents to use.
+[35:05] And we can further extend that
+idea from static agent team
+[35:09] to adaptive agent team.
+[35:12] So there's a technique
+called Adaptive Build.
+[35:15] And in this case, we can
+first decompose a complex task
+[35:19] into smaller steps.
+[35:21] And then for each step, we
+propose a specific agent team
+[35:26] for it.
+[35:27] We can either choose from an
+existing library of agents
+[35:29] or decide to create new agents
+that didn't exist before.
+[35:32] And after finishing
+one step, we now
+[35:35] check what new agents do
+we need for the next step.
+[35:38] So these agents can be
+dynamically selected.
+[35:41] And as we create more
+agents, we can also
+[35:43] add them back to the
+library to improve
+[35:45] overall system over time.
+[35:48] And we make experiments on
+several different benchmarks,
+[35:52] including math, programming,
+data analytics, and so on,
+[35:56] and find the very
+promising result
+[35:59] outperforms previous
+techniques of similar kind.
+[36:03] Yeah, this is just one
+particular example of research
+[36:06] we're doing.
+[36:07] There are many more
+challenging questions.
+[36:09] We still need the community
+to work on them together.
+[36:12] The biggest question is how to
+design this optimal multiagent
+[36:16] workflow for any application
+and considering multiple factors
+[36:20] like quality, the monetary cost,
+latency, and manual effort.
+[36:26] In general, we still want to
+improve the agent capability
+[36:29] from the reasoning, planning,
+multimodalities, or learning
+[36:33] capabilities.
+[36:34] And we also want to ensure
+scalability and make
+[36:38] sure human has a good way to
+guide their safety and so on.
+[36:44] Yeah, so that's the
+end of my lecture.
+[36:48] So I want to acknowledge all
+the open-source contributors.
+[36:51] And you can find our
+Discord community.
+[36:54] We have a large
+community on Discord.
+[36:56] And find this new
+GitHub organization.
+[36:59] And I'm happy to follow
+up with questions.
+[37:03] Thank you very much.
+[37:05] JERRY LIU: Hey, everyone.
+[37:06] That was a great talk
+by Chi from AutoGen.
+[37:09] And yeah, I hope
+to build upon that.
+[37:11] I think this talk is a
+bit less like generic,
+[37:16] I guess, in terms of covering
+a lot of the different agent
+[37:19] architectures and stuff.
+[37:20] This is actually quite about
+a specific use case around
+[37:23] building a multimodal
+knowledge assistant.
+[37:25] And so it's really focused
+on maybe some principles
+[37:29] around RAG.
+[37:30] And how do you actually extend
+that, building a research agent?
+[37:34] And it's a use case that we've
+been exploring pretty deeply
+[37:37] as a company.
+[37:38] But of course, there's plenty
+of agent stuff out there.
+[37:41] You should definitely check out
+AutoGen, check out LlamaIndex.
+[37:44] Try building stuff
+on your own, and then
+[37:46] see what we can come up with.
+[37:47] So let's get started.
+[37:49] And first, if you're not
+familiar with LlamaIndex,
+[37:52] LlamaIndex is a company that
+helps any developer build
+[37:55] context-augmented LLM
+applications from prototype
+[37:58] to production.
+[37:59] So we have an
+open-source toolkit.
+[38:01] The open-source toolkit
+is a developer toolkit
+[38:03] for building agents over your
+data, different types of LLM
+[38:07] applications.
+[38:08] These days, there's a lot
+of people building agents.
+[38:11] We started off helping
+people build RAG systems.
+[38:14] And now we're going
+into territories
+[38:16] where people are building
+slightly more advanced stuff,
+[38:19] where you're using LLMs for
+multistep reasoning as opposed
+[38:21] to just single-shot synthesis
+and prompt generation.
+[38:28] We also have an
+enterprise product,
+[38:29] which I probably won't
+talk about too much today.
+[38:31] But it's basically
+a managed service
+[38:34] to help you offload your
+data indexing and RAG
+[38:37] and all that stuff.
+[38:38] I'll talk a little bit
+about one specific piece
+[38:40] of this, which is document
+parsing or data parsing.
+[38:44] And we think this is a pretty
+important piece in any sort
+[38:46] of context-augmented pipeline.
+[38:49] So let's get started.
+[38:51] How many you know
+of what RAG is?
+[38:53] Yes.
+[38:54] So one part of RAG is you have
+a database, and so a database
+[38:59] of some knowledge.
+[39:00] And the way it
+works is you first
+[39:01] want to do retrieval
+from that database
+[39:03] to return basically just a
+bunch of text to chunk it.
+[39:07] And then given
+the chunk context,
+[39:10] embed it and put it into, for
+instance, a vector database.
+[39:14] And we'll talk a little
+bit about that as well.
+[39:16] So this overall goal of
+building a knowledge assistant
+[39:20] is that a lot of companies
+have these types of use cases
+[39:25] where they have a lot of data.
+[39:26] They have a million PDFs.
+[39:28] They have a bunch of
+PowerPoint presentations.
+[39:30] They have Excel files.
+[39:31] And you want to
+build some interface
+[39:33] where you can take
+in some task as input
+[39:34] and give back an output.
+[39:36] That's really it.
+[39:37] If you think about a chatbot,
+that's basically a chatbot.
+[39:39] So you have a lot of data.
+[39:41] You want your LLMs basically
+understand that data.
+[39:43] And then you want the LLM
+to do stuff with that data.
+[39:48] An example could be
+generating a short answer.
+[39:50] It could also be generating a
+structured output, a research
+[39:53] report.
+[39:54] It could take actions for
+you, like send an email.
+[39:56] It could schedule
+a calendar meeting,
+[39:57] write code, do a
+lot of these things.
+[40:02] We talk a lot about
+RAG as a company.
+[40:06] And especially if you're
+just getting started,
+[40:08] if you follow RAG 101
+on how this works,
+[40:12] we call that basic RAG.
+[40:13] And so what is basic RAG?
+[40:15] Basic RAG is you take
+your unstructured data.
+[40:19] You load it with some
+standard document parser.
+[40:22] And then you chunk it into
+every thousand tokens or so.
+[40:27] You just slice that text
+up into a bunch of slices.
+[40:29] And then you stuff each slice
+into an embedding model,
+[40:33] like OpenAI embeddings.
+[40:34] And then you put it
+into a vector store.
+[40:36] Then when you return
+stuff or you do retrieval
+[40:40] from this database,
+you typically do
+[40:43] semantic search or
+vector search to return
+[40:45] the most relevant items
+from this knowledge base
+[40:47] and stuff it into the
+LLM prompt window.
+[40:50] This entire pipeline gives what
+I call a basic RAG pipeline.
+[40:54] It'll work kind of in being
+able to answer basic questions
+[40:58] that you have over that data.
+[41:01] However, there's a
+bunch of limitations.
+[41:03] And the four limitations
+we list here is one
+[41:06] is the data processing
+layer is pretty primitive.
+[41:09] When you do the chunking,
+you're not really
+[41:11] doing or taking into account
+all the different elements
+[41:14] within that data.
+[41:15] You're not really
+taking into account,
+[41:17] are there tables or
+images or weird sections?
+[41:19] And you want to semantically
+preserve different chunks
+[41:21] together.
+[41:23] You're only using the
+LLM for synthesis.
+[41:26] And so you're not
+using it for any sort
+[41:28] of reasoning or planning.
+[41:29] And so if you think about
+all of what you just
+[41:31] talked about with respect to
+agentic coordination and stuff,
+[41:34] you're doing none of that
+with a basic RAG pipeline.
+[41:36] And so it's kind of a
+waste of LLM capabilities,
+[41:39] especially with the latest
+models, like 01, 3.5,
+[41:43] like Clyde, and whatever.
+[41:45] A lot of these models have
+much greater capabilities
+[41:48] and just being able to
+summarize over a piece of text.
+[41:50] And so you want to figure
+out how do you actually
+[41:52] use the model capabilities
+to do more advanced reasoning
+[41:55] or planning.
+[41:56] The other piece is
+standard RAG pipelines
+[41:58] are typically one shot.
+[42:00] So they're not personalized.
+[42:01] It's just like after
+you ask a question,
+[42:03] it's going to forget about it.
+[42:04] And so every new interaction
+will basically be stateless.
+[42:09] This has certain advantages.
+[42:10] But if you're building
+a personalized knowledge
+[42:12] assistant, ideally, you're able
+to add a memory layer to that.
+[42:16] So a lot of what we
+ask ourselves is,
+[42:19] can we do more than
+a basic RAG pipeline?
+[42:21] There's a lot of
+questions or tasks
+[42:23] that a naive RAG pipeline
+can't give an answer to.
+[42:27] This leads to hallucinations
+for the end user,
+[42:31] having a chatbot where it can't
+answer 80% of the questions
+[42:35] you might want to ask it.
+[42:36] It is like a limited value add.
+[42:38] And so how do you build this
+more generalized knowledge
+[42:42] assistant that can
+take in questions
+[42:43] of arbitrary complexity
+and answer that
+[42:45] over arbitrary amounts of data?
+[42:48] We think a better
+knowledge assistant
+[42:50] has four main ingredients.
+[42:53] And actually, specifically,
+the focus of this talk
+[42:55] is on, how do you
+take in multimodal
+[42:59] or build a multimodal
+knowledge assistant?
+[43:01] So instead of just reasoning
+over standard text file,
+[43:07] how do you reason over
+an entire research report
+[43:09] with a lot of diagrams
+and pictures, images?
+[43:12] How do you basically reason
+over all the visual data
+[43:16] that exists on the internet
+in addition to just text?
+[43:20] So the first piece is we need
+a core high-quality multimodal
+[43:24] retrieval pipeline.
+[43:26] We want to then maybe
+generalize the output
+[43:30] and think about something
+that's a little bit
+[43:32] more complex than your
+standard chatbot response,
+[43:34] so generating a research
+report, doing data analysis,
+[43:37] taking actions.
+[43:39] 3 is agentic reasoning
+over the inputs.
+[43:42] So this is where instead of
+just taking in the user question
+[43:46] and only using the
+LLM for synthesis,
+[43:49] applying Chain of Thought,
+tool use, Reflection,
+[43:52] all that fancy stuff to try
+to break down the question,
+[43:56] do some planning, and
+actually step by step
+[43:58] work towards an overall goal.
+[44:00] And last is deployment.
+[44:03] We'll see how long I have.
+[44:04] I plan to probably talk
+for 15, 20 more minutes,
+[44:07] so just cover some of
+the high-level details.
+[44:09] And for some of the
+examples, they're
+[44:12] basically linked in
+the slides in case
+[44:14] you want to check them out.
+[44:16] The first piece is setting
+up a multimodal RAG.
+[44:19] If you're familiar with RAG,
+you might be familiar with RAG
+[44:22] over text data.
+[44:23] But what we're
+really interested in
+[44:25] is having RAG actually
+operate over just visual data.
+[44:29] And by visual data, I don't
+just mean like a JPEG file.
+[44:33] Even if your PowerPoint,
+for instance, or a research
+[44:37] archive paper, it's going
+to have charts, diagrams.
+[44:41] It's going to have
+weird layouts.
+[44:43] And the issue with a lot
+of standard RAG pipelines
+[44:45] is they do a terrible job
+at actually extracting out
+[44:48] that information for you.
+[44:50] And so like I mentioned, any
+LLM or RAG or agent application
+[44:55] is only as good as your
+data processing pipeline.
+[44:58] And if you're familiar
+with the garbage
+[45:00] in, garbage out principle in
+traditional machine learning,
+[45:03] I think for LLM application
+development, it's no different.
+[45:06] So you basically want
+to have good data
+[45:09] quality as a necessary component
+of any production LLM app.
+[45:13] This ETL layer for LLMs
+consists of basically you
+[45:17] want to do some parsing
+from the document.
+[45:19] You want to figure out
+a smart way to chunk it.
+[45:22] And then you need a
+smart way to index it
+[45:24] and put it into the
+LLM prompt window.
+[45:28] This data source
+that I talked about,
+[45:30] like this case study
+of complex documents,
+[45:33] is pretty common
+data format that we
+[45:35] see across a lot of
+different companies.
+[45:37] And so a lot of documents
+can be classified
+[45:39] as complex, like embedded
+tables, charts, images.
+[45:44] There's irregular layouts.
+[45:46] There's headers and footers.
+[45:48] And a lot of times, when you
+apply off-the-shelf components
+[45:55] to parse a lot of this data,
+it ends up in a broken format.
+[45:58] And LLM hallucinates the answer.
+[46:01] Users want to ask
+different types
+[46:03] of questions over this data.
+[46:04] So you have a bank
+of, say, PDFs.
+[46:06] You want to ask
+questions over it.
+[46:07] It could be a simple
+pointed questions.
+[46:09] It could be multidocument
+comparisons.
+[46:11] It could be longer running,
+like research tasks.
+[46:13] A research task could be
+given these 10 archive
+[46:16] papers around LLM
+quantization or something,
+[46:21] generate a condensed
+summary or a survey paper.
+[46:24] And so that's something that's
+a bit longer or higher level
+[46:27] in nature compared to something
+that's just a simple search
+[46:29] and retrieval task.
+[46:33] So we'll start with the
+basics, which is just parsing.
+[46:36] Ideally, a document
+parser can actually
+[46:39] structure this complex data
+for any downstream use case.
+[46:43] I won't talk about it too
+much because the goal of this
+[46:45] is really about agents.
+[46:46] But really, without needing to
+know the internals of document
+[46:50] parsing, you need to have a
+good PDF parser, basically.
+[46:54] Because if you have a
+bad PDF parser, then
+[46:57] you're going to load in
+some PowerPoint or PDF,
+[47:00] it's going to not
+really extract out
+[47:02] the right text from that PDF.
+[47:03] And then when you
+feed in text that's
+[47:05] been hallucinated by
+the parser, the LLM
+[47:07] is going to have a really
+hard time understanding that,
+[47:10] no matter how good the LLM is.
+[47:12] So ideally, you
+basically want a parser
+[47:15] that can parse out text chunks,
+tables, diagrams, all that stuff
+[47:19] into semantically
+consistent ways.
+[47:21] That is one of
+the things that we
+[47:23] do is we make a pretty good
+gen AI-powered PDF parser.
+[47:27] We're at 30,000-plus
+users right now.
+[47:31] And yeah, if you're
+interested in trying it out,
+[47:34] everybody gets 1,000
+credits or pages per day.
+[47:37] And so it's used at
+different small companies
+[47:40] to large enterprises.
+[47:43] So you want to
+have a good parser.
+[47:46] And what this enables
+is it's actually
+[47:49] an important piece in
+being able to structure
+[47:51] your data in the right way.
+[47:53] If you think about different
+types of data-- so here
+[47:55] is maybe an investor slide deck.
+[47:57] Here's a 10-K annual
+financial report.
+[48:00] Here's an Excel sheet.
+[48:01] Here's a form-- having
+that parsing and extraction
+[48:04] step to extract out stuff
+into clean, formatted data,
+[48:09] it's just much easier for
+LLMs and retrieval processes
+[48:12] to understand that.
+[48:14] Afterwards, once you've
+actually parsed out a PDF
+[48:18] into its constituent
+elements in a good way,
+[48:21] you can then leverage
+hierarchical indexing
+[48:24] and retrieval to
+do something more
+[48:28] fancy than your
+standard RAG pipeline.
+[48:29] So given this document structure
+of text chunks, tables,
+[48:34] and diagrams, for each
+of these elements,
+[48:38] a standard RAG pipeline
+will basically directly try
+[48:41] to embed each of these chunks.
+[48:43] But we found, for instance, a
+better approach is you actually
+[48:46] extract out a bunch of
+different representations
+[48:48] that point to the source chunk.
+[48:50] So for instance,
+for a table, you
+[48:52] might want to extract out a
+variety of different summaries
+[48:54] that point to that table.
+[48:55] For a picture, a
+picture, you can't
+[48:58] feed into a text
+embedding model anyways.
+[49:00] And so you need to
+maybe use some model
+[49:02] to extract out a variety
+of different summaries
+[49:04] that point to that picture.
+[49:06] For bigger text
+chunks, you might
+[49:07] want to extract out
+smaller text chunks that
+[49:09] feed to that bigger text chunk.
+[49:12] Once you extract out
+these representations,
+[49:15] we call these
+nodes because these
+[49:17] are the things that will
+be embedded and indexed
+[49:19] by the vector database
+that you're using.
+[49:22] So if you're using
+a vector database
+[49:23] like Pinecone or whatnot,
+you can basically
+[49:27] extract an index,
+this metadata, that
+[49:30] is associated with
+the source element
+[49:32] but is not the direct
+source element itself.
+[49:35] Then during the retrieval
+process, given a user question,
+[49:40] it will first
+retrieve the nodes.
+[49:42] And because the nodes have
+a reference to the source
+[49:45] document, you can basically
+dereference it and then
+[49:47] feed the resulting
+element into the model.
+[49:50] Notice that most models these
+days are multimodal in nature.
+[49:53] If you look at 01,
+GPT4.0, Claude 3.5 Sonnet,
+[49:58] the latest Gemini
+models by Google,
+[50:00] they can take in
+both text and images.
+[50:03] And so the nice thing
+here is that you can still
+[50:05] use text embedding models for
+represent the element itself.
+[50:08] But then when you actually
+feed stuff into the LLM,
+[50:12] you're able to feed in
+both text and images.
+[50:14] And so what I just
+outlined to you
+[50:15] is a basic way of building
+a multimodal RAG pipeline.
+[50:21] So a multimodal RAG pipeline can
+take in any sort of document.
+[50:25] It could have different
+types of visual elements
+[50:28] in that document.
+[50:29] And it will store both
+text and image chunks.
+[50:33] And so in order to
+index the image chunks,
+[50:35] you could use clip
+embeddings, or you
+[50:38] could do what I said,
+which is use a model
+[50:40] to extract out text
+representations
+[50:42] and link the text representation
+to the image chunk.
+[50:45] And so when you set this
+up, then during retrieval,
+[50:50] you return both the text
+and the image chunks.
+[50:52] And you feed both to
+a multimodal model.
+[50:57] I'm going to skip this example.
+[50:58] But here is a basic
+example here that
+[51:01] shows you how to build a
+standard multimodal RAG
+[51:04] pipeline.
+[51:04] Notice up until now, I haven't
+really talked about agents yet.
+[51:08] This is just setting up the
+basics of multimodal RAG.
+[51:12] And so you don't
+get the benefits
+[51:14] of train of thought or
+reasoning or tool use quite yet.
+[51:16] All this is doing is saying,
+given a specific question
+[51:19] you have about maybe a
+more complex data set,
+[51:22] like research reports
+or slide decks,
+[51:24] you're able to ask
+questions and get answers
+[51:26] over the visual
+elements on the page.
+[51:29] So the next piece--
+[51:31] actually, I might skip
+this just due to time.
+[51:33] But basically, the
+high-level idea
+[51:35] here is a lot of the
+promise of agents
+[51:37] is that it's not just
+going to give you
+[51:39] back a response in the
+form of a chat response
+[51:42] but actually generate entire
+units of output for you,
+[51:46] so producing its own
+PowerPoint or PDF
+[51:49] or taking actions for you.
+[51:51] Or do you guys use-- anybody
+use Claude instead of ChatGPT?
+[51:55] Anyone use Claude?
+[51:56] You know how when you ask
+it to write a paper for you
+[51:58] for your Berkeley essay,
+then it'll actually generate
+[52:01] an entire thing on the side?
+[52:03] That's an example of
+report generation.
+[52:05] It'll actually give you a thing
+that you can just directly copy
+[52:09] and paste into something
+that you then later edit.
+[52:12] So for instance, this is
+a pretty common use case
+[52:15] we're seeing in
+the enterprise too.
+[52:17] So a lot of consultants,
+like knowledge workers,
+[52:21] are interested in
+basically generalizing
+[52:24] beyond the capabilities
+of just giving you
+[52:27] back an unformatted response
+but giving you something
+[52:30] that you can just
+directly use on its own.
+[52:32] So whether that's code,
+whether that's reports,
+[52:36] it's all very interesting.
+[52:37] And I'll probably skip some
+of the architectures of how
+[52:40] to actually build this for now.
+[52:42] And now we talk about agentic
+reasoning over your inputs.
+[52:45] So this is the third section.
+[52:46] So we have a multimodal
+RAG pipeline in place.
+[52:49] Now let's add some layers
+of agentic reasoning
+[52:51] to basically build agentic RAG.
+[52:54] Naive RAG works well
+for pointed questions,
+[52:57] but fails on more complex tasks.
+[52:59] And again, this is due to all
+the reasons I mentioned above.
+[53:01] You're just retrieving a
+fixed number of chunks.
+[53:04] You're not really using
+the LLM to break down
+[53:07] the question in the beginning.
+[53:08] And so if you ask a question
+like summarization questions,
+[53:11] where you need the entire
+document instead of just
+[53:13] a set of chunks, comparison
+questions where where actually
+[53:17] need to look into two or
+three or more documents,
+[53:20] multipart questions, same
+thing, or a high-level task,
+[53:24] you don't really
+get good results
+[53:26] if you use a standard
+RAG pipeline.
+[53:29] So there is a wide
+spectrum of different types
+[53:31] of agentic applications
+you can build.
+[53:33] And I think Chi probably gave
+much better architectures of how
+[53:37] multiagents can
+collaborate with each other
+[53:39] and achieve very
+advanced things.
+[53:41] The way we think about
+it is like there's
+[53:43] both simple to advanced
+agent components.
+[53:48] At the right, you basically
+have entire generalized agent
+[53:52] architectures.
+[53:53] And so this includes a ReAct
+loop, for instance, which
+[53:56] is one of the most common
+agent architectures these days,
+[53:59] came out like about
+two years ago almost,
+[54:01] and basically just uses some
+chain of thought plus tool use
+[54:05] to basically give you some
+generic agent architecture.
+[54:08] You can plug in
+whatever tools you want,
+[54:10] and it'll roughly try
+to reason over them
+[54:12] to solve the task at hand.
+[54:13] This also includes LLMCompiler,
+which is a [? savings ?] paper.
+[54:18] And so this basically
+generalizes a little bit
+[54:21] beyond ReAct into
+doing some preplanning.
+[54:25] So instead of just planning
+the next step at a time,
+[54:27] we'll actually plan out a
+DAG, optimize it, run it,
+[54:30] and basically
+replan periodically.
+[54:33] What we actually
+see a lot of people
+[54:35] these days build is some
+people do use ReAct.
+[54:38] It's a pretty easy
+architecture to get started.
+[54:40] But other people just take
+some of the existing components
+[54:43] and build more
+constrained architectures.
+[54:44] And part of this is just due
+to the desire for reliability.
+[54:48] Even though it's
+less expressive,
+[54:50] even though it
+can't do everything,
+[54:52] some people are still building
+up that trust towards AI.
+[54:55] And so they're trying
+to solve a specific use
+[54:57] case in the beginning.
+[54:59] And so by solving this
+specific use case,
+[55:01] they can leverage more
+specific components
+[55:03] and try to maybe solve in
+a more constrained fashion.
+[55:06] This includes, by
+the way, tool use,
+[55:09] maybe leveraging
+a memory module.
+[55:11] Function calling, we
+see at a lot of places.
+[55:14] People are very interested in
+structured output generation,
+[55:18] tool use, being able to
+call an existing API,
+[55:22] and then also doing some
+basic query decomposition,
+[55:25] whether that is chain
+of thought or parallel,
+[55:28] like given a question,
+break it down
+[55:30] into a bunch of
+different questions.
+[55:33] This overall thing
+we call agentic
+[55:35] RAG because it really
+is just like an agent
+[55:37] layer on top of RAG.
+[55:38] If you think about
+RAG or retrieval
+[55:42] from a vector
+database as a tool,
+[55:44] you can think
+about an agent that
+[55:46] operates on top of these tools.
+[55:48] So instead of giving a
+query, directly feeding it
+[55:50] to the vector database,
+first, passing it
+[55:53] through this general
+agent reasoning layer.
+[55:55] And this reasoning layer can
+decide to do a bunch of things
+[56:00] to the query and
+also decide what
+[56:02] tools to call in order to
+give back the right response.
+[56:05] The end result is that
+you're able to build
+[56:07] a more personalized
+QA system that can
+[56:09] handle more complex questions.
+[56:10] And this is an example of what
+I mean by unconstrained versus
+[56:15] constrained flows.
+[56:16] So, for instance, a
+more constrained flow
+[56:19] might just be you have a task.
+[56:22] And you just have a
+simple router prompt.
+[56:25] A router prompt is
+just a LLM prompt
+[56:28] that just selects one
+option out of [INAUDIBLE].
+[56:32] And all it does is,
+given this task,
+[56:35] feed the task to one
+of the downstream tools
+[56:38] based on the decision
+and the router prompt
+[56:42] and then feed it to
+maybe a reflection layer
+[56:44] and then give back a response.
+[56:45] There's no loops in
+this orchestration.
+[56:48] All that happens is, it will hit
+the router, go through a tool,
+[56:53] go through another prompt
+that just reflects and tries
+[56:57] to validate if it's correct,
+and then generates a response.
+[57:00] This, I defined as
+more constrained
+[57:02] because a lot of
+the control flow
+[57:04] is actually defined through
+humans, through you guys
+[57:07] versus through the agent.
+[57:09] And typically, the programs
+that are more constrained
+[57:12] look like if-else
+statements and while loops
+[57:15] that you actually write
+instead of the agent.
+[57:19] If you're using a more
+generalized agent architecture,
+[57:22] if you're using ReAct or LLM
+Compiler or Tree of Thought
+[57:26] or whatever, then it's a little
+bit more general because you're
+[57:29] basically saying,
+I don't actually
+[57:31] know what the specific plan I
+want the agent to follow is.
+[57:35] I'm just going to give
+the agent a bunch of tools
+[57:37] and let it figure it out.
+[57:38] And so this is more expressive
+because it can technically
+[57:41] solve a greater variety
+of different tasks
+[57:44] than you trying to hard-code
+that flow beforehand.
+[57:47] But it's also less reliable.
+[57:50] It might veer off and
+call tools that you really
+[57:53] didn't want it to call.
+[57:54] It might just repeat, get stuck
+in an infinite loop somewhere,
+[57:58] and never converge.
+[57:59] And it's also more expensive.
+[58:01] Typically, these types
+of agent architectures
+[58:03] use bigger prompts.
+[58:05] You're stuffing in
+more tools at once.
+[58:07] And so the marginal token
+costs are much higher.
+[58:10] And so we see a little
+bit fewer architectures
+[58:15] being built with very
+wide unconstrained flows.
+[58:17] But a good rule of
+thumb is if you're
+[58:19] interested in using
+ReAct or something,
+[58:21] try to stuff in
+four or five tools.
+[58:23] And try to limit it to less
+than 10 with the current models.
+[58:28] We have core capabilities
+in LlamaIndex,
+[58:31] basically help you
+build workflows.
+[58:33] So we call all of
+these things workflows.
+[58:37] They're basically all
+agentic in some nature.
+[58:39] The very rough definition
+of an agent-- everyone
+[58:41] has a different definition.
+[58:43] You guys might disagree with me.
+[58:44] A very rough definition
+is just a program,
+[58:47] like a computer program,
+that has nonzero LLM calls.
+[58:50] That's a very
+general definition.
+[58:53] And we basically help you
+write those types of programs.
+[58:56] So whether you try to define a
+very constrained program where
+[59:01] you're writing the
+if/else conditions
+[59:03] or you're letting an
+agent handle that task,
+[59:05] we basically have an
+event-driven orchestration
+[59:08] system where every step, you
+can listen for a message.
+[59:12] You can pass a message
+to a downstream step.
+[59:14] You can pass messages
+back and forth
+[59:16] between two different steps.
+[59:18] And basically, at
+a certain point,
+[59:20] these steps can be just
+like regular Python code.
+[59:23] They could be LLM calls.
+[59:24] They could be anything you want.
+[59:25] At a certain point,
+the program stops,
+[59:27] and it gives you
+back a response.
+[59:29] And so we're building out
+this very fundamental,
+[59:32] low-level orchestration
+because we
+[59:34] believe that there's some
+interesting properties
+[59:36] among agentic behavior, where
+it is fundamentally a little bit
+[59:40] event driven.
+[59:41] And this also
+provides a nice base
+[59:43] to help users deploy workflows
+to production in the event
+[59:47] that you want to translate your
+program into a Python service.
+[59:50] So check it out.
+[59:52] I guess there are
+some links here.
+[59:54] But this stuff is all
+linked in the docs.
+[59:59] I'm going to skip this piece.
+[01:00:01] And then yeah,
+some use cases that
+[01:00:05] maybe are interesting
+to cover, which
+[01:00:10] I think the links
+are basically here
+[01:00:12] in case you want
+to check it out,
+[01:00:13] is we're very interested in
+a report generation use case.
+[01:00:17] So this is, again,
+something that we
+[01:00:20] see pop up across a lot
+of different companies.
+[01:00:22] And basically, given
+a bank of data,
+[01:00:24] you want to actually produce
+some output from that data.
+[01:00:27] An example architecture
+for this is
+[01:00:29] you have a researcher
+and a writer
+[01:00:31] and maybe a reviewer as well.
+[01:00:33] And you can think about
+this as a multiagent system.
+[01:00:36] It depends on how you define it.
+[01:00:37] But basically, you
+have a researcher
+[01:00:39] that does a little bit of RAG.
+[01:00:41] It retrieves relevant chunks and
+documents from some database.
+[01:00:45] And maybe given a task, make
+sure that it basically-- it's
+[01:00:49] like going on the internet and
+fetching stuff and storing it
+[01:00:52] in your notes.
+[01:00:53] It'll put that stuff
+in a data cache.
+[01:00:56] Basically, this contains
+all the relevant information
+[01:00:58] you need to generate the report.
+[01:01:01] The second step
+is like a writer.
+[01:01:03] And this writer might
+use this data cache
+[01:01:05] to then make an LLM
+call that will then
+[01:01:08] generate this interleaving
+sequence of text,
+[01:01:11] image blocks, tables and
+give you back a full output.
+[01:01:15] So we have an example
+architecture here.
+[01:01:16] And we also have
+some example repos
+[01:01:18] where you generate
+an entire slide
+[01:01:20] deck instead of just a report.
+[01:01:24] Another use case, by the way,
+which isn't in these slides
+[01:01:27] but is very interesting,
+is customer support.
+[01:01:31] I think if you look at just
+practical enterprise use
+[01:01:34] cases of agents, customer
+support for external facing use
+[01:01:37] cases is probably number one.
+[01:01:41] Basically, there's just
+a lot of automation
+[01:01:45] that can be baked
+into the decision flow
+[01:01:46] to basically increase
+your deflection rate
+[01:01:49] and basically ensure
+that the user ends up
+[01:01:52] having a much better
+experience than going
+[01:01:54] through those
+automated phone menus.
+[01:01:56] And so we see that popping up in
+a lot of different places too.
+[01:02:03] And then the last bit
+is really around running
+[01:02:05] agents in production.
+[01:02:07] I think, so far,
+if you start off
+[01:02:10] building a lot of
+these components,
+[01:02:12] you're probably going to start
+off in a Jupyter Notebook.
+[01:02:15] And that's totally fine.
+[01:02:16] When you start off
+building a prototype,
+[01:02:18] it makes sense to do
+something that's very local,
+[01:02:21] that's very narrowly scoped.
+[01:02:22] And you basically see if
+it works over test data.
+[01:02:24] An interesting
+design exercise is
+[01:02:26] to think about what complex
+multiagent architecture looks
+[01:02:30] like and how we can
+leverage existing production
+[01:02:33] infrastructure
+components to achieve
+[01:02:36] that vision of
+multiagents in production.
+[01:02:40] Ideally, if you think about
+agent 1, agent 2, agent 3,
+[01:02:44] every agent is responsible
+for solving some task.
+[01:02:47] And they can all communicate
+with each other in some way.
+[01:02:50] So you ideally can
+encapsulate their behavior
+[01:02:54] behind some API interface.
+[01:02:55] And then you can
+standardize the way
+[01:02:58] they communicate with each
+other through some sort of core
+[01:03:01] mastering layer.
+[01:03:02] You can easily
+scale up the number
+[01:03:04] of agents in this overall
+system to add more
+[01:03:07] to this multiagent network.
+[01:03:09] And you can also
+take into account
+[01:03:11] a large volume of
+client requests
+[01:03:13] with different sessions.
+[01:03:15] So this is basically
+what we're building.
+[01:03:18] And it's a work in progress.
+[01:03:21] But we've made a lot of
+progress in the past few months
+[01:03:23] is like, how do you actually
+deploy agentic workflows
+[01:03:27] as microservices in production?
+[01:03:29] So you model every agent
+workflow as like a service API.
+[01:03:33] We allow you to spin this up
+locally and also deploy this on,
+[01:03:37] for instance, like Kubernetes.
+[01:03:39] All agent communication happens
+via a central message queue.
+[01:03:42] You can have human-in-the-loop
+as a service.
+[01:03:45] So for instance, if this agent
+actually needs your input,
+[01:03:50] it will send a message back
+to you, await your response,
+[01:03:53] and then you give it an input
+before it resumes execution.
+[01:03:58] How many of you have
+seen the Devon demo,
+[01:04:00] like the Cognition Labs' Devon?
+[01:04:01] You know what I'm talking about?
+[01:04:03] How many of know what Devon is?
+[01:04:05] All right, so half of you.
+[01:04:07] I think if you took a look at
+the demo, one example that does
+[01:04:10] is like this coding
+agent will just generate
+[01:04:12] an entire repository for you.
+[01:04:13] But sometimes it will stop.
+[01:04:15] Sometimes it will
+say, I don't actually
+[01:04:17] have enough clarity to
+basically give you the response.
+[01:04:21] Can you actually tell
+me what to do next?
+[01:04:23] And so if you played
+around with Devon,
+[01:04:25] that's basically what it does.
+[01:04:26] And that's an example of
+the human-in-the-loop,
+[01:04:28] this interesting back and forth
+client-server communication,
+[01:04:31] where the server is actually
+waiting on the client to send
+[01:04:33] like a human feedback message.
+[01:04:35] So that's basically it.
+[01:04:37] All these components,
+I think, are
+[01:04:39] step by step towards
+this idea of building
+[01:04:42] a production-grade
+multimodal knowledge
+[01:04:44] assistant over your data.
+[01:04:46] And yeah, thanks.

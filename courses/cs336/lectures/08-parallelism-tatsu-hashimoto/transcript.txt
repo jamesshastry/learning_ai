@@ -1,0 +1,2396 @@
+[00:05] So, last lecture Percy covered some of
+[00:07] the, you know, underlying mechanics,
+[00:09] let's call it, of parallelism.
+[00:11] Today I'm going to do my favorite thing
+[00:13] of talk about all sorts of sort of
+[00:15] things you can know, like knowledge
+[00:17] details and trivia about
+[00:19] how modern parallelism for language
+[00:20] model training works.
+[00:24] Um
+[00:25] and what we're going to try to do is
+[00:26] really get to grips with the many, many
+[00:29] complexities that are involved when you
+[00:31] are having to train huge models on huge
+[00:33] clusters.
+[00:34] Um it's going to turn out that there are
+[00:36] many different parallelization
+[00:38] strategies that you can use at once. Um
+[00:41] at the end we will get to a slide where
+[00:43] I say 4D parallelism because there's
+[00:45] four different things they can do at
+[00:46] once. Actually, even more that I'll talk
+[00:48] about. Um and it turns out that to
+[00:51] parallelize at the largest scale, you'll
+[00:52] need to use kind of all of them or most
+[00:55] of them. Um and we'll sort of discuss
+[00:58] why. Um part of your assignment will be
+[01:00] figuring out um given a particular sort
+[01:02] of network topology and a particular
+[01:04] model, what is the optimal
+[01:06] parallelization strategy for that.
+[01:08] And then finally, I'll walk through some
+[01:09] examples of recent large-scale training
+[01:12] runs with details that are published and
+[01:14] kind of show you this stuff in action.
+[01:18] Okay. So, the very first part I'll I'll
+[01:21] go through somewhat quickly. It's
+[01:22] partially a review of basic collectives,
+[01:24] basic networking primitives, right? Um
+[01:27] but the reason why we need all of this
+[01:29] parallelism stuff is because there's
+[01:31] going to be two bottlenecks that will
+[01:33] solve by going to multiple machines and
+[01:35] multiple GPUs. So, one of it is compute.
+[01:38] We need more compute than we can bring
+[01:39] to bear on a single chip. And the way we
+[01:42] solve that is just to have many, many
+[01:44] machines and link them up together,
+[01:46] right? The fastest supercomputers in the
+[01:47] world have like exaflops of compute,
+[01:50] whereas, you know, um a single GPU is is
+[01:52] nowhere near that number.
+[01:54] Um the other reason why we need to
+[01:56] continue to scale in parallel is because
+[01:58] of memory, right? Models are big. We
+[02:00] can't fit them all into one GPU, so we
+[02:02] need to shard them into smaller pieces
+[02:04] somehow.
+[02:06] Um so, this is going to lead to
+[02:07] complexities of having many GPUs across
+[02:09] many different machines. And an
+[02:11] important conceptual object that we will
+[02:13] deal with throughout um our lecture
+[02:16] today is the difference between
+[02:18] intra-node parallelism, where your
+[02:20] connections are very fast, and so you
+[02:22] can do things that are very
+[02:23] communication expensive, and you're
+[02:25] going to have slower inter-node
+[02:27] communication. And because these are
+[02:29] slow, we will have to use sort of uh
+[02:31] processes that that respect the
+[02:33] communication constraints of our channel
+[02:35] more, right? So, we're going to have to
+[02:36] do both of those.
+[02:39] Now, remember, you know, all of the
+[02:40] things that we will do today, um we're
+[02:42] not actually going to be, you know,
+[02:43] sending packets or anything like that.
+[02:44] We're going to be dealing with this at
+[02:46] the level of uh collective communication
+[02:48] primitives, right? So, um whenever we do
+[02:50] accounting for, you know, how much
+[02:52] communication is done, I might say,
+[02:53] "Okay, you know, we're going to have to
+[02:54] do a all reduce or we're going to have
+[02:56] to do a all gather to implement some of
+[02:58] these operations." So, um
+[03:01] in order to implement some of these
+[03:02] efficiently, um you're going to have to
+[03:04] go all the way to the hardware level,
+[03:05] but our discussion today is going to be
+[03:07] algorithmic and so all of the networking
+[03:09] primitives I'll talk about is going to
+[03:10] be at this level of a of a collective.
+[03:14] And remember, Percy talked about this,
+[03:15] but this is important for um very
+[03:17] important for one part of the talk,
+[03:19] which is going to be that the
+[03:20] equivalence between all reduce and uh
+[03:22] reduce scatter plus all gather, right?
+[03:24] So, um there's going to be one algorithm
+[03:26] where on one hand you do a all reduce
+[03:28] and on the other hand you do, you know,
+[03:29] two of these different steps. And the
+[03:31] fact that these two have the same sort
+[03:32] of cost in some sense, um means that,
+[03:35] you know, we can do the algorithm on the
+[03:37] right for free. We'll we'll see that
+[03:38] again later. This is just a a quick
+[03:40] refresher just to make sure you remember
+[03:43] uh what Percy said.
+[03:44] Okay. So, that's, you know, it for for
+[03:46] the really basic review. Um the other
+[03:49] thing I want to touch on briefly before
+[03:50] we get into the algorithms, which are
+[03:52] going to be kind of hardware and
+[03:53] substrate agnostic, is the difference
+[03:56] Oh, sorry, yes. So,
+[03:57] is there any particular reason why
+[03:59] you're asking only all reduce and not
+[04:01] breaking to reduce scatter and
+[04:04] Okay, the the question was, is there any
+[04:05] reason why I'm talking about this
+[04:06] specifically? We will You can also say
+[04:08] that all reduce is equal to reduce plus
+[04:10] broadcast. Yes, yes, there are other
+[04:12] decompositions. This one in particular
+[04:13] will be useful for A algorithm, which is
+[04:15] why I'm emphasizing this particular
+[04:16] decomposition. That's right. There
+[04:17] there's others that you could do, of
+[04:18] course. Yes.
+[04:20] Okay. Um so, the other thing I will talk
+[04:23] about before I start,
+[04:25] most of our discussion today will be
+[04:26] hardware agnostic. Like for the most
+[04:28] part, once you understand the basic
+[04:29] concepts, you'll be able to apply it to
+[04:31] any hardware substrate. Um but I do want
+[04:34] to sort of briefly, before we start,
+[04:36] just talk about the low-level hardware
+[04:38] stack, both because it's kind of
+[04:39] interesting, um but also because I think
+[04:42] it leads to different sort of uh
+[04:44] parallelization strategies across
+[04:46] different um model training companies.
+[04:48] So, remember the TPU, right? TPU is
+[04:51] Google's accelerator. Um and I mentioned
+[04:53] during the GPU lecture, a TPU is kind of
+[04:55] like a lightweight GPU, but what's
+[04:57] different is the networking. So, how is
+[04:59] the networking different? Well,
+[05:01] in sort of one slide, um the the TPU
+[05:04] network is what's called a toroidal
+[05:06] mesh, right? So, you can think about a
+[05:07] grid and then sort of like allowing the
+[05:10] ends of the grid to communicate with
+[05:11] each other. It's a little bit more
+[05:12] complicated. It's a 3D uh picture, um
+[05:15] which, you know, Marcel, you have the
+[05:17] visualization, right? Can you can you
+[05:18] post that in the in the uh the lecture
+[05:21] channel? Yeah. So, there's like a fun
+[05:22] web visualization that you can look at
+[05:24] that like visualizes the toroidal mesh
+[05:26] in 3D, which is very cool. But your your
+[05:28] mental model, I think, can roughly be
+[05:30] this picture. You can forget the the
+[05:31] more complex one. All the chips are
+[05:32] networked kind of to neighbors, and the
+[05:34] neighbors wrap around, right? So, what
+[05:36] does this let you do? This lets you have
+[05:38] a very simple networking topology that
+[05:40] can be indefinitely scaled up very
+[05:41] simply, right? You're the number of
+[05:43] neighbors you have is kind of the same
+[05:45] no matter how large your your uh network
+[05:47] gets.
+[05:48] Um in contrast, the GPU networking
+[05:50] philosophy is very different. It's
+[05:52] really much more of a all-to-all
+[05:53] philosophy. And the way that it's
+[05:55] networked is it's kind of like a tree.
+[05:57] Um it's often called a fat tree. You
+[05:58] have, you know, your GPUs connected
+[06:00] very, very quickly at the lowest layers,
+[06:02] and then you have groups of GPUs that
+[06:04] are connected in a pod, and then the
+[06:06] pods might have sort of spine switches
+[06:07] that allow them to communicate to each
+[06:09] other. And this means that as the number
+[06:12] of nodes grows, you know, kind of the
+[06:13] tree gets bigger and bigger, your
+[06:15] communication costs is going to get
+[06:17] higher or your communication sort of
+[06:19] topology will get more complicated
+[06:21] because you're sort of connecting all of
+[06:22] these all-to-all as you go.
+[06:25] Now,
+[06:26] this difference in philosophy means that
+[06:28] if you're communicating only to
+[06:29] neighbors, TPUs are great. They're
+[06:31] cost-effective um and you can make each
+[06:33] connection sort of more beefy, right?
+[06:35] With the same power consumption. But if
+[06:37] you're connecting in very random ways,
+[06:38] like very stochastic, unpredictable
+[06:40] ways, then this GPU networking will be
+[06:42] more flexible, right? So, there's this
+[06:44] very different design philosophy um that
+[06:47] you see between TPUs and GPUs, and I'll
+[06:49] try to mention um where this shows up as
+[06:52] we go through uh the parallelism
+[06:53] lecture.
+[06:54] Um and I posted this into the lecture
+[06:57] chat um last lecture, you know, because
+[06:59] someone asked, you know, what's the
+[07:00] difference between these two and so on,
+[07:02] right? But um just to back up my point,
+[07:04] you know, Bill Dally and Jeff Dean were
+[07:05] sort of talking about the different sort
+[07:07] of hardware and like what are what
+[07:08] they're good for, right? Um
+[07:10] you know, GPUs are good for things like
+[07:11] mixture of experts, where the
+[07:13] communication is much less clear cuz
+[07:15] tokens route to different experts. Um
+[07:17] TPUs are great if you have this dense
+[07:19] model that you're doing sort of um very
+[07:21] predictable partitions of. I'll talk
+[07:23] about that um in a in a idea called
+[07:25] tensor parallelism uh later in this
+[07:27] lecture. And so, these hardware things
+[07:29] are are good for different workloads.
+[07:31] And this was kind of where I was going
+[07:33] to leave it for the lecture until this
+[07:35] morning when Google decided that they
+[07:37] were going to announce the TPU AI and T
+[07:40] this morning. Um and then I looked at
+[07:42] this as I was, you know, preparing my
+[07:44] lecture and I said, "Oh my god, TPU AI,
+[07:47] that's a tree topology. They've like
+[07:48] switched to like a much more all-to-all
+[07:50] connection." Um and you know, if you
+[07:52] think about it, it makes sense. Um
+[07:54] you know, modern-day language models are
+[07:56] MoEs, and if you're going to serve a
+[07:58] MoE, you're going to have all sorts of
+[08:00] bandwidth just flying around as you
+[08:02] route tokens to different experts. You
+[08:04] probably do want much more of a
+[08:05] all-to-all um
+[08:07] uh connectivity, where, you know, at
+[08:09] inference time these communications are
+[08:10] real bottlenecks. You want to kind of
+[08:12] deal with them. Um
+[08:14] and even at sort of training time, the
+[08:15] TPU 8T, which is a training chip, you
+[08:18] know, it's sort of the the cross-rack
+[08:19] connectivity like looks a lot more like
+[08:21] a a GPU. Like there's much more of like
+[08:23] a all-to-all style uh switch uh that's
+[08:26] being built out called the the Virgo
+[08:27] network. That's a higher-level uh
+[08:29] networking stack.
+[08:31] So, I think there's kind of really
+[08:33] interesting things happening. It's a
+[08:34] little bit of a convergent evolution um
+[08:36] across both TPUs and GPUs, where really
+[08:39] the workloads are kind of defining the
+[08:41] network that we need to have.
+[08:43] Okay. And then the final thing about
+[08:45] hardware, you know, I just love talking
+[08:48] about kind of the what's happening in
+[08:50] the Chinese AI scene, um is kind of this
+[08:53] idea of, you know, I think in the GPU
+[08:54] lecture someone asked, "If SRAM is so
+[08:56] good, why don't you just all use SRAM?
+[08:58] Like only SRAM chip." And that's Groq,
+[09:00] right? It works really well. Now, some
+[09:02] of you might be thinking, you know, if
+[09:04] all-to-all connectivity is good, why
+[09:06] don't you just connect everything and
+[09:08] connect them with really fast fiber
+[09:10] optic chips, right? Um and then you
+[09:12] would kind of get the Huawei Ascend 910,
+[09:14] right? Um so, if you look at the specs
+[09:16] of the Huawei Ascend, um it's actually
+[09:19] really interesting because each chip is
+[09:21] a lot worse than a H100. Like it's a lot
+[09:23] slower at matmuls, you know, it's, you
+[09:25] know, kind of slower in many ways. But
+[09:27] then, you know, if you're willing to
+[09:29] dedicate kind of a giant rack of sort of
+[09:31] fiber optic switches to connect a much
+[09:34] larger number of chips, like in their
+[09:35] case, 384
+[09:37] uh in a big rack, um
+[09:39] then maybe you can kind of deal with the
+[09:41] fact that each chip is slower by just
+[09:44] connecting a much, much larger number of
+[09:46] these guys, right? Um
+[09:49] and then so, I think what this shows us
+[09:50] is a really interesting trade-off
+[09:52] because once you look at this
+[09:53] architecture, you realize the power
+[09:55] consumption of this thing is insanely
+[09:58] high. It's four times that of the
+[09:59] equivalent Nvidia system. Um and so it's
+[10:02] something like, well, you know, if
+[10:03] you're willing to pay the power cost,
+[10:05] you can solve a lot of, you know, kind
+[10:07] of communication problems brute force,
+[10:09] and you can scale out much more
+[10:11] aggressively to 300 chips. Um but you're
+[10:13] paying a power cost, right? Similar to
+[10:15] that SRAM story of if you want to design
+[10:17] a hardware that is efficient to use both
+[10:20] power and manufacturing-wise, you end up
+[10:22] in a certain place. If you want to brute
+[10:23] force things, you end up in a very
+[10:25] different place, right? So, this is this
+[10:27] is I think just a very interesting
+[10:29] uh place to learn from about sort of
+[10:30] these hardware design trade-offs.
+[10:33] Okay, good. Um so now, you know, just to
+[10:36] put this all together, the first thing
+[10:38] you should think about is the new unit
+[10:39] of compute is not the GPU, it's the
+[10:41] entire data center.
+[10:43] And we want to have several things. We
+[10:45] want to be able to control the amount of
+[10:46] memory we use. We want to be able to
+[10:49] control the amount of compute that we
+[10:50] can bring to bear. And we want all of
+[10:52] these to kind of be lossless, right? We
+[10:54] want to use all of the resources that we
+[10:55] have. Um
+[10:57] And then, you know, we're going to, you
+[10:58] know, talk about the algorithms that
+[11:00] will enable this through all these like
+[11:02] communication primitives components.
+[11:05] Okay.
+[11:06] Good.
+[11:07] So now, the second part of this lecture
+[11:10] is going to be the bulk of the content,
+[11:12] and these are kind of the algorithms
+[11:13] that we will use to um parallelize uh
+[11:17] language models.
+[11:18] And there's going to be a couple
+[11:19] different important ideas.
+[11:21] Um
+[11:23] Actually, these should probably maybe
+[11:24] even be grouped. You know, data parallel
+[11:26] is one set of ideas for essentially
+[11:28] taking your data that you're going to
+[11:30] train on and distributing them across
+[11:31] GPUs. So, the data is the ones that move
+[11:33] around. Um and then model parallelism,
+[11:36] you're going to chop up different parts
+[11:37] of the model and split them around. Um
+[11:39] turns out that the boundary between
+[11:41] these two is a little leaky because one
+[11:42] of the algorithms here will actually cut
+[11:44] parameters up too. But we will see kind
+[11:46] of why I put all these algorithms into
+[11:48] these different bins, right? Um and
+[11:50] conceptually, we're trying to both scale
+[11:53] out compute and memory, and that's why
+[11:55] we will need a whole bunch of these
+[11:56] different um tricks.
+[11:59] Cool.
+[12:01] All right. So, data parallelism, I think
+[12:02] is the easiest to understand. It is
+[12:04] conceptually very simple, and I think
+[12:06] it's the, you know, standard way that
+[12:08] you would try to parallelize an
+[12:09] algorithm like uh LM training.
+[12:11] So, forget that we're doing Adam. We're
+[12:13] going to do just naive uh SGD for the
+[12:15] moment. Um and we have a capital B
+[12:18] batch-sized batch, right? So, each
+[12:20] update step, I'm going to take capital B
+[12:22] elements, and I'm going to sum up the
+[12:24] gradients, and I'll take my update,
+[12:26] right? So, the most naive form of
+[12:28] parallelism that one can do for this is
+[12:30] to take my batch, B. I can cut it up
+[12:33] across M machines. If they're divisible,
+[12:35] each machine will get a smaller, you
+[12:37] know, B over M-sized batch. And then,
+[12:39] what I'm going to do is each machine
+[12:41] computes gradients, and then I will
+[12:42] synchronize all the gradients um to get
+[12:44] my, you know, sum.
+[12:46] Okay, great. So, compute scaling-wise,
+[12:48] you know, this is perfect. As long as
+[12:50] there's enough examples per GPU, we're
+[12:51] good. Communications overhead, how much
+[12:54] do we have to talk to each other? Well,
+[12:56] every batch, we have to basically
+[12:58] communicate two times the number of
+[13:00] parameters, right? Because what I have
+[13:01] to do um is I have to basically
+[13:04] communicate my gradients uh back and
+[13:06] forth.
+[13:07] Okay. And then, for memory scaling,
+[13:09] there's absolutely none. Every GPU has
+[13:11] the same copies of the models. You need
+[13:13] to have the same sized activations. So,
+[13:16] you don't save any memory at all in this
+[13:18] scheme.
+[13:19] Um
+[13:21] So now, what is the problem? Clearly,
+[13:23] we've addressed compute to some extent,
+[13:25] but we have not addressed memory at all.
+[13:27] So, let's take a look at kind of this
+[13:29] memory, you know, problem and just do a
+[13:31] little bit of accounting.
+[13:33] Um initially, it might seem that the
+[13:35] memory situation is bad, but it turns
+[13:37] out our memory situation is actually
+[13:39] just terrible. Um and the reason why the
+[13:41] memory situation is terrible is if you
+[13:44] just kind of do some parameter
+[13:45] accounting, right? Like it it just turns
+[13:47] out you need to store a lot of stuff,
+[13:49] right? And not only do we need to store
+[13:50] a lot of stuff, it's actually more than
+[13:52] the parameters that we need to store.
+[13:55] So, um roughly the rule of thumb, it
+[13:57] depends on your precision, but the rule
+[13:59] of thumb you might say is that we need
+[14:01] something like five copies of weights um
+[14:03] and 16 bytes per parameter to store a
+[14:06] model. Um so, you know, we will need to
+[14:08] of course store our model parameters. We
+[14:10] need a place to put our gradients,
+[14:12] right? You know, it's kind of the
+[14:13] accumulator before we put them into the
+[14:14] model parameters. So, we need to store
+[14:16] those uh guys.
+[14:18] Um but actually, you need to maybe store
+[14:19] more stuff. Um you might need to have
+[14:22] like a higher precision accumulator that
+[14:24] you accumulate into in SGD. This might
+[14:27] be temporary, but you might need this.
+[14:29] Um and if you're doing Adam, and this is
+[14:30] really where the bad stuff comes in, um
+[14:33] you're going to need to track both the
+[14:34] first and second moments of your
+[14:36] gradients, and you need to track them
+[14:37] over time, right? So, you need two of
+[14:39] these. And unfortunately, um you might
+[14:42] need to store them in high precision
+[14:44] depending on your stability
+[14:45] characteristics, and these might be
+[14:46] quite expensive, right? Um and we
+[14:49] generally call these things optimizer
+[14:51] state, right? Like the the thing that
+[14:53] you're accumulating into, the first
+[14:54] moment, the second moment, right? And
+[14:56] these are actually quite expensive. If
+[14:57] you look at the accounting, this is most
+[14:59] of the cost memory-wise of doing an SGD
+[15:01] update.
+[15:04] Um and so, I think one of the really,
+[15:07] you know, elegant and nice, you know,
+[15:09] things that you can do in this space is
+[15:11] to start cutting up the amount of memory
+[15:14] you need um and distributing them across
+[15:17] the accelerators, but doing so in this
+[15:18] structured way that gets you these gains
+[15:21] for basically free.
+[15:23] So, as I kind of said in the last slide,
+[15:25] the optimizer state is most of your
+[15:26] memory. So, here, you know, the
+[15:28] optimizer state is green. That's most of
+[15:30] your memory. Um orange is your
+[15:32] gradients, and uh blue is your
+[15:34] parameters. And notice how parameters
+[15:36] and gradients are the same size, and
+[15:37] your state is bigger, right? Um if you
+[15:39] do naive data parallel, you're just
+[15:41] going to replicate all of these the
+[15:43] state across the GPUs, and this is not
+[15:45] so good, right? Because you've in some
+[15:47] sense consumed way more memory than you
+[15:49] need, and your memory consumption is
+[15:51] linear with your number of accelerators.
+[15:53] Not so good, right? Um what we can do
+[15:56] instead is perhaps we can shard the
+[15:59] optimizer state onto different GPUs, and
+[16:02] this would be a big savings. If we shard
+[16:05] different other parts of, you know, what
+[16:07] we need to track, that would be also big
+[16:09] savings. Like maybe we can also shard
+[16:11] the gradients into different GPUs, or in
+[16:13] the extreme, maybe we can shard
+[16:14] everything into different accelerators.
+[16:17] And then you can see that, you know, the
+[16:18] the implied memory gains on the very
+[16:20] right would be quite dramatic as we go
+[16:22] all the way down from 120 to 1.9.
+[16:25] Now,
+[16:26] um the main thing that we will sort of
+[16:28] study now is what is the cost of doing
+[16:30] this, right? You might imagine there's
+[16:32] no free lunch. You know, baseline is
+[16:34] going to be the fastest, and as we go
+[16:36] downwards to here, we're going to have
+[16:37] to pay a big communication cost in order
+[16:39] to achieve these memory savings.
+[16:41] I think the remarkable thing is going to
+[16:43] be that a lot of this will be free.
+[16:45] Um but I'm going to walk through this
+[16:47] step by step. Um so, let's start with um
+[16:49] what people call zero stage one.
+[16:51] Um so, there's going to be three stages
+[16:53] corresponding to each of these steps.
+[16:55] And so, stage one is going to be the
+[16:56] simplest. The only thing I will shard is
+[16:58] my optimizer state, and I will shard it
+[17:00] across the GPUs, okay?
+[17:02] Um everyone is going to have both the
+[17:04] parameters and the gradients.
+[17:06] Um and so, what you can think of is each
+[17:08] worker is going to be responsible for
+[17:10] updating one slice of the parameters.
+[17:12] So, if I'm GPU number zero, my
+[17:14] responsibility is updating this very
+[17:16] first slice over here, um and I'm not
+[17:18] responsible for any of the other
+[17:20] updates. Um
+[17:23] So, how would it work, right? So, what
+[17:25] we're going to do is everyone computes
+[17:27] everyone has a different data item,
+[17:29] right? So, they're going to compute a
+[17:30] full gradient on their data item. That's
+[17:32] the first step. Now, I'm going to take
+[17:34] the gradient I computed, and I'm going
+[17:36] to reduce scatter the gradients onto all
+[17:38] the other machines because everyone else
+[17:40] needs my gradients, right? But they
+[17:41] don't need all of the gradients, they
+[17:43] only need the gradients associated with
+[17:46] their update, right? So, every worker is
+[17:48] going to get, you know, from me, my
+[17:50] gradient, but their part of the
+[17:51] parameter space, right? So, this is
+[17:53] going to be equivalent to a number of
+[17:55] parameters communication cost because
+[17:57] I'm sending my gradient, but I'm cutting
+[17:59] it up and sending it into each GPU.
+[18:02] Now, each machine is going to be able to
+[18:03] now do their update. They have their
+[18:05] parameters, they have their gradients
+[18:07] that they got from everybody else, and
+[18:08] they have their own state that they've
+[18:09] tracked, right? And now, the parameters
+[18:12] have been updated, and now I'm going to
+[18:14] all gather them back, right? I was
+[18:16] responsible for, let's say, like 1/4 of
+[18:17] the parameters. So, those updated
+[18:20] parameters, I'm going to send back to
+[18:21] everybody else, right? So, this is a um
+[18:24] all gather, right? So, this is where the
+[18:26] the equivalence is kind of useful. How
+[18:28] many sort of operations did I do? Well,
+[18:32] in the naive data parallel case, you
+[18:34] know, what I had to do was I had to do
+[18:35] one all reduce, right? I had to sort of
+[18:37] exchange all the gradients of everybody,
+[18:39] um and then do the updates, right? So,
+[18:41] the communication cost is two times the
+[18:42] parameters. Now, in zero stage one, you
+[18:45] know, I did two operations. One was a
+[18:47] reduce scatter to send the gradients
+[18:49] out, and then an all gather to collect
+[18:51] the updated parameters. But we already
+[18:52] said a reduce scatter and an all gather
+[18:54] is equivalent to an all reduce. So, zero
+[18:57] stage one is going to have the exact
+[18:59] same sort of communication
+[19:00] characteristics as naive DDP, right? So,
+[19:03] this was free. Free memory savings.
+[19:05] Wonderful, right? And we look at the
+[19:06] memory, you know, we've basically taken
+[19:08] the parameters and anything that's not
+[19:10] optimizer state, I've divided by N GPUs,
+[19:12] right? Wonderful, wonderful, wonderful.
+[19:15] Now, can we do more? Well, zero stage
+[19:18] two is now going to say I'm going to
+[19:19] split the gradients up, and then I'm
+[19:22] going to um
+[19:23] you know, shard that as well.
+[19:25] Now, this is going to be trickier
+[19:27] because before I was relying on the fact
+[19:29] that I can compute the entire gradient.
+[19:31] Now, I can't even materialize the whole
+[19:33] gradient. So, what do I do?
+[19:34] Um well, this turns out to just be kind
+[19:37] of a systems trick. You know, as I sweep
+[19:39] backwards through my network, you know,
+[19:41] I don't need to compute the full
+[19:42] gradient. I can send out the gradients
+[19:43] to the associated workers um
+[19:46] as I kind of go. So, the key step here
+[19:49] is now, instead of materializing the
+[19:51] gradient vector all at once, I'm going
+[19:53] to walk backwards through the compute
+[19:55] graph. And after computing a layer's
+[19:57] gradients, I'm going to immediately just
+[19:59] reduce that to send that to the right
+[20:01] worker, right? And once gradients aren't
+[20:03] needed in the backwards graph, just
+[20:04] immediately free it, right? So, you're
+[20:05] kind of now incrementally computing and
+[20:07] sending gradients as you go. And as you
+[20:09] can see, you know, doing it
+[20:11] incrementally or doing it all at once,
+[20:13] same thing, right? So, it doesn't really
+[20:15] make a difference. So, now you can at
+[20:17] the end, once again, all gather the
+[20:18] parameters
+[20:19] I have sharded the gradients in some
+[20:21] sense without incurring any additional
+[20:23] cost, right?
+[20:25] Okay. So, the last and the most hairy
+[20:27] thing, and this always, you know, when I
+[20:29] first learned about this, seemed like
+[20:30] total magic, is, you know, we've gotten
+[20:33] something for free so far, so let's keep
+[20:35] pushing it. I'm going to shard the
+[20:37] parameters as well,
+[20:38] all the way across all the states. Um
+[20:41] and so, we're going to use the same kind
+[20:42] of idea that we used in zero stage two.
+[20:45] And the idea, remember, was I'm going to
+[20:46] do things incrementally, right? Um and
+[20:49] so, what I'm going to do is I'm going to
+[20:50] send and sort of receive parameters on
+[20:53] demand while stepping through the
+[20:54] compute graph. And this is really tricky
+[20:57] because each GPU only sees a slice of
+[21:00] both the parameters, gradients, and
+[21:01] optimizer states at any one time, right?
+[21:04] Um and this is zero stage three, also
+[21:06] known as FSDP. If you've ever paralyzed,
+[21:09] you know, anything in a torch library,
+[21:10] you've probably dealt with this before.
+[21:13] Um so, the way that it works under the
+[21:15] hood, um is what you're going to do is
+[21:18] you're going to do two all gathers and
+[21:20] one reduce scatter as you go. So, um
+[21:23] we're going to step from left to right
+[21:24] here, and this is kind of going to be um
+[21:27] the entire sort of update process. So,
+[21:28] what you do is you're going to load your
+[21:31] model, you know, you have your two GPUs
+[21:33] at the top and the bottom. You're first
+[21:35] going to gather your weights for this
+[21:37] one layer, I'm going to forward this one
+[21:39] layer, and then I can free my weights
+[21:41] cuz I've already done the forward,
+[21:42] right? I don't need these parameters
+[21:43] anymore.
+[21:45] Now, let's say I only have one layer,
+[21:46] you know? Um now I can move to the
+[21:48] backwards process. Now, to do the
+[21:50] backward step, I need the activations,
+[21:52] which I've kept, and I need the
+[21:53] parameters for this layer, which I can
+[21:55] all gather kind of on demand. I all
+[21:57] gather it, I do the backwards, and then
+[21:59] I scatter the gradients back right when
+[22:01] I get them, right? So, I got the
+[22:02] gradients, I reduce scatter the
+[22:04] gradients out, and then I free the
+[22:05] weights, I don't need them anymore, and
+[22:06] I repeat this process, right? So, I grab
+[22:09] the parameters as I need them, I compute
+[22:11] my backwards, I send the gradients out,
+[22:13] and I repeat this process, and then, you
+[22:15] know, I update my weights, all done,
+[22:17] right? Um
+[22:18] so, what's the communication cost,
+[22:20] right? How many all gathers did we do?
+[22:21] We need two all gathers, one reduce
+[22:23] scatter. Um
+[22:25] Also, like, you know, so, we have one
+[22:28] extra all gather, which seems bad.
+[22:29] That's one thing. The second thing is
+[22:31] this seems a little crazy in terms of
+[22:33] the overhead because we're doing
+[22:34] communication all the time. Like, every
+[22:36] layer, we're doing this communication.
+[22:39] Um you might think that this is
+[22:41] extremely expensive and bad.
+[22:43] But I think, you know, one of the things
+[22:45] that's counterintuitive and important is
+[22:48] um you know, zero stage three uses kind
+[22:50] of two really important ideas to make
+[22:53] this essentially overhead free. Um so,
+[22:56] the first one, which we've already seen,
+[22:58] is this idea that we're going to kind of
+[22:59] sweep through the compute graph, and
+[23:01] then we're going to do the necessary
+[23:02] communication, and then immediately free
+[23:04] the memory, right? That's already an
+[23:05] idea we've experienced. The other idea,
+[23:08] which I haven't talked about yet,
+[23:10] is we're going to overlap the
+[23:12] communication and computation cost um of
+[23:15] this process, right? Um and this is kind
+[23:17] of hard to explain initially, so I think
+[23:19] I I've taken this plot from this uh
+[23:22] paper, which I think was explaining um
+[23:24] the PyTorch FSDP sort of architecture.
+[23:26] Um so, the way that this kind of works
+[23:29] is, you know, in order so so, we have
+[23:32] different streams here. This is kind of
+[23:33] what's happening in the CPU, this is
+[23:34] what's happening in the GPU for
+[23:36] computation, and then what's happening
+[23:37] in the GPU for communication at the very
+[23:39] bottom here.
+[23:40] Now,
+[23:41] you know, the way FSDP works is I have
+[23:43] to first get my parameters before I can
+[23:45] do my computation. So, I'm going to all
+[23:46] gather zero, layer zero, right? And once
+[23:49] I've all gathered, I can now do my
+[23:50] forward. But as I'm doing my forward,
+[23:53] notice that I'm requesting the next
+[23:55] layer's parameters. I'm all gathering
+[23:56] one while I'm doing this computation.
+[23:59] And now I all gathered one, I can now do
+[24:01] forward one, right? And I can start all
+[24:03] gathering two um while I'm starting this
+[24:05] process. And so, I'm overlapping
+[24:08] uh computation and communication as I'm
+[24:10] kind of doing this. And, you know, I
+[24:12] might spend some time freeing my
+[24:13] parameters, I might also spend some time
+[24:16] sort of um computing another forward.
+[24:17] For example, if you reuse that W naught,
+[24:20] you know, I'm reusing this forward zero
+[24:22] sort of twice, right?
+[24:24] And so, what this allows you to do is if
+[24:25] you have enough computation and your
+[24:27] network's fast enough, by overlapping
+[24:30] communication and computation, right?
+[24:32] FSDP can basically be free, right? You
+[24:34] do see some bubbles, these are
+[24:35] overheads, but if your comms is very
+[24:38] fast and your computation is very big,
+[24:41] right? You can easily see how the
+[24:42] computation can run faster than the
+[24:44] communication or sorry, the computation
+[24:46] can take longer than the communication,
+[24:47] and you end up having this really great
+[24:50] improvement in memory usage without
+[24:52] paying for almost any amount of uh
+[24:55] memory use.
+[24:57] Okay. So, um
+[24:59] you know, when we look at the different
+[25:00] zero stages, right? Um
+[25:02] DDP, the naive data parallel, costs two
+[25:05] times parameters, right? It was a single
+[25:07] all reduce. Um the two zero stages, one
+[25:10] and two, right? The ones that shard
+[25:12] gradient and optimizer state, this is
+[25:14] free in the literal sense because it has
+[25:16] the same amount of
+[25:17] communication cost, right? It's just the
+[25:20] identity of all reduce being equivalent
+[25:22] to two operations, right?
+[25:24] Um
+[25:25] Now, zero stage three is technically a
+[25:27] little bit more communications. You need
+[25:28] an extra all gather, right? But it's not
+[25:31] so bad because of the really clever ways
+[25:33] in which all these libraries can hide
+[25:35] the communication cost underneath the
+[25:37] computation. So, in practice, you know,
+[25:39] FSDP, if you run it, you're going to see
+[25:41] GPU utilization that's very close to,
+[25:44] you know, just the single GPU
+[25:45] performance. Like, it is actually quite
+[25:47] remarkable how good um FSDP is. And it's
+[25:50] also very conceptually simple. You will
+[25:51] actually um have to write an FSDP
+[25:54] implementation as part of your
+[25:55] assignment. Um and, you know, you can
+[25:57] just kind of like write a wrapper that
+[25:59] will wrap any module and turn it into
+[26:01] its FSDP version, right? Um
+[26:02] conceptually, all you're going to do is,
+[26:04] you know, do a bunch of all gathers,
+[26:06] compute, free, and then repeat on the
+[26:07] backwards pass.
+[26:10] Okay, good.
+[26:11] Um yes.
+[26:13] So, the assumption is that, like, we are
+[26:15] taking the
+[26:16] gradients from the next GPU to calculate
+[26:18] the gradients for the previous right?
+[26:20] Um when you say "gradients"
+[26:23] So, so, we're not um I think what you
+[26:25] just described, which is like taking
+[26:27] gradients from one GPU to the next,
+[26:29] that's closer to pipelining. Pipelining
+[26:30] would be like if one layer was on one
+[26:32] GPU and another layer was on another
+[26:33] GPU. That's not the case. So, in all
+[26:36] these cases, you know, every uh GPU kind
+[26:39] of goes through the entire
+[26:41] uh model, right? From the start to
+[26:42] finish. Um but the difference is no GPU
+[26:46] is going to hold the entire parameters
+[26:47] at the same time. And so, what we're
+[26:49] going to do is, you know, if I only have
+[26:51] part of the, you know, network that
+[26:53] doesn't have layer zero, I'm going to
+[26:55] sort of demand the layer zero parameters
+[26:57] first, and then do the full computation,
+[26:59] and then I'll move on to the next layer,
+[27:00] right? So, it's the same computation,
+[27:02] you know, it's the same single GPU
+[27:04] computation as naive data parallel, but
+[27:06] you can just kind of think of it as
+[27:07] request parameters, free parameters in
+[27:09] between every computational operation.
+[27:12] Yes. So, are you saying that every GPU
+[27:14] has a part of every layer, and that's
+[27:16] what the all gather is for? Yes, that's
+[27:17] all. So, so, the the picture is here,
+[27:19] right? Parameters, gradients, and
+[27:20] optimizer states are all sharded across
+[27:21] different GPUs. That's right.
+[27:23] Yeah. Good. Oh, yes.
+[27:25] Why is the communication cost not
+[27:28] multiplied by the number of layers in
+[27:30] small
+[27:33] Yeah, because these are So, so, the the
+[27:35] number of operations multiplies by
+[27:37] layer, that's So, that's correct. But
+[27:38] each of these these communication pieces
+[27:40] is smaller, right? Cuz this is just one
+[27:42] tiny MLP or something. Uh and I'm
+[27:44] comparing that to the the cost of all
+[27:45] reducing a whole network, right? So, so,
+[27:48] it all adds up in some sense.
+[27:49] Yeah, good. Um
+[27:51] all right.
+[27:53] Okay, good. Um so, in practice, you
+[27:56] know, if you look at, you know, the
+[27:57] maximum size that can fit on, you know,
+[27:59] let's say a 100 GPU, um you know, if you
+[28:03] go from like the baseline, you can not
+[28:04] even fit a 7B model, and you go to zero
+[28:06] stage three, you know, you can now fit,
+[28:08] you know, 50 uh billion parameter models
+[28:11] and so on, right? So, um it becomes a
+[28:13] lot easier to fit these big models using
+[28:16] uh FSDP, right? The the improvements
+[28:18] that you get in terms of the um
+[28:22] memory improvement is quite significant.
+[28:24] Okay, yes.
+[28:26] So, can you go back to the previous
+[28:28] slide?
+[28:29] Uh so, regarding this uh on index E
+[28:32] E100, what would be what would be the
+[28:35] limitation on H100 or P200? Okay, I I I
+[28:40] can't do the mental math of like
+[28:41] multiply by 141 and divide by 80, but if
+[28:44] that would be the number for like an
+[28:45] H200,
+[28:47] um and so on and so forth. Yeah, it
+[28:48] would it would be linear, right? Like,
+[28:49] it wouldn't really change the math very
+[28:50] much to to go from one accelerator to
+[28:52] another.
+[28:53] Um okay. So, FSDP, I think is very
+[28:56] clean, it's very elegant, I like it a
+[28:57] lot. Um I wish I could end the lecture
+[29:00] here, but unfortunately, we will have to
+[29:02] proceed into uglier and more hairy
+[29:05] things. And there's, you know, two
+[29:07] reasons why we have to do that. One of
+[29:08] them, and this is an important idea for
+[29:10] parallelization,
+[29:12] is that in some sense, data parallel is
+[29:13] consuming an important resource, and
+[29:15] that resource is kind of the the batch
+[29:18] size, so to speak, right? If you have a
+[29:19] batch size of eight, you can never have
+[29:21] more than eight accelerators, right? Um
+[29:25] and you might think, okay, like, let's
+[29:26] just make the batch size bigger and
+[29:27] bigger and bigger as we have more
+[29:28] accelerators. Um you can't do that
+[29:31] because at a certain point, you know, um
+[29:33] there's something called the critical
+[29:34] batch size where the basically gain that
+[29:37] you get from the additional batch
+[29:39] element is less than if you had taken
+[29:41] another SGD step on that single element,
+[29:43] right? So, there comes a point where,
+[29:45] you know, at at small batch sizes,
+[29:46] adding extra elements is, you know,
+[29:48] perfectly helpful. It's the same as
+[29:50] taking more SGD steps. But at a certain
+[29:51] point, diminishing return hits in and an
+[29:53] infinitely large batch size is not
+[29:55] infinitely better than infinite steps,
+[29:56] right? Infinite single steps.
+[29:58] Um because of this, now we have faced a
+[30:01] hard trade-off. Like, do we want small
+[30:03] batch sizes and let our GPUs be more
+[30:05] idle? Do we want big batch sizes and
+[30:07] sort of take the hit from optimization?
+[30:09] Sort of hard to say, right? There's
+[30:11] another issue that we have, which is
+[30:13] that we still have memory issues, um you
+[30:17] know, zero stages one and two don't
+[30:18] really let you scale memory at all. And
+[30:21] zero stage two lets you cut up the
+[30:22] parameter memory,
+[30:24] um
+[30:25] but unfortunately, you know, there's
+[30:27] activation memory and other kinds of,
+[30:29] you know, memory use that this does not
+[30:31] split up or this does not reduce at all,
+[30:32] right? Um and so we need better ways,
+[30:35] more fine-grained ways of cutting up the
+[30:36] model in order to really start pushing
+[30:38] down the memory use beyond these points,
+[30:41] right?
+[30:42] Um
+[30:43] and so this kind of takes us to various
+[30:45] model parallelism ideas.
+[30:47] Um and so model parallelism is going to
+[30:50] be this idea of essentially, like FSDP,
+[30:53] we're going to split up the parameters
+[30:55] across GPUs, um but I think the
+[30:57] important conceptual difference between
+[31:00] what we talked about and what we will
+[31:01] talk about next is that now we are going
+[31:03] to communicate activations, right? In
+[31:05] FSDP, we cut up the parameters, but in
+[31:08] some sense, it was just kind of a
+[31:09] wrapper. We were still doing the normal
+[31:11] computation, we were just sending
+[31:13] parameters back and forth before doing
+[31:15] Right? So parameters were the things
+[31:16] flying around. Now what we're going to
+[31:18] do instead is we're going to communicate
+[31:19] activations back and forth, right? So
+[31:21] if, for example, one layer lives on GPU
+[31:23] zero, the next one lives on GPU one,
+[31:26] right? What I have to communicate is the
+[31:27] activation of the layer in between,
+[31:29] right? So that's going to be um the big
+[31:31] difference. And and this will, you know,
+[31:34] uh involve pipeline parallel, which is
+[31:35] cutting up layers, um tensor parallel,
+[31:37] which is cutting up matrices, and expert
+[31:39] parallel, which is sharding experts into
+[31:41] different places, right? Um and Percy's
+[31:43] talked about, you know, tensor parallel
+[31:45] already, so you have roughly some mental
+[31:46] model of this.
+[31:48] Um
+[31:49] I'll start by talking about pipeline
+[31:51] parallel, um or layer-wise parallel. Um
+[31:54] you know, this is I think conceptually
+[31:55] very simple. Like, you know, back in the
+[31:57] the days when I first learned about
+[31:59] parallelism, I was like, oh yes, it's
+[32:00] simple, just cut up the layers and put
+[32:02] them on different GPUs, right? Very very
+[32:03] simple thing. Um and so you're going to
+[32:05] pass activations uh forward in the
+[32:08] forward pass, and then you're going to
+[32:09] pass like partial gradients backwards in
+[32:11] the backward pass.
+[32:13] Now, okay, if I do this, what will
+[32:15] happen? You will get a terrible-looking
+[32:16] picture like this, um very very
+[32:18] depressing. I have four um accelerators,
+[32:21] um each handling a quarter of the model.
+[32:23] And so what computation happens as a
+[32:25] function of time? So time is sweeping
+[32:26] from left to right, and the different
+[32:28] accelerators are the different rows.
+[32:30] So first, my uh zeroth accelerator at
+[32:34] the bottom here, that's handling the
+[32:35] first layer, will will do some
+[32:37] computation, and then it will stop,
+[32:38] right? And then it will hand off the
+[32:39] computation to the second one, and then
+[32:41] it will do nothing for the rest of time,
+[32:43] um until the very end. And then I will
+[32:45] basically passing things back and forth,
+[32:47] and one GPU will be active at a time. Um
+[32:49] and then coming backwards, one GPU will
+[32:51] be active handling the backward pass at
+[32:53] a time.
+[32:54] Um and so most of the time my GPUs are
+[32:56] idle, my utilization is truly truly
+[32:58] terrible.
+[33:00] Um and this is called a bubble. It's the
+[33:02] part of the pipeline where you're not
+[33:04] doing anything.
+[33:05] Um and the solution to this is to
+[33:08] essentially do kind of a batching or
+[33:10] pipelining. Um so instead of doing a
+[33:12] simple sort of one layer after another,
+[33:15] you're going to have a pipeline, right?
+[33:16] Where in this case, in this picture
+[33:18] here, you have four elements to be
+[33:19] processed, and as soon as you process
+[33:21] one, you know, you start on the next
+[33:23] element, and then you pass off the the
+[33:25] one that's already done to your next
+[33:26] layer, right? So you can do this to
+[33:28] essentially pass elements upwards and
+[33:31] then back downwards. Um and so if you
+[33:33] want to to make this reasonable, then
+[33:36] what you need is, you know, the the
+[33:38] ratio of essentially this bubble time to
+[33:40] the useful compute, the utilization in
+[33:42] some sense, is going to be the number of
+[33:44] stages um divided by kind of this this
+[33:46] microbatches. And so we need a huge
+[33:49] batch size in order to to reduce this
+[33:51] bubble towards zero, right? Like so if
+[33:53] we want our bubble to be zero, it's
+[33:55] going to go down as one over the the
+[33:57] microbatch size.
+[33:59] This is kind of why I said um batch
+[34:01] sizes are useful resource, because now
+[34:03] we can spend it in a different way,
+[34:05] which is the pipeline more to reduce the
+[34:08] amount of uh idle time in pipeline
+[34:10] parallel.
+[34:13] Okay. So pipelines are terrible, um and
+[34:15] by folklore, you know, people say things
+[34:17] like, you know, parallelization code
+[34:19] looks reasonable and people can
+[34:20] understand it until you implement
+[34:22] pipeline parallel.
+[34:24] So why do we do pipeline parallel? Well,
+[34:26] you know, pipelines can save memory
+[34:27] compared to DDP, cuz we've cut up
+[34:29] layers, and you can also compose this
+[34:31] with data parallel, so you can do both.
+[34:33] Um but the other reason why this is a
+[34:35] very important idea to learn, um and you
+[34:37] will always have a pipeline in certain
+[34:39] kinds of topologies, is that it has very
+[34:41] good communication properties, um
+[34:43] compared to both FSDP and compared to,
+[34:45] you know, any other kinds of things you
+[34:46] can do. Um it only depends on
+[34:48] activations, like B * S * H. It is also
+[34:51] point-to-point, you know, one layer is
+[34:53] going to communicate to another, it's
+[34:54] not all-to-all.
+[34:55] And so, you know, depending on how you
+[34:57] sequence these things, they can be a
+[34:58] very efficient way to utilize your
+[35:00] network.
+[35:02] So in practice, what we're going to do
+[35:03] is that pipelines are going to live on
+[35:05] the slowest networking links. So if you
+[35:07] have, you know, multiple data centers or
+[35:09] multiple pods that are slower to talk
+[35:12] to, you're going to parallelize across
+[35:14] those two using pipeline parallel,
+[35:15] because that's kind of the most
+[35:16] communication-efficient uh parallelism
+[35:19] that you can kind of bring to bear uh
+[35:21] here.
+[35:23] Okay.
+[35:24] Um and as I said, you know, pipeline
+[35:26] performance is really dependent on batch
+[35:28] size. So um I'll I'll point at this
+[35:30] paper repeatedly, but I'll mention which
+[35:31] one this is now. This is um uh the
+[35:33] Megatron paper from Nvidia. They have a
+[35:35] bunch of really lovely sort of parameter
+[35:37] sweeps of what happens to utilization as
+[35:40] a function of different sort of
+[35:42] configurations you can do. Um so as you
+[35:45] if you have large batch sizes and you
+[35:47] pick a large pipeline size, you can get
+[35:49] pretty good utilization, close to, you
+[35:51] know, not doing pipeline parallel at
+[35:53] all, um but you need the big batch sizes
+[35:55] in order to be able to to keep
+[35:57] utilization up. Otherwise, pipeline
+[35:59] parallel is going to rapidly degrade
+[36:01] your utilization and performance.
+[36:04] Actually, I'm going to pause for a
+[36:04] moment here to ask questions, cuz the
+[36:06] next slide is uh is complicated. Yes. So
+[36:09] you mentioned on the previous slide
+[36:11] where that like pipelines have like good
+[36:13] communication properties compared to
+[36:15] FSDP. What is the specific mechanism for
+[36:17] why that is?
+[36:19] Um it's a smaller amount of stuff that's
+[36:21] being communicated. So it's batch times
+[36:23] sort of sequence length times hidden,
+[36:25] and that's almost always a smaller
+[36:27] amount of data than like attempting to
+[36:29] communicate a whole parameter matrix,
+[36:31] right? Uh
+[36:34] So people have tried to figure out much
+[36:38] more clever ways of, you know, reducing
+[36:41] the amount of pipeline sizes, and you
+[36:43] can kind of do clever things that cut up
+[36:47] sort of the different stages of what
+[36:48] you're doing for different layers or
+[36:51] different microbatches. So you can
+[36:52] sequence different forward pass elements
+[36:55] in between different backwards pass
+[36:56] elements, and by doing sort of clever
+[36:59] scheduling, you can further reduce the
+[37:01] bubble size. This was taken from the
+[37:02] DeepSeek paper. So by really cleverly
+[37:04] manipulating when you're doing forward
+[37:06] and backward computation, you can get a
+[37:08] little bit better in terms of the the
+[37:10] bubble size.
+[37:13] But I think the even more clever thing
+[37:15] that you can do, uh which is called like
+[37:16] zero bubble pipelining,
+[37:18] um is not really about scheduling per
+[37:21] se, but it's actually about kind of
+[37:24] thinking carefully about the structure
+[37:25] of your backward pass.
+[37:27] Um so in the backward pass, there's
+[37:29] really two things that have to happen.
+[37:31] Um if you think about it, you're kind of
+[37:33] going backwards in your computation
+[37:35] graph, and as you do that, you're going
+[37:36] to do two things. One is going to be
+[37:38] you're going to propagate your sort of
+[37:39] partial derivatives further down your
+[37:41] computation graph. So like, remember,
+[37:43] you know, backpropagation, you start at
+[37:44] the end, and you're propagating these
+[37:46] like partial derivatives back, right? So
+[37:47] you have to do that. But you also want
+[37:49] to compute the gradients for the current
+[37:51] weight, right? So you have two things
+[37:53] that you do at sort of every node of
+[37:54] your computation graph. You're going to
+[37:55] propagate backwards, and you're going to
+[37:57] compute the derivative of your weight.
+[38:00] The important thing about, you know,
+[38:01] thinking about this compute graph is
+[38:03] actually, you know, one of these two is
+[38:06] really important for pipelines, like,
+[38:08] you know, and the other one you can kind
+[38:09] of do whenever.
+[38:11] Propagating the partials backwards,
+[38:13] right? That's very important, because
+[38:14] your next stage can't do any work until
+[38:16] you've propagated that signal back. On
+[38:18] the other hand, the derivative with
+[38:20] respect to the weights, that is kind of
+[38:21] a leaf node, so to speak, on this graph,
+[38:24] and I can do it whenever, right? And so
+[38:26] the clever thing to do now is you kind
+[38:28] of separate these two, right? Like so
+[38:29] you got your Bs over here. These Bs are
+[38:31] kind of the backwards, right? We're
+[38:33] propagating backwards. And then these
+[38:35] Ws, these Ws are computing the
+[38:37] derivative of the weights, and they can
+[38:38] happen whenever. So what you do is you
+[38:41] compute the Bs as quickly as you can,
+[38:43] right? So those come first, and then you
+[38:45] can defer the Ws until later and do it
+[38:47] when you have a gap in your computation.
+[38:50] And when you do this, you can basically
+[38:52] almost all completely fill up the
+[38:54] pipeline.
+[38:55] Um and this zero bubble pipelining thing
+[38:58] is very complicated, or much more
+[39:00] complicated than you would normally like
+[39:02] to deal with, but it allows you to
+[39:04] almost deal with these like pipelining
+[39:05] issues almost entirely, depending on,
+[39:07] you know, essentially the workload
+[39:08] involved in the W versus the B, and so
+[39:10] on and so forth.
+[39:12] Good.
+[39:12] But I think, you know, having having
+[39:14] seen this, I was like, oh this is this
+[39:15] is so clever. Such clever things that
+[39:17] you can do um with systems.
+[39:19] Okay.
+[39:20] So that was pipelining. Um any questions
+[39:23] about that?
+[39:26] Good.
+[39:27] So I think there's a natural sort of uh
+[39:30] analogy or like a parallel you can think
+[39:32] of. So pipeline parallel is like depth.
+[39:34] So you have your depth, you cut up your
+[39:36] your network along the depth dimension.
+[39:38] Um but we have two ways that we scale,
+[39:40] right? We got a depth axis, and we have
+[39:41] a width axis. So, how What if we start
+[39:44] cutting up our model along width, right?
+[39:46] So, this is tensor parallel, as Percy
+[39:49] explained before.
+[39:50] Um and it's really the simple idea that,
+[39:52] you know, matrix multiplies can kind of
+[39:53] be cut up into smaller matrix
+[39:55] multiplies, which you then add the
+[39:57] partial sums back together. This is
+[39:59] really the same idea as tiling, as well.
+[40:01] So, this core primitive just appears
+[40:04] many, many times.
+[40:06] Um
+[40:07] And so, when you do this in practice,
+[40:09] right? What does this actually look
+[40:10] like? Um so, this is a, you know, GeLU
+[40:14] that's happening. So, what do you
+[40:15] normally do? You have your X coming in
+[40:16] as input on the on the very right of
+[40:19] this slide here. Um and then I have a
+[40:21] matrix A that I multiply with. I apply
+[40:23] my non-linearity GeLU, and then I
+[40:25] multiply with B to down project, and
+[40:28] then I output my Z, right? This is the
+[40:30] normal sort of serial computation that I
+[40:32] do. Now, in tensor parallel, what I
+[40:34] would do is I would cut up my A into two
+[40:36] sub matrices, my B into two sub
+[40:38] matrices, and then I would, you know,
+[40:40] run the computations in parallel, and I
+[40:42] would sort of gather them together at
+[40:43] the end.
+[40:45] Now, one thing that is, you know, kind
+[40:47] of important is there's kind of a
+[40:49] duality between the forward and backward
+[40:51] pass. So, in the forward pass, you know,
+[40:53] all I do with the X is I, you know, copy
+[40:55] them twice, and then I run the
+[40:56] computation forward. So, F is the
+[40:58] identity, this F function.
+[41:00] And then, once I get to the end of my
+[41:02] parallel component, the G function,
+[41:04] that's a all reduce that brings them
+[41:06] back together, right? But in the
+[41:07] backwards pass, as I'm doing my
+[41:09] gradients, this is going to flip. My G
+[41:11] is going to be an all uh sorry, my G is
+[41:13] going to be an identity, right? Because
+[41:14] the partial derivatives are coming
+[41:16] backwards. And then, my F are the
+[41:18] partials, you know, that I need to sum
+[41:20] up in order to get my, you know, partial
+[41:22] derivatives at the start of this module,
+[41:24] right? So, they're going to flip and and
+[41:26] this duality is kind of important if
+[41:28] you're going to, you know, write tensor
+[41:29] parallel.
+[41:31] Okay. Um and so, you know, you you might
+[41:35] have already noticed, right? But when we
+[41:36] split things, you know, some of the the
+[41:39] ways that we cut are going to be
+[41:40] column-wise. So, column-wise uh tensor
+[41:42] parallel is going to happen at the kind
+[41:44] of the inputs, right? So, the inputs of
+[41:45] the MLP, the projections of the
+[41:47] attention are going to be cut up by the
+[41:49] columns
+[41:50] um in uh each transformer block. So,
+[41:53] this is column-wise
+[41:54] uh cuts. And then, there's going to be
+[41:56] row-wise cuts in sort of the
+[41:58] corresponding second stage. So, in the
+[42:00] uh down projections of the MLP, um as
+[42:03] well as the outputs of the attention,
+[42:04] you're going to have a row-wise cut. And
+[42:06] then, everything that's kind of a small
+[42:08] layer, like a layer norm, more like a
+[42:10] non-linearity, or routers in ML uh
+[42:12] sorry, in MoEs, those are all fully
+[42:14] replicated across the machines. You
+[42:16] don't really want to bother with the the
+[42:18] overhead of uh cutting those guys.
+[42:22] Okay. And then, like so, when do we do
+[42:24] tensor parallel? Um tensor parallel is
+[42:28] extremely uh computation hungry. Um
+[42:31] what you're doing is every time you have
+[42:33] a matmul, you're going to be doing some
+[42:35] communication, right? You have a all
+[42:36] reduce, or you have a, you know, in the
+[42:38] backwards pass, you have a you have a
+[42:39] all reduce here. Um one in the in the G
+[42:42] when you you're going forward. Um and
+[42:44] these are kind of activation size, and
+[42:46] you're doing them very frequently.
+[42:48] So, this is very communication hungry,
+[42:50] and so you only want to do this um
+[42:52] within a uh node. So, for GPUs, um you
+[42:56] know, eight GPUs are going to be
+[42:57] networked tightly together in a single
+[42:59] box. And so, up to eight, you might be
+[43:02] willing to do some tensor parallel. Once
+[43:04] you go beyond that, you're going to be
+[43:05] going cross node, and those uh inner
+[43:08] connects, those connections, are much
+[43:10] slower, and so you're going to get a big
+[43:11] drop in performance as soon as you sort
+[43:13] of hit that point of going beyond a
+[43:15] single machine. So, tensor parallel, you
+[43:17] should kind of remember as very
+[43:19] communication hungry. You usually use it
+[43:21] in the fastest inner connects that you
+[43:23] have at hand.
+[43:25] Um
+[43:26] And this is kind of the point at which
+[43:28] I, you know, I'm going to sort of go
+[43:29] back to the thing I said about TPUs,
+[43:31] right? Remember for TPUs, you don't
+[43:33] really have this distinction between
+[43:35] fast eight GPUs and and next machines.
+[43:37] You just have this big mesh. Um and so,
+[43:39] one of the big advantages that TPU
+[43:41] people will tell you is, you know, you
+[43:42] can tensor parallel very large numbers
+[43:45] compared to the GPU world, because
+[43:47] they're able to sort of have high
+[43:48] bandwidth in this very regular
+[43:50] communication uh pattern um over this
+[43:52] mesh, right? So, that's a big difference
+[43:54] if you're parallelizing between TPUs
+[43:56] versus GPUs, the amount of tensor
+[43:58] parallelism you use versus pipeline
+[43:59] parallel will actually be quite
+[44:01] different.
+[44:02] Okay.
+[44:03] So, how do we compare these two? They're
+[44:05] both model splitting strategies. They'll
+[44:07] both save on, you know, both uh
+[44:09] parameters and potentially activations.
+[44:11] Um the pros here of of tensor parallel
+[44:14] is that there's no necessarily pipeline
+[44:16] bubble. Um and if your network's fast
+[44:18] enough, you know, you might be able to
+[44:19] get full utilization.
+[44:21] Um it's also low complexity. It's just
+[44:23] cutting up some matmuls. Um
+[44:25] but the con is that the communication is
+[44:27] much larger. It used to be that you were
+[44:29] doing B * S * H point-to-point
+[44:32] communication. Now, instead, I'm going
+[44:34] to be doing something like 8 * B * S * H
+[44:37] uh times roughly one uh all reduce
+[44:40] communication, right? So, this is not
+[44:41] even just point-to-point. This is, you
+[44:42] know, all-to-all communication that
+[44:44] needs to happen.
+[44:45] So, tensor parallel is great whenever we
+[44:48] have high-speed inner connects. Every
+[44:50] other time, we probably want to be using
+[44:51] pipeline parallel.
+[44:53] Okay.
+[44:55] So, the last thing I want to talk about
+[44:58] about sort of, you know, we're talking
+[44:59] about memory use, um is to, you know,
+[45:01] really think
+[45:02] care more carefully about memory. I
+[45:04] think the most naive view of memory in
+[45:07] kind of deep learning and language
+[45:08] modeling is something like, well, memory
+[45:10] is just parameters. Like, that's this
+[45:12] green bit over here, right? You have a
+[45:14] certain number of bits you need to store
+[45:15] for your parameters, you know, that's
+[45:17] it. Um
+[45:19] I've already talked about optimizer
+[45:20] state, which is important, which is this
+[45:21] yellow box over here. Um but if you look
+[45:24] at this plot, this is, you know, actual
+[45:26] memory use as profiled in one of the
+[45:28] PyTorch profilers, um you'll find
+[45:30] actually that this is not really the
+[45:32] whole story. There's a lot of dynamic
+[45:34] memory that needs to exist in um in a
+[45:37] computation. You need to store all the
+[45:39] activations, you know, these big red
+[45:40] bumps over here. And then, as you
+[45:42] compute your gradients, you kind of need
+[45:43] to store them in your backward sweep,
+[45:45] right? And so, really maximum memory
+[45:48] usage happens a little bit after, you
+[45:50] know, the maximum activation point.
+[45:52] Like, after you start sweeping backwards
+[45:54] on your gradient, but you still need to
+[45:55] compute a lot of keep your activations,
+[45:57] those are usually the maximum memory
+[45:59] points, right? So, to reduce this, maybe
+[46:01] we need to deal with this big red hump,
+[46:03] this activation. Um
+[46:06] And if you start looking at um sort of
+[46:08] more modern um
+[46:10] sort of workloads for language models,
+[46:12] um you start to find that as you get to
+[46:14] sort of bigger and bigger parameters.
+[46:16] Forget the column that says present
+[46:17] work, I'll talk about that in a moment
+[46:18] here. But if you look at just the
+[46:20] baseline columns of this plot, as you go
+[46:22] to bigger models for moderately large
+[46:24] sequence lengths, you know, your
+[46:25] activations are just kind of going to
+[46:28] dwarf the parameter memory that you
+[46:29] need. And so, any sort of memory saving
+[46:32] strategy has to sort of reason about
+[46:35] activations in order to be fully
+[46:37] effective. Like, we can't just deal with
+[46:39] um parameter memory. That's not really
+[46:41] sufficient uh for us.
+[46:44] So, if we're storing everything, and
+[46:46] this is kind of a good, I don't know, uh
+[46:48] statistic or rule of thumb to start
+[46:50] with, um if we need to store everything,
+[46:53] the amount of activations that we need
+[46:55] um is going to be something like 34 * S
+[46:59] * B * H, and and that's going to be
+[47:00] sequence length times batch size times
+[47:04] hidden dimension size, plus 5 * AS over
+[47:07] H. So, that's AS is attention heads
+[47:10] times sequence length divided by hidden
+[47:13] dimension size. And this SBH dependence,
+[47:15] right, is kind of fundamental um
+[47:17] because, you know, we expect to have to
+[47:19] store something for every element of the
+[47:21] sequence, we expect to have to store
+[47:22] something for every batch element, and
+[47:24] we expect to have to store something for
+[47:26] every hidden dim size, right? So, we're
+[47:28] going to see this SBH term uh repeatedly
+[47:30] as we try to go through different ways
+[47:32] of reducing activation memory and
+[47:34] accounting for the total amount of
+[47:35] activation memory. Um and in case you're
+[47:37] curious where the terms come from, um
+[47:39] you know, this odd-looking term, the 5
+[47:41] AS over H, is going to come from the
+[47:43] quadratic attention terms including the
+[47:45] dropout terms. Um and we can drop this
+[47:46] term via recomputation if we do flash
+[47:48] attention.
+[47:51] Um
+[47:52] Okay.
+[47:53] Now, what if we did tensor parallel?
+[47:55] Like, you know, one of the promises that
+[47:56] I made to you in talking about model
+[47:58] parallelism was that we could reduce
+[48:01] activation um quite a bit. So, now let's
+[48:04] think about what happens. Well, tensor
+[48:06] parallel is going to split out the
+[48:07] matrix multiplies in attention and MLPs.
+[48:10] So, which parts are those? Well, the um
+[48:12] MLPs are 24 uh of those of those 34 that
+[48:16] I talked about before. Um and the uh
+[48:19] attention heads are 5 AS over HT, right?
+[48:22] The second term over here.
+[48:24] Now, I can reduce that by T, my tensor
+[48:26] parallel size, and that's kind of good.
+[48:28] This is not bad, because I've taken, uh
+[48:31] you know, most of the memory, and I've
+[48:33] made it scale linearly with the tensor
+[48:35] parallel size T. So, that's good. Um but
+[48:39] it turns out that there are other things
+[48:41] that you do. Like, you might have a
+[48:42] layer norm. You might have a dropout.
+[48:44] You need to keep the inputs to attention
+[48:47] and the MLP, right? Cuz the the inputs
+[48:49] to each layers need to be stored as
+[48:50] residuals for the for the backwards
+[48:52] pass.
+[48:53] And unfortunately, these are not reduced
+[48:56] with your tensor parallel size, right?
+[48:58] Tensor parallel does not split the layer
+[49:00] norm, and therefore it does not split
+[49:01] the activation for these guys, right?
+[49:04] So, this is unfortunate, because you
+[49:05] were hoping that if you had a thousand
+[49:07] different GPUs um in tensor parallel,
+[49:09] cuz you're Google, you might be able to
+[49:11] reduce this activation dramatically. The
+[49:12] the unfortunate reality is that you're
+[49:14] still going to suffer a 10 times SBH
+[49:17] penalty uh for doing all of this.
+[49:20] Um and so, the last part that's usually
+[49:23] used in composition with tensor parallel
+[49:25] um is this idea of sequence parallel. Um
+[49:28] this is an extremely misleading name,
+[49:30] because usually when I say sequence
+[49:32] parallel, um actually there's a thing
+[49:34] called context parallel that is actually
+[49:35] more natural uh for this name, but um
+[49:38] sequence parallel is kind of the the
+[49:39] following idea. So, what you're going to
+[49:42] do is we have these remaining terms, 10
+[49:44] SBH, and these terms are very
+[49:48] lightweight. They're like layer norms,
+[49:49] they're stuff that doesn't have much
+[49:51] computation. Um and what I'm going to do
+[49:53] is I'm going to split them up somehow,
+[49:55] and I'm going to split them up over the
+[49:56] sequence axis rather than over the
+[49:59] hidden axis. Um and this is going to
+[50:02] then involve all gathers and reduce
+[50:05] scatters um
+[50:07] uh before every operation where we need
+[50:09] these.
+[50:10] Um and if you think about it, this is
+[50:11] very reminiscent of FSDP, right? We have
+[50:14] this thing that we need. We need
+[50:15] attention, I'm sorry, we need
+[50:16] activations at some point. We need to
+[50:18] compute the activations going forward,
+[50:20] and we need the activations when we
+[50:21] sweep backwards for the derivatives,
+[50:23] right? But, we don't need them now. So,
+[50:26] we're going to store them by sort of
+[50:27] split them up splitting them up across
+[50:28] the sequence axis and materializing them
+[50:30] on demand. So, I would say this is like
+[50:32] conceptually very similar to the
+[50:34] FSDP-style idea um where we're kind of
+[50:36] storing them in this sharded format, and
+[50:38] then we're gathering them as we need
+[50:40] them.
+[50:41] Um and then as I said before, there's a
+[50:42] duality to this. So, in the forward
+[50:44] pass, you know, G is an all gather, G
+[50:47] bar is a reduce scatter. In the
+[50:48] backwards pass, this is going to be
+[50:50] reversed, right? The the all gather and
+[50:52] reduce scatter are going to be reversed
+[50:54] um between G and G bar.
+[50:57] So, if I do this, now what do I get?
+[51:00] Well, remember with the no parallelism
+[51:02] setting, the very first part, you know,
+[51:04] what I told you was you get this
+[51:06] activation memory. You use 34 * SBH with
+[51:09] an attention head component.
+[51:11] With tensor parallel, you know, I get to
+[51:12] divide the MLP part and the the uh
+[51:16] attention part by T, but not all these
+[51:18] other sort of pointwise ops that I have.
+[51:21] Um if I do sequence parallel, I've split
+[51:23] these up by my accelerators as well just
+[51:25] in the sequence axis, which gives me now
+[51:28] fully linear dependence. Um if I do
+[51:31] activation recomputation, I can even
+[51:33] drop the second term because remember
+[51:35] this is just the the uh storage that I
+[51:37] need for the softmax, so I can drop this
+[51:39] through recomputation, which gives you
+[51:41] SBH * 34 / T. Um this is nice to
+[51:45] remember because this is kind of the
+[51:46] lower bound of what you can achieve,
+[51:49] reasonably speaking, um for normal
+[51:51] training for activation memory. And so,
+[51:53] if you want to do things like compute by
+[51:55] hand whether your model will fit into a
+[51:57] GPU, this is a good thing to remember.
+[51:59] You need at least this much for
+[52:00] activation memory, you're going to need
+[52:02] some memory for your optimizer state,
+[52:04] and you will need some memory for your
+[52:05] parameters and your gradient, and once
+[52:07] you have those things, you have a rough
+[52:10] uh sense of how much memory you're going
+[52:12] to need uh for your model.
+[52:14] Okay, I'm going to stop here for a
+[52:15] moment. I have talked through both
+[52:18] pipeline and tensor parallel at this
+[52:19] point. Um and so, people might be a
+[52:21] little bit confused, um and we can talk
+[52:23] through a few things before I move on to
+[52:25] expert parallel.
+[52:30] Good.
+[52:31] Oh, yes.
+[52:33] MLP
+[52:35] Uh 24 over T is the MLP part, yes.
+[52:37] And MLP part cannot be
+[52:40] uh
+[52:41] optimized through the recomputation.
+[52:44] You can recompute the MLP as well. Like,
+[52:46] you can do a lot more recomputation than
+[52:48] what is listed here,
+[52:50] um but recomputation beyond what is
+[52:52] listed here um is very computationally
+[52:54] expensive. Like, a recomputation for MLP
+[52:56] involves running the MLP again in the
+[52:59] backward pass, which you probably do not
+[53:01] want to do. But, recompute for attention
+[53:03] is much cheaper.
+[53:04] Um you recomputation for attention is
+[53:07] generally cheaper, yeah, cuz you do it
+[53:08] tile-wise as well.
+[53:09] Yeah, and and also you don't want to pay
+[53:11] the quadratic cost. That's quite
+[53:13] expensive. The quadratic cost
+[53:18] Okay.
+[53:19] Cool. All right.
+[53:21] Um so, I'm going to talk now talk about
+[53:23] the last uh ingredient in sort of the
+[53:26] standard parallelism toolbox, which is
+[53:28] expert parallelism, right? Now that MoEs
+[53:31] are very standard part of the toolkit,
+[53:34] you know, most big models are MoEs these
+[53:36] days, and that allows us to take
+[53:39] advantage of one of their big benefits,
+[53:41] which is expert parallelism.
+[53:42] Um and expert parallelism, you know, I
+[53:45] think of myself as um being something
+[53:48] analogous to tensor parallel, right? In
+[53:50] the sense that you're taking the MLPs,
+[53:53] right? The the FFN components of your
+[53:54] network, and you're going to split them
+[53:56] up in various ways, and you'll incur a
+[53:58] communication penalty. It's in the same
+[54:00] way that you're maybe splitting up the
+[54:01] matrices, except here you're splitting
+[54:03] up the whole MLP across different
+[54:05] devices.
+[54:07] Um and the system's behavior of tensor
+[54:09] parallel is uh oh sorry, expert parallel
+[54:12] is roughly like tensor parallel as well.
+[54:15] In the sense that this is a
+[54:16] high-bandwidth
+[54:17] parallelism primitive that also reduces
+[54:20] activation. Um but, one important thing
+[54:23] is that if you're doing a ML uh MoE, um
+[54:26] you almost always prefer uh using an
+[54:28] expert parallel sharding strategy over
+[54:31] tensor parallel. I've taken this
+[54:32] screenshot from um
+[54:34] the parallelism guidelines from uh
+[54:37] Megatron, which is Nvidia's like
+[54:39] parallelism library. It's a really
+[54:41] wonderful uh library and document, um
+[54:44] and one of the guidelines they say is,
+[54:45] "Look, if you're going to do some sort
+[54:47] of parallelism, either EP or TP, you
+[54:49] know, you should be using EP over TP."
+[54:51] Why is that?
+[54:53] Well, this is actually a good list of
+[54:54] drawbacks for a tensor parallel. If you
+[54:56] have a matrix, and then you cut up the
+[54:58] matrix too finely, well, the matrices
+[55:01] are going to start to get small, and
+[55:02] your GPU utilization will suffer, right?
+[55:04] So, you want your matmuls as big as
+[55:06] possible, and tensor parallel kind of
+[55:08] reduces that.
+[55:09] Um for MoE layers, it's a lot easier to
+[55:12] sort of route sparse token activations
+[55:16] rather than to sort of potentially route
+[55:18] these dense big tensor parallel matmul
+[55:20] activations. Um and then um you know,
+[55:25] you can sort of do things like um
+[55:27] uh route tokens exactly to the places
+[55:29] that they need, and you can sort of skip
+[55:31] some computation or sorry, some overhead
+[55:33] uh in the case is that if you're going
+[55:35] to have uh MoE anyway, you might as well
+[55:38] have the number of experts sort of split
+[55:40] up over all the devices.
+[55:42] Um
+[55:43] Now, this Sorry. Yeah, okay.
+[55:47] This might make it seem like, "All
+[55:48] right, EP is great. Everyone should be
+[55:50] doing expert parallel all the time." Um
+[55:52] unfortunately, expert parallel is still
+[55:54] really complicated and still very
+[55:57] difficult. I think everything that I've
+[55:58] said after FSDP, you know, tensor
+[56:01] parallel, pipeline parallel, system-wise
+[56:03] is quite non-trivial to get working
+[56:05] really well. Um and I'll just point to
+[56:07] two different libraries, not to tell you
+[56:10] the details of what happens inside of
+[56:11] them, but to tell you this is like kind
+[56:13] of seriously complicated business. Um
+[56:16] DeepSpeed has a library called DPP,
+[56:18] which I think is is one of my favorite
+[56:19] things from the DeepSpeed V3 era, which,
+[56:22] you know, is basically their own library
+[56:24] for doing expert parallel sort of
+[56:26] routing and dispatching, where they're
+[56:28] like looking at really low-level uh GPU
+[56:31] networking primitives in order to try
+[56:33] to, you know, basically combine
+[56:35] different operations or like have the
+[56:37] hardware handle certain operations in
+[56:39] order to make MoE routing as sort of
+[56:41] efficient as possible.
+[56:43] Similarly, Nvidia has a library called
+[56:45] Hybrid EP, which, you know, is a
+[56:48] similar, you know, effort of having very
+[56:50] efficient low-level hardware
+[56:52] implementations of um expert parallel
+[56:55] dispatching. Um and just to like give
+[56:58] you the high-level thing, right? Um the
+[57:00] reason why this stuff is hard is, you
+[57:02] know, you are doing a lot of all-to-all
+[57:04] dispatches. If you If you look at the
+[57:05] communications pattern of of a MoE, much
+[57:08] like tensor parallel, every time you
+[57:09] have a MLP, you're going to have to
+[57:11] route tokens all sorts of different
+[57:13] places, um and you need to do this in a
+[57:15] very latency-sensitive way because your
+[57:17] computation is waiting for your tokens
+[57:19] to arrive. So, reducing sort of the
+[57:21] latency of this dispatch is extremely
+[57:23] extremely important.
+[57:25] And sort of one final thing that is like
+[57:27] a fun trivia about the DPP library is,
+[57:30] you know, the the DeepSpeed folks are so
+[57:32] intense that, you know, in order to
+[57:33] optimize like every last bit of
+[57:35] performance, they basically looked and
+[57:37] found sort of undocumented um sort of
+[57:40] PTX, which is like, you know, GPU
+[57:41] machine code, um or machine-code-like
+[57:44] things, um and they found how to use
+[57:46] these undocumented instructions to
+[57:48] further accelerate their networking
+[57:50] communication. So, really this is like
+[57:51] the level of stuff that you kind of need
+[57:54] in order to get to the frontier of, you
+[57:56] know, parallelism efficiency.
+[57:58] Um Finally, you know, up until now, I've
+[58:01] sort of talked about all the parallelism
+[58:03] primitives in isolation, like data
+[58:04] parallel and so on and so forth, um with
+[58:06] the implicit assumption that you can
+[58:08] just kind of like put them together like
+[58:10] LEGO blocks. And this is true for the
+[58:13] most part for basically all the other
+[58:14] parallelism strategies. Like, it's very
+[58:16] easy to combine like, I don't know, data
+[58:18] and tensor parallel.
+[58:20] Um
+[58:21] Expert parallel um
+[58:23] has sort of additional constraints that
+[58:25] you want to be somewhat respectful of.
+[58:28] Usually, um the naive way to do data and
+[58:31] expert parallelism, which I think is in
+[58:33] many of the old libraries, is that the
+[58:36] sort of replicas for for DP and EP are
+[58:38] the same. So, in other words, like let's
+[58:40] say I have a data parallelism of eight,
+[58:42] you know, I'm going to shard my eight
+[58:44] experts uh my experts across those eight
+[58:46] replicas, and then my data will be split
+[58:49] across those eight replicas and routed
+[58:51] in various ways, right? So, in other
+[58:52] words, you split your GPUs according to
+[58:55] DP, and then your EP is sort of a subset
+[58:57] of that split, right? And this is like a
+[58:59] very natural thing to do because you're
+[59:00] routing tokens. Um but, if you do this,
+[59:04] um there's a maximum bound to how far
+[59:06] you can parallelize with EP, and it
+[59:08] constrains sort of how uh DP and TP
+[59:11] interact.
+[59:13] Um and so, I think this is the final
+[59:15] complexity. I I apologize that expert
+[59:17] parallel is a little bit, you know, like
+[59:19] really messy in many ways, um but
+[59:21] because of these complexities, um there
+[59:24] is actually this one interesting sort of
+[59:26] systems thing that I'll I'll tell you
+[59:28] about before I I stop talking about EP,
+[59:30] um which is this following fact.
+[59:32] Remember, MOEs only change the MLPs,
+[59:34] right? They don't change the attention
+[59:35] at all, right? So,
+[59:37] um, because we're cutting up the MLPs
+[59:39] but not the attention, this means that
+[59:41] expert parallelism kind of applies
+[59:43] unevenly to the model. So, when I
+[59:44] parallelize at the expert level, I'm
+[59:47] parallelizing the MLPs but I'm not
+[59:49] parallelizing the attention, right? Um,
+[59:52] and so in order to parallelize the
+[59:53] attention, you know, maybe I want to
+[59:55] also use tensor parallel, right? So, I
+[59:57] want a high tensor parallel level in
+[59:59] order to cut up my attention, um, but,
+[01:00:02] you know, this is going to then affect,
+[01:00:05] uh, my my, uh,
+[01:00:06] my MLPs because if I have high tensor
+[01:00:09] parallel and high expert parallel, I've
+[01:00:11] cut up my matrix matrices into really
+[01:00:13] tiny pieces and my utilization is very
+[01:00:16] bad. So, there's this weird trade-off
+[01:00:18] where you want high tensor parallel for
+[01:00:19] the attention, but you want low tensor
+[01:00:22] parallel for the MLPs. So, you know,
+[01:00:25] there's this conflict.
+[01:00:26] Um, so, what do you do? Well, um, in the
+[01:00:30] last few years, people have come up with
+[01:00:32] more complicated system solutions that
+[01:00:34] kind of decouple the tensor parallel,
+[01:00:37] uh, in the MLPs and the attention. And
+[01:00:39] so, the attention layers get one kind of
+[01:00:40] tensor parallel and the MOE layers get
+[01:00:42] another kind of tensor parallel, um, and
+[01:00:45] so now you can fully decouple the
+[01:00:46] parallelism, um, and this leads to, you
+[01:00:49] know, more complicated but more
+[01:00:50] effective combinations of of EP and, uh,
+[01:00:54] tensor parallel as well as as uh, data
+[01:00:56] parallel.
+[01:00:58] Cool.
+[01:00:59] Okay.
+[01:01:00] So, the last thing, uh, in this space
+[01:01:02] that I kind of want to end with, um, is,
+[01:01:06] uh,
+[01:01:07] context parallel. So, context parallel
+[01:01:09] or, uh, ring attention, um, is an idea
+[01:01:11] of basically splitting activations in a
+[01:01:13] very long sequence across different
+[01:01:16] accelerators.
+[01:01:17] Um, and you can do things like, you
+[01:01:18] know, pass the, uh, activations to the,
+[01:01:22] uh, sort of device that's needed in kind
+[01:01:24] of this ring-like way following the mesh
+[01:01:26] topology, uh, of TPUs.
+[01:01:29] So, ring attention, which I think was
+[01:01:31] the original paper that did this, um,
+[01:01:33] showed that this worked really well on
+[01:01:34] TPUs. Um, context parallel is a standard
+[01:01:37] parallelization strategy that does this.
+[01:01:39] Both of these are used in long context
+[01:01:41] extension stages and in, uh, sort of
+[01:01:43] model serving. Um, I'm not going to talk
+[01:01:45] about it, um, mainly because I think it
+[01:01:47] overlaps in concept to a lot of what
+[01:01:49] we've talked about already.
+[01:01:51] Okay.
+[01:01:52] Um, so, this is the end of the second
+[01:01:54] part and I think to to put everything
+[01:01:57] together, I've made a big table of, um,
+[01:02:00] parallelization strategies including
+[01:02:01] data parallel, which are the top two
+[01:02:03] rows, and the various model parallelism
+[01:02:05] strategies below them. Um,
+[01:02:07] and I think, you know, I've colored in
+[01:02:08] red what I subjectively feel like are
+[01:02:11] the drawbacks of the different methods.
+[01:02:13] Um, and the reason why I've colored
+[01:02:16] things in red is to try to convey to you
+[01:02:18] that there is no one strictly dominant
+[01:02:20] parallelization strategies. It's all
+[01:02:22] like a whole bunch of trade-offs that
+[01:02:24] you somehow have to manage gracefully in
+[01:02:27] order to get a good outcome. So, you
+[01:02:30] know, for example, FSDP is great. It's a
+[01:02:32] wonderful strategy, does not help you
+[01:02:34] with activation, it sort of consumes
+[01:02:36] your global batch size in order to to do
+[01:02:39] parallelization, right? So, it has
+[01:02:40] limits. And to address these, you know,
+[01:02:42] maybe you want to compose them with some
+[01:02:44] of these other tricks that you have at
+[01:02:46] hand. You know, maybe you want to do
+[01:02:47] some tensor parallel to cut down on
+[01:02:49] activation memory. Um, it also doesn't
+[01:02:52] uh, touch global batch size, but if you
+[01:02:53] do this, now you need fast networking
+[01:02:56] and you need, um, sort of high
+[01:02:58] bandwidth. And also then to to leverage
+[01:03:02] your slower connections, maybe you want
+[01:03:04] to use some of the other parallelization
+[01:03:06] strategies, right? So, you kind of see
+[01:03:08] how all of these different advantages
+[01:03:10] means that there's a place for one of
+[01:03:13] these parallelization strategies in, you
+[01:03:15] know, not every architecture but in many
+[01:03:17] large-scale architectures use a large
+[01:03:19] combination of these. Yes?
+[01:03:27] Yeah, so, um, the question was, you
+[01:03:29] know, is pipeline and and, uh, what?
+[01:03:32] FSDP applicable to MOEs? Yes, yes,
+[01:03:34] they're absolutely applicable.
+[01:03:36] Um, if anything, like the standard
+[01:03:38] recommendation, um, is, you know, expert
+[01:03:40] parallel is kind of like tensor
+[01:03:42] parallel, so you you want to go up to
+[01:03:43] like eight or like, you know, fast
+[01:03:44] connections. Um,
+[01:03:46] people don't really follow that anymore,
+[01:03:48] um, but even then, FSDP and or data
+[01:03:51] parallel in general and pipeline and
+[01:03:52] tensor are used extensively in all the
+[01:03:54] frontier models. Yeah.
+[01:03:58] Good. Okay. Uh, and you will do this,
+[01:04:01] uh, or something like this, you know, as
+[01:04:03] part of your assignment, but one of the
+[01:04:05] things that's cool about parallelism and
+[01:04:06] I think is nice is that you can do some
+[01:04:08] math, right? You can actually say,
+[01:04:09] "Okay, how much compute do I do per
+[01:04:12] layer for my different sharding
+[01:04:14] strategies? How much communication do I
+[01:04:16] do per layer for my different
+[01:04:18] communication strategies? And if I have
+[01:04:21] different devices allocated to different
+[01:04:23] communication strategies, how do these
+[01:04:25] things scale?" And then I can figure
+[01:04:27] out, you know, for a combination of
+[01:04:29] these strategies, you know, how do they
+[01:04:30] scale? And you can start to sort of make
+[01:04:33] plots of, you know, if I have a certain
+[01:04:36] batch size and I have a certain
+[01:04:38] parallelization strategies, I have three
+[01:04:39] different parallelization strategies
+[01:04:40] here, you know, how much am I sort of
+[01:04:43] utilizing my GPU, right? The ratio of
+[01:04:46] compute time to communications time. And
+[01:04:49] as long as my compute time is longer
+[01:04:51] than communications time, in principle,
+[01:04:53] you know, you can just hide
+[01:04:54] communications underneath your
+[01:04:56] computation, right?
+[01:04:57] Um, and so you can make plots like this
+[01:04:59] where, you know, this is the dash line
+[01:05:00] at the very top. That's kind of the the
+[01:05:02] boundary of where you're efficient.
+[01:05:04] Anything above that is sort of fully
+[01:05:06] utilizing your computation. Anything
+[01:05:08] below that is on the on the bad part of
+[01:05:10] your roof line, right? You're waiting
+[01:05:11] for communication to do your
+[01:05:13] computation.
+[01:05:14] One thing that's pretty interesting
+[01:05:16] here, right? So, I think this should
+[01:05:18] feel intuitive to you based on what I've
+[01:05:20] told you. If your batch size is big
+[01:05:22] enough, FSDP only is good, right? Like
+[01:05:24] if you have a batch size of 2,000,
+[01:05:27] right? Um, per chip. Um, so, then, you
+[01:05:31] know, how how far can you go? Well,
+[01:05:32] you've got FSDP doing extremely well.
+[01:05:35] You're fully compute bound, right? But,
+[01:05:37] the important thing is as the batch size
+[01:05:39] goes down, FSDP only will hit a point
+[01:05:42] where you're now communication bound.
+[01:05:43] Now, what do you do, right? Well, what
+[01:05:45] do you do is now, in order to keep
+[01:05:48] pushing efficiencies, you have to
+[01:05:49] incorporate MP, in this case is tensor
+[01:05:51] parallel, to the mix, right? Now, you
+[01:05:53] can sort of push that curve out a little
+[01:05:54] bit more and be compute bound even into
+[01:05:57] smaller batch size regimes, right? And
+[01:05:59] and you keep adding strategies to push
+[01:06:01] this curve out in order to get something
+[01:06:03] better.
+[01:06:05] And this is, you know, what people call
+[01:06:06] 3D or 4D, I don't think there's 5D, uh,
+[01:06:09] parallelism, which is when you put all
+[01:06:11] these strategies together to keep your,
+[01:06:14] uh, compute units fully utilized, um,
+[01:06:16] under different communication
+[01:06:18] topologies.
+[01:06:19] There's a very simple prescription, um,
+[01:06:21] you know, I think up until now I've been
+[01:06:23] telling you things in generalities, so
+[01:06:25] it might feel complicated, but I think
+[01:06:27] actually the the strategy for how you
+[01:06:29] parallelize is very simple, actually,
+[01:06:31] which is until your model fits into
+[01:06:32] memory, you're going to cut up your
+[01:06:34] model by whatever means necessary,
+[01:06:36] right? And how are you going to cut up
+[01:06:37] your model? You're going to use either
+[01:06:38] tensor or expert parallel
+[01:06:40] for your fast interconnect. And so, if
+[01:06:42] you have eight GPUs per machine, you're
+[01:06:43] going to use a
+[01:06:44] a tensor or expert parallel of eight.
+[01:06:46] And then you're going to pipeline
+[01:06:48] parallel or zero three, you know, which
+[01:06:49] is FSDP, um, the rest of the way to make
+[01:06:52] your model fit. And once your model
+[01:06:53] fits, then you're going to just data
+[01:06:55] parallel the rest of the way, right?
+[01:06:56] They used up the rest of your GPUs with
+[01:06:58] data parallel, right? Um, if your batch
+[01:07:01] size ends up being too small, you can do
+[01:07:02] gradient accumulation, uh, to get better
+[01:07:04] GPU utilization, right?
+[01:07:07] Very simple strategy, um, and this is
+[01:07:09] borne out in, you know, the actual kind
+[01:07:11] of like large-scale parallel training
+[01:07:13] libraries that you might use. Um, so
+[01:07:14] I've added the link here to to, uh,
+[01:07:17] Megatron's like guide to sort of
+[01:07:19] parallelizing MOEs, um, but this idea
+[01:07:21] actually applies to the dense models as
+[01:07:23] well. And you see exactly the thing that
+[01:07:25] I said, but kind of in reverse order.
+[01:07:26] So, guideline number one is minimize
+[01:07:29] model parallelism, maximize data
+[01:07:30] parallelism, right? So, use most of your
+[01:07:32] GPUs to shard data if you can. Now, um,
+[01:07:35] if you're using GPUs, you know, stay
+[01:07:37] within NVLink. So, that's one machine,
+[01:07:39] uh, so one one box, right? Keep expert
+[01:07:42] parallel and tensor parallel within one
+[01:07:43] box, right? And then if you're going to
+[01:07:45] go multi-node, use pipeline parallelism
+[01:07:47] to go multi-node. And then, you know, if
+[01:07:49] you're, uh, MOE, then prefer expert
+[01:07:52] parallel. And then finally, if you're
+[01:07:53] doing long sequences, use context
+[01:07:55] parallel, right? Ring attention. Um,
+[01:07:57] so, exactly kind of what I've been
+[01:07:59] trying to get across to you through um,
+[01:08:02] but, you know, in kind of practitioner
+[01:08:03] form that you see here.
+[01:08:06] Okay.
+[01:08:06] Um, the final component, actually, maybe
+[01:08:08] I can pause here, um, in case anyone's
+[01:08:10] curious about like 4D parallelization
+[01:08:13] stuff. Yeah.
+[01:08:25] Oh, yeah, yeah.
+[01:08:27] Well, I mean, sequence parallel is like
+[01:08:29] often just like, you know, you do it
+[01:08:31] with tensor parallel in order to reduce
+[01:08:33] activations. It's kind of more of like
+[01:08:35] an add-on that you you put in in order
+[01:08:36] to reduce activation. It's not its own
+[01:08:38] like stand-alone thing in many cases.
+[01:08:42] Yeah.
+[01:08:51] Okay. Uh,
+[01:08:53] I don't know how much I I buy the loop
+[01:08:54] transformer mythos, uh, rumors. Maybe it
+[01:08:57] is. It'd be interesting. Um, okay, but
+[01:08:59] to the question of like what how the
+[01:09:01] system's structured would change,
+[01:09:04] it's a good question. I mean, I guess,
+[01:09:07] it might mess with things like FSDP.
+[01:09:09] Like you can't really discard the
+[01:09:10] weights. It does have the advantage
+[01:09:12] though that like, you don't have to keep
+[01:09:13] getting weights. Like it is much more
+[01:09:15] parameter efficient and so much maybe
+[01:09:16] much of the model parallelism stuff
+[01:09:18] wouldn't be as important. Um, it it
+[01:09:20] would be interesting. It would be
+[01:09:21] definitely different, um,
+[01:09:23] for a lot of the FSDP style things cuz
+[01:09:25] the FSDP strategy is really predicated
+[01:09:28] on like get weights, discard weights,
+[01:09:30] get weights, discard weights and in a
+[01:09:31] loop you're not discarding anything.
+[01:09:34] Good. Okay.
+[01:09:36] All right. So, this is an old paper, but
+[01:09:39] it is actually a you know, probably one
+[01:09:41] of the best resources.
+[01:09:43] And also it's not like the the
+[01:09:45] networking fundamentals changed that
+[01:09:47] much. So, I think you know, the the
+[01:09:48] lessons from here are very relevant
+[01:09:51] today.
+[01:09:52] And so this is a paper by Nvidia and
+[01:09:56] formerly unfortunately Stanford folks
+[01:09:58] Matei and Deepak who did a bunch of runs
+[01:10:01] of large-scale parallel training across
+[01:10:03] many different configurations to
+[01:10:05] basically tell you, you know, as you're
+[01:10:06] scaling up, how should your
+[01:10:08] parallelization strategies change across
+[01:10:12] different scales. And you see exactly
+[01:10:15] this prescription that I've been talking
+[01:10:16] about before, which is you know, you
+[01:10:18] have data parallel
+[01:10:19] sort of maxed out and then your tensor
+[01:10:21] parallel kind of increases until it hits
+[01:10:23] eight and then you stop because you
+[01:10:25] don't want to go any higher and then
+[01:10:26] from that point on your pipeline
+[01:10:27] parallel increases and increases and
+[01:10:29] increases, right?
+[01:10:31] And with sufficiently large scale data
+[01:10:33] parallel kind of decreases and at the
+[01:10:35] very end you have a DP of six and this
+[01:10:37] is because you just need this much
+[01:10:39] tensor and pipeline parallel to fit the
+[01:10:40] stuff, right? And you're using the rest
+[01:10:43] of your budget on data parallel.
+[01:10:46] And if you sort of put them all
+[01:10:48] together, right? Even as you you know,
+[01:10:50] go to you know, ludicrously large
+[01:10:52] numbers of GPUs, you know, your
+[01:10:54] utilization stays very flat and very
+[01:10:57] good. And this is why I think you know,
+[01:10:59] you see this gigantic data center build
+[01:11:01] outs. Like the parallelization
+[01:11:02] strategies people have come up with are
+[01:11:04] kind of so effective and the hardware
+[01:11:06] for communication is so good that even
+[01:11:08] with the gigantic data centers or even
+[01:11:09] cross data center training, you can get
+[01:11:12] really good utilization
+[01:11:14] across you know, these different
+[01:11:16] regimes.
+[01:11:19] They have really nice quantitative
+[01:11:22] evidence showing you you know, for
+[01:11:23] different batch sizes for tensor
+[01:11:25] parallel, you know, what is the right
+[01:11:27] place to stop and it's clearly you know,
+[01:11:29] um
+[01:11:30] tensor parallel size of eight as you go
+[01:11:32] you know, beyond that you're going to
+[01:11:33] get into trouble and pipeline parallel
+[01:11:36] you also need big batch sizes in order
+[01:11:37] to be able to
+[01:11:39] utilize the machines effectively. That's
+[01:11:41] kind of why there's a blue to orange
+[01:11:42] gap. There's pipeline parallel and the
+[01:11:44] larger the pipeline parallel, you know,
+[01:11:46] the larger the gap between orange and
+[01:11:48] blue.
+[01:11:50] And then I think another thing that
+[01:11:53] maybe you have already internalized from
+[01:11:55] flash attention, but maybe not is you
+[01:11:57] know, maybe you should do a bunch of
+[01:11:59] activation recomputation because if you
+[01:12:01] do activation recomputation, you know,
+[01:12:03] very cleverly, then you can get a bigger
+[01:12:04] batch size and the bigger batch size
+[01:12:06] then allows you to get better
+[01:12:08] utilization. This is kind of a initially
+[01:12:10] I think very counterintuitive
+[01:12:12] observation that actually you should do
+[01:12:14] more computation via recomputation in
+[01:12:17] order to you know, end up getting better
+[01:12:20] utilization because it allows you to
+[01:12:22] save memory and memory can be turned
+[01:12:24] into batch size.
+[01:12:26] Okay.
+[01:12:27] So, that was kind of a more quantitative
+[01:12:30] view of how to pick parallelism
+[01:12:32] strategies.
+[01:12:33] The last thing I want to end with is
+[01:12:35] just to look at just a very few
+[01:12:38] training runs and looking at the
+[01:12:40] training runs maybe we can get a sense
+[01:12:42] of how modern parallelization is used in
+[01:12:44] practice and how it's evolving.
+[01:12:46] So, Dolma by AI2 was a 7B open source
+[01:12:49] model.
+[01:12:51] Sorry, Olmo which was trained on the
+[01:12:53] Dolma data set and this is in the Dolma
+[01:12:55] paper for the details
+[01:12:57] was a 7B model trained fully with FSDP
+[01:13:01] across
+[01:13:02] a whole bunch of accelerators. I forget
+[01:13:04] exactly how many.
+[01:13:05] Um
+[01:13:06] but you know, this is one example of you
+[01:13:08] know, FSDP scales surprisingly well even
+[01:13:10] to like many many GPUs as long as you're
+[01:13:13] training a small model, you know, FSDP
+[01:13:15] is actually a pretty good strategy for
+[01:13:17] parallelization. I think many 7B-ish
+[01:13:19] models are trained purely with FSDP.
+[01:13:23] DeepSeek because of their systems you
+[01:13:25] know, skills does do some pretty exotic
+[01:13:29] and and useful stuff. So, DeepSeek V1
+[01:13:33] was trained just with data parallel zero
+[01:13:35] stage one
+[01:13:37] with tensor sequence and pipeline
+[01:13:39] parallel as I kind of talked you before.
+[01:13:41] DeepSeek V3, you know, that's a MoE
+[01:13:43] model if you remember my MoE lecture.
+[01:13:45] So, they have you know, not only
+[01:13:47] pipeline parallel, but they also have
+[01:13:49] expert parallel instead of tensor
+[01:13:51] parallel, right? And their expert
+[01:13:52] parallel actually is a little bit exotic
+[01:13:54] because they have 64-way parallelism.
+[01:13:56] So, they group eight different machines
+[01:13:58] together and that's their expert
+[01:13:59] parallel sort of domain
+[01:14:02] and to to enable this large expert
+[01:14:04] parallel, they basically use the same
+[01:14:06] tricks that they have
+[01:14:08] from their
+[01:14:09] pipeline parallel pipelining in order to
+[01:14:11] try to make sure that expert parallel
+[01:14:13] doesn't sort of like have
+[01:14:15] low utilization period. So, this is
+[01:14:16] actually a quite a complicated trick
+[01:14:18] that they do to get these very large
+[01:14:20] expert parallel splits.
+[01:14:22] Um
+[01:14:23] Another example Yi from Chinese open
+[01:14:26] weights training setting, they use once
+[01:14:29] again zero stage one and tensor and
+[01:14:31] pipeline parallel, right? This very much
+[01:14:33] makes sense. It's a it's the classic
+[01:14:35] data parallel tensor parallel pipeline
+[01:14:36] parallel combo. And once again, once you
+[01:14:39] go to MoEs, you replace the tensor
+[01:14:41] parallelism with expert parallelism,
+[01:14:43] right? They they serve similar sort of
+[01:14:45] goals, but expert parallelism is just a
+[01:14:47] little bit more efficient.
+[01:14:49] Um On the other extreme of a really big
+[01:14:52] dense model, you have Llama 3.
+[01:14:55] The Llama 3 report I like quite a bit
+[01:14:57] because they're one of the few reports
+[01:14:59] that have like literally a full
+[01:15:00] breakdown of their parallelism strategy,
+[01:15:03] not just like in the abstract, but
+[01:15:04] across all the different phases. So, the
+[01:15:07] cool thing that you see is they have a a
+[01:15:10] pre-pretraining stage like a little
+[01:15:11] warm-up phase at the very start. You can
+[01:15:13] ignore that first row. And then they
+[01:15:14] have their main sort of pretraining
+[01:15:16] phase in the middle row here
+[01:15:18] and this is a very standard
+[01:15:19] parallelization strategy. Tensor
+[01:15:21] parallel of eight,
+[01:15:22] one sort of context parallel, 16
+[01:15:25] pipeline parallel and 128 data parallel,
+[01:15:28] right? Like big data parallel splits.
+[01:15:30] And then at the very end because they
+[01:15:32] want a long context model, they do long
+[01:15:34] context extension and for this they
+[01:15:36] crank up the context parallel, lower the
+[01:15:38] data parallel and that's kind of how
+[01:15:39] they parallelize this very memory hungry
+[01:15:41] stage for long context extension. And
+[01:15:43] notice you know, we're in tensor
+[01:15:44] parallel not expert parallel then
+[01:15:46] because Llama 3 405B is a gigantic dense
+[01:15:49] model. It's not a MoE model.
+[01:15:52] Um
+[01:15:53] And as a side note, right? Like one
+[01:15:56] thing that I don't talk about, but if
+[01:15:57] you for example become an infra engineer
+[01:15:59] at one of these companies,
+[01:16:01] you'll notice is you know, GPUs fail all
+[01:16:04] the time.
+[01:16:05] Apparently in during Llama 3 405B
+[01:16:07] training,
+[01:16:09] GPUs failed 148 times and so you need
+[01:16:13] you know, lots not just like fast
+[01:16:15] parallelism, you need redundancy in
+[01:16:17] order to be able to deal with all these
+[01:16:18] like kind of horrible things that can
+[01:16:20] happen to your training. So, there's a
+[01:16:21] distributed systems challenge as well.
+[01:16:23] Um
+[01:16:24] Gemma 2 which is a
+[01:16:26] Google open source model
+[01:16:28] has FSDP plus tensor parallel and
+[01:16:32] sequence parallel
+[01:16:34] and uses these two strategies only and
+[01:16:36] the reason why I sort of brought up
+[01:16:38] Gemma 2 is as far as I understand this
+[01:16:40] is basically a realization of the Google
+[01:16:43] claim that you know, for TPUs really you
+[01:16:46] don't need to do pipelines. You just
+[01:16:47] take a really big toroidal mesh and you
+[01:16:49] do tensor tensor parallel over that big
+[01:16:51] mesh network that you have.
+[01:16:54] Unclear whether this can like scale out
+[01:16:56] forever. That has always been a little
+[01:16:57] bit
+[01:16:58] less clear to me, but at least at you
+[01:17:00] know, the Gemma scales, this is
+[01:17:02] definitely the case.
+[01:17:04] Finally, I took a look at some of the
+[01:17:06] models that were trained this year like
+[01:17:07] Mistral 8x22B
+[01:17:10] and during my investigation, you know,
+[01:17:11] one of the things that I discovered was
+[01:17:12] actually you know, if you're interested
+[01:17:14] in like model training and parallelism
+[01:17:16] configurations in the wild,
+[01:17:19] Nvidia has a repository called
+[01:17:21] Megatron-Bridge where they sort of
+[01:17:23] release a lot of you know, recommended
+[01:17:25] training configurations for a lot of
+[01:17:26] different model sizes and model settings
+[01:17:29] and you can kind of take a look at what
+[01:17:31] they end up saying is the right model
+[01:17:33] configuration for like 8x24 22B MoE or
+[01:17:38] DeepSeek V3 model. And so for Mistral,
+[01:17:40] you know, they do expert parallel of
+[01:17:42] eight, pipeline parallel four and an
+[01:17:44] additional tensor parallel of four. This
+[01:17:45] one for the attention layers and you
+[01:17:47] kind of see you know, this follows the
+[01:17:49] prescription of keep your expert
+[01:17:50] parallel roughly around eight.
+[01:17:53] Um
+[01:17:54] NeMo-Megatron 3 Super follows kind of
+[01:17:56] the DeepSeek V3 model, has a bunch of
+[01:17:58] expert parallel as well as context
+[01:18:00] parallel because they were doing
+[01:18:01] extensions at least in this article.
+[01:18:03] And then the last one that I want to
+[01:18:06] talk about is Qwen 3
+[01:18:08] which follows the DeepSeek recipe, which
+[01:18:11] is fairly large amount of expert
+[01:18:13] parallel 32
+[01:18:15] and they have eight pipeline parallel
+[01:18:18] and two tensor parallel to split up kind
+[01:18:19] of things like the attention matrices.
+[01:18:22] Um
+[01:18:23] It is actually kind of interesting to
+[01:18:25] see
+[01:18:26] additionally the the different kinds of
+[01:18:28] benchmarking that Nvidia folks have done
+[01:18:30] for you know, parallelizing different
+[01:18:31] models. And you see I won't go into
+[01:18:33] details of what this is. This is in the
+[01:18:35] Nvidia Bridge repo if you want to take a
+[01:18:37] look.
+[01:18:38] There's all sorts of different like sub
+[01:18:39] configurations that you can pick even
+[01:18:41] within tensor parallel that can
+[01:18:43] significantly affect the performance of
+[01:18:45] these. So, the the systems integration
+[01:18:47] is is quite significant.
+[01:18:49] So, to sort of put everything together,
+[01:18:51] you know, I kind of decided maybe I
+[01:18:53] would build an overview. Really the
+[01:18:56] thing that's common to this is you know,
+[01:18:58] as much as you can, all the models use
+[01:19:00] data parallel. They maximize the data
+[01:19:02] parallel domains to the extent that they
+[01:19:03] can. Tensor parallel almost always
+[01:19:06] remains below eight
+[01:19:08] and expert parallel can sometimes be big
+[01:19:10] now and I think that's partially because
+[01:19:11] of DeepSeek V3 and a lot of the infra
+[01:19:13] that they built for large-scale expert
+[01:19:15] parallel training.
+[01:19:18] Good.
+[01:19:19] Okay.
+[01:19:20] So, to put everything together, right?
+[01:19:23] The the highest level point right of
+[01:19:25] this lecture is we need to think about
+[01:19:27] multi GPU multi node, maybe even multi
+[01:19:30] data center parallelism. And to think
+[01:19:32] about efficiency in that regime, right?
+[01:19:34] We need to really bring to bear all the
+[01:19:36] approaches that we have because you've
+[01:19:38] got fast links, you've got slow links,
+[01:19:39] you've got
+[01:19:41] techniques that make use of batch sizes
+[01:19:43] and all these different resources that
+[01:19:45] you all want to consume as much as
+[01:19:46] possible.
+[01:19:47] But given all of these, it turns out
+[01:19:49] that there's fairly simple rules of
+[01:19:51] thumb for combining all these different
+[01:19:53] forms of parallelism to get, you know,
+[01:19:55] in the end what is effective
+[01:19:57] effectively like full utilization of
+[01:19:59] your compute hardware.
+[01:20:01] Great. And next week I think we're
+[01:20:02] talking about scaling loss.

@@ -1,0 +1,1661 @@
+[00:05] Okay, let's get started. So, welcome
+[00:08] back everyone. So, today we're going to
+[00:10] talk about parallelism.
+[00:13] And remember in the last week we
+[00:15] introduced how to make a single GPU go
+[00:18] fast by writing kernels. and we really
+[00:21] looked inside his GPU.
+[00:23] And this week we're going to talk about
+[00:25] how to leverage multiple GPUs to make
+[00:27] your code go even faster. Um, so the
+[00:31] picture you should have in your head is
+[00:33] something like this. So for the last
+[00:35] week, we focused on one of these boxes
+[00:37] where you have your GPU. Uh remember you
+[00:40] have your high bandwidth memory, HPM, um
+[00:43] L2 cache, L1 cache, registers and a
+[00:46] bunch of streaming multip u streaming
+[00:49] multiprocessors.
+[00:51] Um so now the picture gets extended
+[00:53] because instead of having one GPU, you
+[00:56] might have four, you might have a
+[00:57] thousand GPUs and those are going to be
+[01:00] connected. Um, and I'll talk later about
+[01:02] how those GPUs are going to uh get
+[01:05] connected. And then you're going to have
+[01:07] to figure out how to leverage all of
+[01:09] this compute uh to train models.
+[01:12] So in both cases meaning both in the
+[01:16] single GPU case and in the multiGPU case
+[01:18] as we'll talk about today the situation
+[01:21] is kind of similar if you zoom out which
+[01:23] is that the compute um the arithmetic
+[01:26] logic uh units the tensor cores so on is
+[01:29] far away from your data and far away for
+[01:31] a single GPU means all the way over here
+[01:33] in uh HBM and and now if you have
+[01:37] multiGPUs the thing that you need here
+[01:40] might be all the way on a different GPU
+[01:41] you and you're going to have to shuffle
+[01:43] uh that over somehow. But the same
+[01:45] principles are going to be the same
+[01:47] because the game is to orchestrate the
+[01:50] computation to try to avoid data
+[01:53] transfer bottlenecks. It's very easy to
+[01:56] use a ton of GPUs, but it's hard to use
+[01:59] them effectively.
+[02:01] So um taking a little bit of liberty we
+[02:04] can think about the generalized
+[02:05] hierarchy where at the at the sort of
+[02:09] local level next to the um the SMS is a
+[02:14] single node single GPU where you have um
+[02:17] an L1 cache shared memory. This was the
+[02:19] fastest and then you had um HPM which we
+[02:24] lamented was so slow but in this lecture
+[02:27] HPM is going to be considered fast. Um
+[02:30] now we're going to uh think about the
+[02:32] single node multiGPU setting where the
+[02:35] GPUs are going to be connected via MV
+[02:37] link and MV switch. Um and then finally
+[02:40] the multi- node multiGPU where we have
+[02:43] to resort to infiniband and um Ethernet
+[02:45] depending on what uh network you have.
+[02:49] Okay. So last week uh we talked about
+[02:53] various um tricks for um imp reducing
+[02:57] memory accesses uh fusion and tiling
+[03:00] read into shared memory do everything
+[03:02] you as much as you can and then write it
+[03:04] back out um and this week we're going to
+[03:07] talk about how you can reduce amount of
+[03:09] communication um across uh GPUs by
+[03:13] replicating and and and sharding
+[03:15] appropriately.
+[03:17] So, so why do you do GPU multi-GPUs? Um,
+[03:21] the the obvious answer is well, you want
+[03:22] to scale, but to put a finer point on
+[03:26] it, there's really two reasons. One is
+[03:29] that your parameters or activations or
+[03:32] gradients and optimizer state don't fit
+[03:35] on the HPM memory of a single GPU. So,
+[03:38] B200 has 192 gigabytes. If you're
+[03:41] training a one trillion parameter model,
+[03:42] that's not going to fit on a single GPU.
+[03:46] And the other reason is that even if
+[03:48] your model could fit on single GPU, you
+[03:50] might want to leverage more GPUs by
+[03:53] splitting everything up to train faster.
+[03:56] So sometimes there will be kind of some
+[03:58] decisions to be made because um you
+[04:01] could fit everything on GPUs, but you
+[04:03] have fewer cores. Uh but if you spread
+[04:07] out, then you're going to have to pay
+[04:09] the communication bandwidth, right? So
+[04:11] that's some calculation you're going to
+[04:13] have to do to figure out um how to
+[04:16] paralyze.
+[04:18] Okay. So just one note here is that um
+[04:22] so far this lecture is Python. You
+[04:24] execute it and you can just show
+[04:26] everything. Now in this lecture if you
+[04:29] run this directly it uses
+[04:31] multipprocessing. Um but when I trace
+[04:34] through it I'm putting in some sort of
+[04:36] like special single process mode. So if
+[04:39] you want to see the standard out for
+[04:40] this lecture um run in the
+[04:43] multiprocessing setup um you can click
+[04:45] here and I'll show this as we go through
+[04:47] the lecture. But just remember as we
+[04:50] step through this lecture we're not
+[04:51] actually doing multiprocessing um
+[04:53] because we're just stepping through uh
+[04:55] single lines of code. Okay. So this
+[04:58] lecture is going to include uh two
+[05:00] parts. One is we're going to learn about
+[05:03] the building blocks of distributed
+[05:05] communication and computation.
+[05:08] um starting with the programming model,
+[05:10] talk a little bit about the hardware, um
+[05:13] start to implement things in torch um
+[05:16] which you're going to um do on your
+[05:19] assignment too. And then the second part
+[05:22] is we're going to look at actual uh
+[05:24] training. Um we're going to look at
+[05:26] three types of parallelism. Uh data
+[05:28] parallelism, tensor parallelism,
+[05:30] pipeline parallelism. Each is going to
+[05:32] cut up our model in different ways.
+[05:34] We're going to do this for um MLPS. um
+[05:37] rather than the full transformer but
+[05:40] it's really um sort of the core
+[05:42] computation is going to be uh shown
+[05:44] here.
+[05:45] Okay. So let's dive in.
+[05:50] So the first thing to talk about is
+[05:52] these things called collective
+[05:54] operations.
+[05:56] So collective operations are these uh
+[05:58] primitives from distributed programming
+[06:01] that go back to the 80s. So the idea of
+[06:04] parallel programming is is very old. Um
+[06:07] it's wasn't invented for LM training. Um
+[06:10] and it's still the case that these
+[06:13] primitives are the ones that we um use
+[06:16] um today. And here collective just means
+[06:19] that you're specifying a general
+[06:21] communication pattern or a template
+[06:23] across multiple devices rather than
+[06:26] managing um pointto-point how this GPU
+[06:29] is going to communicate with another
+[06:30] GPU. And this is going to be much um
+[06:34] easier and the systems can do a lot more
+[06:36] work for you. So this is um a very tried
+[06:39] andrude interface for doing parallel uh
+[06:42] programming.
+[06:44] Okay. So the general setup is as
+[06:46] follows. Um the terminology here is a
+[06:49] little bit I find it a little bit
+[06:50] strange but this is standard in um
+[06:53] parallel programming. The idea is that
+[06:56] you have a bunch of ranks where rank
+[06:59] corresponds to a particular device. In
+[07:01] our case, a GPU could be a TPU. But the
+[07:04] point is that you have let's say four
+[07:05] ranks here. The world size corresponds
+[07:08] to the number of devices. So the world
+[07:10] size here is four.
+[07:13] Okay. So there's a few operations we're
+[07:16] going to go through. Uh broadcast,
+[07:18] scatter, gather, reduce, all gather,
+[07:20] reduce, scatter, all reduce, and all to
+[07:23] all. And each of these operations is
+[07:25] going to specify how this set of ranks
+[07:28] or devices is going to transfer some
+[07:32] amount of data slashcomputee with it to
+[07:34] some other set of devices.
+[07:37] So the first three broadcast, gather,
+[07:39] gather, reduce are just warm-ups. I
+[07:43] would say they allow you to get a sense
+[07:46] of how um these uh collective uh
+[07:49] commission collective operations work
+[07:52] but they're not really going to be the
+[07:53] ones that are driving most of training.
+[07:56] All gather reduce scatter and all reduce
+[07:58] are the ones that are going to show up
+[08:00] again again for uh distributed training
+[08:03] of uh language models. And finally all
+[08:05] to all I'll just mention here um uh
+[08:09] which is important forees but we're not
+[08:12] going to actually spend too much time on
+[08:14] this this lecture.
+[08:16] Okay. So let's uh dive in uh with the
+[08:18] simplest um operation which is
+[08:22] broadcast. So in broadcasting you have a
+[08:26] rank zero. It could be any rank but
+[08:28] let's just say for sake of picking one
+[08:31] rank zero has some tensor 0 one 0 one
+[08:35] two three and it broadcastes to all the
+[08:38] ranks. So at the end of this operation
+[08:42] um we have that each of the ranks has
+[08:44] the same tensor on it. Okay, that should
+[08:48] be pretty uh straightforward.
+[08:51] Um and this again doesn't really show up
+[08:54] in the like kind of the core path of
+[08:56] training. Generally broadcasts are used
+[08:59] for kind of initialization where let's
+[09:01] say you initialize a load initial
+[09:04] checkpoint and then you br broadcast it
+[09:06] to all the ranks. So something that's
+[09:08] done like once.
+[09:10] Okay.
+[09:12] So the second operation is a scatter.
+[09:15] And a scatter basically says I have um a
+[09:20] tensor at rank zero whose uh is split up
+[09:25] into the world size and I'm going to
+[09:28] basically scatter my tensor onto the
+[09:31] other ranks. So rank zero gets zero uh
+[09:35] the zero component rank one gets this
+[09:38] rank two gets this and rank three gets
+[09:40] that.
+[09:41] Okay.
+[09:43] Um so again this is not directly used
+[09:45] but um scatter is a important stepping
+[09:48] stone to understand reduce scatter. So,
+[09:50] as the name implies, scatter just takes
+[09:53] um a big tensor at one place and spreads
+[09:56] it out onto multiple places. And you can
+[10:00] see how this might be helpful because
+[10:02] you want uh all the uh GPUs you're
+[10:06] scattering to to do some local
+[10:08] computation on the different parts.
+[10:13] Okay, so the inverse of scatter is
+[10:15] gather. Um so this should be very uh
+[10:18] predictable. Um the input is you have a
+[10:22] dump for a bunch of pieces each of which
+[10:24] reside on a particular rank and then
+[10:27] when you do gather that's with respect
+[10:30] to a particular rank rank zero um it's
+[10:33] going to just concatenate all the pieces
+[10:34] together.
+[10:38] Okay, again gather isn't directly used
+[10:40] but it's going to be a stepping stone to
+[10:42] understand all gather.
+[10:45] So next is uh reduce. So those of you
+[10:48] who do you know functional programming
+[10:50] are probably familiar with reduce is.
+[10:52] It's exactly the same. The idea is that
+[10:56] you have you start in the same starting
+[10:58] point as a uh a gather
+[11:01] um and where the denser is split up
+[11:05] across multiple well you have some piece
+[11:08] of data on each of the different ranks
+[11:11] and then you're going to apply your
+[11:12] reduction operation to all of these and
+[11:15] get that in put that on uh rank zero. So
+[11:20] in this case if you uh do a reduction
+[11:22] with sum then you add these all up you
+[11:24] get six.
+[11:26] Okay. So you can think about gather as a
+[11:29] reduction where the the operation is you
+[11:32] know concatenation if you will.
+[11:37] Okay. And of course reduce is important
+[11:39] to understanding all reduce.
+[11:41] Okay. So let me pause there. Um those
+[11:44] were just kind of the warm-ups just in
+[11:45] case people have any questions about
+[11:47] what a collective operation is. Um
+[11:50] broadcast
+[11:52] uh scatter gather reduce.
+[11:59] >> Yeah.
+[12:04] Or is it?
+[12:06] >> So the question is is this related to uh
+[12:09] broadcasting and nonpie? Um I mean I
+[12:13] think it's the same I conceptually the
+[12:16] same idea where you have one thing that
+[12:18] goes to many things like in numpai if
+[12:20] you have a scaler get broadcast to a
+[12:22] tensor but um the instantiation this is
+[12:26] for collective communication so it's a
+[12:28] bit different
+[12:32] okay so let's uh move on to something
+[12:35] more interesting so all gather
+[12:38] is what you do to basically you perform
+[12:41] gather to all ranks, not just rank zero.
+[12:45] So remember what gather does, it uh
+[12:48] basically takes all the different pieces
+[12:51] and it just puts it on one rank, rank
+[12:54] zero. And now all gather just does it
+[12:58] for every single rank.
+[13:00] Okay, that's what the all is for. All
+[13:02] means do it for all the output to all
+[13:05] the ranks and gather is what you're
+[13:07] doing to all the ranks.
+[13:12] Okay, so this is going to come up um a
+[13:15] bunch. Um it's not important that you
+[13:17] understand this statement precisely, but
+[13:20] later we'll see that each rank holds
+[13:23] part of the parameters. And then what
+[13:26] you need to do is all gather the
+[13:28] parameters to get the full parameters
+[13:30] for the full forward pass. So in general
+[13:33] as we're doing training we're going to
+[13:34] see a lot of this gather uh to do
+[13:37] something and then scatter and then
+[13:39] gather and scatter again.
+[13:43] Okay. So reduce scatter is performing
+[13:47] reduce on each dimension and then
+[13:50] scattering you know the results. Okay.
+[13:53] So you have let's say you have um uh you
+[13:58] know four
+[13:59] uh devices and each of them has some you
+[14:03] know vector
+[14:05] and so when we did a a reduce before we
+[14:10] just had 0 1 2 3 and that got reduced to
+[14:13] six but now reduce scatter says that for
+[14:17] each component of this tensor I'm going
+[14:19] to do a reduction and then I'm going to
+[14:21] put it on a different uh you know you
+[14:26] know uh rank. So um the first dimension
+[14:30] I'm going to add these up I get six. Um
+[14:34] now for the second dimension I'm going
+[14:35] to add these up. I get 10. For third
+[14:37] dimension I'm going to process these.
+[14:39] For the fourth dimension I'm going to
+[14:40] process those.
+[14:44] Okay.
+[14:47] Okay. So, so where this is going to show
+[14:49] up just as a to foreshadow things um
+[14:52] after the backward pass when you sum uh
+[14:56] the what you're going to do is each
+[14:59] uh GPU will be dealing with different
+[15:01] data right and what you're doing is you
+[15:04] need to sum all the gradients
+[15:07] um from the different you know shards
+[15:10] and then you're going to distribute
+[15:13] redistribute this you know storage
+[15:18] Okay. And then finally all reduce. Um if
+[15:21] you understand all reduce scatter and
+[15:24] all gather, it's basically you do one
+[15:26] and then you do the other. Okay. So what
+[15:29] this does is um reduce scatter
+[15:33] uh the same input as we had um you know
+[15:36] before. And um remember in reduce
+[15:40] scatter we had 6 10 14 and 18 sit on
+[15:44] different ranks and uh the all gather
+[15:48] part of all reduce just puts them all on
+[15:50] the same everything on the same node.
+[15:56] Okay. So all reduce is in some sense the
+[15:58] easiest to understand. You have a bunch
+[16:00] of tensors you reduce in this case sum
+[16:03] and then you replicate them on all the
+[16:05] nodes.
+[16:09] Okay, so we're going to see this one
+[16:11] actually first when we do a data
+[16:14] parallel where we sum the gradients um
+[16:16] and then we replicate the full you know
+[16:18] parameters.
+[16:20] So so that's where we're actually going
+[16:22] to start. So maybe just focus your
+[16:23] attention on all reduce. Later we're
+[16:25] going to see how um to get to fancier
+[16:29] things like zero or fstp we need to
+[16:32] break the all reduce into reduce scatter
+[16:35] and all gather
+[16:37] because then you can intervene and you
+[16:39] can manage uh things a bit more but for
+[16:41] the basic uh version all reduces is
+[16:45] fine.
+[16:48] Okay, finally all to all. This one is
+[16:52] the in some ways the most general. You
+[16:54] basically specify how each rank sends uh
+[16:58] a particular message to another rank. Um
+[17:03] and so here's a you know simple example
+[17:06] where you have the same input as you
+[17:08] know before. And what this is saying is
+[17:10] that I want to send zero to this element
+[17:15] to rank uh zero. um meaning keep it
+[17:18] myself. I'm going to send one to rank
+[17:21] one, two to rank two, and three to rank
+[17:24] three. And then uh for if I'm rank one,
+[17:28] I want to send four to rank zero, five
+[17:31] to rank one, six to rank two, and uh
+[17:34] seven to rank three. So basically the
+[17:37] position
+[17:38] here is going to denote where which rank
+[17:41] is going to be the ultimate destination.
+[17:44] And and so if you look at the output,
+[17:48] what happens is that um uh the first
+[17:52] rank is going to receive everyone who
+[17:55] sent everything in uh column zero
+[17:58] because all these ranks are sending
+[18:00] these things to rank zero. Um similarly
+[18:04] for rank one, all of the uh ranks are
+[18:08] sending this column to rank one and so
+[18:11] on and so forth.
+[18:16] Okay, so this is going to be useful when
+[18:20] um for training
+[18:22] and the intuition here is that each rank
+[18:26] has both a split of the data and also a
+[18:28] subset of experts and basically you in
+[18:32] the key idea of thee is that it's sort
+[18:35] of dynamic routing. you have to look at
+[18:37] your data to figure out which experts um
+[18:40] are you need to route that um those
+[18:43] activations to. So it ends up being a
+[18:46] allto uh communication. Um so if you
+[18:50] look at if everything were balanced
+[18:53] meaning that every rank sent the same
+[18:56] number of uh you know bytes to this to
+[18:59] every other rank then all the wall you
+[19:02] can think about as essentially a
+[19:03] transpose. If you think about this as a
+[19:05] matrix, all you're doing is transposing
+[19:07] that matrix.
+[19:09] But in general, alt also handles
+[19:11] unbalanced splits. Um, and I'm not
+[19:14] showing this uh this here, but you can
+[19:16] configure it to send any number of uh
+[19:18] you know bytes to any other um another
+[19:21] rank. Um but in general, you want the
+[19:24] splits to be as balanced as possible. So
+[19:27] remember Tatsu's uh lecture where we had
+[19:30] load balancing to make sure that things
+[19:32] were as balanced as possible. So morally
+[19:36] the ideal goal is to have thing all to
+[19:38] all look kind of like this.
+[19:43] Okay. So just to summarize um maybe a
+[19:47] few helpful tips to remember the
+[19:48] terminology because I just went through
+[19:51] like quite a few different um
+[19:55] operations.
+[19:56] So reduce is well it's reduce it
+[20:00] performs un some sort of associative
+[20:02] commutative um operation could be sum
+[20:05] could be max could be min um scatter is
+[20:08] the inverse of gather scatter
+[20:10] distributes gather centralizes and all
+[20:13] just means that the destination is all
+[20:15] you know devices so that explains all
+[20:18] reduce um and all gather.
+[20:23] Okay, let me pause there um to take any
+[20:26] questions about collective
+[20:27] communications.
+[20:31] >> Yeah, for operations such as like gather
+[20:34] reduce where we like where we like
+[20:36] basically like these wall ranks to like
+[20:38] zero does that rank zero
+[20:42] like is it like a particular GPU every
+[20:45] time or can that rank zero change? Yeah.
+[20:48] So the question is when you do a gather
+[20:50] or a reduce the target where you uh
+[20:56] write the output right now I said rank
+[20:58] zero. Um you'll see later in the code
+[21:02] you basically specify the the
+[21:06] GPU ID or the the rank um and it goes
+[21:09] there. So it doesn't have to be
+[21:11] determined like way in advance, but it
+[21:13] has to be determined basically when you
+[21:17] execute the call.
+[21:23] Cool. Anything else?
+[21:27] Yeah, these are just like conceptual.
+[21:30] They're not like actually
+[21:34] like are there like these the actual
+[21:40] Yeah. So the question is are these just
+[21:42] uh conceptual building blocks or are
+[21:43] they code? So I'm showing these right
+[21:45] now as just conceptual building blocks
+[21:47] but we'll very quickly see how these are
+[21:49] implemented in code.
+[21:53] Okay. So before getting into code um I
+[21:56] want to talk a bit about uh the hardware
+[21:59] in particular how GPUs are connected
+[22:01] because we already know what's inside a
+[22:02] GPU. Um so you know let's talk about
+[22:06] networking.
+[22:08] um in in general. So this is kind of a
+[22:11] very classic picture. You can tell from
+[22:13] this uh very old looking image um that
+[22:18] you know this is how computers used I
+[22:20] mean generally work. So you have this uh
+[22:24] you know server and then you have a
+[22:25] bunch of CPUs. There's a PCIe bus uh
+[22:28] which you connect things like your um or
+[22:32] used to connect things like your mouse
+[22:33] and and and keyboard um and and then you
+[22:36] have a bunch of GPUs sitting off of them
+[22:39] and you have some RAM and then this
+[22:42] computer is connected to Ethernet to
+[22:44] another computer um and so on so forth.
+[22:47] Okay. So this is a particular setup
+[22:50] because a particular topology um and um
+[22:54] you know GPUs on the same node you use
+[22:57] PCIe to communicate and GPUs on
+[23:00] different node you have to go all the
+[23:02] way through Ethernet.
+[23:04] Okay. So this is like if you bought your
+[23:06] like gaming GPU and you had you know
+[23:08] hooked it up with your friend and he's
+[23:10] like I'm going to train some big model.
+[23:12] Um that's what you would have to do. But
+[23:14] you know if you're really serious about
+[23:16] training then um things look more like
+[23:21] uh this. This is the picture I showed in
+[23:23] the very uh you know beginning where you
+[23:25] have the GPU and there's something
+[23:27] called MVL link and MV switch and
+[23:30] infinipad. So the typical uh you know
+[23:34] setup is this and these numbers eight is
+[23:37] typical but this 256 is kind of made up.
+[23:41] So typically you have eight GPUs per
+[23:43] node. Um and these are connected via um
+[23:47] Nvidia's MVL link to a switch. Um and
+[23:52] just for kind of calibration if you use
+[23:55] MVLink five then you're getting 1.8
+[23:58] terab it's terabytes per second of total
+[24:02] you know bandwidth. And remember HBM was
+[24:05] for B200 was um 8 terabytes per second.
+[24:08] So it's, you know, about four uh about
+[24:12] 4x uh slower. So I mean this is still
+[24:15] pretty fast if you think about um going
+[24:17] between devices, but obviously not as
+[24:20] fast as uh high bandwidth memory, which
+[24:22] is much slower than you know shared
+[24:25] memory or L1 cache.
+[24:28] Okay. So basically a MVA link connects
+[24:31] to the switch and which means that um
+[24:35] from a programming perspective you can
+[24:37] think about GPUs as connected uh to any
+[24:39] other GPU right you go GPU to any other
+[24:43] GPU and the hardware takes care of um
+[24:46] transmitting that to the switch and the
+[24:48] switch routes it.
+[24:51] Okay. So typically what you will also
+[24:54] have is that at some point you uh you
+[24:57] can't have uh MV switch and MV link and
+[25:01] you have because as your clusters uh you
+[25:04] know number of GPUs grows then you're
+[25:06] going to have to put these um nodes into
+[25:09] pods or uh which are connected by
+[25:13] infiniband
+[25:14] and the way infiniband works is that now
+[25:18] there's a bit you know more the so Now
+[25:21] the the GPU doesn't connect directly to
+[25:24] the other GPU. it has to go through PCI
+[25:27] E and uh and goes through this kind of
+[25:31] special Infiniband cable and you see
+[25:33] that the um the you know the speeds are
+[25:36] much much lower
+[25:39] and then finally if you run out of
+[25:41] Infiniband and you have these like huge
+[25:43] pods um you know then you need to
+[25:46] connect them via you know Ethernet and
+[25:50] in Ethernet um you know you have to go
+[25:54] through PCIe and actually goes through
+[25:56] the your CPU which as we'll see is um
+[25:59] you know even even slower.
+[26:02] Okay, so it's kind of analogous to the
+[26:05] kind of memory situation. The more nodes
+[26:08] uh you have then the slower it's going
+[26:10] to be. You can't have like a MV switch
+[26:13] handling like a 100,000 you know GPUs.
+[26:18] So one note is that this I mentioned
+[26:21] alluded to this bypassing the CPU which
+[26:24] is is going to be uh an important thing
+[26:28] from a hardware perspective. Um so if
+[26:32] you have traditional Ethernet you know
+[26:34] what happens is that the GPU has to talk
+[26:38] to the CPU to get its uh data copied. So
+[26:41] it basically has to copy the data uh to
+[26:44] this uh the CPU has a kernel socket
+[26:47] buffer here is kernel means you know not
+[26:50] the GPU kernel but this uh the CPU
+[26:52] traditional notion of a kernel um and
+[26:54] then has to build some uh some network
+[26:56] packets copy to the network interface
+[26:59] and then ship it over. So this generally
+[27:01] introduces a lot of latency
+[27:05] and so there's this technology called
+[27:07] remote direct memory access RDMA which
+[27:09] allows a GPU to directly write or read
+[27:13] from another uh GPU's memory without
+[27:17] using the CPU at all. So obviously if
+[27:20] you're in MVL link land and MV switch
+[27:23] land then you have RDMA. Um Infinibad
+[27:26] also supports RDMA. So if you're
+[27:29] connected via Infiniband then you can
+[27:31] directly uh have GPUs connect to each
+[27:34] other without access involving the CPU.
+[27:37] Uh but standard Ethernet uh does not.
+[27:42] Um there's two notable advancements I
+[27:45] will mention is that uh so Nvidia has
+[27:50] been really pushing the limits on what
+[27:52] you can do with larger and larger you
+[27:54] know pods. So they have for the
+[27:56] basically the B200s and the um B300s
+[28:00] they have something called MVL 72 which
+[28:02] means that they they have these trays of
+[28:06] eight GPUs but have nine of them and so
+[28:08] basically at the end of it you have 72
+[28:10] GPUs that are all kind of MV switched
+[28:13] into one MVLink domain and if you
+[28:15] remember um the MV link uh you know
+[28:19] speeds are very fast right so normally
+[28:23] um if you're if you're you know mortal
+[28:26] you think well okay I have eight GPUs
+[28:29] that are interlin really fast and then
+[28:31] outside of that you know then things get
+[28:34] slowed down a lot but you have a lot of
+[28:36] money you can buy this really fancy
+[28:38] hardware and you can get uh really fast
+[28:41] interconnects up to 72 um GPUs
+[28:46] and the other thing I'll mention is that
+[28:48] you know I said standard Ethernet
+[28:50] doesn't support RDMA but there has been
+[28:52] progress on the Ethernet front as well.
+[28:55] So there's something called um ROCE RDMA
+[28:59] over a converged Ethernet where the
+[29:01] Ethernet actually bypasses the the CPU.
+[29:05] Um and this is sort of their their
+[29:08] answer to infiniband. So Infiniban
+[29:11] generally is very expensive as is you
+[29:14] know a lot of Nvidia products. Um but uh
+[29:18] you can get you know pretty good
+[29:21] performance by using um um
+[29:26] using uh uh RDMA over converge Ethernet
+[29:29] and uh Meta had some papers showing that
+[29:33] they were use exploring this. So, uh,
+[29:36] llama may or may have been trained over,
+[29:39] uh, converg.
+[29:43] Okay. So, that's just a kind of brief
+[29:44] overview of what the the hardware uh,
+[29:47] looks like. You have GPUs. They connect
+[29:49] via MVLink to MV uh, switch over some
+[29:53] domain, maybe eight, maybe 72, and then
+[29:55] it's infinite band uh, from there.
+[29:58] And now let's talk about, you know, how
+[30:01] do you program this? So at the very
+[30:04] lowest level there's something called
+[30:05] the Nvidia collective communications
+[30:07] library n uh NCCL or nickel which
+[30:11] translates the collective operations the
+[30:14] all reduce uh reduce broadcast into the
+[30:17] actual low-level packets that are sent
+[30:20] between GPUs.
+[30:22] So what nickel does is it um when you
+[30:26] when you use nickel it's basically like
+[30:28] saying I want to all reduce and then
+[30:31] nickel goes and figures out what is the
+[30:34] topology of the hardware figures out the
+[30:36] the path between different GPUs and then
+[30:39] it actually launches the GPU kernels to
+[30:41] send and receive data because at the end
+[30:44] of the day remember everything that runs
+[30:45] on a GPU is is a kernel. So there are
+[30:48] communication kernels as well that
+[30:51] actually do uh you know communication
+[30:53] with other GPUs.
+[30:56] Okay. So we're not going to look too too
+[30:58] much more in at nickel but just know
+[31:00] that it exists.
+[31:03] Um and then we're going to actually go
+[31:06] to PyTorch. So maybe before that any
+[31:08] questions about you know hardware?
+[31:13] >> Yeah. Could you like describe it like a
+[31:17] rack and tray?
+[31:20] >> Uh can I describe physically a rack and
+[31:24] a tray? Like what a rack is and what a
+[31:26] tray is. Um, so for the MV uh 72, so I'm
+[31:31] not I'm not a hardware expert, but uh
+[31:34] but a rack I mean is literally like I
+[31:37] mean if you've seen data centers like
+[31:39] literally a rack and each tray is uh
+[31:44] something that has so so G the G stands
+[31:47] for grace. So there's you know two CPUs
+[31:50] and each CPU is connected to four GPUs.
+[31:53] So each tray has um eight uh GPUs on it
+[31:57] and they're stacked and everything, you
+[32:00] know, is connected to this, you know, um
+[32:02] MB's uh switch.
+[32:07] >> Yeah.
+[32:16] >> Yeah. So the question is what is the
+[32:17] difference?
+[32:22] >> Yeah. So RDMMA you can think about it as
+[32:24] a more of a a diterata. RDMMA means that
+[32:29] one GPU can read and write from another
+[32:31] GPU's memory. And there's multiple ways
+[32:33] to do RDMA. One is to use MVLink and MV
+[32:38] switch. And another way is to use
+[32:41] Infiniband.
+[32:45] So, Infiniband and MV switch and MVLink
+[32:48] are more the the hardware like what what
+[32:52] pieces like what cables are are and
+[32:54] switch is are there and RDMA is more um
+[33:00] operationally like what what happens
+[33:02] when you're communicating
+[33:04] >> so we
+[33:07] just like one week
+[33:10] there will be other ways not
+[33:15] Yeah, for example, this advancement uh
+[33:18] uh RDMA over converge Ethernet is
+[33:20] another way to do RDMA.
+[33:21] >> Okay. So, so we draw
+[33:30] >> uh
+[33:32] okay yeah
+[33:33] >> is nickel optimized for
+[33:37] multi-node
+[33:38] clusters cuz obviously like it seems
+[33:41] intuitive for but like for like RDMA
+[33:45] based uh processes would nickel be for
+[33:49] that?
+[33:51] So the question is is nickel optimized
+[33:53] for multi- node clusters? Um
+[33:59] so my so I don't know the details of how
+[34:04] you know they have or have not optimized
+[34:06] it. All I can say is that you know
+[34:08] Nvidia has been basically you know
+[34:11] optimizing their entire stack for you
+[34:14] know inference and training of these
+[34:17] large um models because their main
+[34:18] customers are the kind of major um you
+[34:21] know providers of language models. So I
+[34:23] would be surprised if they haven't
+[34:25] thought of uh optimizing for those type
+[34:28] of workloads.
+[34:32] >> Yeah.
+[34:32] >> What's the most common way you have
+[34:35] workloads that
+[34:44] So, uh the question is what happens if
+[34:46] you have nine GPUs? How do you uh
+[34:48] distribute the workload across uh those?
+[34:52] Um I I suppose
+[34:56] I I guess it kind of depends on how the
+[34:58] nine lands in your your setup. For
+[35:01] example, a lot of times you'll have um
+[35:04] you know, let's say you have eight GPUs
+[35:06] per node. So then the ninth one would be
+[35:08] on a different node. And if you don't
+[35:10] have um you know, MV uh link connecting
+[35:14] them, then that's going to be really bad
+[35:16] because that's going to be one node
+[35:18] which not providing that much compute
+[35:20] and also very expensive to communicate
+[35:22] with. Uh but if you let's say had a um
+[35:27] everything were connected by MB's you
+[35:29] know switch then it would be um much
+[35:32] more reasonable.
+[35:34] >> Okay. Um one more question I'm going to
+[35:35] move on. Yeah.
+[35:37] >> TPUs.
+[35:39] >> So how is this different from uh TPUs?
+[35:42] Um so Tatu to describe TPUs a bit more.
+[35:47] So um I mean the let's see
+[35:52] um what can I say quickly about this? Um
+[35:56] so TPUs are generally kind of much uh
+[36:00] you know simpler objects. Um I'm not too
+[36:03] familiar with the details of how this
+[36:06] like what this each of these components
+[36:08] corresponds to but maybe we can talk
+[36:10] about it offline.
+[36:14] Okay. So let's actually get down to some
+[36:16] code to um take advantage of this this
+[36:19] hardware. So PyTorch conveniently has a
+[36:23] torch distributed library that provides
+[36:25] a clean interface into these collective
+[36:28] operations. Um so you don't have to
+[36:30] explicitly think about nickel. Um and in
+[36:34] fact this library also supports
+[36:37] different backends for different
+[36:38] hardware. So if you are on GPUs then you
+[36:41] would use the nickel back end. And if
+[36:43] you're on CPUs then there's something
+[36:45] called glue which still allows you to
+[36:48] you know like I said parallel processing
+[36:50] has been around for um you know a long
+[36:53] time before GPUs and you can do um these
+[36:56] collect operations on CPUs as well. Um
+[37:01] this library also supports higher level
+[37:03] models and algorithms such as uh FSFTP
+[37:07] but we're not going to use those in the
+[37:09] course because we're building things
+[37:10] from scratch.
+[37:12] All right, so let's walk through some
+[37:15] basic examples of collective operations.
+[37:19] Um, so there's this function called
+[37:21] spawn which takes another function. I'm
+[37:24] going to call and it says I'm going to
+[37:26] run this uh replicate it four times
+[37:29] where four is the world size. So let's
+[37:32] see what this does. Um this is actually
+[37:36] a wrapper I wrote um just to sort of
+[37:40] hack around the fact that I can't do
+[37:42] multiprocessing in this uh this lecture.
+[37:44] So normally what you would do is you
+[37:47] call
+[37:49] um you know torches
+[37:52] multipprocessing.spawn
+[37:53] and you call the function um but you
+[37:56] know I'm going to do this branch which
+[37:58] disates disables distributed. So let's
+[38:01] just go through that. So now um now I'm
+[38:05] in this function that it's supposed to
+[38:07] be running on asynchronously for each
+[38:10] process. So remember world size is a
+[38:13] number of processes
+[38:15] and the rank is either zero or one or
+[38:18] two all the way up to world size minus
+[38:20] one. And so there are worldsized number
+[38:23] of these functions that are each running
+[38:25] on a process at the same time. Okay, so
+[38:29] I'm on rank zero right now. So what do I
+[38:31] do?
+[38:32] Um there's a setup. Um you basically
+[38:35] configure uh the the master
+[38:39] address and port. Um notice that this is
+[38:42] not actually how the the GPUs are going
+[38:45] to communicate. This is more for just
+[38:47] general metadata and coordination. The
+[38:49] actual data goes through nickel
+[38:51] otherwise it'll be very very slow. Um
+[38:55] and if you have CUDA available then you
+[38:57] can use the nickel backand. Um I am on
+[39:00] my laptop so I'm going to use uh the
+[39:01] glue back end.
+[39:04] Okay. So um so now I'm here I'm running
+[39:09] um you know pretend I have four of these
+[39:11] processes running. Um so there's this uh
+[39:14] barrier function which um is useful as
+[39:18] it's a synchronization barrier. So
+[39:20] basically if I see this then it waits
+[39:24] for all the processes to get to this
+[39:26] point. Um okay so basically you can
+[39:32] think about all the processes are
+[39:33] running asynchronously um so I don't
+[39:36] really control one could completely
+[39:37] finish before the other they might uh
+[39:40] finish be interled in any way so if I
+[39:43] want to make sure that certain there's
+[39:45] some code that is executed before other
+[39:48] code I put these synchronization
+[39:50] barriers in. So now the downside of
+[39:53] putting more barriers in is that well
+[39:56] you end up kind of waiting uh
+[39:58] potentially unnecessarily.
+[40:01] Okay. So let's try an all reduce. Okay.
+[40:05] So I'm going to um create this tensor
+[40:09] 0123.
+[40:11] And um I have my rank just to make it
+[40:14] more interesting. Each rank is going to
+[40:18] have a different tensor.
+[40:20] Um, I'm going to print out what I have
+[40:22] before the all reduce. So, now I'm going
+[40:24] to skip over here and see what's gets
+[40:28] printed out. Um, so, uh, rank zero
+[40:32] before all reduce has 0, one, two,
+[40:34] three. Um, rank one has 1, two, three,
+[40:37] four, and so on. It's the same example
+[40:39] as I showed before. Notice that the
+[40:41] print statements are coming in whatever
+[40:43] order uh, the hardware feels like it
+[40:45] because it's running async, but all the
+[40:47] data is there. Okay.
+[40:51] So now if I do a all reduce and uh this
+[40:55] you pass in this is a PyTorch function.
+[40:58] It pass in this this tensor. You pass in
+[41:02] the reduction operation which is a sum
+[41:04] and I'm going to say don't do async. And
+[41:08] what this does is it calls um in this
+[41:11] case it would be glue but it could be
+[41:13] nickel. And which in which case it would
+[41:16] spin up the the CUDA kernels. it would
+[41:18] do the communication. It takes care of
+[41:20] everything for you and then it basically
+[41:23] writes in place to the data. So after
+[41:26] the all reduce um I have the all reduce
+[41:30] operation remember which is the sum of
+[41:33] each of these columns but replicated
+[41:35] across all the ranks.
+[41:41] Okay. So, so that's, you know, all
+[41:44] reduce. And if you wanted to be, you
+[41:47] know, fancier and do async, then you
+[41:49] could say async equals true. But then it
+[41:51] would screw up all these print
+[41:52] statements. So, I'm trying to put more
+[41:55] barriers than I would normally would.
+[41:59] >> Yeah. Question. In this case the rank is
+[42:08] >> uh so the question is the rank the GPU
+[42:11] uh for this class the rank is uh the
+[42:14] GPU. Yes.
+[42:19] Okay. So let's try another example here.
+[42:21] Um
+[42:23] so I'm going to do a reduced scatter.
+[42:26] So here
+[42:28] I'm going to create an input which is
+[42:31] zero through the the world size um and
+[42:37] um I'm going to
+[42:40] um have
+[42:42] uh the the output um I'm going to
+[42:44] allocate the output and so what does
+[42:47] this look like before I do the reduce
+[42:48] scatter it looks like uh let's see um
+[42:53] this where each it's a kind of the same
+[42:58] you know input and the output is happens
+[43:00] to be zeros but it could be you know
+[43:02] just anything
+[43:04] and then um I do the reduce scatter
+[43:07] tensor here instead of writing in place
+[43:10] I have a um output tensor and an input
+[43:12] tensor I say I want to you know do the
+[43:14] sum and then afterwards I get uh
+[43:19] basically the input is not touched but
+[43:21] the output I get the um the reduction of
+[43:25] each component written into the
+[43:27] respective ranks.
+[43:36] Okay. So yeah question.
+[43:50] >> Yes. So the question is how does it work
+[43:52] to do the all reduces asynchronous? So
+[43:56] what this means is that this this is
+[43:58] sort of like a monolithic operation. You
+[44:01] say go do the all reduce and it's
+[44:04] spinning up you know CUDA kernels.
+[44:06] that's going to you know do the
+[44:08] communication and uh remember CUDA is
+[44:11] already kind of async um with respect to
+[44:14] the process processes and now we have
+[44:16] all the processes being async and the
+[44:18] point is that um this code just would
+[44:22] return um and and then you could do kind
+[44:28] of other things. So a typical thing um
+[44:31] which I'm not going to have uh talk
+[44:34] about this class is overlapping
+[44:36] computation and communication. Uh so for
+[44:39] example you can do this um operation and
+[44:43] then you can go ahead and load some
+[44:45] other data for the next uh step um which
+[44:48] is independent of this operation. And
+[44:50] then when you want to make sure that you
+[44:53] actually um are done then you can call a
+[44:56] weight or a barrier.
+[45:03] Okay. So let's do the final one which is
+[45:07] all gather. So by now I think you kind
+[45:09] of get the idea here. I'm going to set
+[45:12] as the input the output of the reduce
+[45:15] scatter. Um I'm going to allocate an
+[45:18] output. Uh so before the all gather it
+[45:23] looks like this. I have my results from
+[45:26] the reduced scatter here. Um the output
+[45:29] is uh you know it just allocated happens
+[45:32] to have some values in it but don't you
+[45:34] know worry uh about it. Um and then um
+[45:40] after I do the all gather into tensor um
+[45:44] and then I will have um you know all the
+[45:50] different uh inputs
+[45:53] uh you know gathered onto all the
+[45:56] different ranks.
+[45:59] Okay. And you can see here that indeed
+[46:02] uh proof via example that all reduce is
+[46:05] equal to reduce scatter plus all gather.
+[46:13] Okay. And then um just to wrap things up
+[46:16] just as I started by a setup then I
+[46:20] clean up uh which you know uh just um
+[46:25] it's good practice to clean up.
+[46:30] Okay. So so that was your first example
+[46:33] of a torch distributed you know program.
+[46:38] Okay. So let's do um some
+[46:42] um you know benchmarking. Uh this will
+[46:44] be quick since I want to actually move
+[46:46] on to the uh part two.
+[46:49] Um so how fast does communication
+[46:51] happen? So let's do an all reduce. Um so
+[46:55] here I'm going to all reduce with uh you
+[47:00] know 100 million um elements
+[47:03] and oops
+[47:08] okay let me sorry mess this up
+[47:14] okay so I'll reduce so I'm going to
+[47:17] create uh you know this this tensor with
+[47:21] this number of elements call um and
+[47:24] remember just like before when we do
+[47:25] benchmarking we warm up first um and
+[47:29] here I'm going to call the CUDA
+[47:31] synchronize and also the the barrier um
+[47:34] just to make sure that because there's
+[47:36] two forms of asynchrony here the CUDA
+[47:38] kernels and the different processes and
+[47:40] just want to make sure everything is
+[47:42] kind of uh not running in the um is is
+[47:46] done um before I start the time and I'm
+[47:49] going to do the all reduce
+[47:52] um and
+[47:55] and then wait uh again with the
+[47:58] synchronize in the barrier and stop the
+[48:00] time. Okay. So um remember this is
+[48:05] running for every single rank. So if I
+[48:09] look at the output here for rank 0 2 1 3
+[48:14] um I have a different time potentially
+[48:16] because they're all different processes.
+[48:19] um each of them is going to report a
+[48:20] certain um you know measurement and if
+[48:24] you want to report one number you can
+[48:25] take the average for example.
+[48:28] Um
+[48:30] so now one thing um that is uh useful to
+[48:34] do which is analogous to when we were
+[48:36] computing MFU is to compute measure the
+[48:40] effective bandwidth and the idea here is
+[48:43] that well this took 1.6 six
+[48:46] milliseconds, you know, how much um you
+[48:50] know, is that good or bad? So to compute
+[48:53] the effective bandwidth, what we're
+[48:55] going to do is to compute essentially
+[48:58] how much how many bytes were sent and
+[49:02] should be sent kind of during this
+[49:04] computation. Um and then you divide by
+[49:07] the total time then you get the B
+[49:09] effective bandwidth. Okay. So um the
+[49:12] size of what I'm sending around is the
+[49:16] the size of each element times the
+[49:18] number of elements. So that's the
+[49:19] basically the number of bytes of this uh
+[49:21] data tensor.
+[49:24] Um how many bytes get actually sent. So
+[49:26] this uh needs some unpacking. So for all
+[49:31] reduce um if you think about let's just
+[49:35] say for the simplicity you do a rank
+[49:38] zero plus rank one plus rank two plus
+[49:40] rank three um you need to iterate this
+[49:43] world size minus one steps because
+[49:45] there's a world size minus one you know
+[49:48] addition operations though so that's
+[49:50] this factor there's a two because you
+[49:53] need to both kind of send and reduce so
+[49:56] and then you multiply by the size of the
+[49:59] payload code. So that's the total number
+[50:00] of sent bytes
+[50:03] and the total duration
+[50:06] um is the the time that the wall clock
+[50:10] time that it took and then you multiply
+[50:13] by the the world size um because it's
+[50:17] like the total amount that the all the
+[50:19] ranks have waited and the bandwidth is
+[50:23] the the um the bytes sent divided by the
+[50:27] total you know duration.
+[50:30] Okay. So in this case uh you get
+[50:33] something like you know about 400
+[50:35] gigabytes uh you know per second.
+[50:40] Okay. So one uh a few notes here. One is
+[50:45] that the effective bandwidth if you look
+[50:48] at this expression size time 2 * world
+[50:51] size minus one divided by world size
+[50:52] times duration. So as world size
+[50:54] increases this world size minus one
+[50:57] divide by world size essentially
+[50:59] converges to one. So you're effectively
+[51:01] left with two times the size by over the
+[51:04] duration. So this is essentially uh the
+[51:08] bandwidth notice that this is
+[51:09] independent of the world size which is
+[51:12] which is good. So if you grow the number
+[51:14] of GPUs you have you are still you know
+[51:16] the bandwidth doesn't you know change.
+[51:19] It is also independent of the topology
+[51:21] which is something that kind of nickel
+[51:24] uh you know figures out whether you're
+[51:26] um going to pass the messages in a kind
+[51:29] of a ring or a tree topology.
+[51:32] Um
+[51:34] so yeah
+[51:37] okay so that is uh all reduce and for
+[51:41] reduce scatter um this is very similar
+[51:45] um so I'm going to create the inputs and
+[51:47] the outputs warm up uh perform the
+[51:51] operation and time it so uh notice that
+[51:56] the reduce scatter has uh this um these
+[52:00] timings Um and
+[52:04] and you can also measure the effective
+[52:06] bandwidth here. The number of bytes uh
+[52:09] that were uh in the input. You have the
+[52:14] number of bytes that were sent. Here
+[52:16] there is no um you know 2x here. Um and
+[52:21] then the total duration you divide by
+[52:22] that you get the bandwidth. So here the
+[52:25] bandwidth is uh um it should be very
+[52:29] similar. I guess sometimes there's some
+[52:31] stoasticity but it's on in the kind of
+[52:34] 400s.
+[52:37] So a few notes here.
+[52:40] All reduce is remember as we stated
+[52:43] reduce scattered plus an all gather.
+[52:47] And so all reduce naturally is moving
+[52:51] twice the amount of data. U because
+[52:55] reduced scatter is like has some cost.
+[52:57] All gather has some cost and all reduces
+[53:00] doing twice as much work. Um but and it
+[53:04] takes twice the amount of time. Um but
+[53:07] you know the two cancel out so you get
+[53:09] the the same kind of bandwidth.
+[53:17] Okay.
+[53:19] All right. So um that is the end of part
+[53:22] one. Maybe
+[53:24] any questions before I move to part two.
+[53:30] do that synchronize for.
+[53:40] >> So why do we have to do the synchronize
+[53:42] for the CUDA kernel? So at the end of
+[53:45] the day we are still doing CUDA
+[53:47] operations, right? we have just multiple
+[53:50] processes each with a GPU um doing some
+[53:54] CUDA operations and then so if you're
+[53:58] doing a CUDA operation remember by
+[54:00] default it's async so when you reach the
+[54:04] next line in Python that CUDA operation
+[54:06] might not be done
+[54:07] >> so we need to wait always until that's
+[54:10] to make sure it's done by synchronizing
+[54:12] >> yeah
+[54:16] the other way
+[54:18] >> so do you have to do barrier first and
+[54:20] then synchronize. Um
+[54:25] not sure.
+[54:27] >> Yeah.
+[54:38] Yeah, I think one problem is if you
+[54:41] barrier first and then the CUDA might
+[54:44] not be done running and you just
+[54:47] immediately go to the barrier and then
+[54:50] you are still kind of each independently
+[54:53] synchronizing the different CUDA kernels
+[54:56] which means that you're not really
+[54:58] synchronized on like the barrier might
+[55:00] if all those operations just return the
+[55:02] barrier doesn't really do any thing.
+[55:07] Okay, let me move on. So now let's
+[55:09] actually start thinking about how you
+[55:11] train models. Okay, so we're just going
+[55:13] to walk through a very barebones
+[55:15] implementation of training MLPS,
+[55:17] multi-layer MLPS. Um, I guess that's
+[55:20] redundant. It's multi-layer perceptrons
+[55:23] already. Um, and remember that MLPS are
+[55:27] the ones that are the actual compute
+[55:28] bottleneck and transformer. So this is
+[55:30] actually pretty representative of what
+[55:32] you'll see. Okay. So, data uh
+[55:36] parallelism, tensor parallelism, and
+[55:38] pipeline parallelism. And the picture I
+[55:41] want to you to have in your head is this
+[55:45] picture. So, um this is a little bit of
+[55:48] a schematic, so don't think too deeply
+[55:50] about this, but it's more of a way to
+[55:53] conceptualize how you're cutting um your
+[55:56] data and parameters. So data parallelism
+[56:00] says I'm going to split the data into
+[56:03] pieces and then each of the GPUs is
+[56:08] going to be responsible for part of the
+[56:10] data and I'm going to do do normal uh
+[56:14] you know I'm going to keep track of all
+[56:15] the parameters and do model normal model
+[56:17] you know training
+[56:20] um and then I need to synchronize. So
+[56:22] let me explain how this all this works.
+[56:24] So I'm going to generate some sample
+[56:26] data. So there's a batch size of 128
+[56:29] number of dimensions 1,024.
+[56:32] So this is a batch size by num dim uh
+[56:35] matrix data matrix.
+[56:38] And uh let's jump into
+[56:41] this uh data parallelism.
+[56:44] Okay. So the way that it's going to work
+[56:48] is that you have this data matrix and
+[56:51] I'm going to break up the rows into a
+[56:55] bunch of um into worldsiz pieces
+[57:00] and this case four and each
+[57:04] u rank is going to get a piece okay so
+[57:07] the number of dimensions the batch size
+[57:10] um
+[57:12] so each I'm going to call the local
+[57:14] batch size basically um you know the
+[57:18] batch size divide by the world size
+[57:20] which is every row is going to that uh
+[57:23] GPU sees is going to have 32 um you know
+[57:27] data points
+[57:29] um and this is just indexing start index
+[57:32] uh data start to end gets you the slice
+[57:36] of that data and I'm going to just put
+[57:38] it on that um on that rank.
+[57:42] Okay, so at this point each GPU has now
+[57:46] a distinct data tensor which is the part
+[57:49] that they're responsible for. Now in
+[57:53] practice uh each rank should probably
+[57:55] load its own data rather have this you
+[57:57] know this bottleneck but um this is just
+[58:00] for illustrative purposes.
+[58:04] Okay. So let's uh instantiate the the
+[58:07] MLP. So here I'm uh assume we have
+[58:13] numbum layers um and num layers uh and
+[58:19] for each of the layers I'm going to have
+[58:22] just a num dim by num dim um matrix
+[58:26] um so I'm just going to initialize a
+[58:29] random you know set of parameters
+[58:32] um and then um I'm going to feed that
+[58:35] into optimizer. Okay, so here's the
+[58:38] training loop. So in the forward pass, I
+[58:41] take the data. So remember data is not
+[58:44] the all the data. It's just um if I'm
+[58:47] rank two, then I only get B2 part of the
+[58:49] data. I'm going to just you know go
+[58:52] through the number of layers and do a
+[58:55] forward pass and then I'm going to do a
+[58:58] backward pass
+[59:00] and then normally this would be it. But
+[59:04] um now remember every rank has different
+[59:08] data. Therefore the gradients are going
+[59:11] to be you know different as well. So
+[59:15] this is the key uh step that makes uh
+[59:18] data parallelism work. We're going to
+[59:20] synchronize the gradients across all the
+[59:22] workers. This is the only difference
+[59:23] between standard training and DDP. It's
+[59:25] actually pretty nice and elegant. So
+[59:27] basically for all the parameters I'm
+[59:29] going to do a all reduce
+[59:32] of um pram.grad grad
+[59:37] and I'm going to average.
+[59:39] Um, and then after this all reduce is
+[59:42] done.
+[59:45] Then now at this point each of the ranks
+[59:48] has the exact same gradients
+[59:53] and then I'm just going to update uh the
+[59:56] the parameters.
+[59:59] Okay,
+[01:00:01] so it's kind of really kind of elegant I
+[01:00:03] find because it's basically standard
+[01:00:05] training where you apply it to your
+[01:00:08] local batch but um you just insert this
+[01:00:11] after the backward pass. Let's just you
+[01:00:14] know average all the gradients via this
+[01:00:15] all reduce. It's a oneline you know uh
+[01:00:18] code change and then the parameters get
+[01:00:21] updated. So as you're training each um
+[01:00:25] rank is basically performing parameter
+[01:00:28] updates as if it were had all the data
+[01:00:31] on it but it's only actually processing
+[01:00:33] a part of the data.
+[01:00:36] Okay. So that's basically uh DDP or um
+[01:00:39] the first type of data parallel.
+[01:00:43] Any questions about this?
+[01:00:47] >> Yeah.
+[01:00:52] So the question is, can you only do this
+[01:00:53] with batch size greater than one? Uh,
+[01:00:57] yes. So your batch size has to be at
+[01:01:00] least world size for this to really make
+[01:01:03] sense. And usually it should probably be
+[01:01:05] quite a bit larger.
+[01:01:08] >> Yeah.
+[01:01:13] >> Yeah. So the question is, should the um
+[01:01:16] batch size be a multiple of world size?
+[01:01:17] then that's also would be nice. Yes.
+[01:01:22] I mean if it's not then you can pat it
+[01:01:23] with zeros or something. So there's ways
+[01:01:26] but it's just easier for everyone if it
+[01:01:29] is.
+[01:01:30] >> Can you talk about
+[01:01:33] transformer?
+[01:01:40] What what would it look like for a
+[01:01:42] transform?
+[01:01:44] >> Uh yeah. So the question is what would
+[01:01:46] this look like for a transformer? It
+[01:01:48] would actually be basically the the
+[01:01:49] same. The DDP has a nice thing that is
+[01:01:52] very modular. You do the forward pass. I
+[01:01:56] mean DDP just averages the parameters
+[01:01:58] here. It doesn't care what your forward
+[01:02:00] pass looks like.
+[01:02:04] Okay, let me move on.
+[01:02:07] Okay, so that's DDP. Um so just to
+[01:02:13] summarize the losses are different
+[01:02:15] across the ranks. Um the gradients are
+[01:02:19] also you know initially different but
+[01:02:23] they are all reduced to be the same
+[01:02:24] across the ranks and therefore the
+[01:02:26] parameters all remain the same across
+[01:02:29] ranks.
+[01:02:31] Okay. So next lecture Tatsu is going to
+[01:02:34] talk about fancier uh data parallelism
+[01:02:37] FSTP and zero and the idea there is as
+[01:02:41] I've alluded to here we use all reduce
+[01:02:44] it's like a very simple monolithic
+[01:02:46] operation but it does require holding
+[01:02:48] all the MA models parameters in memory
+[01:02:51] but what if the model parameters don't
+[01:02:52] fit in memory then you're going to have
+[01:02:55] to be more clever and that's the topic
+[01:02:57] for next class
+[01:02:59] okay so let me talk about tensor
+[01:03:02] parallelism.
+[01:03:04] So here the idea is we're going to cut
+[01:03:07] this way. I mean we're not going to cut
+[01:03:08] the data. We're going to cut um the
+[01:03:12] essentially uh each layer.
+[01:03:16] And so each rank is going to get part of
+[01:03:20] each layer.
+[01:03:22] Okay. And generally this rem means that
+[01:03:26] we're going to have to transfer a lot
+[01:03:28] more more data. We'll discuss this a bit
+[01:03:30] later.
+[01:03:31] Um
+[01:03:33] so what does tensor parallel look like?
+[01:03:37] Okay. So,
+[01:03:40] um we're just going to assume we have
+[01:03:42] this data. Every rank has all the data
+[01:03:45] um just for simplicity. And here,
+[01:03:50] remember the the data is batch size
+[01:03:52] times num dim. And I'm going to define a
+[01:03:55] local num dim to be for this uh rank. I
+[01:04:00] only am um responsible for a subset of
+[01:04:04] the dimensions.
+[01:04:07] So uh the kind of the picture here is
+[01:04:10] that um each model still has all the
+[01:04:14] layers here for all the layers but the
+[01:04:17] parameters now are num dim times local
+[01:04:21] num dim.
+[01:04:23] Okay so if this were one of the
+[01:04:25] parameter matrices for one layer um I
+[01:04:29] would be doing um splitting down uh the
+[01:04:33] columns.
+[01:04:34] Okay, so this is also known as column,
+[01:04:37] you know, tensor parallel. You can also
+[01:04:39] do it by rows, but we're not going to
+[01:04:41] talk about that right now.
+[01:04:44] Okay, so now what does a forward pass
+[01:04:46] look like?
+[01:04:48] So go through all the layers and I'm
+[01:04:51] going to compute activations.
+[01:04:53] So
+[01:04:55] um I start with uh you know x the data
+[01:05:00] and I'm going to access the parameters
+[01:05:03] at layer uh layer and notice that this
+[01:05:08] is only a slice of the parameters right
+[01:05:11] so if I'm on rank one I only get this
+[01:05:14] part of uh the matrix but you know I can
+[01:05:17] still proceed I can apply this
+[01:05:19] nonlinearity because this is elementwise
+[01:05:21] anyway Okay.
+[01:05:23] Uh but now what I'm going to do is I'm
+[01:05:27] going to um you know communicate
+[01:05:30] activations.
+[01:05:32] So if I have a data matrix, rank one has
+[01:05:35] activations for part of the activations
+[01:05:38] for this part of the matrix. Um rank one
+[01:05:41] has part of activations for this matrix
+[01:05:44] and so on so forth. And I need to
+[01:05:46] basically
+[01:05:48] put all the activations on all the um
+[01:05:50] the ranks
+[01:05:52] and but we know how to do that. We
+[01:05:54] introduced all gather
+[01:05:57] as a collective primitive. So I have
+[01:06:00] this is all the the activations.
+[01:06:04] Um so this is um you know the batch size
+[01:06:08] times local num dim which is the shape
+[01:06:11] of the of the activations. Um and
+[01:06:17] then I'm doing an all gather um sorry so
+[01:06:21] this is the allocating memory for the
+[01:06:23] activations. So X is the actual part of
+[01:06:26] the activation. So this is batch size
+[01:06:29] times local num dim and all gather says
+[01:06:32] each rank has x and each uh rank is
+[01:06:38] going to allocate activations
+[01:06:40] um which is a list one for each world
+[01:06:43] size and then after the all gather x is
+[01:06:46] going to be copied into each of the
+[01:06:49] respective location activations.
+[01:06:53] Okay. So then um once I gather all the
+[01:06:56] activations, I concatenate them to form
+[01:06:58] the full dimensional X which is batch
+[01:07:01] size times numbed in.
+[01:07:08] Okay. Um any questions about
+[01:07:12] column tensor parallel?
+[01:07:18] So this is done for every layer. Um we
+[01:07:22] now notice one difference between uh
+[01:07:25] data parallel is now we have to kind of
+[01:07:27] muck around with a model. Data parallel
+[01:07:30] is very elegant because it's splitting
+[01:07:31] by data. The model is treated as a as a
+[01:07:34] module. Uh but now we have to muck
+[01:07:36] around with a model. Um and you know
+[01:07:40] this is sort of strongly leveraging the
+[01:07:42] fact that if you want to do a matrix
+[01:07:44] multiplication you can split it up into
+[01:07:47] a set of small matrix small smaller
+[01:07:49] matrix multiplications. We can do those
+[01:07:51] on different ranks and then we can
+[01:07:53] gather the the results.
+[01:07:58] >> When it comes to propagation, it's
+[01:08:01] sticky, right? Because your radian still
+[01:08:08] >> Yeah. So, so now the question is what
+[01:08:10] happens in backrop? Now in the back prop
+[01:08:14] you have your your activations and you
+[01:08:17] have to uh reduce scatter to all the
+[01:08:20] different um you know gradients. So in
+[01:08:23] some ways all gather and reduce scatter
+[01:08:25] have this kind of duality where in
+[01:08:27] forward if you're all gathering in the
+[01:08:29] backward you're reduce scattering.
+[01:08:33] >> Yeah.
+[01:08:36] >> So question is does that done
+[01:08:38] automatically by autograd? So none of
+[01:08:41] this well okay so if you just call
+[01:08:45] backward it's not going to do it because
+[01:08:47] there's no parallelism in that but you
+[01:08:50] know pietorrch has all these things that
+[01:08:53] are done automatically for you so um
+[01:09:00] >> what would I have to
+[01:09:04] what do I to my
+[01:09:09] So in this so what hack is done for you
+[01:09:12] and versus automatically um here we're
+[01:09:15] managing things fairly explicitly. So
+[01:09:18] which means I'm not doing the backward
+[01:09:21] pass but you would have to manage and
+[01:09:23] call the the reduce scatter yourself.
+[01:09:26] >> Yeah.
+[01:09:27] >> Yeah.
+[01:09:30] >> And that's by design because this is 336
+[01:09:33] uh you know building language models
+[01:09:35] from scratch. In practice, you probably
+[01:09:37] wouldn't have to do that. Okay, so let's
+[01:09:39] do pipeline parallelism uh quickly. So
+[01:09:42] the idea behind pipeline parallelism is
+[01:09:45] we're going to split the network this
+[01:09:47] way. So each um rank is going to get a
+[01:09:50] subset of the layers. Now within each
+[01:09:53] layer, it's going to get all the the
+[01:09:55] dimensions and it's also going to get
+[01:09:57] all the um well the one of the ranks is
+[01:10:01] going to get all the data. Um we're it's
+[01:10:03] gonna every rank is going to see all the
+[01:10:05] data in some form.
+[01:10:07] Um so this is the the way it's going to
+[01:10:12] work. Um okay so let's
+[01:10:16] um we have all the data which is again
+[01:10:20] the batch size times numbum dim. Um and
+[01:10:24] I'm going to split up the layers. So
+[01:10:26] local num layers is going to be the
+[01:10:28] number of layers that a particular rank
+[01:10:30] is going to handle.
+[01:10:32] Um and and so now I'm going to have
+[01:10:35] local params uh which is basically only
+[01:10:39] there's local number of layers number of
+[01:10:41] them but within each layer I'm going to
+[01:10:44] do the you know numbed in by numbum in
+[01:10:48] okay so um one thing I um maybe tatu
+[01:10:53] will talk more about this on uh
+[01:10:55] Wednesday is this idea of micro batches
+[01:10:59] um so maybe I'll just present this and
+[01:11:02] explain why I'm doing things this way.
+[01:11:05] So, in addition to splitting up the
+[01:11:07] layers, I'm also going to split up the
+[01:11:09] batch into a bunch of micro batches.
+[01:11:13] Um, so if I'm rank zero, then I get the
+[01:11:18] data. Um, and I'm going to chunk it up
+[01:11:21] into number of microbatches.
+[01:11:24] Um and for each
+[01:11:28] um you know microbatch
+[01:11:31] what I'm going to do is uh receive it
+[01:11:36] from the previous rank
+[01:11:39] um and then do the feed forward pass
+[01:11:42] only on the layers that are assigned to
+[01:11:44] this rank and then I'm going to send to
+[01:11:48] the next uh you know rank.
+[01:11:51] Okay. So here I'm actually using these
+[01:11:54] receive and send which are pointwise
+[01:11:56] operations. I so I didn't cover those
+[01:11:58] before but they're fairly um
+[01:12:01] explanatory. This basically says I'm
+[01:12:04] rank and I'm going to send this tensor
+[01:12:07] over to um you know uh sorry I'm going
+[01:12:11] to receive this tensor from rank minus
+[01:12:12] one. Um and this says I'm going to send
+[01:12:15] tensor x to rank plus one.
+[01:12:20] Um
+[01:12:22] okay so
+[01:12:29] basically the reason why
+[01:12:32] um I'm talking about micro batches is uh
+[01:12:35] and Tatu will talk more about this uh on
+[01:12:37] Wednesday is that in pipeline
+[01:12:40] parallelism so you have one rank that
+[01:12:44] gets the data it processes some of the
+[01:12:47] layers and then it sends it to the next
+[01:12:50] um you know GPU and it processes some of
+[01:12:53] the layers and it then sends it to the
+[01:12:55] next GPU right so this is a very natural
+[01:12:58] way of dividing out deep network but the
+[01:13:01] problem is that you get these what
+[01:13:03] called pipeline bubbles where um while
+[01:13:07] you're not um sort of processing you're
+[01:13:10] kind of waiting around for other tensors
+[01:13:13] to process and this is ends up being
+[01:13:16] quite inefficient
+[01:13:18] So the idea behind uh micro batches is
+[01:13:21] that you break it up into smaller
+[01:13:23] batches so you can kind of process it
+[01:13:25] quickly, send it on to the next one. So
+[01:13:27] this can reduce the number of uh
+[01:13:28] pipeline now bubbles.
+[01:13:32] Okay. So the other thing I will mention
+[01:13:34] that is not handled in this very kind of
+[01:13:36] naive version is the idea of overlapping
+[01:13:40] communication and computation which is
+[01:13:41] actually very important to pipeline
+[01:13:44] parallelism. basically gives you the
+[01:13:46] right structure. If you put a I before
+[01:13:49] these then it becomes um kind of async.
+[01:13:53] Um you you have to add more things to
+[01:13:55] kind of manage the uh the code. Um and
+[01:13:58] the idea here is that you want to be
+[01:14:02] while you're computing here um you
+[01:14:06] should you know you can be receiving um
+[01:14:08] data or sending data. So computation and
+[01:14:12] communication should be overlap. So uh
+[01:14:15] that reduces amount of time u you're
+[01:14:17] actually spent waiting.
+[01:14:23] Okay. So a few things are kind of um you
+[01:14:26] know missing here uh which we'll uh
+[01:14:30] hopefully fill in next time. So the
+[01:14:33] communication versus computation overlap
+[01:14:36] which is uh especially crucial in
+[01:14:39] pipeline parallelism. Um I didn't
+[01:14:42] mention uh in data parallelism this also
+[01:14:45] um happens because I just did a forward
+[01:14:48] pass and then at the end I'm just doing
+[01:14:50] all these all reduces but if you're
+[01:14:52] clever then on the backward pass as soon
+[01:14:55] as the gradients are done you can start
+[01:14:57] sending that and that's something you're
+[01:14:59] being explore in the assignment too and
+[01:15:02] this again allows you to just you know
+[01:15:05] overlap communication and computation um
+[01:15:08] more
+[01:15:10] um We they had some questions about what
+[01:15:13] about general models. Again, I think
+[01:15:15] this
+[01:15:17] um MLP gives you essentially all you um
+[01:15:22] you know, mostly of most of kind of what
+[01:15:24] you need for understanding the you know
+[01:15:26] the basics. Um some of the larger models
+[01:15:29] just require a lot more bookkeeping. So
+[01:15:31] um it's harder to kind of see the core
+[01:15:34] core algorithms.
+[01:15:36] Um there are other types of parallelism
+[01:15:38] that we haven't covered. Um so sequence
+[01:15:40] parallelism takes a whole you know
+[01:15:42] sequence and chops it up into pieces and
+[01:15:45] that allows you to paralyze attention
+[01:15:47] computation. Expert parallelism which um
+[01:15:51] allows you to paralyze the experts
+[01:15:53] forees and this is where the all to all
+[01:15:55] that I mentioned comes in and then also
+[01:15:59] you know uh you know different
+[01:16:01] combinations of uh different paralyzes
+[01:16:04] techniques which also will show up in
+[01:16:06] the assignment. Um
+[01:16:10] so one thing to note is that the which
+[01:16:14] parallelism technique you choose is
+[01:16:17] going to be strongly dependent on the
+[01:16:20] hardware. For example, tensor
+[01:16:22] parallelism there's a lot of
+[01:16:25] communication because for every layer
+[01:16:27] you're just you know you need to send
+[01:16:29] all these activations which are fairly
+[01:16:31] big. So generally tensor parallelism
+[01:16:33] happens within a node on MVLink or MV uh
+[01:16:37] where you have high bandwidth
+[01:16:40] um whereas you wouldn't do tensor
+[01:16:42] parallelism passed to kind of a MV link
+[01:16:45] you know domain um whereas a pipeline
+[01:16:48] parallelism you'll see people using it
+[01:16:50] and generally this is can tolerate much
+[01:16:54] uh you know slower you know uh
+[01:16:57] interconnects. So some of the
+[01:16:59] decentralized
+[01:17:00] um training work uses pipeline parallel
+[01:17:03] because your your nodes are GPUs are
+[01:17:06] actually across halfway across the
+[01:17:08] world. Um but you wouldn't want to do
+[01:17:10] tensor parallel in that that setting.
+[01:17:13] Um so sometimes you when you look at
+[01:17:17] these combinations it will be tensor
+[01:17:19] parallel within a node and then
+[01:17:23] um
+[01:17:25] and then uh you know pipe data parallel
+[01:17:27] or FSTP and then um and then uh you know
+[01:17:32] pipeline parallelism if you if you need
+[01:17:34] it. Um there's other effects such as if
+[01:17:37] you do data parallel, you might be able
+[01:17:40] to do data parallel uh quite a bit, but
+[01:17:42] then you start hitting to something
+[01:17:45] called the critical batch faces where if
+[01:17:47] you start increasing the batch size too
+[01:17:49] much, it doesn't actually help you in
+[01:17:51] which case you're just kind of wasting
+[01:17:53] your compute and then you're better off
+[01:17:55] using tensor parallel. So there's a
+[01:17:56] bunch of these considerations which u
+[01:17:58] we'll talk more about as we go through
+[01:18:01] the class. Um so final note uh so TPUs
+[01:18:05] kind of came up a little bit. Um one
+[01:18:09] thing to to note is that on purpose we
+[01:18:13] are using PyTorch and not just using
+[01:18:15] PyTorch but really using the collective
+[01:18:19] uh operations in a very primitive way so
+[01:18:22] you can see mechanically what's
+[01:18:24] happening. Another approach uh
+[01:18:27] especially if you're in your Jackson TPU
+[01:18:29] land is that you can simply define the
+[01:18:32] model and the charting strategy and the
+[01:18:36] compiler actually handles a lot of um
+[01:18:39] the the decision of how to uh basically
+[01:18:44] what kind of communicated operations you
+[01:18:47] need. you basically say well this piece
+[01:18:50] of data needs to be here and here and
+[01:18:53] here and then the compiler does um some
+[01:18:56] magic to figure out what um so that's
+[01:18:59] appealing but you know obviously it
+[01:19:01] would take a lot of the you know the joy
+[01:19:04] out of actually building things from
+[01:19:06] scratch okay
+[01:19:08] uh just to summarize so there's many
+[01:19:12] ways to parallelize um you can cut by
+[01:19:15] data cut by tensor or um expert cut by
+[01:19:20] pipeline or sequence. Um we looked at
+[01:19:24] data parallelism. Um we only did DDP.
+[01:19:28] Next time we'll do FSTP and zero. Um
+[01:19:32] tensor parallelism as I mentioned
+[01:19:34] requires very fast interconnects.
+[01:19:36] Pipeline less so u but you need to
+[01:19:39] really work hard to reduce these
+[01:19:41] pipeline you know bubbles. Um and then
+[01:19:44] maybe at a high level uh we see this
+[01:19:47] kind of you know pattern come up a lot
+[01:19:51] right so you can either recomputee or
+[01:19:54] store in memory um when we were talking
+[01:19:57] about things like activation
+[01:19:58] checkpointing or uh doing um you know
+[01:20:02] when we're working with GPUs or in this
+[01:20:05] case you can think about an extension of
+[01:20:07] this is that you can store um on a
+[01:20:10] different you know GPU right from that
+[01:20:12] perspective If you look at the data
+[01:20:14] parallel, right, you're doing redundant
+[01:20:16] work in some sense because every um you
+[01:20:20] know rank is actually updating its
+[01:20:22] parameters and keeping track of all the
+[01:20:24] parameters. But the reason you're doing
+[01:20:26] that is that you don't have to move the
+[01:20:28] optimizer state across. Um
+[01:20:33] so you know one thing is that you know
+[01:20:35] hardware is getting you know faster but
+[01:20:38] in some sense we'll always want you know
+[01:20:39] bigger models. So this idea of having a
+[01:20:42] hierarchical structure will you know
+[01:20:45] always be there.
+[01:20:47] Okay. So that's it for today. So uh next
+[01:20:51] Wednesday Tatu will uh do more of a deep
+[01:20:54] dive on more parallelism techniques.
+[01:20:56] Okay.

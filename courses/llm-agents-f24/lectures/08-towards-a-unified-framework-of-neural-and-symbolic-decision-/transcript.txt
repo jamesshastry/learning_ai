@@ -1,0 +1,2402 @@
+[00:00] YUANDONG TIAN: My
+name is Yuandong Tian.
+[00:01] I'm a research scientist
+director in Meta AI FAIR.
+[00:04] Today I'm going to talk about
+our recent work on the reasoning
+[00:10] and planning domain
+and also agent domain.
+[00:12] So the title is, towards
+a unified framework
+[00:16] of neural and symbolic
+decision making.
+[00:18] OK, so we all know
+that language model
+[00:20] is being used very extensively
+in many different scenarios.
+[00:23] So here I'm basically going to
+list a few possible applications
+[00:28] that larger model has already
+proven to be super useful.
+[00:33] So people have been
+using language models
+[00:35] for conversational AIs to
+generate content, and also
+[00:39] use that to play against each
+other, to basically do roleplay,
+[00:42] and also do AI agents as well.
+[00:45] And recently, a
+large amount has also
+[00:47] been used for
+reasoning and planning.
+[00:49] And we also see that by
+using [INAUDIBLE] of sorts,
+[00:52] the reasoning capability
+of larger model actually
+[00:55] become much better.
+[00:56] And at the same time, we also
+see issues with action models
+[01:01] when we are trying
+to leverage that
+[01:03] in different planning tasks.
+[01:05] So in this lecture, I'm going
+to be focused on the unit
+[01:10] and planning component.
+[01:11] Since in Meta, I
+have been working
+[01:14] with a bunch of very creative
+and very talented people
+[01:18] together, working on
+larger model with reasoning
+[01:22] and planning and
+trying to find a way
+[01:24] to make their planning
+and reasoning technique
+[01:27] and strength become much
+stronger to the next level.
+[01:31] So let's see.
+[01:32] What are the
+interesting components
+[01:34] that we can do for
+reading and planning?
+[01:37] So one thing that we
+want to think about
+[01:39] is that in order to improve the
+existing reasoning, planning
+[01:43] capabilities, of course,
+we want to understand
+[01:46] what is the weakness,
+and how can we overcome?
+[01:49] How can we overcome
+such weakness
+[01:53] with different approaches?
+[01:55] Here's the one example
+that I probably
+[01:58] use it for many different
+scenarios for showing
+[02:01] that the larger
+model really does not
+[02:03] plan very well in
+different scenarios,
+[02:06] especially in scenario that
+is common in our daily life.
+[02:10] So one an example is the
+travel planning problems.
+[02:15] So for travel planning,
+the task is super simple.
+[02:18] We just ask the model
+about a travel plan.
+[02:23] So I want to say, I
+want to go to Hawaii.
+[02:25] I want to go to Seattle.
+[02:26] I want to go to California
+at some specific date
+[02:30] with some specific budget.
+[02:32] And then I want them to give
+me a very clear, executable,
+[02:38] feasible and even
+optimal itinerary.
+[02:41] So this is the
+task we want to go.
+[02:43] So in order to
+achieve this task,
+[02:46] then people may still start
+to think about some identity
+[02:49] behaviors.
+[02:51] So of course, we first
+want language model
+[02:53] to query a few informations,
+a lot of information,
+[02:57] from outside, from
+external world.
+[03:00] So for example, you can ask
+language model to do a search,
+[03:05] and it will give you some
+of the possible directions,
+[03:09] the possible destination
+you want to go.
+[03:10] You also want to ask the model
+to do a flight search or a hotel
+[03:15] search, and you get multiple
+entries of possible hotels,
+[03:19] as well as basically the--
+[03:23] and also the flight
+information, as well.
+[03:26] So once you have all this
+information, put it together,
+[03:29] then, of course, you want
+the language model to plan.
+[03:32] So given all this
+information, hopefully
+[03:34] the model can figure out
+a path, an itinerary,
+[03:38] that will connect all the
+existing informations together
+[03:43] into a clear path or itinerary
+that can be executed.
+[03:49] So the figure to the bottom
+right, basically the figure,
+[03:56] basically the real plan,
+that we want to use in order
+[04:00] to execute the plan.
+[04:03] But interestingly,
+what happened is
+[04:05] that if we actually use
+the current language
+[04:08] model to do this
+planning task, it's
+[04:12] actually not doing very well.
+[04:14] So this is a paper that we
+published in this year's
+[04:18] ICML as a spotlight.
+[04:20] And in this paper,
+this is the main table
+[04:22] that we put to show the
+incapability of language models
+[04:27] for solving these
+kind of problems.
+[04:29] So first of all, the
+top chunk of the table
+[04:33] basically shows that even
+with the GPT 4 Turbo, which
+[04:37] is the model that is the
+strongest at that time,
+[04:41] we actually see that the final
+pass rate of the entire travel
+[04:45] itinerary is only 0.6%.
+[04:47] So here you have
+a percentage here
+[04:49] where we don't show in the top.
+[04:52] But even if we give the
+language model the ground truth
+[04:57] information of the tools and we
+ask them all to directly plan
+[05:01] the travel, then the final pass
+rate is also only like 4.4%.
+[05:07] So the pass rate
+definition is very simple.
+[05:11] Given the itinerary,
+you really want
+[05:14] to see whether every
+stage of the travel
+[05:17] satisfy the constraints.
+[05:19] We say the constraint
+means that you
+[05:21] might have a criteria
+that you don't
+[05:24] want to be in a smoking room.
+[05:27] So you might want to say,
+I have a budget constraint.
+[05:30] The budget cannot exceed
+some fixed amount of numbers,
+[05:33] et cetera.
+[05:33] So you can basically
+have some code
+[05:36] to check whether the
+travel itinerary really
+[05:40] pass all these criterias.
+[05:42] But unfortunately, the final
+plan quality is not great,
+[05:45] and you have to really
+have a human involved
+[05:48] in order to find a plan
+that is really executable.
+[05:51] Of course, I mean, people will
+say, OK, this is like a paper--
+[05:57] that basic paper that is
+being published at the early
+[06:00] this year.
+[06:01] And in luxury model
+era, every month counts.
+[06:05] Every week counts.
+[06:07] And the people published,
+like, half a year ago basically
+[06:11] means it's ages old, and
+people may not care anymore.
+[06:16] So how about using old ones,
+like the current models
+[06:20] for reasoning and planning?
+[06:21] And thanks for the courtesy of
+the first author for this paper.
+[06:25] We also get some overall
+numbers with this short planning
+[06:29] benchmark.
+[06:30] Then what happened
+here is that you still
+[06:32] see that the overall pass
+rate is not great for our mini
+[06:37] and also on preview.
+[06:39] They are even worse
+than the model
+[06:41] that is fine-tuned to
+that particular task.
+[06:43] So it's not really solving the
+problem for the travel planning
+[06:47] problems.
+[06:48] And you can actually see the
+same thing for the LLM plan
+[06:52] and in other scenarios.
+[06:56] So you can see that--
+[06:58] so the figure to
+the left is actually
+[07:01] from the DeepMind Gemini team.
+[07:06] So in that paper,
+what they show here
+[07:09] is that for planning
+problems like trip planning
+[07:11] and also meeting planning,
+you see that the performance
+[07:16] actually dropped substantially
+with more complexity in term
+[07:21] of the number of
+variables and also
+[07:25] the scale of the problem
+for the planning task.
+[07:27] So while a Gemini is still
+doing great in these benchmarks,
+[07:34] you will see this worrying
+trend all the way down to zero
+[07:38] where you have more and more
+cities or more and more people
+[07:41] showing that the
+problem scale goes up.
+[07:43] OK.
+[07:44] So the figure to the left
+basically shows the performance
+[07:48] before release.
+[07:49] But the figure to
+the right actually
+[07:51] shows what happened
+after release.
+[07:53] Of course, you see that O1 is
+actually doing a very great job.
+[07:57] So you see super
+high performance
+[08:01] for when these are applied
+to smaller-scale problems,
+[08:07] like big gap between O1
+and also existing models.
+[08:11] However, if the scale of the
+planning problem goes up--
+[08:17] so the plan learns from going
+from 2 all the way to 14 or 16,
+[08:21] then all of a sudden you see
+the curve also drops to 0.
+[08:25] So this is actually from OSU.
+[08:28] The paper is called
+the [INAUDIBLE] Plan.
+[08:30] It's a study on that.
+[08:32] So this actually
+basically gives you
+[08:35] this kind of sense
+that while you
+[08:37] can see the bias
+term of the curve
+[08:40] is moving up substantially,
+the trend of the entire curve
+[08:45] still goes down substantially.
+[08:48] And the trend does
+not change over time.
+[08:51] So this is actually, in some
+sense, a very worrisome kind
+[08:55] of curve that even the best
+models that we have encountered
+[09:00] have not solved these
+kind of problems.
+[09:04] Of course, the next slide will
+be, what are the solutions?
+[09:06] What are the solutions?
+[09:07] So in this lecture,
+I'm going to talk
+[09:09] about the three possible
+different categories
+[09:12] of solutions.
+[09:14] And they are listed there.
+[09:15] So the solution one, of
+course, is the scaling law.
+[09:18] And we say with more data,
+more compute and larger models,
+[09:23] and hopefully one
+day, then, we're
+[09:25] going to see better
+performance and going
+[09:28] to eventually solve
+all these problems
+[09:30] with all these bigger models.
+[09:33] So of course, they
+are very expensive.
+[09:35] And then this also involve a
+lot of engineering challenges,
+[09:38] but may not necessarily
+involve a new kind
+[09:41] of thinking and thoughts about
+how we solve these problems.
+[09:45] That's definitely one path.
+[09:46] I don't want to comment on
+how good or bad of this path,
+[09:51] but this is just one
+option, something
+[09:53] that you can think about.
+[09:56] There's a second option
+that's called hybrid systems.
+[10:01] In that option, what we can
+think about is that, OK,
+[10:04] so we can see it's
+very clear that there
+[10:06] are two complementary paths.
+[10:08] If we use deep models
+like foundation models,
+[10:11] they are very good
+at understanding
+[10:13] the natural language
+instructions,
+[10:16] but they are not doing very
+well in doing very good planning
+[10:21] tasks.
+[10:22] So they will have bad solutions.
+[10:24] The solution is not high
+quality, and et cetera.
+[10:27] So on the other hand,
+there's another one
+[10:30] called the combinatorial
+solvers, or symbolic solvers.
+[10:33] So these solvers
+basically can give you
+[10:36] optimal solutions in
+many different scenarios
+[10:39] and will have guarantees
+and often run super fast
+[10:44] compared to neural
+networks and do not
+[10:46] require GPUs in many cases.
+[10:48] And these are basically very
+good solvers for complicated
+[10:53] planning problems,
+but at the same time,
+[10:55] these solvers don't
+understand natural language.
+[10:57] They don't understand
+the user's request.
+[10:59] They don't understand
+many flexible scenarios.
+[11:03] So maybe we should combine them
+together into the same system.
+[11:08] Then you're going to see that
+these two can be put together.
+[11:13] And it can give you
+something that is
+[11:14] stronger than both of the side.
+[11:16] So on these options, there
+are several different ways
+[11:20] of combining them, which
+we're going to talk about
+[11:24] in the following slides.
+[11:26] And that's actually option
+3, which is actually,
+[11:31] say that there's actually a way
+to understand the neural talk
+[11:35] and find that there's a
+symbolic representation that
+[11:39] emerges automatically from the
+green descent optimization.
+[11:43] So that's something that
+could be super interesting.
+[11:46] And recently this
+is something that we
+[11:47] have found in our
+very recent research,
+[11:50] but I'm going to talk about
+that later after the option two.
+[11:55] So let's start with this one.
+[11:57] So there's different ways
+of combining deep models
+[12:00] with solvers.
+[12:01] And of course, the first one
+that we can do is tool use.
+[12:05] So for this, we actually
+have follow-up work
+[12:09] for the trial
+planner about how can
+[12:12] we leverage mixed integer
+linear programming and neural
+[12:17] network, larger models,
+together in order
+[12:20] to solve the travel
+planning problems.
+[12:23] So here, instead of
+asking the larger model
+[12:26] to directly give you the
+optimal itineraries, which
+[12:32] is very hard and
+even infeasible given
+[12:34] the current problems of
+issues of luxury models,
+[12:38] how about that?
+[12:39] We can ask the language
+model to first convert
+[12:43] the natural language
+input into JSON file.
+[12:48] So here's the JSON file.
+[12:49] And given the JSON
+file, it gave you
+[12:51] all the symbolic representation
+of the request for the user.
+[12:58] And given this request, combined
+with the flight and hotel
+[13:02] information, you can
+actually call a solver.
+[13:06] Here we are using mixed integer
+linear programming solver.
+[13:10] And that solver will give
+you some symbolic description
+[13:13] of the optimal itinerary.
+[13:15] And you can use the
+optimal itinerary,
+[13:18] and you can convert that
+back to the actual sentences.
+[13:22] And this will be used as
+the response of the agent.
+[13:26] So you can do this.
+[13:27] Instead of doing a direct
+pass, you can take a detour
+[13:31] through the symbolic
+solver, and that detour
+[13:34] will give you some solution that
+is guaranteed to work better.
+[13:38] So we actually built
+a demo on top of that.
+[13:40] And our demo actually was just
+accepted in this EMNRP demo
+[13:44] session to be held in Miami.
+[13:49] If you are interested and
+people are joining NRP,
+[13:52] please go ahead and take a look.
+[13:54] So this entire thing can be a
+demo because it's in real time.
+[13:58] So here's basically a
+breakdown of the speed.
+[14:03] So we actually fine-tune
+instruction translator.
+[14:08] That will take, like, two
+seconds, or 2.5 seconds,
+[14:12] to translate from
+natural language
+[14:14] all the way to the JSON file.
+[14:17] And then we also have a MIRP
+solver, intelligent programming
+[14:20] solver, that will basically
+solve the problem.
+[14:24] And the solving is
+actually very, very fast.
+[14:27] It takes 0.7 seconds
+to solve the problem.
+[14:33] So this will make the
+entire demo real time.
+[14:35] And people can
+actually play with it.
+[14:37] And we also have
+human evaluations,
+[14:40] and basically human subjects
+ask about these questions,
+[14:45] whether the system is
+useful, whether it satisfied
+[14:49] the request, whether they
+offer a good amount of value
+[14:52] for the money, and
+whether this is efficient.
+[14:54] And you can see that most
+of the human subjects,
+[15:00] they are, in fact,
+positive on our system
+[15:05] compared to the baselines.
+[15:07] So that's actually
+quite interesting.
+[15:12] Of course, the next step would
+be mostly around dialogue.
+[15:15] So here in the previous
+systems, what do we do here
+[15:18] is that the agent basically
+take the single-round dialogue,
+[15:25] take the user request at one
+single round of the request,
+[15:28] and send this request
+to the neural network,
+[15:33] to the larger models, and we
+will convert to a JSON file.
+[15:36] But in practice, people
+are not doing that, right?
+[15:39] People always start with
+some rough idea about travel.
+[15:42] So I want to go to Hawaii.
+[15:43] I have no idea what else,
+but I want to go Hawaii.
+[15:45] But then the agent will try
+to ask a little bit more
+[15:48] about details.
+[15:49] How much budget?
+[15:52] Are you a people who
+really care about money,
+[15:56] or are you people who
+care about experience?
+[15:59] So there's actually a
+lot of detail questions
+[16:01] you really want to figure out.
+[16:03] And this is actually
+a natural scenario
+[16:05] for multi-round dialogues
+and discussions.
+[16:08] So in order to achieve
+that, we actually
+[16:10] train an agent that can
+basically proactively
+[16:16] ask questions to the
+agent, to the travelers,
+[16:22] and traveler will answer
+these questions accordingly.
+[16:25] And the agent is aiming
+to efficiently get
+[16:28] all the information with the
+minimum amount of dialogue
+[16:32] and then convert them into
+JSON and compare this JSON
+[16:34] with the ground
+truth JSON that's
+[16:37] being created privately from
+the data generation process.
+[16:42] And how we achieve this
+agent is that we actually
+[16:47] design our agent
+constitution in order
+[16:51] to allow the agent to
+follow these instructions.
+[16:56] So the constitution
+that we develop
+[16:59] is called APEC constitution.
+[17:01] So it consists of four
+different component.
+[17:05] So first you want agent
+to be super accurate.
+[17:08] And the second, you want
+agent to be proactive,
+[17:11] means that you want agent
+to ask question proactively
+[17:14] to get answers.
+[17:15] You don't want agent to
+ask random questions.
+[17:18] That is not interesting.
+[17:19] So you also don't want
+agent to be very impressive.
+[17:22] So agent needs to find what are
+the interesting questions you
+[17:25] want to ask and
+then answer them.
+[17:27] And we also want
+agent to be efficient,
+[17:29] which means that
+agent don't want
+[17:31] to waste time and effort
+to evaluate questions,
+[17:36] but most important questions.
+[17:37] The agent also need to be
+adaptive to different types
+[17:43] of the travelers.
+[17:45] So we actually set, like,
+50 different personas
+[17:48] of the travelers.
+[17:49] Each persona of
+the traveler will
+[17:51] deposit different behaviors.
+[17:53] And these traveler will have
+private hidden spreadsheet
+[17:58] of most critical information.
+[18:00] They really want
+to get it correct.
+[18:03] And then we want to compare
+whether the agent can actually
+[18:06] get all this information
+in a short amount of time.
+[18:10] And finally, we also want
+the agent to be credible,
+[18:12] which means less generalization,
+less inconsistency, et cetera.
+[18:18] So we can use all
+these constitutions,
+[18:21] and we can fine-tune
+the models, and we
+[18:23] can see that after several
+rounds of fine-tuning using DPO,
+[18:27] our models actually
+become a little bit more
+[18:30] efficient in basically
+two categories.
+[18:33] One is called overall.
+[18:34] Overall means all the entries.
+[18:37] And critical means that
+the critical entries
+[18:39] for particular persona
+of the travelers
+[18:44] out of, like, 50 personas.
+[18:46] And we also want to optimize
+the agent [INAUDIBLE]
+[18:49] scores, [INAUDIBLE]
+classification, et cetera.
+[18:53] And we see that after
+few rounds of DPOs,
+[18:55] the performance
+actually goes up,
+[18:57] and the system also
+doing a good job here.
+[19:01] So it's interesting,
+showing that if you
+[19:04] use agent constitution,
+it's possible
+[19:07] that we can improve the agent
+performance along different axes
+[19:11] simultaneously with
+very simple techniques.
+[19:14] And this can be also better
+than existing approaches,
+[19:17] like if you just use
+Llama-3.1-B, [INAUDIBLE] models,
+[19:21] the performance is actually
+not great because it's not been
+[19:24] fine-tuned along
+these directions.
+[19:27] So recently, there's a separate
+paper that also involved
+[19:34] multiple Meta authors,
+is that alternatively we
+[19:38] might also use agent as a
+judge instead of having humans
+[19:41] as a judge.
+[19:43] So in this paper, what we do
+here is that traditionally,
+[19:48] we basically use
+larger model as a judge
+[19:50] to judge the behavior of agent.
+[19:52] And we may only check the
+final results of agent
+[19:56] given all the outcomes.
+[19:58] But in this paper, we are
+trying to use agent as a judge,
+[20:02] and the agent will try to check
+every step of the target agent
+[20:07] and to see whether they
+are doing very well or not.
+[20:12] And doing that, we
+were able to give you
+[20:15] more refined and more rich
+feedbacks for the Meta agent
+[20:20] to improve.
+[20:20] OK?
+[20:21] OK.
+[20:22] So we are finishing
+this first part
+[20:27] of using deep models to
+call the solvers in order
+[20:31] to finish the task.
+[20:32] So let's proceed
+with the second part.
+[20:37] So the second part
+is that maybe there's
+[20:39] different ways of combining
+agent, combining deep models,
+[20:42] with solvers.
+[20:43] The second part is
+like, how about we
+[20:45] use the solver to provide data
+to deep models to train better?
+[20:50] For this one, we actually have
+a bunch of direction tasks--
+[20:54] sorry, a bunch of
+research directions,
+[20:56] that actually are
+showing this is also
+[20:59] a very interesting and
+nice trend to follow.
+[21:03] So for this, we're
+going to introduce
+[21:04] this search former results.
+[21:07] And for search former,
+what we do here
+[21:10] is that the goal is
+to basically predict
+[21:13] the outcome of
+the planning task.
+[21:17] So here is a very
+simple planning task.
+[21:18] You have a maze.
+[21:19] You have multiple walls.
+[21:21] And you want to find
+what is the shortest
+[21:23] path between the starting
+point and the goal point.
+[21:27] So here the maze is 3 by
+3, and the shortest path
+[21:32] is very simple.
+[21:32] You just go all the way
+down and to the right.
+[21:36] Sorry, and to the left.
+[21:37] And then you go to
+the destination.
+[21:39] Very simple.
+[21:41] But if before you actually
+get to the destination
+[21:44] and get to the optimal plan, if
+you execute our symbolic solver,
+[21:49] here the symbolic
+solver is A star search.
+[21:52] So A star search is
+a very seminal work
+[21:56] that trying to use a heuristic
+function to find what
+[22:01] is the optimal path from
+the beginning state all
+[22:04] the way to the end state.
+[22:05] It's been used very extensively
+in many different scenarios.
+[22:09] And here we are
+just to use the--
+[22:11] we use this approach to
+find the shortest path.
+[22:15] So if you think about how A
+star search solve the problem,
+[22:19] before it actually gives
+you the final optimal plan,
+[22:22] it also gives you all
+the intermediate steps
+[22:26] in order for you to
+reach the optimal plan.
+[22:29] So, for example, in this
+particular case, what happened
+[22:32] is that A star search
+will start to create
+[22:35] a new node during the
+search and explore
+[22:38] different parts of the
+maze to see which paths
+[22:42] can lead to the destination.
+[22:44] So this entire procedure will
+create these intermediate steps,
+[22:49] which is shown in purple,
+and also the teal colors.
+[22:54] So this basically is a kind of
+internal steps of the search.
+[22:57] After the search
+procedure was finished,
+[22:59] then we actually find
+what is the optimal plan
+[23:02] for the entire problems.
+[23:05] So the idea of search
+former is that instead
+[23:10] of trying to model that
+directly, predict the plan given
+[23:14] the prompt, prompt is
+basically the description
+[23:16] of the problem, which this is
+something that people often do.
+[23:21] So we have some
+description of the problem,
+[23:23] and then we directly
+predict what
+[23:25] is the outcome, optimal
+plan of the problem.
+[23:29] In our approach, what we
+do is that if we start
+[23:33] from the initial
+prompt, we can actually
+[23:36] first predict the trace, the
+search trace, of the problems.
+[23:40] And then, given
+the search trace,
+[23:42] we can predict the
+final output plan.
+[23:46] So that's called the
+search augmented model.
+[23:48] That's the model that
+we propose in our paper
+[23:51] as the first stage of models.
+[23:54] So if you check
+how many tokens we
+[23:58] are using, so for these
+two settings, of course
+[24:01] the solution only
+models typically
+[24:04] will only generate
+maybe 100 to 400 tokens.
+[24:07] But the search augmented model
+may generate much longer tokens,
+[24:12] number of tokens, because it
+will also output the trace,
+[24:16] how you do the search
+and then the plan.
+[24:18] So people may wonder, OK, now
+you have some kind of prediction
+[24:25] problems that need to take a
+detour to the final destination.
+[24:29] Do you think that's a good idea?
+[24:32] The answer is yes.
+[24:33] You can actually find this
+a very nice screen log
+[24:37] curve associated with the
+search augmented models.
+[24:40] So first, let's check out
+here the solution only curve.
+[24:43] So this is basically
+the model that
+[24:47] can be used in many
+different cases.
+[24:50] But also you see a scaling
+law curve is not so perfect.
+[24:57] So for this curve,
+what happens is
+[24:59] that you need to have a million
+number of training sequences
+[25:04] in order to reach
+something that is
+[25:06] super high in term of the
+performance on a test set.
+[25:09] And this basically is using
+175 million parameters
+[25:13] in the solution only models
+for 30 by 30 maze navigation.
+[25:18] OK, not great.
+[25:20] However, if you use search
+augmented models and you check,
+[25:25] basically, the curve, and you
+see that the curve is actually
+[25:29] very different.
+[25:30] So all of a sudden, what you see
+is that with a certain augmented
+[25:34] model of only 15
+million parameters,
+[25:38] 10x smaller than the
+solution-only models,
+[25:42] you see a training curve that
+is much better than the original
+[25:48] solution-only models.
+[25:49] So with only, like, 50k samples,
+then what you see is that
+[25:53] the performance of the final
+score is already around 80%
+[25:59] compared to the 20% with
+the solution-only models.
+[26:03] So where you have more and
+more training sequences,
+[26:05] the performance is
+getting even better.
+[26:09] So now what you will see here is
+that this search-augmented model
+[26:13] becomes much more parameter
+efficient and much more
+[26:16] data efficient.
+[26:17] It gives you approximately same
+performance with a 10x fewer
+[26:22] number of samples,
+100k versus 1,000,000,
+[26:26] and 10x fewer number
+of parameters,
+[26:30] like 50 million
+versus 175 million.
+[26:34] So with this simple trick,
+by adding the search trace,
+[26:39] all of a sudden the
+performance actually
+[26:41] getting much, much better.
+[26:43] You can also do the same thing
+for the so-called [INAUDIBLE]
+[26:46] game.
+[26:46] So this is a game
+called sokoban.
+[26:49] The game is very simple.
+[26:50] So you have one
+agent, and you want
+[26:52] to push the boxes to
+different destinations.
+[26:55] And the only action you can
+take is to push the box forward.
+[27:00] So you cannot pull the box back
+from a corner or from a wall,
+[27:05] and you have to basically
+start over from the beginning.
+[27:09] So then this problem basically
+requires a substantial planning
+[27:12] because you cannot just
+do these things randomly.
+[27:14] If you push the
+box to the corner,
+[27:16] then there's no way you
+can put a box back later.
+[27:20] And this will basically conclude
+a failure stage of the game.
+[27:25] You have to basically
+restart, and you basically
+[27:27] see very clear,
+also similar trends,
+[27:30] for the solution-only versus
+the search-augmented models.
+[27:36] OK, so now we can see
+the scale of the two kind
+[27:40] of models are very different,
+given that we first
+[27:44] predict the search trace and
+then we predict the final plan.
+[27:49] Then people may wonder,
+how can we go beyond?
+[27:52] So what we did is just
+the imitation learning.
+[27:55] So we started from
+solver search trace,
+[27:58] and then we use the
+search trace to train.
+[28:00] The transformer
+will teach a forcing
+[28:02] to get the search
+augmented model.
+[28:04] And this is already data
+efficient, and also time
+[28:07] efficient, as well.
+[28:09] What you can do
+further is that given
+[28:12] the search-augmented models,
+which is already end-to-end
+[28:17] differentiable models,
+what we can do here
+[28:20] is to fine-tune this model
+to achieve shorter trace,
+[28:25] but still leads to optimal plan.
+[28:28] So this is basically, in
+some sense, a very typical
+[28:31] reinforcement learning task, and
+that is a search former model
+[28:36] that we end up with.
+[28:37] So what we want to say
+is that we don't do,
+[28:41] really, a reinforcement task,
+but what we do is very simple.
+[28:44] We just do expert activation.
+[28:46] What it does is that once you
+have this search augmented
+[28:49] model, you can actually sample
+this model many, many times
+[28:53] with some diversity.
+[28:55] And this sampling actually will
+lead to many different choices
+[28:59] and many different plans.
+[29:01] You pick the plan
+that is optimal.
+[29:03] And then given all
+the optimal plans,
+[29:05] check the associated searches.
+[29:08] we want to find which search
+phrase is the shortest.
+[29:11] You basically get
+all the shortest
+[29:12] trace with optimal plan,
+and then use these data,
+[29:16] use subset of
+data, as a training
+[29:18] set for the next generation
+of the search form.
+[29:21] You can do this iteratively.
+[29:24] Then what happens
+is that you still
+[29:27] keep the same or even
+better optimality rate.
+[29:31] But at the same time,
+the distribution
+[29:33] of the sequence
+lengths per test task
+[29:37] now actually becomes
+shorter and shorter.
+[29:41] OK, so you can see
+that at the beginning
+[29:43] of the top of the figure, you
+see that the augmented model
+[29:47] and A star, they are sharing
+a similar distribution
+[29:51] of the sequence length
+average per task
+[29:54] because the search
+augmented model
+[29:57] is imitation learning results
+of the original A star searches.
+[30:01] So this is not surprising.
+[30:03] But once you have
+done multiple step
+[30:05] of this bootstrapping
+iteratively
+[30:08] by creating a lot of
+traces and their plans
+[30:11] and picking the trace
+that is shortest but still
+[30:14] leads to optimal plan and put
+them back into the training set
+[30:17] and retrain the model,
+or refine the model,
+[30:19] then you can see that over time,
+the distribution of the sequence
+[30:23] length average per task
+actually shrinks to the left,
+[30:26] means that it's become
+shorter and shorter.
+[30:30] That's why this paper is
+called Beyond A Star, which
+[30:33] means that we are
+able to find shorter
+[30:36] trace lengths while
+keeping the optimality
+[30:39] of the final solutions.
+[30:41] And in terms of numbers, we
+actually also see improvements.
+[30:47] So here we define a
+metric called ILR, which
+[30:50] is the improved length ratio.
+[30:52] That's the length ratio of the
+optimal of the A star search
+[30:58] trace divided by the
+trace that is discovered
+[31:04] by the neural networks.
+[31:06] So what you see here
+is that over time,
+[31:09] the improved length
+ratio actually
+[31:11] become higher and higher, which
+means that the final trace that
+[31:16] is output by neural networks
+become shorter and shorter
+[31:19] over time when we go through
+a step of bootstrapping.
+[31:25] And then people
+may ask about, OK,
+[31:28] what happens if you check
+the optimality rate?
+[31:33] It's possible that the
+trace for optimal results,
+[31:38] optimal solution, is shorter,
+but it's also possible
+[31:41] that maybe the number of
+optimality also goes down.
+[31:44] But actually, it's not the case.
+[31:46] You see the numbers,
+and you will
+[31:48] see that the optimality
+actually goes up a little
+[31:51] bit every time when you do
+the steps of tuitions, which
+[31:55] is something that's
+kind of mysteries,
+[31:57] but it's still
+interesting to see.
+[31:59] So after this number
+of steps, iterations,
+[32:02] you see the optimality
+rate goes up,
+[32:04] and the same time,
+the search trace
+[32:08] has become much more efficient.
+[32:10] And you see that this number
+of parameters, the performance
+[32:14] is actually comparable when you
+use this search former tuition
+[32:18] procedure with 24
+million parameters
+[32:22] compared to the
+solution-only models that
+[32:25] has a lot of large parameters,
+so several hundred million.
+[32:30] And you can see that
+the optimality rate
+[32:33] become comparable after
+this bootstrapping process.
+[32:37] Yeah.
+[32:38] So that actually shows
+that this is interesting
+[32:40] steps, and our search
+former performance,
+[32:45] surprisingly, after
+this kind of bootstrap
+[32:47] steps, actually doing very well.
+[32:50] So recently, we also
+have a follow-up paper
+[32:53] called DualFormer.
+[32:55] That paper is a V2
+version of search formers.
+[32:58] So what do we do
+here is very simple.
+[33:00] So one of the weakness
+of the search former
+[33:03] is that the trace
+is often very long.
+[33:07] Basically it takes,
+like, thousand tokens,
+[33:10] or maybe 10,000 tokens, before
+it actually give you the final
+[33:14] outcome of the solutions.
+[33:17] And what should we do?
+[33:18] So in the DualFormer,
+what we do here
+[33:21] is that we are trying to reduce
+the length of the search trace
+[33:27] by dropping randomly
+some portion of it.
+[33:31] So we define different
+levels of dropping.
+[33:33] So we can say, maybe the
+close costs in A star search
+[33:38] is not important.
+[33:39] So we can get rid of them.
+[33:41] Maybe the cost tokens
+in the create center,
+[33:46] the create clause,
+is not important.
+[33:48] We drop them.
+[33:48] We can also drop the
+entire query costs.
+[33:50] So we have a different
+level of the dropping.
+[33:55] And we also define the
+final level, the level 4,
+[33:58] is basically drop
+the entire trace,
+[34:00] and we just use solution-only
+data to train the models.
+[34:05] So then what happened
+is that if you
+[34:08] train the model with all
+different combinations
+[34:11] of these levels of
+traces, then what happens
+[34:16] is that the performance is
+actually getting better compared
+[34:19] to the two cases that you
+train with only solutions,
+[34:24] and you train with
+the complete trace.
+[34:27] That's very interesting.
+[34:28] So we actually test this on
+a maze of different sizes,
+[34:32] and also the global task that
+we used in the previous slides.
+[34:36] We actually see much
+better performance
+[34:38] compared to these cases.
+[34:40] And at the same
+time, the diversity
+[34:43] of the outcome of the traces
+is also getting much higher.
+[34:48] So diversity basically defines
+as how many clusters you see out
+[34:55] of 64, the number
+of rollouts that you
+[34:58] have generated from the models.
+[35:01] The reason that it is important,
+especially for the test
+[35:04] time compute, because if
+you have high diversity
+[35:07] during the generation, then
+if you scale up your test time
+[35:13] compute, then the performance
+will also get much better.
+[35:18] So in this paper, it looks
+like it's very simple.
+[35:21] This simple approach
+will automatically
+[35:23] give you high diversity
+because the input data is also
+[35:27] very diverse.
+[35:29] And more interestingly, there
+is a finding that is also
+[35:32] very surprising is that this
+approach, this final result
+[35:36] called dual former,
+it will automatically
+[35:38] switch between fast mode
+and slow mode by itself.
+[35:43] It depends on the
+problem specifications,
+[35:45] and it will work better
+for dedicated models
+[35:47] in either of the situations.
+[35:50] So we all know
+that usually people
+[35:52] will talk about
+system 1 and system 2.
+[35:54] So for system 1
+settings, what happens
+[35:57] is that the model will directly
+predict final solutions
+[36:03] without any thinkings.
+[36:04] And for system 2, usually the
+model will first think around,
+[36:09] or what should we do, so
+there's some search process,
+[36:11] and then come up with
+other final solutions.
+[36:15] So usually for
+system 2, we think
+[36:19] there are two different
+discrete mode of operating,
+[36:23] and we want two different
+models to deal with these two
+[36:27] kind of thinkings separately.
+[36:30] And we can basically
+control on top of that
+[36:32] to ensure which one to use.
+[36:34] But now with the dual
+former, we actually
+[36:36] see the surprising behavior
+that once the model
+[36:39] trained on this mixture of data,
+it will automatically switch
+[36:43] between system 1 and system 2.
+[36:45] So sometimes the dual former
+will output the right token.
+[36:50] So once the dual former
+output [INAUDIBLE] token,
+[36:53] which means that
+the model start is
+[36:55] kind of slow-thinking
+process, and here it
+[36:57] gives you the actual plan.
+[36:59] Sometimes the
+model will give you
+[37:02] a plan token at the beginning,
+which means that the model will
+[37:06] directly give you the answer.
+[37:08] That's actually
+quite interesting.
+[37:10] So basically, you see
+that this kind of behavior
+[37:13] automatically emerges
+from the training
+[37:16] and without basically
+having human
+[37:19] giving explicit evaluation,
+explicit signals there.
+[37:23] So here you see that for the
+dual former bracket auto,
+[37:27] this means that this model
+is doing an auto mode.
+[37:31] We are free to let
+the dual former output
+[37:35] any kind of tokens.
+[37:36] In my output, a plan token,
+which is the system 1 settings,
+[37:41] and may also output
+a [INAUDIBLE] token,
+[37:43] which is the system 2 settings.
+[37:45] And in the same time, you
+see that the performance
+[37:48] is getting better than if
+your model only trained
+[37:51] on system 1 and the model
+trained on system 2.
+[37:55] And moreover, it's interesting
+to see that we can actually
+[37:58] control how the former is
+operating, but can only
+[38:03] control the first tokens.
+[38:04] So if we say the
+dual former is forced
+[38:07] to generate the first
+token called create,
+[38:10] then dual former is forced to be
+entering the system 2 settings,
+[38:14] which are slow settings.
+[38:15] If the dual former is forced to
+create a token called a plan,
+[38:20] then it will basically
+give you a system 1 output.
+[38:25] And interestingly, when you
+compare this dual former fast,
+[38:30] which means that
+the former is forced
+[38:31] to operate in a fast mode, with
+the dedicated fast models, that
+[38:37] is notified by solution only.
+[38:39] You see the performance
+is also getting better.
+[38:42] If you compare the
+dual former, which
+[38:44] is forced to be
+in the slow mode,
+[38:46] and you can see that
+its performance is also
+[38:48] better than the
+baselines that is
+[38:52] trained on complete trace, which
+means that it is forced to--
+[38:56] the model is dedicated
+to the slow mode.
+[38:59] So it's interesting that
+the model can switch
+[39:01] to both modes at the same time.
+[39:05] If the model is forced
+to use one mode,
+[39:07] it's also still better than
+the dedicated models trained
+[39:10] on particular data.
+[39:12] And we also try this
+idea in math problems.
+[39:16] So this problem
+is more realistic.
+[39:18] So for math problems,
+what do we do here
+[39:22] is that, so we start from
+this AugMATH data set, which
+[39:26] has a very long
+explanation about how
+[39:29] we arrive at the answers.
+[39:31] And then we can basically
+randomly decimate sentences
+[39:37] from the channel of sorts.
+[39:41] And then we can
+train the models.
+[39:43] And the resulting model is
+actually quite interesting.
+[39:46] It gives you much shorter
+and concise steps.
+[39:49] At the same time, it still
+gave you a little bit better
+[39:52] performance.
+[39:54] So here is the examples of
+the performance that you get.
+[39:57] So you see that in
+the previous work,
+[40:01] people already discover
+that by augmenting
+[40:04] the chain of [INAUDIBLE] with
+existing language models,
+[40:09] we create a data set called
+AugMATH, which is our baseline.
+[40:12] So this AugMATH already
+give you better performance
+[40:15] compared to the
+original mass data set.
+[40:18] But with our approach with
+different ratio of dropping,
+[40:23] we actually see even
+better performance.
+[40:25] And at the same time, the
+trace length is also shorter.
+[40:29] So in the end, we
+have these kind
+[40:32] of comparisons between the
+dual form and also the old one.
+[40:37] So you actually will see that
+the dual form will give you
+[40:39] the correct path towards the
+destination with all the export
+[40:46] states, as shown in the
+red, and the old one,
+[40:49] without any training,
+does not really
+[40:51] understand what's going on
+inside these main settings.
+[40:56] And we only give you
+a pass that basically
+[40:59] break all these situations
+with all the words.
+[41:02] So in this case, we show
+that after the training,
+[41:06] this dual former is able
+to do good planning,
+[41:10] and the planning is reasonable,
+and it's better than
+[41:13] the [INAUDIBLE] preview in
+these particular problems.
+[41:15] But I will say this is not a
+fair comparison because ideally
+[41:18] there should be a fine-tuned
+version on that particular data
+[41:22] set and see how good
+the performance is.
+[41:27] OK.
+[41:27] So now I conclude the second
+part of the option two.
+[41:31] So let's go to the last
+part of the option two,
+[41:34] how we can train the
+models and the solver
+[41:36] at the same time in
+end-to-end manner.
+[41:40] So for this one, we're
+talking about a little bit
+[41:44] different settings.
+[41:45] This setting is also using
+combinatorial solvers,
+[41:49] but it's applied to
+real-world problems that
+[41:54] requires optimization.
+[41:56] So think about, you
+want to optimize
+[41:59] very complicated functions.
+[42:02] They are differentiable,
+but at the same time,
+[42:05] it also need to subject to
+the combinatorial constraints.
+[42:11] So you have some
+combinatorial constraints,
+[42:13] and the objective is non-linear.
+[42:16] There are many different
+real-world domains that actually
+[42:20] fall into these categories.
+[42:22] So, for example, you want to
+optimize some computer systems.
+[42:25] You want to optimize
+some antenna designs,
+[42:28] optimize some
+devices in physics.
+[42:31] So all these problems,
+usually you cannot write down
+[42:35] the optimization
+problem in linear form,
+[42:37] and this will basically prevent
+you from directly calling
+[42:41] combinatorial solvers
+to solve the problems.
+[42:43] So here's the one
+example that we actually
+[42:45] encountered in our productions.
+[42:48] So this problem is like
+inviting table placement.
+[42:52] So suppose you have k tables
+that are [INAUDIBLE] tables,
+[42:56] and they have identical devices.
+[42:58] Here, devices means GPUs.
+[43:00] And then you want to place these
+k tables to identical devices
+[43:05] such that each device
+will have a lot of tables,
+[43:12] but does not exceed
+the memory capacities.
+[43:17] And the goal is to minimize
+the latency, which is
+[43:19] estimated by a neural network.
+[43:21] So if you want to formulate that
+problem in a mathematical way,
+[43:26] you actually end up
+with these formulations.
+[43:28] So here, x is a binary
+variable representing
+[43:33] that this table I is being
+placed to device J. OK,
+[43:39] so of course, like
+for each table I,
+[43:42] we want this one to be placed
+with device J, some device J.
+[43:45] So that's why you have
+some J. Xij equals 1.
+[43:50] And another constraint is
+that for all the device J,
+[43:55] you want to basically--
+[43:58] you don't want the
+final memory consumption
+[44:01] exceeding any memory budget.
+[44:03] That's why you
+have this sigma Xij
+[44:05] and I smaller than
+or equal to MJ.
+[44:08] So you have these
+three constraints.
+[44:10] And because Xij is a binary,
+this makes this entire problem
+[44:15] combinatorial.
+[44:16] And at the same time,
+the loss function
+[44:18] is non-linear because
+of system issues.
+[44:23] So there's a batching
+communication,
+[44:24] different issues that will lead
+to highly nonlinear objective
+[44:28] functions.
+[44:29] That is pretty hard and
+tricky to deal with.
+[44:32] Remember, if you use any kind
+of optimization technique--
+[44:36] for example, genetic algorithms,
+to solve this problem,
+[44:41] it may take forever to even
+find the feasible solutions.
+[44:44] So then the question is
+that, maybe we should still
+[44:48] get a good optimization
+solutions, and at the same time,
+[44:55] leveraging the existing
+combinatorial solvers.
+[44:58] So then what we can
+do is to install
+[45:01] solving the original problem
+in the original space that
+[45:05] is non-linear.
+[45:06] We can actually find
+a latent space such
+[45:09] that the problem becomes a
+little bit linear in the latent
+[45:13] space.
+[45:13] So what do we do here is
+that we first basically try
+[45:18] to learn a surrogate
+cause C. And basically,
+[45:22] this surrogate cause C is
+a function of the problem
+[45:26] description y.
+[45:27] So y is some description
+saying, like,
+[45:29] maybe how many GPUs
+do you have, what
+[45:32] are their memory capabilities.
+[45:35] So these are basically
+the problem descriptions.
+[45:38] So we first predict
+some surrogate cost.
+[45:41] And then given the
+surrogate cost,
+[45:43] you want to solve a
+linear problem, which
+[45:45] is shown on the right.
+[45:47] The linear problem will
+give you a solution x
+[45:49] star, which is a function of y.
+[45:51] We really want this linear
+problem, the final solution,
+[45:55] to optimize the original
+non-linear optimization
+[45:59] problems as much as possible.
+[46:02] So you have this kind of loop.
+[46:04] So how are you going
+to solve this problem?
+[46:07] It's actually very simple.
+[46:08] You can just leverage
+descent optimization.
+[46:12] So here's basically
+the computational graph
+[46:14] of the [INAUDIBLE]
+optimizations.
+[46:16] So you first start from
+the problem description y.
+[46:21] And that y, you first get
+into the C equals to Cy,
+[46:25] and this will basically give
+you a surrogate coefficient C.
+[46:29] And that C will be
+plugged into a solver.
+[46:32] And that solver will
+give you a solution.
+[46:34] That solution will be plugged
+into our objective, which
+[46:38] gives you the loss function.
+[46:39] So in order to find
+what is the best
+[46:43] way to represent the surrogate
+coefficients, what we can do
+[46:48] is that we can do
+back propagation.
+[46:51] So our goal is to find,
+OK, what is the best
+[46:54] way to minimize our loss?
+[46:56] And I don't care about all
+the intermediate stages,
+[46:58] but I just want to find,
+what is the best way
+[47:00] to minimize the loss subject so
+that the entire pipeline will
+[47:06] be working?
+[47:07] In order to do that,
+you want to find out,
+[47:09] what is the best way to
+specify the coefficients?
+[47:13] But what we can do is we can
+propagate all the way down,
+[47:15] and you can actually
+find the optimal weights
+[47:18] for that associate C equal
+to Cy parametrizations.
+[47:25] So we actually try these
+ideas in this embedding table
+[47:29] sharding.
+[47:29] And this is actually
+doing quite well.
+[47:32] So what we can see here
+is that, so here there's
+[47:36] two tables, or two figures.
+[47:38] The left figure basically
+shows the solution quality.
+[47:41] So we want the solution to
+be as low loss as possible.
+[47:46] Ideally, you want
+them to be zero.
+[47:47] That would be the best one.
+[47:49] And on the right,
+you want also want
+[47:53] to care about the
+deployment runtime.
+[47:56] You don't want the
+deployment to be too slow.
+[47:59] So you also want to also
+reduce the deployment runtime.
+[48:02] So in that case, we can actually
+leverage multiple variations
+[48:06] of our approach.
+[48:08] So we have these
+three variations.
+[48:11] One is called circle
+0, which is basically,
+[48:13] do the back propagation on
+the test time, which is slow,
+[48:17] of course, but it will
+give you good solutions.
+[48:19] We also have the
+circle prior, which
+[48:22] is another variation
+that directly learned
+[48:25] this C equals to
+Cy mapping and used
+[48:29] the mapping to directly predict
+the C and call the solver once.
+[48:32] Then you get a solution.
+[48:33] You also have a
+hybrid version of it,
+[48:36] which means that you first
+call the prior module
+[48:41] to find the initial value
+of C, and you continue
+[48:44] optimizing the C over time.
+[48:47] So then what we do,
+what we see here
+[48:48] is that our three
+variations actually
+[48:51] give you a very good
+trade-off between the solution
+[48:54] loss and the deployment time.
+[48:56] It's actually much
+better in solution loss
+[48:58] compared to the
+existing approaches.
+[49:01] So this includes domestic,
+heuristic, greedy, and also
+[49:04] the dream shot.
+[49:05] This is a kind of approach
+that uses reinforcement
+[49:07] learning to optimize these
+non-linear optimization
+[49:10] problems.
+[49:12] On the other hand, in term
+of deployment runtime,
+[49:15] our three approaches is also
+doing quite well, especially
+[49:21] for the circle prior,
+because you only
+[49:22] need to predict the
+coefficient C once,
+[49:27] and it's actually
+much, much faster.
+[49:29] And at the same
+time the performance
+[49:31] is also really, really good.
+[49:33] We also apply the same idea
+to other design problems.
+[49:37] So one initial design problem is
+called inverse photonic design.
+[49:40] So for that problem,
+what we do here
+[49:43] is that you have this kind of
+a very small 80 by 80 grid.
+[49:47] So this is shown
+on the top middle.
+[49:50] So this grid is super small.
+[49:53] It's in nanometers.
+[49:54] And the goal of this design is
+that once you send the lights
+[49:59] from the top, you want
+the design to change
+[50:03] the trace of the
+light so that it
+[50:06] will land onto different
+parts of the bottom,
+[50:10] depending on their wavelength.
+[50:12] So the reason why
+this can be done
+[50:15] is because once you put design
+in this very small nanometer
+[50:19] scale plate, then the light will
+basically behave like waves.
+[50:27] And the waves will interfere
+in the diffraction and diffract
+[50:31] at different places
+so that the light
+[50:35] will go to different places
+at different frequencies.
+[50:38] So the reason why we are not
+using any mirror to do that is
+[50:42] because the place is so small
+that you cannot place all
+[50:46] the mirrors there.
+[50:47] You have to use diffraction
+and interference in order
+[50:51] to make this happen.
+[50:53] We idealize two
+different routes.
+[50:57] Then the optimization problem
+obviously is very complicated.
+[50:59] So this optimization loss
+functions you want to optimize,
+[51:03] you have to first
+do a simulation.
+[51:06] Given the current setup of the
+design and given the simulation,
+[51:11] you want to compute
+the frequency response,
+[51:13] and then compute
+cutoff frequencies
+[51:15] and compute all these equations
+to find overall loss quantities.
+[51:21] OK, [INAUDIBLE].
+[51:23] But at the same time,
+the design space
+[51:25] is combinatorial
+because at every entry
+[51:28] of this 80 by 80 grid, you can
+choose either to put 1 or put 0
+[51:34] into this grid.
+[51:35] And this is a binary
+problem, of course,
+[51:38] but also you have a
+linear constraints,
+[51:40] which means that you want
+to find a feasible solution.
+[51:45] So the design has to be
+implemented by a brush.
+[51:49] So when you
+manufacture the object,
+[51:51] you have a brush to
+move these things around
+[51:54] in order to carve all
+these designs onto a plate.
+[51:58] So the size of the brush
+become constraints.
+[52:02] Now, you don't want to have
+one single dot out of nowhere
+[52:06] to be manufactured.
+[52:08] This is non-manufacturable.
+[52:09] So this actually gives
+you a different constraint
+[52:12] that can be written as
+a linear constraint,
+[52:15] but then the entire
+problem actually
+[52:17] become quite complicated.
+[52:21] So there are several
+different benchmarks
+[52:22] that people are thinking about.
+[52:24] So you can try to bend
+the light from the top all
+[52:27] the way to the left by
+using this kind of very
+[52:30] specific and nice
+aligner patterns.
+[52:33] You can also basically
+split the light
+[52:36] into two different streams.
+[52:38] It's called a beam splitter.
+[52:40] You can also do
+other kind of works
+[52:43] like the wavelength multiplier.
+[52:46] So then we are actually
+using our approach.
+[52:50] We're able to find a good
+designs using this optimization
+[52:53] technique.
+[52:55] And basically, this
+curve basically
+[52:56] show that our approach called
+circle zero and circle hybrid
+[53:00] have a much smoother basically
+convergence curve compared
+[53:05] to existing approaches, which
+is called the pass-through.
+[53:08] So this is also a good
+[INAUDIBLE] based approach,
+[53:12] but there's no
+neural talk involved,
+[53:14] and the curve looks
+very unstable,
+[53:17] and it takes a long
+time to converge.
+[53:20] Of course, there are
+limitations of such approaches.
+[53:25] So first of all, if the function
+f is not differentiable,
+[53:29] what should we do?
+[53:30] And also, during the
+training, we also we actually
+[53:33] need to call the solver
+every time, which is slow.
+[53:37] And you also require
+a [INAUDIBLE].
+[53:40] For these two, we actually have
+several follow-up work in order
+[53:45] to achieve these problems.
+[53:47] Due to time limitation, I won't
+be able to tell you the details,
+[53:51] but if you are interested,
+please feel free to reach out.
+[53:56] Feel free to read these papers.
+[53:57] And the code is already online.
+[54:00] OK, so this concludes
+the second part,
+[54:02] which is basically hybrid
+systems, the hybrid system that
+[54:06] can use both neural network,
+the larger models, and also
+[54:13] the solvers.
+[54:15] In the last part
+of the lecture, I'm
+[54:17] going to talk a little
+bit about option 3,
+[54:20] whether these
+models can actually
+[54:22] converge to anything symbolic.
+[54:24] So this is actually
+something that
+[54:26] can be very interesting
+because we all
+[54:29] know that there's actually two
+different conflicting narrations
+[54:33] in our daily debates
+in Twitter or X.
+[54:37] So there's one part of the
+people who actually say,
+[54:39] luxury model can do everything.
+[54:41] When the parameter of the models
+become larger, what you see
+[54:45] is you're going to see so many
+emergent behaviors with more
+[54:48] and more parameters.
+[54:50] So when you have more
+and more parameters,
+[54:52] then we will enjoy
+all these capabilities
+[54:54] without too much worry.
+[54:56] Then we can just sit down
+and do our usual work,
+[54:58] and the model will
+do [INAUDIBLE] later.
+[55:02] That's one way of seeing
+the entire situations.
+[55:07] But that's another
+different direction,
+[55:09] different kind of opinions.
+[55:13] And people actually also
+think about otherwise,
+[55:17] because for many experiments,
+what people actually
+[55:20] see is that maybe language
+model is not doing
+[55:23] anything really intelligent.
+[55:26] So maybe language model is
+basically just doing retrievals.
+[55:29] The reason why it
+is doing reasonably
+[55:31] well is because in training set,
+you already see good examples.
+[55:37] So recently in Apple, Apple
+actually have one paper
+[55:41] called The [INAUDIBLE] Symbolic.
+[55:43] That paper actually
+gave you this kind
+[55:45] of examples that by adding
+irrelevant topics, irrelevant
+[55:49] sentences into the GSM
+[INAUDIBLE] data set, all
+[55:54] of a sudden you see a huge
+drop of all the models'
+[55:58] performance on the test set.
+[56:00] So it's actually very surprising
+because the final answer is not
+[56:05] supposed to be changed after
+these random sentences being
+[56:08] inserted.
+[56:10] But unfortunately,
+all these models
+[56:12] will experience huge
+performance drop.
+[56:16] Then, how can we actually
+address these problems?
+[56:20] How can we understand
+better why and what kind
+[56:24] of representation language model
+is used to do the reasoning
+[56:28] and planning?
+[56:29] That's one of the core
+problems that people
+[56:31] may want to ponder on during
+their career and their studies.
+[56:37] So in order to
+achieve that, so here
+[56:39] I give you one example about how
+we should analyze and understand
+[56:44] the representation
+that is learned
+[56:47] by the natural language--
+[56:51] sorry, by the training
+of the language models.
+[56:54] Here's the one
+simple case, which
+[56:55] is called the modular addition.
+[56:57] This is a very
+simple reading task.
+[57:01] It's very simple.
+[57:01] So you basically give A and B.
+You want to predict what is C.
+[57:05] So basically predict
+the answer of addition.
+[57:08] But the addition is
+modular, which means
+[57:10] that there's a mode D here.
+[57:13] So if the C is too
+big, it will wrap back
+[57:15] to the smaller number that is
+in between 0 and D minus 1.
+[57:20] So for this task, you may
+wonder, it's very simple, right?
+[57:25] So there's only D squared
+number of possible inputs.
+[57:30] So this should be
+giving you something
+[57:35] that's super simple, that maybe
+the network after training
+[57:38] this model will have implicit
+tables to do retrievals.
+[57:42] But actually, it's not.
+[57:44] So what happened here
+is that people actually
+[57:46] discover the learned
+representation of such
+[57:49] a simple problem
+is a flawed basis.
+[57:52] So there's many papers that
+already show that large model,
+[57:57] once you train on
+this addition task,
+[58:00] they will actually show these
+very nice sine cosine curves
+[58:04] as a representation
+for different numbers.
+[58:07] The question is why?
+[58:08] It's very simple why
+you can see that.
+[58:11] So in order to explore
+what's happening
+[58:15] in the very recent
+work that I did,
+[58:19] we actually just used
+the two layer networks
+[58:22] to understand the
+behavior better.
+[58:24] So we have two layer networks,
+bottom layer and top layer.
+[58:27] And the bottom layer basically
+takes one representation
+[58:31] of A and B. And they
+are basically sending
+[58:33] to the two weights matrices.
+[58:36] And they add together,
+and then they
+[58:38] send to [INAUDIBLE]
+different hidden nodes.
+[58:41] Each was quadratic activations.
+[58:43] And then these activations
+will be sent to the top layer,
+[58:47] and it will give you a one
+[INAUDIBLE] representation.
+[58:50] As it will give you
+the output, the output
+[58:52] will be compared with the
+100 representaiton of C. Very
+[58:56] simple settings.
+[58:58] And surprisingly,
+you actually also see
+[59:00] a [INAUDIBLE] basis that is
+emerging from the training.
+[59:03] So in order to understand
+what's going on,
+[59:05] let's convert everything
+to Fourier domain.
+[59:07] Obviously, you should do that.
+[59:08] And that will make things
+much easier to analyze.
+[59:13] So you basically do
+the Fourier transform,
+[59:15] and you get Za, Zb, Zc.
+[59:17] You have all these complex
+number coefficients.
+[59:21] Because this original
+Wa, Wb, Wc are real,
+[59:26] there are some
+additional conditions
+[59:28] that need to hold
+which the permission
+[59:31] conditions for the associated
+complex numbers, Za, Zb, and Zc.
+[59:38] So given all these
+settings, let's
+[59:40] look at what the gradient
+descent solution look like.
+[59:45] It actually very regular.
+[59:47] So here that the figure
+is two-dimensional,
+[59:50] the x-axis is a
+hidden node index.
+[59:53] So here you have
+very simple settings.
+[59:55] You have D equals to
+7 and Q equals 20.
+[59:59] So Q is the number
+of hidden neurons.
+[01:00:02] So these hidden neurons index
+from 0 all the way to 19.
+[01:00:07] And for y-axis,
+that's the frequency
+[01:00:10] of the Fourier transform.
+[01:00:12] So what you can see here
+is that for each frequency,
+[01:00:16] there's actually a
+few hidden neurons
+[01:00:20] that will show
+strong frequencies
+[01:00:24] at that particular frequency
+k, a strong response
+[01:00:26] of that frequency k.
+[01:00:28] So if you check how
+many neurons are showing
+[01:00:32] strong correspondence,
+strong response
+[01:00:36] for that particular
+frequency, you
+[01:00:38] can see that that
+number of neurons
+[01:00:41] is having a very
+interesting structure.
+[01:00:44] So if you check for
+each frequency k--
+[01:00:47] so for frequency
+k equals to 1, you
+[01:00:49] see there's 1, 2, 3,
+4, 5, 6, neurons that
+[01:00:53] show super high response
+of that frequency.
+[01:00:56] For k equals 2, you also
+get 1, 2, 3, 4, 5, 6.
+[01:01:00] You get all the six solutions.
+[01:01:04] Of course, you also will
+see all the four solutions.
+[01:01:07] So this is another example.
+[01:01:09] So for [INAUDIBLE] 1,
+you see 1, 2, 3, 4.
+[01:01:12] There's four solutions.
+[01:01:13] But you also see some bias
+terms across the other neurons.
+[01:01:18] And so far you have
+seen all of six or four.
+[01:01:22] But is there any others?
+[01:01:24] Also is interesting, though,
+if you check more statistics
+[01:01:28] on gradient descent
+solutions, so here
+[01:01:30] the statistics on D equals 23.
+[01:01:33] So the figure to the left
+shows all the training curves.
+[01:01:36] And the right shows
+distribution of the orders
+[01:01:41] at different frequencies.
+[01:01:42] And you see very
+sharp peaks at 4
+[01:01:45] or 6, 4, and 6 in these figures.
+[01:01:49] Very clear.
+[01:01:50] And what happened
+to larger setups?
+[01:01:54] Now we have studio settings.
+[01:01:56] So D equals to 23, D equals
+to 71, D equals to 127.
+[01:02:02] And also with different
+weight decays.
+[01:02:04] So you see that
+most of the cases,
+[01:02:07] you still see two peaks,
+order 6 and order 4,
+[01:02:13] unless that you have
+a very strong weight
+[01:02:15] decay in which all the
+solutions, collapse
+[01:02:18] into order 0, which
+means that there's
+[01:02:20] no solutions or everything is 0.
+[01:02:22] And other than that, you
+see strong peaks there.
+[01:02:27] OK, then why?
+[01:02:28] So in this paper, what we see
+is that we actually come with--
+[01:02:32] we find a nice structure of
+the loss function solutions.
+[01:02:36] That structure can be
+useful for expanding
+[01:02:39] what's happening there.
+[01:02:40] So first of all, you want
+to rewrite this MSE loss
+[01:02:45] into this form.
+[01:02:46] It has quite complicated terms.
+[01:02:49] It has 1 minus term
+and also three terms
+[01:02:51] that are sum of squares.
+[01:02:54] And this term is
+representing in this way.
+[01:02:57] So you have the red
+one and the blue one.
+[01:03:00] Sorry, and the green one.
+[01:03:02] And you might wonder, OK,
+why don't you write this MSE
+[01:03:04] loss into such an ugly form?
+[01:03:06] That's does seem
+to be interesting.
+[01:03:09] But interestingly,
+given these forms,
+[01:03:12] we first can come up with
+a sufficient condition
+[01:03:15] of the global solutions.
+[01:03:18] Obviously, if you set
+this [INAUDIBLE] to 1
+[01:03:21] and all the sum of squared terms
+to 0, you get global solutions.
+[01:03:27] But then the question is like,
+why and how to achieve that?
+[01:03:32] The objective is
+highly non-linear.
+[01:03:34] However, in order
+to achieve that,
+[01:03:37] you can actually leverage some
+very nice algebraic structure
+[01:03:41] that's happening in
+the two-layer network.
+[01:03:44] First of all, we
+consider all the spaces
+[01:03:47] of two-layer networks,
+but with different number
+[01:03:50] of hidden nodes.
+[01:03:51] So this space is big Z. It
+actually have nice structures.
+[01:03:56] The structure is called
+semiring structure.
+[01:03:58] If you define a ring addition
+to being a concatenation of two
+[01:04:03] hidden neurons
+and multiplication
+[01:04:06] being a Kronecker product
+along the hidden dimensions,
+[01:04:09] then this entire structure
+becomes semiring.
+[01:04:12] And what makes
+things interesting
+[01:04:14] is that these two terms that is
+happening in the previous loss
+[01:04:20] functions, they are actually
+the ring homomorphisms.
+[01:04:24] So what is ring homomorphism?
+[01:04:25] It's actually very simple.
+[01:04:26] Basically, you want that--
+basically this function
+[01:04:31] is a ring homomorphism.
+[01:04:32] If that particular function
+respect the addition
+[01:04:37] and multiplication across
+ring and normal addition
+[01:04:41] and multiplication, then
+they are ring homomorphisms.
+[01:04:44] So what does that implication
+is that you actually will see,
+[01:04:50] you can start with
+partial solutions.
+[01:04:52] So suppose Z1 is
+a partial solution
+[01:04:55] that is only satisfy one single
+term of your loss functions,
+[01:05:00] and Z2 is another
+partial solution
+[01:05:03] that only satisfy another single
+term of your loss solutions.
+[01:05:08] They are part solutions.
+[01:05:09] They are not the
+entire solution.
+[01:05:11] But interestingly, because
+of the ring structure,
+[01:05:14] if you multiply
+these two together,
+[01:05:16] then the resulting Z will
+satisfy both of the constraints
+[01:05:23] at the same time.
+[01:05:26] So what does that mean?
+[01:05:27] What does that mean is
+that you can actually
+[01:05:29] start with some partial
+solutions that are very partial.
+[01:05:31] They only satisfy some
+part of the constraints,
+[01:05:34] but you can gradually construct
+more and more complicated
+[01:05:37] solutions with
+your multiplication
+[01:05:40] and your addition.
+[01:05:41] And then it will
+actually give you
+[01:05:43] the global optimization,
+global solutions,
+[01:05:46] to your original loss functions.
+[01:05:49] So the entire process does
+not require gradient descent.
+[01:05:52] You just construct
+this algebraically,
+[01:05:55] and then you will
+get a solution that
+[01:05:58] is global optimal to the
+original loss functions.
+[01:06:03] So you can construct
+a solution this way.
+[01:06:06] You can construct a
+solution like order 6
+[01:06:07] by multiplying all those three
+and all the two solutions
+[01:06:11] together and add over all
+the possible frequencies.
+[01:06:15] You can also construct
+all the four solutions.
+[01:06:19] You can also construct
+solutions that
+[01:06:21] correspond to the perfect
+memorization, which is actually
+[01:06:23] all these solutions.
+[01:06:26] So these control
+solutions are nice,
+[01:06:28] but people may
+wonder, OK, how is
+[01:06:30] this related to the real world?
+[01:06:32] This is, in some sense, a
+symbolic and abstract world
+[01:06:35] created by mathematicians.
+[01:06:37] We have nothing to do
+with the real world.
+[01:06:40] But actually, what
+happened here is
+[01:06:41] that if you compare
+the gradient descent
+[01:06:44] solutions with the solution
+that are constructed previously,
+[01:06:47] we can actually see an
+exact match between the two.
+[01:06:51] So first of all, in these
+particular settings,
+[01:06:55] you can see all the
+different solutions.
+[01:06:59] There are either four
+or six, which is already
+[01:07:02] shown in this histogram.
+[01:07:04] And also, if you pick this order
+six or order four solutions
+[01:07:09] and you try to
+factorize them according
+[01:07:12] to the previous defined
+ring multiplication,
+[01:07:16] you realize that 95%
+of the solution, they
+[01:07:19] can be factorized into
+either 2 by 3 or 2
+[01:07:22] by 2, which is the same
+as the construction
+[01:07:25] that we previously did in
+our theoretical construction.
+[01:07:31] And their factorization
+error is small.
+[01:07:34] And finally, if you check every
+entry of the factorization, what
+[01:07:39] you see is that 98%
+of solutions actually
+[01:07:41] can be factorizable into
+the constructive forms.
+[01:07:44] They actually fall into the form
+that we constructed previously,
+[01:07:50] which means that the gradient
+descent solution matches
+[01:07:53] very well with the construction
+from the theoretical side.
+[01:07:57] That is quite interesting.
+[01:07:59] And also, if you
+check distribution
+[01:08:01] of the parameter
+in the solutions,
+[01:08:04] you actually see very
+nice, regular structures.
+[01:08:07] The sharp peaks and
+different angles
+[01:08:10] that correspond to
+the higher symmetries.
+[01:08:13] So this is something
+that's quite interesting
+[01:08:15] that haven't been
+explored yet, but that
+[01:08:17] can be nice for our papers
+to understand them better.
+[01:08:22] So what are all
+these implications?
+[01:08:25] So first of all, so it's kind of
+surprising that neural networks,
+[01:08:30] if you run this
+on top of that, it
+[01:08:32] will give you a
+solution that is very
+[01:08:36] similar to symbolic
+representation.
+[01:08:38] So maybe in general, the neural
+network or maybe large models
+[01:08:43] will also converge to some
+solution that is symbolic,
+[01:08:46] but we don't know or we
+haven't constructed yet.
+[01:08:48] But here we just give you an
+example, a reasoning task,
+[01:08:52] will give you a solution that is
+symbolic after the training was
+[01:08:55] given assent.
+[01:08:57] And second, it will give
+you an alternative path
+[01:09:01] to what's the solution
+other than gradient descent.
+[01:09:04] So you can think about gradient
+descent can give you a solution,
+[01:09:07] but you can also have some
+advanced algebraic operation
+[01:09:11] that is also giving you
+the same kind of solutions.
+[01:09:13] So maybe in the future, we
+don't need a gradient descent
+[01:09:15] any more.
+[01:09:16] We just need a
+geometric constructions
+[01:09:18] to combine small solution
+to the larger solutions.
+[01:09:21] And then maybe gradient descent
+will become obsolete eventually.
+[01:09:25] So that's why I want to
+introduce this part of work.
+[01:09:28] So this might suggest
+a different path
+[01:09:31] compared to the existing
+path that we have.
+[01:09:33] In the future, instead of
+having people complaining
+[01:09:35] about the distributed
+system not working well,
+[01:09:39] we can open the black box
+and have a peaceful approach
+[01:09:41] to do this.
+[01:09:42] Thanks for your attention.

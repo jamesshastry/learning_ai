@@ -1,0 +1,1813 @@
+[00:05] Okay, let's get started.
+[00:07] So, today is the second day on data.
+[00:12] Um, last time we talked about how data
+[00:15] doesn't really just fall from the sky.
+[00:17] You actually have to think about where
+[00:19] it comes from. Um, so in general, the
+[00:21] internet consists of live services. um
+[00:24] these
+[00:26] um the data on those services have to be
+[00:28] either dumped or crawled and then
+[00:31] there's additional step where you have
+[00:33] to process the data and we also talked
+[00:36] about various um social societal
+[00:39] considerations
+[00:41] um terms of service copyright you have
+[00:43] to either get a license or appeal to
+[00:45] fair use. So there's a lot of complexity
+[00:48] that goes into data. Um so today we're
+[00:51] going to look more at the data pipeline
+[00:54] from transforming the data, filtering
+[00:56] the data, dduplication and mixing. Um
+[01:00] and then we're going to top it off by
+[01:02] talking a bit about um post-training
+[01:05] data um in particular how folks are
+[01:09] using synthetic data these days. So the
+[01:12] first part is going to be mostly about
+[01:14] pre-training. That's what you should
+[01:15] have in mind.
+[01:17] So we talked a little bit about data
+[01:20] transformation already, but just as a
+[01:22] kind of reminder. So raw data doesn't
+[01:25] come as text. Even as if you've you've
+[01:29] scraped something. If you ever look at
+[01:31] inside Chromic Crawl, it's it's not
+[01:33] text. It's either HTML. Sometimes it
+[01:36] could be PDFs or directories in the case
+[01:40] of uh GitHub.
+[01:42] So most of the tension on transforming
+[01:46] data is dealing with HTML because most
+[01:48] of the web is in HTML
+[01:51] and for this processing there's a lot of
+[01:54] this is fairly heristic um there's
+[01:57] removing of boilerplate um like
+[01:59] navigation and ads um and extracting
+[02:02] content um which is like the main part
+[02:04] of the page and there's some you know
+[02:08] subtleties around what constitutes
+[02:10] content usually
+[02:11] um you get rid of the footers and
+[02:13] headers um and maybe menus and those
+[02:17] things and you try try to extract the
+[02:19] content but you could imagine in cases
+[02:22] where some of the the navigation
+[02:24] elements might be might be helpful to
+[02:26] learn what web pages look like. So what
+[02:28] is content and what is not content is
+[02:30] not always clear and then what do you do
+[02:34] about images and tables are on in web
+[02:37] pages. Um so inherently this is a lossy
+[02:41] process because you need to linearize
+[02:44] HTML which at least is either
+[02:46] hierarchical or visual if you think
+[02:48] about the rendered uh output and do a
+[02:51] sequence of tokens. In particular tables
+[02:53] are um a bit tricky to deal with. Simple
+[02:56] tables you can render um using markdown
+[03:00] but if you have nested tables then that
+[03:02] becomes quite uh challenging. you have
+[03:04] to give ups at some point or approximate
+[03:08] at some point. Um so typically HTML to
+[03:12] text processing is is rule-based and the
+[03:18] reason for this is that rulebased um
+[03:20] processors are very fast um and and also
+[03:26] um they you're not trying to do too much
+[03:28] here. You don't need too much
+[03:30] intelligence. So rule-based generally
+[03:32] works. Um now I think there could be a
+[03:35] case for model based um interventions at
+[03:39] this point. They have to be very fast
+[03:41] and they have to you know do something
+[03:43] um more more intelligent. But if you
+[03:46] ever look at data you'll notice there
+[03:48] are um imperfections in the data just
+[03:50] because any rule-based uh processing is
+[03:53] going to be um is have some failure
+[03:56] rate. As we showed last time, the
+[03:59] accuracy uh does matter depending on
+[04:02] which tool you choose. Um
+[04:05] if you use Brazil parse or Traflera,
+[04:07] then it's you know I guess Brazilia
+[04:10] parse on these extended DCLM you know
+[04:14] eval um works better um than the others.
+[04:19] Um I'll talk also briefly about PDFs. So
+[04:22] there this uh hugging face work um which
+[04:25] released a data set called find PDFs. Um
+[04:28] so PDF files if you have open them up
+[04:30] not in um PDF reader um looks looks kind
+[04:34] of like this. Um and this needs to get
+[04:37] kind of rendered. Um so PDFs can be
+[04:41] found on just like web pages on the the
+[04:44] internets and common crawl u does um
+[04:48] have you know some PDFs. Um, generally
+[04:51] common call focus on text, but sometimes
+[04:54] if you're just given a URL, you might
+[04:56] not even know before you fetch it
+[04:57] whether it's a PDF or or not if it
+[04:59] doesn't have the extension.
+[05:02] Um, there's a lot if you read this blog
+[05:04] post there's a lot of details which I'll
+[05:06] spare you of. Um, for example, one thing
+[05:10] is that uh many of the PDFs that are in
+[05:12] comic crawl are truncated because PDFs
+[05:14] are big. So then that re demands that
+[05:18] rec crawling is necessary and then
+[05:20] there's a question once you have the PDF
+[05:21] file how do you actually convert it to
+[05:23] text um and you know some PDFs are might
+[05:27] be just scans as well right so they're
+[05:29] essentially images so there's a bunch of
+[05:32] tools that um this paper uh tried out um
+[05:36] but mostly this kind of involves um
+[05:38] running OCR um using a VLM and this
+[05:42] obviously can be much more expensive
+[05:44] than what we were doing before with
+[05:46] text. Fortunately PE or unfortunately uh
+[05:50] the PDFs are a very small fraction of
+[05:52] the whole internet but um they are very
+[05:56] valuable um because generally if you
+[05:58] bother to make a PDF that means you
+[06:00] probably have something um interesting
+[06:02] to say as opposed to a web page. So the
+[06:05] uh quality of a PDF is average PDF is
+[06:09] generally higher than uh for um for a
+[06:13] HTML file.
+[06:14] there's a lot of clean up and filtering
+[06:16] and PDFs more so even then than web
+[06:20] pages a lot of layout information is
+[06:22] missing um because uh in HTML you have
+[06:26] various tags like H1 and P that gives
+[06:29] you some semantic information PDFs are
+[06:32] by design all about layout so you don't
+[06:35] necessarily um they preserve the the
+[06:38] kind of the semantic structure
+[06:42] okay so there's a bunch of
+[06:43] transformation information that happens
+[06:45] at this point. You have uh text um um
+[06:50] and but you're not done. You're far from
+[06:53] done. So the next step is filtering.
+[06:56] So um I'm going to talk somewhat
+[06:58] abstractly about what filtering is.
+[07:02] Here's a sort of the building block. So
+[07:05] suppose you have some target data that
+[07:07] you uh want to get. Um this is usually a
+[07:11] small amount of high quality data and
+[07:13] lots of raw data. This is the the the
+[07:17] fresh shipment of the uh the tokens that
+[07:20] you do transform from the the previous
+[07:22] step and the goal is to find uh a subset
+[07:26] of this raw data that is similar to
+[07:29] target. So this is the general skeleton
+[07:32] for filtering and may almost all kind of
+[07:35] filtering falls into this uh this uh
+[07:38] schema.
+[07:39] So filtering, you could there's many
+[07:41] reasons you might want to filter. Uh if
+[07:42] you're training um an English language
+[07:45] model or a German language model, you
+[07:48] might want to identify the language and
+[07:49] filter things that don't match that that
+[07:52] language. Um the main reason for
+[07:54] filtering is is quality filtering. You
+[07:56] want to find things that are high
+[07:58] quality as opposed to low quality. You
+[08:00] don't want just uh you know spam. You
+[08:02] want um encyclopedia information. Um and
+[08:07] and then another application is uh
+[08:09] toxicity filtering. Of course, the
+[08:11] internet has plenty of nasty content and
+[08:14] maybe you don't want to train your
+[08:15] language model on that.
+[08:19] Okay, so for a filtering algorithm, you
+[08:21] want that you want some generalization
+[08:24] from the target data, right? Because you
+[08:26] already have the target data. You don't
+[08:28] want to just only get the target data
+[08:30] but um you also want it to be extremely
+[08:34] fast because you have to run it on the
+[08:37] whole internet. So this could be uh 100
+[08:40] trillion tokens worth of worth of data.
+[08:44] So generally filtering is you end up
+[08:46] with a very small fraction single digits
+[08:49] fraction of your entire um data.
+[08:54] Okay. So, so remember the general
+[08:55] framework given the target uh and raw
+[09:00] you're trying to find a subset. Okay. So
+[09:02] the general scheme is that you estimate
+[09:05] some sort of model based on R&T and
+[09:08] derive a scoring function and then you
+[09:10] keep the examples in R based on their
+[09:12] score. So typically there are two uh
+[09:16] types of classifiers. One are generative
+[09:18] models. Uh so this is basically um you
+[09:23] have your target data you can just um
+[09:27] you know estimate a model of that data
+[09:30] and remember this has to be cheap so
+[09:33] probably you're not training a big
+[09:34] language model generally um klm
+[09:37] basically says I'm going to train a five
+[09:39] gram uh model
+[09:41] um a more common thing um which I think
+[09:44] we're mostly seeing these days is just
+[09:46] train a classifier and The classifier
+[09:49] says, I'm going to predict a positive
+[09:52] label for examples that are in t my
+[09:56] target and negative labels for things
+[09:59] that are in raw but not in t. So you
+[10:03] basically it looks like t are your
+[10:07] positive examples. Um some random subset
+[10:09] of r your negative examples. You maybe
+[10:12] balance it and then you train a
+[10:13] classifier.
+[10:16] And the tool that people generally use
+[10:18] is fast text because it's fast uh and
+[10:21] it's generally it's just a linear
+[10:23] classifier bag of words. And then once
+[10:26] you have this model now for every new
+[10:29] document you can score it and you set
+[10:31] some appropriate threshold depending on
+[10:33] your quality bar and you keep the
+[10:37] examples sometimes stochcastically
+[10:38] sometimes not.
+[10:41] Okay. So, so this is a very much a model
+[10:45] based filtering approach. Remember from
+[10:47] the last lecture, there are many data
+[10:49] sets um from you know generally a few
+[10:52] years ago that did not use modelbased
+[10:55] filtering because they wanted to not
+[10:57] bias things too much. These days I think
+[11:01] uh basically everyone does some amount
+[11:03] of modelbased filtering because um uh
+[11:07] unless you are compute plentiful which
+[11:10] in which case you probably don't need to
+[11:12] do as much filtering. You can just train
+[11:14] on everything. Most people are compute
+[11:16] uh poor um you have to be very smart
+[11:20] about how you're filtering. Otherwise
+[11:21] you're just wasting flops on kind of
+[11:24] lowquality content.
+[11:27] Okay, so let me talk through some
+[11:29] instantiations of of filtering. So
+[11:32] remember I mentioned language
+[11:33] identification. Um so the goal is just
+[11:37] to find given a piece of text, detect
+[11:39] whether it's of a particular language.
+[11:42] Um so Meta has trained these set of fast
+[11:45] text language identification models
+[11:47] which often you can just use off the
+[11:49] shelf. So it supports 176 different
+[11:52] languages. It's been trained on uh a
+[11:55] bunch of multilingual sites. So,
+[11:56] Wikipedia, remember, has a lot of
+[11:58] languages. There's also translation
+[12:00] sites um and sites for different
+[12:02] languages. So, um a language ID is is
+[12:06] generally a fairly easy problem compared
+[12:09] to many other tasks that we're dealing
+[12:12] with. So, a simple classifier, if you
+[12:14] look at a few words, you can tell that
+[12:16] it's Spanish or or or Japanese. Now this
+[12:19] does you know there are subtleties
+[12:21] because of code switching and text and
+[12:24] there's some dialects. So it's I
+[12:25] wouldn't say it's like an absolutely
+[12:27] solved problem but you know this is not
+[12:30] really the bottleneck for training a
+[12:31] good language model.
+[12:34] Um okay and then you can just so once
+[12:37] you have your classifier you just choose
+[12:38] some threshold. Um this is generally
+[12:40] fairly heristic.
+[12:43] So um another thing you can do with
+[12:46] filtering is that suppose you're looking
+[12:48] for data of a certain type. So let's say
+[12:51] you want to get really good at math. So
+[12:52] you go want to go and find a bunch of
+[12:54] math data. So uh open math text is this
+[12:58] um paper from 2023 where the goal is to
+[13:01] create a large corpus of math text. Um
+[13:04] this pipeline is consists of a few
+[13:07] steps. Um so it's not training a single
+[13:10] classifier. So first you use some rules
+[13:11] to filter does it contain latte
+[13:14] commands. Um you they also use kenlm. So
+[13:17] this is a generative approach um and
+[13:20] trained it on the proof pile which is a
+[13:22] known data set of math and keep it if
+[13:25] the perplexity is uh you know below some
+[13:28] threshold. Um and then you also train a
+[13:32] fastax classifier to predict whether
+[13:34] it's mathematical writing um or not. And
+[13:38] there's, you know, two different
+[13:40] thresholds. If it has latte in it, then
+[13:42] it's a higher bar. If it's uh sorry, if
+[13:44] it's it's a lower bar, but if it's uh
+[13:47] doesn't have latte in it, it's a higher
+[13:49] bar. Um and then as a result, they got
+[13:53] you know 15 billion uh tokens which they
+[13:56] use to train models. And as a paper they
+[13:58] show that um this more targeted security
+[14:01] data collection results in models that
+[14:03] are better than math at math than models
+[14:06] that were trained on 20 times much data
+[14:08] which were not filtered in this way.
+[14:12] Okay. So the the quality filtering again
+[14:14] think about it as a tool. Um you can
+[14:17] define quality however you want. There's
+[14:20] no universal notion of quality. If you
+[14:21] want define quality to be math then you
+[14:23] can go and get math and you get better
+[14:25] at it.
+[14:26] Um so GPT3 I think I mentioned this last
+[14:29] time but just to put it in this
+[14:31] framework. So positive examples are
+[14:33] Wikipedia
+[14:35] um web text. So these are pages that um
+[14:38] link out from high uh you know star
+[14:41] Reddit posts and some books and
+[14:44] negatives are generally sampled from the
+[14:46] the web. Um they train a linear
+[14:48] classifier and keep documents if the
+[14:50] linear classifier is scored um highly
+[14:52] enough. Um there's the first llama paper
+[14:56] the positives were pages referenced by
+[14:59] Wikipedia not Wikipedia articles
+[15:01] themselves um and the it's just kind of
+[15:04] the same idea. So uh 51 from Microsoft
+[15:09] um is interestingly had um you know also
+[15:15] falls into this framework. So um they
+[15:20] um started with the raw data is not
+[15:23] already a Python subset of the stack
+[15:25] remember which is this uh all you know
+[15:27] code and um they they're uh
+[15:32] the the prompt they define a prompt
+[15:34] which is determine educational value and
+[15:37] then they use GPD4
+[15:40] to classify uh a subset of R 100k subset
+[15:45] of the R with this prompt.
+[15:47] and see if it's uh and the ones that are
+[15:52] positive are kept and called the target.
+[15:55] Right? So the target here is actually
+[15:57] output of an expensive um you know
+[16:00] classifier
+[16:02] and then you train a cheaper classifier
+[16:04] in their case a random forest but you
+[16:05] could have probably used fast text as as
+[16:07] well. Um and uh and then you select data
+[16:12] that is um classified positive by this
+[16:15] this classifier. And they also show that
+[16:18] using this uh data set you do uh much
+[16:21] better than if you're just using um the
+[16:24] raw data. So this performance goes up in
+[16:27] fewer steps to a higher value.
+[16:32] Okay. So toxicity kind of works the same
+[16:36] way. There's this data set Jigsaw toxic
+[16:38] uh comments um where it came from this
+[16:42] project where the goal is to help people
+[16:44] have better discussions online. So here
+[16:46] the data is the Wikipedia talk pages um
+[16:50] which can I guess for controversial
+[16:52] sites get quite uh heated and this has
+[16:56] been annotated with whether there are
+[16:58] any any toxic comments on there and you
+[17:02] can similarly define positive and
+[17:03] negative examples and you can train a
+[17:05] classifier on that.
+[17:08] Okay. So, so now I think you have the
+[17:12] tools or some examples and inspiration.
+[17:15] You can identify um a particular type of
+[17:19] data that you want. You build a
+[17:21] classifier for it and then you can go
+[17:23] filter common crawl for that.
+[17:26] I want to talk about one uh subtlety
+[17:29] here u which is that you know the notion
+[17:32] of what you want for data is actually
+[17:36] depends on what model you want to train.
+[17:38] So in particular, it depends on the
+[17:39] number of tokens uh you're training on.
+[17:42] And so there's no optimal threshold. So
+[17:44] before when I looked at the the
+[17:46] classifier gives you a score um there's
+[17:49] you can't say 0.9 and say that's the
+[17:51] best because it depends on what you want
+[17:52] to do. Intuitively
+[17:55] if you are going to train for a longer
+[17:57] period of time then you can tolerate
+[18:00] lower quality data. If you're training
+[18:03] for shorter then uh you you want higher
+[18:08] quality data in general. Okay. And of
+[18:12] course you know if if you could wave of
+[18:15] magic one if you're training for longer
+[18:17] you want more high quality data but
+[18:18] that's not an option that you're given
+[18:20] the data pool is what it is.
+[18:24] So here's an a kind of a a preliminary
+[18:27] experiment um uh that Michael Ryan did
+[18:31] and uh so basically this plot shows for
+[18:34] a 157 million parameter model um we're
+[18:37] taking a very small uh pool so uh 100 uh
+[18:42] you know works which is a tiny fraction
+[18:44] of common crawl and um we're look
+[18:47] training and training um for more
+[18:52] uh over time. So let's take a look at
+[18:55] the blue curve. So the blue curve is
+[18:57] DCLM. And so the the loss starts here
+[19:01] and then it comes down and each of these
+[19:04] lines is when you uh epoch over the
+[19:07] data. So this is one epoch and then the
+[19:09] next blue is the second epoch and so on
+[19:11] and so forth. So there's not that much
+[19:13] data. So eventually you have to repeat
+[19:15] your data and um you know the loss
+[19:18] continues going down um because the
+[19:21] second time you look at the data you're
+[19:22] still learning things and at some point
+[19:24] you start to to overfit.
+[19:27] Okay. Um whereas if you look at
+[19:29] resilient pars this is basically no
+[19:31] filtering. Um so here it's it's much
+[19:35] worse in the beginning. Um but as you
+[19:38] continue and continue um at some point
+[19:40] you also epoch um it starts to go down
+[19:43] you know slower. So you kind of see this
+[19:45] trend where high quality data is better
+[19:49] in this regime where you're not epoing
+[19:52] but once you get to lots and lots of
+[19:55] tokens um high quality data is no longer
+[19:59] that uh great. And of course you with
+[20:01] high quality data you you wouldn't even
+[20:03] get you wouldn't want to go into this
+[20:05] regime because you're overfitting.
+[20:06] You'll probably stop here. But even this
+[20:08] at this point this is worse than if you
+[20:10] had trained for longer using low quality
+[20:13] data.
+[20:14] >> Yeah.
+[20:15] >> Just a question about like the um
+[20:18] computing the metrics. This is actually
+[20:20] not like totally about graph but like
+[20:21] when you're like each of those dots
+[20:23] correspond with one training one
+[20:25] training run, right?
+[20:26] >> Yes. um do you ever need to do the
+[20:28] confidence interval when you're doing
+[20:29] these kind of pre-training experiments
+[20:31] or like is it kind of enough just to do
+[20:34] it one time?
+[20:35] >> So the question is each of these points
+[20:37] is a single training run and uh should
+[20:41] you do it multiple times and get
+[20:42] confidence intervals? Um ideally that
+[20:45] would be good practice. Um often you'll
+[20:48] see in these papers that um these are
+[20:51] kind of scarce because each training run
+[20:54] is fairly expensive. Um so you but but
+[20:59] in reality when we have done these
+[21:01] experiments it's generally tends to be
+[21:04] stable I would say at least for
+[21:06] pre-training.
+[21:07] >> Yeah.
+[21:08] >> Yeah. So you mentioned uh like trading
+[21:11] for longer and high quality data as
+[21:14] that's not like a combination that we're
+[21:16] considering but like like if if we are
+[21:19] trading with uh for longer on this high
+[21:22] quality data um would it have
+[21:24] diminishing returns compared to like
+[21:27] training for longer with quality data?
+[21:29] >> Yeah. So the question is if you were
+[21:31] able to get higher quality data and you
+[21:33] train for longer would it still have
+[21:35] diminishing returns? Um, every data set
+[21:38] is going to have the machine returns
+[21:40] eventually. Uh, that's finite. Um, but
+[21:44] it would just it would probably be here.
+[21:46] It would just like be down here and just
+[21:48] just keep on going down.
+[21:53] Okay, great. Let's let's move on. So,
+[21:56] summary, filtering is is pretty critical
+[21:59] for building a good model, especially
+[22:01] when you're computed like most of us. Um
+[22:05] technically if you have infinite compute
+[22:07] you don't need to filter and you can
+[22:09] train on everything and it'll be a giant
+[22:11] model but um realistically everyone has
+[22:14] to filter.
+[22:16] Um so and the recipe here is figure out
+[22:19] what good data looks like and then you
+[22:23] can train a classifier and that will
+[22:25] extrapolate to the rest of your model.
+[22:28] and what the good data looks like. You
+[22:31] can either find it by saying, "Aha,
+[22:33] there's this data set out there that I
+[22:35] really like and I just want more of it."
+[22:37] Or you can craft a prompt um to a
+[22:39] language model and then use that to
+[22:42] construct um to do a sort of a
+[22:44] preliminary filter of a large pool and
+[22:46] then use that uh good quality data to
+[22:49] train a smaller classifier and
+[22:50] extrapolate to everyone else.
+[22:55] Okay, next I'm going to talk about
+[22:57] dduplication. So at this point we have
+[23:00] uh filtered our data set so we only have
+[23:04] what we deem to be high quality data. Um
+[23:07] but you know
+[23:10] often data still has duplicates in it
+[23:14] and um there's you know two types of
+[23:17] duplicates. There's exact duplicates. So
+[23:20] this happens when um for example if you
+[23:23] look at these um mirror sites the whole
+[23:26] point of a mirror is that it's a
+[23:27] duplicate and you know sometimes the web
+[23:30] crawler isn't smart enough to know that
+[23:32] this mirror is exactly this mirror so it
+[23:34] just crawls um many uh sites and you'll
+[23:38] get this exact same content.
+[23:40] Um also when you fork a repo um that is
+[23:44] also um a a duplicate. um even if you
+[23:48] make changes probably you're making
+[23:50] changes to a few files so 99% of that
+[23:53] repo might be uh the same. So duplicate
+[23:56] is is um abundant um and yeah sometimes
+[24:01] there's actually near duplicates which
+[24:03] are not mirrors or derivative but they
+[24:06] just happen to be uh same text differing
+[24:09] by a few tokens. Um, usually probably
+[24:11] this came from a kind of a uh it could
+[24:14] be copying or came from a different uh
+[24:16] common source. So here's some examples
+[24:19] of near uh you know duplicates. So terms
+[24:22] of service and licenses. Um so I guess
+[24:25] the MIT license probably shows up um you
+[24:30] know on a lot of places. Um and so many
+[24:34] cases it is a exact um copy but only of
+[24:40] that license unless someone made a typo
+[24:42] when they copied it. Um but the rest of
+[24:44] the page um that the license might be
+[24:47] part of is might be different. And we
+[24:49] talked about how a lot of websites have
+[24:52] the same um headers and footers. Those
+[24:55] are also you know duplicates. Um there's
+[24:58] also cases where for whatever reason um
+[25:01] you know there's uh this is from LM1B so
+[25:05] the one billion or benchmark there's
+[25:06] like these articles where you just have
+[25:09] you know typographic uh differences like
+[25:11] uh there's one version with a comma and
+[25:13] one version without a comma I don't
+[25:15] really know why but uh that's happens
+[25:17] and sometimes you see these templates
+[25:19] where there this is like some you know
+[25:22] probably low quality content where it's
+[25:24] like a it's a essentially looks like an
+[25:26] ad of some sort and someone just uh you
+[25:30] know templatize replace Canada with USA.
+[25:34] Um so if you train like on this data but
+[25:38] you are just training on different
+[25:39] variations of this with different
+[25:41] entities this is going to be wasting
+[25:43] your GPUs.
+[25:45] There's a more extreme cases. So this is
+[25:48] why it's good to look at your data. So
+[25:50] this audit of the C4 data set found this
+[25:53] product description 61,000 times in the
+[25:56] data set. And if you trace back, this is
+[25:59] really bizarre. I don't know why this is
+[26:02] like some um description of this gas
+[26:05] mask. And this just showed up in this
+[26:07] data set um in common crawl 61,000
+[26:11] times. So um yeah, the web is weird. Um
+[26:17] so why do duplicate? So the first clear
+[26:21] uh idea is clear because you want to
+[26:22] train more efficiently. Duplication
+[26:24] reduces your data set size without
+[26:27] really losing information because you're
+[26:30] just removing duplicates. And it also
+[26:32] has this benefit of avoiding um
+[26:34] memorization which this uh paper you
+[26:37] know talks about. Um for example, if you
+[26:40] have some um copyright content that's
+[26:42] duplicated a lot then if you train on it
+[26:45] then you memorize it and also privacy
+[26:47] concerns. uh but mostly I think uh it's
+[26:50] uh just to uh
+[26:53] make sure that you're not uh wasting
+[26:57] flops related to due duplication that's
+[27:00] also decontamination which is arguably
+[27:02] even more important to and it's the same
+[27:04] sort of uh deal is that you want to make
+[27:07] sure that your uh test set is not in
+[27:11] your training set.
+[27:14] Okay. So so how do we ddup? So here's
+[27:18] the design space to think about. So
+[27:20] first of all, what are the items that
+[27:22] you're dubbing? Do you do at the
+[27:24] sentence level, the paragraph level, or
+[27:26] the document level? Um, how do you
+[27:29] determine a match? Is it an exact match?
+[27:31] Is it existence of a common sub item? Is
+[27:34] it the fraction of common sub items u
+[27:36] for near dduplication? And then once you
+[27:40] found a duplicate between two pages,
+[27:42] what do you do? Do you remove all the
+[27:44] instances or do you remove all but one?
+[27:48] Okay, so um and the key algorithmic
+[27:53] challenge is that dduplication is
+[27:56] fundamentally about comparing items to
+[27:58] other items.
+[27:59] Um and
+[28:02] normally if you're doing filtering this
+[28:03] is about an individual item. This item
+[28:06] is it good or not? And this can be
+[28:08] paralyzed. It can be you know it's sort
+[28:10] of linear time which is good. Um and
+[28:13] even in linear time we're trying to make
+[28:14] it fast by having rule-based or very
+[28:17] small models. But due duplication
+[28:19] clearly you can't do the n square thing
+[28:21] where you compare everything to
+[28:22] everything. You need linear times uh
+[28:25] algorithms to scale especially at this
+[28:27] web scale.
+[28:29] So um typically the dduplication
+[28:32] literature um uses hash functions to get
+[28:35] around this. Um so we'll develop some of
+[28:38] these uh ideas. These are quite nice
+[28:40] ideas um from um thanks to um you know
+[28:44] the algorithms uh community. So I think
+[28:47] everyone knows what a hash function is.
+[28:49] It takes of some sort of value like a
+[28:52] string and maps it into something like a
+[28:54] string or integer. Um and a hash value
+[28:57] is much smaller than item. Hash
+[28:59] collisions are when two distinct items
+[29:01] map to the same age. Okay. So uh when
+[29:06] you look at hash functions there are
+[29:08] really fancy hash functions which are
+[29:11] cryptographic uh nature. These are
+[29:13] collision resistance used in cryp um uh
+[29:16] cryptography and um and bitcoin and
+[29:19] things like that. And then there's these
+[29:21] like uh faster ones which are used for
+[29:24] hash tables where hash collisions aren't
+[29:27] the end of the world. And so we'll be
+[29:29] using um these. Okay. So take a string
+[29:32] and map it to some value. That's what um
+[29:36] hash functions do.
+[29:38] Okay. So exact duplication is is
+[29:41] conceptually very simple. Um you you
+[29:44] take a string um you see if there's an
+[29:47] exact match and you remove all but one.
+[29:50] Okay. So here you have a bunch of um
+[29:52] elements and you you hash them and you
+[29:57] ddup. Okay. So this is um and exact
+[30:00] duplication is is is very nice. It's
+[30:04] very clear what's happening, but this
+[30:07] isn't really good enough for the messy
+[30:09] web data because often you have these
+[30:11] near duplicates. Um and one note is that
+[30:15] there's many ways to have um you know
+[30:17] written this. Um this is written by in a
+[30:20] sort of like um a bit of a map reduce uh
+[30:24] style way which makes it more easy to
+[30:27] easily paralyzable and scale. Um so C4
+[30:32] um
+[30:34] this uh this paper from the the T5 paper
+[30:37] um which process common crawl did exact
+[30:40] duplication. the items they operate on
+[30:43] were three sentence spans. Um, and you
+[30:48] uh do um exact match and they remove all
+[30:51] but one.
+[30:53] So, one, if you're kind of paying
+[30:55] attention, you realize that there's
+[30:57] something kind of a bit strange about
+[30:59] this because you're looking at three
+[31:02] sentence spans. And if you find two
+[31:05] documents with three sentence span, you
+[31:07] remove all but one. That means you're
+[31:10] just going to rip out three sentences
+[31:12] from that document, which is a little
+[31:14] bit strange because it breaks the
+[31:16] coherence, but you know, this is what
+[31:18] they did.
+[31:21] Um okay so that's exact dup dd
+[31:25] duplication. So how do we do near uh
+[31:29] dduplication? So first of all we have to
+[31:31] define what approximate uh match means
+[31:34] here. Okay. So to do that um we're going
+[31:38] to define this uh called jakard
+[31:40] similarity which is a fairly standard
+[31:43] notion. And jakard of two sets is
+[31:47] basically the size of the intersection
+[31:48] over the size of a union. Okay. So given
+[31:51] these two sets uh 1 2 3 4 and 1 2 3 5.
+[31:55] Uh when you compute jakard you take the
+[31:58] intersection that's 1 2 3 you take the
+[32:00] union that's 1 2 3 4 5 and you divide
+[32:04] and the jakard is 0.6.
+[32:08] Okay. So the chakard is a number between
+[32:10] 0 and one. Zero means that they're
+[32:12] disjoint. one means that they're
+[32:14] identical. Okay, so a fairly natural
+[32:17] notion and um we're going to say that
+[32:21] two documents are near duplicates if
+[32:24] their jakard similarity is above some
+[32:26] threshold let's say 0.99.
+[32:28] So now the question is how do you find
+[32:30] near duplicates in linear time? Okay, so
+[32:34] fortunately this is a solved uh you know
+[32:36] algorithms question and the answer is to
+[32:39] use um minash.
+[32:42] So um
+[32:45] well okay so the first step is to use
+[32:47] minash that's not the final answer. So
+[32:50] minash is a random hash function
+[32:54] so that the probability of a hash
+[32:56] collision is exactly uh the jakard of am
+[33:00] and b. So this is a very kind of nice
+[33:03] property because um hash functions
+[33:07] hashing is good for making things linear
+[33:09] time. Jakard is the metric that we want
+[33:13] and we're sort of connecting these two
+[33:15] uh right now or in expectation. So
+[33:18] what's interesting is that normally you
+[33:20] want hash functions to define hash
+[33:22] functions so that everything is um
+[33:25] hashing to different distinct elements
+[33:27] are hashing to different things. You
+[33:28] don't want collisions but here you
+[33:30] actually want collisions u not arbitrary
+[33:33] collisions but you want to control the
+[33:34] collisions in a certain way to align
+[33:37] with a similarity. So similar things you
+[33:40] want to collide more than the disperate
+[33:42] things.
+[33:44] Okay. So um so the minash is essentially
+[33:51] you um actually let's see maybe I will
+[33:56] okay so here's the the min hash. It's
+[33:59] fairly simple. You take the set and you
+[34:01] hash every element in that set and you
+[34:03] take the minimum element. Okay. So um
+[34:08] this mean might if you're seeing this
+[34:10] for the first time it may seem a little
+[34:11] bit strange. Why are you taking the min
+[34:13] um you can take a max too doesn't really
+[34:15] matter it's just a way to break um ties.
+[34:18] So here's the the picture that uh you
+[34:21] should have in your mind. So okay so if
+[34:23] you have um
+[34:26] um a remember a contains one two three
+[34:29] four and b contains 1 2 3 5. So this is
+[34:32] a characteristic matrix representation
+[34:35] of these two sets, right? And so what
+[34:38] the random hash uh function is is doing
+[34:43] is that it induces a permutation over
+[34:45] the items.
+[34:47] Okay, so it might be 4 3152
+[34:51] or something else. And then you look at
+[34:53] which item is first according to this
+[34:56] permutation in A and which item is first
+[34:58] in B.
+[35:00] So each item has the same probability of
+[35:04] being first. Okay. So if you have if it
+[35:09] the random hash function puts one first
+[35:14] then um first in
+[35:18] A will be equal to first in B. And if
+[35:22] it's two first then it's the same. If
+[35:25] it's three first it's also the same. But
+[35:27] if it the random permutation puts four
+[35:30] first then the first element in A is
+[35:33] going to be different from the first
+[35:34] element in B. And same with five.
+[35:39] Okay. So look at this representation.
+[35:42] Basically the random hash function says
+[35:44] elect one of these rows to be you know
+[35:46] first and then when I the min is just
+[35:50] telling me the min um the the the min
+[35:56] equal of a equal the min of b is
+[35:58] basically telling me whether that row
+[36:01] has um is the same.
+[36:08] Okay, so that is the I guess the proof
+[36:11] of um why minash why this property holds
+[36:15] which is that you have a hash function
+[36:19] in expectation over your random choice
+[36:22] of hash functions that um the
+[36:24] probability of collision is the
+[36:26] similarity metric you want
+[36:30] okay so let's just check this in code so
+[36:33] um I'm going to generate 100 different
+[36:36] hash uh you know functions S each hash
+[36:39] function is given by a seed um and I
+[36:41] just check whether the minash is equal
+[36:44] to minash and the estimated jakard. So
+[36:48] um I'm going to just look at the number
+[36:50] of the fraction of matches and you get
+[36:52] 0.6.
+[36:56] Okay. And the key thing with a minash is
+[36:59] that um I don't have to do the the n
+[37:04] squared thing. I can compute the minash
+[37:07] of A and the minash of B and minash of a
+[37:10] different set and I just look for
+[37:12] collisions.
+[37:16] Okay, any questions so far about
+[37:19] Minhash.
+[37:29] So now we can hash our items, but we're
+[37:32] not done yet because a collision doesn't
+[37:36] tell us that jakard is above some
+[37:38] threshold, which is what we want. We
+[37:41] want to find a and b such that jakard is
+[37:43] greater than 0.99. All we've done is
+[37:45] said, okay, well, if we got a collision,
+[37:48] the probability of that collision of two
+[37:51] things colliding is the jacard. But
+[37:53] that's not really that useful by itself.
+[37:55] it's sarcastic and I can't really get
+[37:58] anything reliable here.
+[38:00] So um the next thing idea is this thing
+[38:05] called locality sensitive hashing which
+[38:08] essentially solves this uh problem. So
+[38:10] this is a very classic idea in
+[38:12] theoretical computer science and it's
+[38:14] quite nice. Um so the idea here is that
+[38:20] we have a and b colliding with
+[38:23] probability equal to jakard. Okay, so it
+[38:26] is true that more similar items will
+[38:29] collide more often,
+[38:31] but it's very stochastic, right? The
+[38:33] variance is, you know, quite large here.
+[38:36] So our goal is to have A and B collide
+[38:39] if the Jakard is greater than some
+[38:41] threshold. So we in some in some sense
+[38:44] have to sharpen these these
+[38:47] probabilities somehow like the
+[38:49] probability can't just be literally
+[38:50] equal to the jakard.
+[38:53] So the solution is to use more hash
+[38:56] functions
+[38:58] u and these hash functions are going to
+[38:59] be independent.
+[39:01] So um this part is you know gets a bit
+[39:05] technical but um we'll walk through it.
+[39:08] So you break the n hash functions into u
+[39:12] b bands of r hash functions. So if you
+[39:15] have 12 hash functions you have three
+[39:17] bands. Each band has our uh four hash
+[39:21] functions. Okay. So there's a band here
+[39:24] H1 through H4. Here's a second band H5
+[39:27] through H8. Third band H9 through H12.
+[39:32] Okay. And then so what we're going to
+[39:35] try to do so so each hash function gives
+[39:38] us either um collision or not collision.
+[39:42] Okay. Um and so every hash function
+[39:45] there's a probability of uh colliding.
+[39:48] So the key here is that we want to say
+[39:53] um compute the probability that A and B
+[39:56] collide. We say that A and B collide if
+[40:00] for some band all of its hash functions
+[40:03] return the same value.
+[40:06] Okay. So um if H5 and H6 and H7 and H8
+[40:12] all return um the kind of the same
+[40:15] value. So sorry if h a of a equals h5 of
+[40:21] uh sorry h5 of a equals h5 of b and h6
+[40:25] of a equals h uh six of b and so on that
+[40:28] means this band is triggered and then I
+[40:32] would say they collide or if this band
+[40:34] if all of these say um coll uh agree
+[40:38] then I say it's collision or these two
+[40:42] but you don't have to have all the hash
+[40:43] functions uh um you know uh return the
+[40:47] same value.
+[40:49] Okay, so there's sort of this and or
+[40:51] structure here that is um is is doing
+[40:55] the the lifting here and we'll see why
+[40:58] this uh this works.
+[41:02] So um so now let's say you have a
+[41:06] particular jakard of A and B
+[41:09] um what is the probability that A and B
+[41:12] collide according to this uh definition?
+[41:15] Okay. So we can calculate this. Um
+[41:19] so let's say that uh this jakard
+[41:23] similarity is 0.8.
+[41:26] Okay. And we have five uh you know bands
+[41:30] and each band has 10 hash functions.
+[41:34] So then we can say what is the
+[41:37] probability of a fixed band matching. So
+[41:40] that's 0.8 eight to the r because each
+[41:45] band has r hash functions. So the
+[41:50] probability that they all have to match
+[41:52] is uh 0.8 to r. Okay. So the probability
+[41:55] of a band of a fixed band matching is is
+[41:59] generally quite low. It's exponential in
+[42:01] r.
+[42:04] Okay. And then now the probability of
+[42:06] collision is the probability that some
+[42:09] band matches
+[42:11] and that's going to be the probability
+[42:13] of one minus the probability of so this
+[42:16] is a probability of um a band not
+[42:18] matching
+[42:19] and this if you raise it to the B
+[42:22] there's B bands this is a probability
+[42:24] that all of them don't match and then
+[42:27] one minus that is the probability that
+[42:29] some match
+[42:32] okay so the probability of collision is
+[42:34] you know four and you expect it to be
+[42:36] higher because you're given you know
+[42:38] beach tries to get a match.
+[42:44] Okay.
+[42:47] So if you plot this um this is what it
+[42:51] looks like. Okay. So you have um on the
+[42:56] x- axis the similarity here
+[42:59] um and we were looking at 0.8 eight um
+[43:03] and and you look at uh the probability
+[43:06] of a a collision here. So we would
+[43:09] expect that if it's similarly zero then
+[43:11] it should be zero. If it's one it's one.
+[43:13] But notice that this is kind of a
+[43:15] interesting sshaped
+[43:17] which is is nice because this is what we
+[43:20] wanted to sharpen. We wanted to
+[43:22] basically say if the similarity is below
+[43:25] some threshold then we want the
+[43:27] probability to match to be as low as
+[43:29] possible. And if the similar is above
+[43:31] some threshold, we want it to be as high
+[43:33] as possible. So we're trying to get this
+[43:35] to be like a phase transition.
+[43:39] Okay. And if you you know plot this this
+[43:42] function as a function of similarity,
+[43:45] that's um what you get.
+[43:50] Okay. So um
+[43:56] Oops. Okay. So,
+[44:01] so let's just look at some examples. So,
+[44:03] let's uh concretely
+[44:07] we have um similarly 0.7 to 0.98. Okay.
+[44:12] Um and we're going to look at how u b=
+[44:16] 10 r equ= 10.
+[44:18] So we um look at the collision
+[44:21] probability according to our definition
+[44:24] and we see that um this gives us a range
+[44:29] of um you know 0.25 to to one.
+[44:34] Okay. So if you were to set a threshold
+[44:36] you know this is this is not you know
+[44:38] bad. uh we can like set it here and you
+[44:42] know these with um you know some
+[44:45] probability will uh you know there's
+[44:48] still false positives because even if
+[44:51] these are below a threshold let's say
+[44:53] 0.9 these might still collide but we can
+[44:56] filter them out um if we if we want but
+[44:59] um the ones above are mostly kept.
+[45:04] So what happens when you move uh
+[45:07] so increasing r so remember r is a
+[45:11] number of hash functions within a
+[45:12] bucket. So when you increase r um the
+[45:17] the threshold sharpens and moves the
+[45:21] curve to the right everything becomes
+[45:23] harder to match right because you have
+[45:24] more hash functions inside a bucket you
+[45:26] have that it sharpens that exponent. So
+[45:29] the probabilities you see here are kind
+[45:31] of sharper here. And now everything
+[45:34] moves to the to the right. Um, and now
+[45:37] it's fairly unlikely that if something
+[45:39] has loaded your card, you're going to to
+[45:41] match it.
+[45:43] So before it was like 0.25 and now it's,
+[45:46] you know, 08. Okay. So we're sharpening
+[45:49] the probabilities
+[45:51] and then increasing B has the effect of
+[45:55] moving the curve to the left. It makes
+[45:57] it easier to match. B is the number of
+[45:59] bands and some band has to match. If you
+[46:02] have more bands then there's more
+[46:03] chances of matching.
+[46:06] So if you look at this then um before
+[46:09] and after. So now we're making before
+[46:12] this 0.9 was only 72 and now it's 0.92.
+[46:16] And of course this this also increases
+[46:19] but you know not by that much.
+[46:23] Okay. So and you can drive these uh
+[46:26] phase transition to be as you know as
+[46:28] sharp as you want by increasing B and R.
+[46:30] But of course, if you can increase BNR
+[46:33] too much, then it can be more expensive.
+[46:37] But okay, so let's look at a more real
+[46:41] world setting. So in this paper on
+[46:44] dduplication,
+[46:46] the they had um you know B 20 bands and
+[46:51] R is 450. So to give you an idea of the
+[46:54] magnitude of these um these numbers
+[46:58] um and
+[47:00] In general this phase transition happens
+[47:04] at the at a threshold which is one over
+[47:07] b raised to the power of one over r. So
+[47:10] if you want to uh find a you know if you
+[47:14] want to filter based on jakard greater
+[47:17] than 0.9 then you basically have to set
+[47:19] bnr such that this is 0.9 and then by
+[47:23] changing BNR you can make that phase
+[47:26] transition uh sharper.
+[47:29] Okay. So remember probability that a
+[47:31] fixed band matches is one over b. If you
+[47:34] have at this threshold then the
+[47:37] probability that a and b collide is um
+[47:42] you know uh approximately
+[47:45] uh it's a it's a constant. So the
+[47:47] probability of collision is 64.
+[47:51] Okay. And this this makes sense that
+[47:52] basically if you have a phase transition
+[47:55] um the sort of center of that phase
+[47:56] transition is like point you know 64 and
+[47:59] everything below it should go to zero as
+[48:01] BNR increases and um everything above it
+[48:04] should go to one as BNR increases.
+[48:10] Okay any uh any questions about LSH?
+[48:14] So this this method is called minash LSH
+[48:18] um because LSH really works for any hash
+[48:21] functions. For um the duplication of
+[48:24] language model processing, we're using
+[48:26] the minash which approximates your card.
+[48:29] And so um that uh that basically is the
+[48:34] one you should use here.
+[48:39] Okay. questions about um DDUP.
+[48:55] So one note about DDUP is that
+[48:58] um there's often as we'll see data sets
+[49:02] that are coming in and sometimes the um
+[49:05] duplication will happen within a data
+[49:07] set but you actually have to do
+[49:09] duplication across your entire data set
+[49:12] because often data sets can be
+[49:14] redundant. So um you know sometimes
+[49:17] that's not uh done but it should be.
+[49:19] Okay, let's go on to the next topic
+[49:23] which is data mixing. Okay, so so far
+[49:27] we've transformed our data from really
+[49:30] uh you know raw HTML or PDFs into text.
+[49:34] We filter for high quality. we dduped.
+[49:37] So we have a smaller set of high quality
+[49:39] um documents and um
+[49:43] and this generally happens um for a
+[49:48] given you know data source but language
+[49:50] models are trained on multiple data
+[49:52] sources. So um in Marin um currently uh
+[49:58] this this website tracks the different
+[50:01] uh data sources that um the next model
+[50:05] will be trained on and you can see that
+[50:08] um there's a bunch of things there's
+[50:10] some neatron there's fine PDFs which we
+[50:13] talked about um there's some uh you know
+[50:18] institutional books um
+[50:21] and um some code and all these things.
+[50:24] Okay, so you have all these different
+[50:26] you know sources
+[50:28] um and the question is
+[50:32] how do you combine these?
+[50:35] So if you look at an older paper the
+[50:36] pile
+[50:38] um this is the
+[50:41] set of sources that they had at that
+[50:43] time
+[50:44] um and
+[50:46] they essentially assign a particular
+[50:50] weight to each component. So basically
+[50:53] you have a distribution of resources.
+[50:56] Okay. And so where does that weight come
+[50:59] from?
+[51:02] So more you know just cut and dry let's
+[51:06] say you have three sources you want to
+[51:09] find a data mixture and a data mixture
+[51:10] is just a distribution over your
+[51:12] sources.
+[51:15] Okay. So if you're just thinking about
+[51:17] this problem uh from first principles
+[51:20] um well not from first principles but
+[51:22] like just from what would you what you
+[51:24] might do um vibes which is I guess
+[51:27] opposite of first principles is you just
+[51:30] manually set it based on some intuition
+[51:34] which is more often than you might think
+[51:36] what people do right so I think this is
+[51:40] this is definitely fairly vibes based um
+[51:44] And even more recent papers um you know
+[51:47] you just look at it maybe you use some
+[51:50] method and then you just like tweak
+[51:51] things. Um you can also um do uniform
+[51:56] sampling which is you just put a uniform
+[51:58] distribution over your sources um and
+[52:01] you sample every um you know chunk you
+[52:05] you get you just sample a source. Um you
+[52:09] can also do uh proportional mixing which
+[52:12] is that you sample proportional to the
+[52:14] number of tokens in a source. So if you
+[52:17] have a data set with more you know
+[52:19] tokens then you put higher weight. So
+[52:22] this is also you know generally a
+[52:24] rational thing to do but you might worry
+[52:26] that the if you have a a huge lowquality
+[52:28] data set that's going to eat up a lot of
+[52:30] your tokens. So this doesn't seem quite
+[52:32] optimal either.
+[52:35] So intuitively
+[52:38] you should upweight your higher quality
+[52:39] sources.
+[52:41] Okay. But there's two things that um are
+[52:46] important to keep in mind. One is that
+[52:48] you do want to ensure some diversity,
+[52:50] right? So often sources are incomparable
+[52:54] for literature, code, and papers. um you
+[52:57] can't really say that uh you know this
+[53:00] paper is higher quality than this code
+[53:02] because they're just incomparable you
+[53:04] know objects maybe and if you want your
+[53:06] language model to do well you don't want
+[53:08] to just put all your um uh your mass on
+[53:11] just papers
+[53:14] the second thing which we'll talk a bit
+[53:16] more about is uh each source is actually
+[53:20] finite so if you put too much weight on
+[53:23] a small source then you need to you
+[53:26] essentially run out of that source and
+[53:29] you're you need to just epoch over it.
+[53:31] Meaning that you keep on training on the
+[53:33] same literally the same tokens and this
+[53:36] is going to be bad for reasons we'll uh
+[53:39] see. Okay, so let's let's uh try to
+[53:42] unpack this a little bit more concretely
+[53:44] this last point. So imagine you had just
+[53:46] have two sources a lowquality source you
+[53:49] have 10 trillion tokens and you have a
+[53:51] high quality source that has 10 billion
+[53:53] tokens. Generally high quality sources
+[53:55] are smaller.
+[53:57] Okay. So if you just do a naive data
+[54:01] mixture, let's just do uniform. So half
+[54:03] on high, half on low.
+[54:06] And I'm going to train for one trillion
+[54:08] tokens. Um so when I say train for one
+[54:12] trillion tokens, that doesn't mean
+[54:13] unique tokens. I just means uh train for
+[54:16] that many steps divided by batch size
+[54:19] essentially or times batch size. Um
+[54:23] okay. So then you look at let's look at
+[54:26] this which is the number of
+[54:29] times a particular element in the
+[54:32] lowquality data set was trained on. So
+[54:34] that's the number of epochs uh a
+[54:36] particular data uh point was trained on.
+[54:39] So p low times train tokens is the
+[54:43] number of uh times I'm want to request
+[54:48] uh tokens from um this lowquality source
+[54:52] and divided by the total number of
+[54:53] lowquality sources. So um this is less
+[54:56] than one. So basically that means um 5%
+[54:59] of the tokens in this lowquality data
+[55:02] set I'm even going to touch and train on
+[55:04] once.
+[55:07] Um, and then if you look at high
+[55:10] quality, you'll see that uh the number
+[55:13] of epochs is 50, right? Because I only
+[55:17] have 10 billion tokens here. And if I'm
+[55:22] half half, that means 500 billion
+[55:24] tokens. Um, I'm I need to train up 500
+[55:28] billion tokens of high quality data. But
+[55:30] I don't have 500 billion tokens of data.
+[55:32] So I have to repeat each data point 50
+[55:34] times.
+[55:36] Okay, so this is actually really
+[55:38] important and you know some big model
+[55:41] trains range uh runs have kind of messed
+[55:43] this up is that you can't just like
+[55:46] naively look at the the data sets and
+[55:49] define a distribution and then you
+[55:50] sample because um if you just look at
+[55:53] the quality if you look at the data you
+[55:55] don't you don't you're sort of missing
+[55:57] how many data points are there. Okay,
+[56:00] does this make sense? Maybe pause for
+[56:02] questions. This is a kind of important
+[56:03] point.
+[56:14] Okay. So, yeah.
+[56:25] >> Um, I guess like does it like why do we
+[56:29] need
+[56:31] in the first place? like doesn't it
+[56:32] achieve comparable performance level way
+[56:36] I don't know fewer you know
+[56:37] >> so the question is why do you need 50
+[56:39] epochs and I guess the point is that you
+[56:41] don't need 50 epox um worst case it's
+[56:44] wasting compute sorry best case is
+[56:47] wasting compute and worst case you're
+[56:49] overfitting
+[56:50] um but 50 the reason it's 50 is that if
+[56:54] you just go in and you define this data
+[56:55] mixture then you're going to be end up
+[56:58] doing 50 epochs without realizing unless
+[57:00] you're paying close attention
+[57:02] So this is basically the lesson is like
+[57:05] look at how many epochs you're actually
+[57:07] doing on your data.
+[57:10] >> Yeah.
+[57:10] >> How does this how do the mixtures get
+[57:12] expressed during training? Like so when
+[57:14] you switch every step do you train like
+[57:16] steps of 10 saying oh I want to do 10
+[57:19] code 10 to see because I feel like it
+[57:21] was like is there also any intuition
+[57:23] between
+[57:24] >> what decisions are made there.
+[57:25] >> Yeah good question. So the question is
+[57:27] like how when you train how do the
+[57:29] mixtures get uh kind of realized and so
+[57:34] uh in general um you you sample um so
+[57:39] you have you want to fill a batch right?
+[57:42] So you can sample a essentially for each
+[57:47] element um which uh mixture component it
+[57:50] comes from and you fill up a batch with
+[57:54] um you know sequences from that mixture
+[57:56] component. Usually you every sequence
+[57:58] comes from one mixture component. You're
+[58:00] not sampling like per token.
+[58:02] >> I guess so each batch should be mixed.
+[58:05] So I guess the unexture assumptions are
+[58:07] at the batch level and then you just
+[58:09] train for that. It's not like oh there's
+[58:11] one step is
+[58:13] one step is
+[58:14] >> yeah in general you want to to reduce
+[58:16] variance you want to train from multiple
+[58:18] um you know a batch should have some
+[58:21] mixture in it. Yeah.
+[58:25] Okay. So so this idea I mean this
+[58:28] problem has been noticed uh you know
+[58:30] quite a long time ago. Um and so in this
+[58:34] paper they introduced a unimax and I in
+[58:37] there that that case it was uh they were
+[58:39] training in multilingual models. It was
+[58:42] like very clear that some languages uh
+[58:45] were very low resource. So um you had to
+[58:50] do something about this. So in this
+[58:52] paper they noticed that before um some
+[58:56] works would uh essentially um take the
+[59:00] proportional mixing and raise it to some
+[59:02] power um to kind of flatten it out the
+[59:05] distribution. Um but the idea in this
+[59:09] paper is that um let's be a bit more
+[59:13] kind of explicit about that. Let's
+[59:15] sample the sources uniformly but with a
+[59:17] hard cap on the number of epochs. Okay,
+[59:20] so this is the key idea here is that you
+[59:22] say I'm only going to take 20 epochs
+[59:25] over a particular, you know, data
+[59:27] source. So if you've done that, then you
+[59:31] know, too bad. You go you you don't get
+[59:32] any more um tokens. You move on to the
+[59:35] next thing. So this is sort of like a a
+[59:37] safety net in in some sense. So in
+[59:41] particular if you look at the number the
+[59:43] probability assigned to a source times
+[59:46] the number of training tokens that
+[59:47] should be less or equal to the cap.
+[59:51] Okay. And there's a simple procedure for
+[59:53] actually just determine the mixture uh
+[59:55] subject to this uh constraint.
+[59:59] Um okay so let's switch gears a little
+[01:00:03] bit and talk about how we define the
+[01:00:07] mixture in the first place. Right?
+[01:00:08] Because if you have 50 sources, there's
+[01:00:11] 50 numbers you have to fill. And we
+[01:00:13] noticed that proportional mixing isn't
+[01:00:15] really enough. Maybe you can try to get
+[01:00:18] estimate some quality metric and then
+[01:00:20] you can sample proportional to that. Um
+[01:00:24] but that is also heristic.
+[01:00:26] So the the most principled uh methods
+[01:00:30] and most kind of easiest to understand
+[01:00:32] like what's happening is these
+[01:00:33] regression based mixing methods. So
+[01:00:35] ragmix um mix and other papers like this
+[01:00:40] and the idea here is is kind is
+[01:00:44] relatively simple. So first you let's
+[01:00:48] say you're trying to train a large scale
+[01:00:49] model. So you go to a small scale um
+[01:00:52] let's say one you know I guess let's say
+[01:00:55] 300 million parameters um and you you
+[01:00:59] try different data mixtures. So let's
+[01:01:02] say you have three uh components. You
+[01:01:04] try different mixtures and then you
+[01:01:06] train these small models. So you train a
+[01:01:08] swarm of small models. Each model gives
+[01:01:11] you a loss on some target metric. It
+[01:01:14] could be some downstream evals, it could
+[01:01:16] be perplexity, whatever you want. Okay.
+[01:01:20] So you use these data points to
+[01:01:23] basically fit a regression where the
+[01:01:25] regression model maps these um inputs
+[01:01:28] which is the the data mixture weights to
+[01:01:31] the loss.
+[01:01:34] Okay.
+[01:01:35] So now you have basically a very cheap
+[01:01:38] model that tells you if I were to train
+[01:01:41] on this mixture what loss would I get?
+[01:01:44] then you can essentially optimize that
+[01:01:48] um you know um data mixture uh sorry
+[01:01:52] optimize that function for the optimal
+[01:01:55] data mixture
+[01:01:57] and then that is the data mixture you
+[01:01:59] use to train the large scale model.
+[01:02:03] Okay, so that's the kind of the simple
+[01:02:06] procedure and you'll notice some kind of
+[01:02:08] similarities with with scaling laws
+[01:02:10] where you're trying to do some cheap
+[01:02:12] computations to figure out some answers
+[01:02:14] and then uh you know scale up. Okay, so
+[01:02:19] there's a few design decisions here. One
+[01:02:22] is you know what are the mixtures that
+[01:02:25] you're trying out here? You need a
+[01:02:27] distribution over distributions here. Uh
+[01:02:29] so often people use some durlay uh
+[01:02:32] distribution.
+[01:02:34] Um you also have to define the
+[01:02:35] regression method. Um people have tried
+[01:02:38] linear models or boosted decision trees.
+[01:02:42] Um you have to figure out the target
+[01:02:44] here. Um often this is based on
+[01:02:47] downstream eval. So, we have to be very
+[01:02:49] careful not to overfit, right? Because
+[01:02:52] we're doing pre-training and then, you
+[01:02:55] know, supposedly pre-training is
+[01:02:57] supposed to be training this general
+[01:02:58] purpose model and we're not trying to
+[01:03:00] fit some downstream evals. And if you're
+[01:03:03] not careful, for example, if you have a
+[01:03:05] bunch of code evals, then well, guess
+[01:03:07] what? You're going to upweight all the
+[01:03:08] code data. That's, you know, not rocket
+[01:03:11] uh science. And if you then go and you
+[01:03:14] say I want to generate some poetry, you
+[01:03:16] might uh you know realize that you've
+[01:03:17] over over fit. So you have to be very
+[01:03:19] careful about this. So proportional
+[01:03:21] mixing and uniform mixing don't have
+[01:03:23] this problem because you're not looking
+[01:03:24] there's no downstream evals.
+[01:03:27] And the the final thing is that you know
+[01:03:30] how much of a difference between small
+[01:03:31] and large scale um is there and this is
+[01:03:35] a cost and accuracy trade-off. Of
+[01:03:37] course, if you train really really small
+[01:03:39] models, um this might not be
+[01:03:40] representative. But if you train large
+[01:03:43] models to do this, you well, there's no
+[01:03:46] point in doing any of this. You just
+[01:03:47] train you're basically doing
+[01:03:49] hyperparameter tuning at the largest
+[01:03:51] scale, which is too expensive.
+[01:03:53] Um so this Omix paper actually does a
+[01:03:56] nice um has this nice table which shows
+[01:03:58] you for a number of different um methods
+[01:04:02] that all fall into this kind of um
+[01:04:04] framework. um this the size of the proxy
+[01:04:08] models they're generally fairly you know
+[01:04:10] tens or uh uh tens of millions of
+[01:04:14] parameters. How many you know points do
+[01:04:17] you sample mixtures do you sample um m
+[01:04:21] here being the number of parameters in
+[01:04:23] your mixture sorry the number of domains
+[01:04:25] rather um and you can use dishlay you
+[01:04:29] can use exponential um and then the
+[01:04:33] regression model uh you can fit a log
+[01:04:36] linear model which um you know tends to
+[01:04:39] work uh pretty well um and then uh you
+[01:04:44] can use different ways is to solve this
+[01:04:46] optimization um you know problem.
+[01:04:50] Okay, so there's sort of two leaps of
+[01:04:52] faith here that you just have to be very
+[01:04:54] careful of is that um the regression
+[01:04:58] model was trained on a bunch of these
+[01:05:00] small proxy runs and you're optimizing
+[01:05:04] this. So the hope is that your the
+[01:05:07] minimizer um your optimal data mixture
+[01:05:11] that regression model is still accurate.
+[01:05:14] Um, and this is a little bit kind of,
+[01:05:17] you know, you have to be very careful
+[01:05:19] because, um, if you, let's say, sample a
+[01:05:22] random mixture, you'll probably be fine
+[01:05:24] because, um, because of, you know,
+[01:05:27] classic generalization, you sample a
+[01:05:29] mixture, you and you fit a function, it
+[01:05:32] should be able to predict in
+[01:05:33] distribution. But when you're
+[01:05:34] optimizing, you're essentially trying to
+[01:05:36] go to potentially the extremes where you
+[01:05:39] might not have as much coverage. So
+[01:05:41] that's one thing to be careful of. And
+[01:05:43] the other thing is that um optimal uh
+[01:05:48] data mixtures you just hope that they
+[01:05:51] transfer for small scale to large scale.
+[01:05:54] Um and this in general it seems like at
+[01:05:58] least at the scales that open community
+[01:06:00] works with um tends to be true or not
+[01:06:04] blatantly false. Um but clearly there
+[01:06:06] are uh scale dependent effects. If you
+[01:06:09] just think about the the the previous
+[01:06:12] slide when we were talking about
+[01:06:13] filtering, if you're training for many
+[01:06:14] more tokens, then probably low quality
+[01:06:16] data is is okay. So clearly the optimum
+[01:06:19] is not the same, but you just kind of
+[01:06:21] hope for the best here.
+[01:06:24] Okay, so hold on. There's one scale
+[01:06:26] dependent effect that we we already
+[01:06:28] talked about but and we need to address
+[01:06:31] here which is that um you imagine so we
+[01:06:35] have a lot of lowquality data 10
+[01:06:37] trillion tokens 10 billion tokens of
+[01:06:39] high quality data and if we train a
+[01:06:43] small model on low token counts you know
+[01:06:47] remember uh what what happens is that
+[01:06:50] you might this is a madeup um you know
+[01:06:53] uh example But um you might put a lot of
+[01:06:58] mass on your high quality data
+[01:07:00] because if a low token counts, you're
+[01:07:02] not epoching. So it's like, oh wow,
+[01:07:05] Wikipedia is so great. Let's just train
+[01:07:07] on Wikipedia. Um but if you then go and
+[01:07:10] train your large mixture on this large
+[01:07:13] model on this mixture, um then you're
+[01:07:16] going to end up epoing a lot on this
+[01:07:18] high quality data and you'll overfit and
+[01:07:20] that's definitely um bad.
+[01:07:24] So one way to fix this which is done in
+[01:07:27] the OMIX um this Omix uh paper um is you
+[01:07:32] can just uh cap the number of epox
+[01:07:38] solution. There's another solution here
+[01:07:40] which um goes by probably multiple names
+[01:07:44] but one name for it is simulate
+[01:07:46] epoching. And the the the principle here
+[01:07:49] is that make your small scale look like
+[01:07:51] your large scale. This is kind of a
+[01:07:53] general theme for the course. We saw it
+[01:07:55] in kind of uh when Tatsu talked about
+[01:07:57] MUP. Um you parameterize your model so
+[01:08:00] that your your hyperparameters transfer.
+[01:08:02] And so the kind of same principle
+[01:08:04] applies here. And the problem with uh
+[01:08:08] you know doing this kind of naive
+[01:08:10] scaling is that um at low you can't be
+[01:08:14] not epoing at small scale and epoch then
+[01:08:16] epoing at large scales because then
+[01:08:18] those are qualitatively different um
+[01:08:22] operations on your data set. So the way
+[01:08:25] you would handle this is you um you
+[01:08:29] downstream your sources proportionally.
+[01:08:32] So
+[01:08:34] um so if you have your small runs were
+[01:08:37] 10 billion tokens um and your big run
+[01:08:40] were one trillion tokens then you have
+[01:08:44] um a you know one in 100 kind of
+[01:08:46] downsampling um and
+[01:08:49] and then uh you basically use the down
+[01:08:53] sample mixture. And so the idea is that
+[01:08:57] if you have the down sampled you know
+[01:08:59] data um then this solution is not going
+[01:09:04] to look good because you're not training
+[01:09:06] on all you're not you don't get to just
+[01:09:08] train on all Wikipedia you're going to
+[01:09:10] train on some minuscule fraction of
+[01:09:12] Wikipedia and you'll realize oh actually
+[01:09:14] I'm going to be epoing a lot and that's
+[01:09:17] going to have really bad uh loss which
+[01:09:20] means that in the optimization you're
+[01:09:21] going to look for more balanced uh uh
+[01:09:24] approaches. is so you're kind of
+[01:09:26] simulating the data scarcity that you
+[01:09:28] would get at in your high regime at a
+[01:09:30] low scale.
+[01:09:34] Okay.
+[01:09:37] So to summarize this section um the
+[01:09:40] problem is how do you weigh different
+[01:09:41] sources? You have Wikipedia, you have
+[01:09:43] your common crawl, um you have your your
+[01:09:46] code, you have some math data that you
+[01:09:49] you scrape from somewhere. Um how do you
+[01:09:51] balance them? Um regression based mixing
+[01:09:54] is is a nice framework I think to think
+[01:09:57] about things. You you estimate your a
+[01:09:59] function form uh that maps your mixture
+[01:10:03] weights to a loss at small scale
+[01:10:05] optimize and then you generalize to
+[01:10:08] large scale. And you just have to be
+[01:10:11] very careful with uh this uh because of
+[01:10:15] epoing and overfitting kind of issues.
+[01:10:17] And you have to either use capped epoing
+[01:10:19] or simulate epoing.
+[01:10:22] So one lesson here is that um if you're
+[01:10:25] trying to optimize anything you have to
+[01:10:28] be very careful because you are in
+[01:10:30] danger of optimizing the the wrong uh
+[01:10:33] thing.
+[01:10:36] Okay. Any questions about data mixing
+[01:10:38] before I move on?
+[01:10:43] um when you're a dev sample assume
+[01:10:45] something is like too small that like
+[01:10:48] you can't really generalize as well.
+[01:10:52] >> So uh the question is if you're
+[01:10:54] downsampling is there's a risk maybe you
+[01:10:57] get too small of a data set. Um yeah
+[01:11:01] absolutely.
+[01:11:02] So
+[01:11:04] um I think right you might get into a
+[01:11:07] case where you just have so few tokens.
+[01:11:10] Um I think then what will happen is that
+[01:11:13] your optimum will just put very small
+[01:11:16] mass on that and when you scale up maybe
+[01:11:19] you get the right set of tokens. So in
+[01:11:20] principle like it should work out but
+[01:11:23] there might be like rounding errors
+[01:11:24] where like you end up instead of
+[01:11:26] training once on this data set you train
+[01:11:29] like zero times by accident. But you can
+[01:11:32] you can sort of work around these by
+[01:11:34] just like um think you always train once
+[01:11:37] on this data. Yeah.
+[01:11:44] Okay. So, yeah.
+[01:11:45] >> Within data mixing, um, do you ever
+[01:11:48] because like I guess these sources just
+[01:11:49] happen to align with different topics,
+[01:11:52] but do you ever take like a diverse data
+[01:11:55] set and then try to do like data mixing
+[01:11:57] within that?
+[01:11:58] >> Yeah.
+[01:11:59] >> So, the question is uh do you do what do
+[01:12:01] you apply data mixing to the like
+[01:12:04] different you know domains or even
+[01:12:06] within a data set? That's actually I
+[01:12:08] forgot to mention that. So I'm glad you
+[01:12:09] brought it up. So in Neotron uh paper
+[01:12:13] they uh actually in in some of the OMO
+[01:12:16] stuff as well you basically think about
+[01:12:18] let's say I give you a just common crawl
+[01:12:21] right you can actually break this up so
+[01:12:24] you can group by domain. So they the AI2
+[01:12:27] folks have this like web organizer so
+[01:12:29] you can group into topics but you can
+[01:12:31] also quality filter. Um so then you you
+[01:12:35] have this like two-dimensional grid
+[01:12:36] where you have domains and you have
+[01:12:38] quality and each of these like cells is
+[01:12:42] something that you would data mix.
+[01:12:45] So that's one automatic way to determine
+[01:12:48] the the domains and then on top of that
+[01:12:51] you add ex extra sources that people
+[01:12:53] hand you.
+[01:12:57] Okay. So I'm going to quickly go through
+[01:12:59] post training uh data here. Um so up
+[01:13:05] until now this is basically pre-training
+[01:13:08] or maybe mid-training data. It's
+[01:13:10] generally fairly task agnostic except
+[01:13:13] for the reg mix stuff where you're
+[01:13:15] you're trying to minimize the loss but
+[01:13:17] still the data itself is still task uh
+[01:13:20] relatively task agnostic and you're
+[01:13:22] trying to develop uh basic skills. So
+[01:13:24] when you look at post- trainining a lot
+[01:13:27] of the data becomes very kind of task uh
+[01:13:30] you know dependent um and I'm not going
+[01:13:34] to do a comprehensive review I just want
+[01:13:36] to point out some of interesting um
+[01:13:39] post-raining you know data sets that
+[01:13:41] have been recently released in
+[01:13:42] particular for coding since that's uh of
+[01:13:45] I think great interest these days. Um so
+[01:13:49] the general recipe
+[01:13:51] is um you define a set of you know
+[01:13:54] environments um in the case think about
+[01:13:56] code which might be GitHub um you know
+[01:13:59] repos you define a set of uh tasks or or
+[01:14:03] prompts and then you collect responses
+[01:14:06] from a strong model or teacher. So
+[01:14:10] implicitly you know at least in the open
+[01:14:13] community almost all the post- training
+[01:14:15] data that's uh most of it is you know
+[01:14:17] synthetically you know generated
+[01:14:20] um you can also replace strong model
+[01:14:23] with uh a human uh but you know that is
+[01:14:27] slow and costs a lot of money but you
+[01:14:29] know if you're at the frontier and of um
+[01:14:32] if you I guess a few years ago you kind
+[01:14:35] of had to go and pay a lot of people a
+[01:14:38] lot of money to give you responses. Um,
+[01:14:41] and nowadays, even at the frontier, you
+[01:14:44] can do sort of hybrid human AI things.
+[01:14:47] But anyway, the the point is that
+[01:14:48] there's some teacher out there that's
+[01:14:50] giving you responses. Okay. So, um, a
+[01:14:54] few kind of I'm just going to talk to a
+[01:14:57] few works here. So, one is this works,
+[01:15:00] uh, called open thoughts. Um and
+[01:15:04] this idea here is um this came around it
+[01:15:08] was motivated by you know when 01 came
+[01:15:10] out and there was a lot of intention on
+[01:15:12] reasoning mostly for like math and
+[01:15:14] science um how do we get really good
+[01:15:17] post-training data sets for this and um
+[01:15:21] you know they eventually came out with
+[01:15:23] 1.2 two million examples uh using this
+[01:15:26] teacher model. Um so the steps are first
+[01:15:30] of all um there are a bunch of so what
+[01:15:35] are the environments and the tasks and
+[01:15:37] questions. Um there are a lot of
+[01:15:40] different sources um that they they drew
+[01:15:43] from there human sources like sack
+[01:15:46] exchange um or num math and then there's
+[01:15:49] like some synthetic sources as well.
+[01:15:51] These are just a subset of the the
+[01:15:54] coding ones, but there's also more for
+[01:15:55] math and chemistry. This is a big
+[01:15:57] project that involved a lot of different
+[01:15:59] uh contributions from many uh people. Um
+[01:16:04] so you can see that there's um you know
+[01:16:07] some of these are like coding exercises,
+[01:16:09] some of these are um you know more
+[01:16:12] realistic things that show up on um I
+[01:16:15] guess code golf is not realistic but
+[01:16:17] there are some more realistic uh um
+[01:16:20] examples here. Um so code review this is
+[01:16:23] probably more realistic. Um and they
+[01:16:26] noticed that they did a fairly
+[01:16:28] comprehensive uh analysis of you know
+[01:16:30] given this data set what how do you
+[01:16:33] generate responses. They show that um
+[01:16:36] having a few sources was actually good
+[01:16:39] but rather than trying to do all sources
+[01:16:42] sampling multiple generations is helpful
+[01:16:44] like 16. Um one thing that was
+[01:16:47] interesting is that having better models
+[01:16:51] um aren't necessarily um you know better
+[01:16:54] teachers. So for example QWQ 32B which
+[01:16:58] is you know now a very old and small
+[01:17:00] model is was a better teacher than
+[01:17:03] deepseeek R1 which was at the time
+[01:17:05] probably one of the strongest open
+[01:17:06] models. Um they also found that basic
+[01:17:09] answer filtering wasn't helpful. Um
+[01:17:13] and so the entire pipeline looks
+[01:17:15] something um you know like this where
+[01:17:18] you have a bunch of these sources uh you
+[01:17:21] know going in um and then you you
+[01:17:24] duplicate you randomly um you know
+[01:17:27] sample I guess this down sample the
+[01:17:29] questions and you generate multiple
+[01:17:31] answers and that gets uh into the final
+[01:17:33] data set. So the 1.2 2 million isn't um
+[01:17:37] is examples but divided by 16 gives you
+[01:17:40] the number of actual questions.
+[01:17:43] Okay. So there's an another so that was
+[01:17:47] for um you know math and science and and
+[01:17:51] some code. Um I think more recently
+[01:17:54] there's been a lot of interest in
+[01:17:56] developing in particular a gentic coding
+[01:17:59] um model. So not just a model that can
+[01:18:01] just generate some code but actually a
+[01:18:03] model that can do software development.
+[01:18:06] Um so this uh Swissmith paper um
+[01:18:11] um had the idea of you're given a
+[01:18:14] repository,
+[01:18:16] you're using an language model to
+[01:18:18] automatically generate tasks. So they
+[01:18:21] have an agent that um takes a repository
+[01:18:24] and actually makes it usable for um uh
+[01:18:28] like uh installing dependencies and so
+[01:18:30] on. Um and then you generate tasks which
+[01:18:34] are generally um you know you modify the
+[01:18:37] code in some way maybe introduce some
+[01:18:38] bugs um and those get verified and you
+[01:18:41] get some task instances. So these are
+[01:18:44] synthetic tasks um but you get you know
+[01:18:47] 50k of them which is actually um at the
+[01:18:49] time which was last year uh quite large
+[01:18:53] um so since then there's been um a bunch
+[01:18:57] of other uh work which I'll uh
+[01:19:02] you know mention um so there's this
+[01:19:04] sweet zero paper from you know Nvidia
+[01:19:08] um which had this kind of um actually
+[01:19:13] Okay, I'll also talk about that. So this
+[01:19:15] is a kind of an interesting idea where
+[01:19:18] the observation was that unlike math su
+[01:19:22] task have just a lot of heavy
+[01:19:23] dependencies. Most GitHub repos like
+[01:19:27] don't even run and you have to install
+[01:19:29] all these dependencies and out of date
+[01:19:31] especially if you roll back to like when
+[01:19:33] a PR was. It's just kind of a mess. Um
+[01:19:36] and this is just a nightmare. Um and so
+[01:19:40] they were thinking about how can we
+[01:19:42] actually get a data set that just um on
+[01:19:46] all the the the repos and rather than
+[01:19:50] having a repo specific docker image um
+[01:19:54] they noticed that the models are
+[01:19:55] actually good enough that they can solve
+[01:19:56] a lot of these tasks without execution
+[01:19:59] feedback. Um so you know if you look at
+[01:20:03] some of these uh models if you were
+[01:20:05] allowing educ execution you get like 80
+[01:20:08] if you don't allow educa not education
+[01:20:11] execution you get almost 70. So which is
+[01:20:15] you know not bad for not being able to
+[01:20:17] execute code. So um somehow these models
+[01:20:21] have some internal semantics of of of
+[01:20:24] code. Um so they were able to generate
+[01:20:26] 300,000 agent trajectories. Um all of
+[01:20:30] these are real GitHub uh you know PR so
+[01:20:32] they're realistic unlike the the
+[01:20:35] Sweenith Smith examples. Um they use the
+[01:20:38] open hands scaffold and did some there's
+[01:20:41] a lot of details like how to prevent um
+[01:20:44] agent hacking. So um normally you uh
+[01:20:47] hand an agent this um instruction you
+[01:20:50] explore you test you implement and their
+[01:20:54] uh 30 version was basically saying you
+[01:20:57] cannot run Python code you can only do
+[01:20:59] like set and grap and all these like
+[01:21:01] basic um um operations.
+[01:21:05] Okay. So then they distilled from a big
+[01:21:08] coding model um and filtered um because
+[01:21:12] sometimes a coding model will ignore
+[01:21:14] these instructions and still try to
+[01:21:15] execute anyway. Um and then there they
+[01:21:18] showed that with this um oh they also
+[01:21:21] had 13k agent trajectories that do
+[01:21:24] require execution feedback. So they
+[01:21:27] train models where they first uh
+[01:21:30] fine-tune on these sweet zero um
+[01:21:33] examples and then fine-tune again on
+[01:21:35] these sweet hero examples and they were
+[01:21:37] able to you know I guess the frontier is
+[01:21:39] still pretty uh high up but they were
+[01:21:42] able to make some you know progress
+[01:21:43] here. Um I'll quickly go through rebench
+[01:21:47] was essentially another uh attempt to
+[01:21:51] grab tons and tons of uh you know uh
+[01:21:54] PRs. Um, so and all of these kind of
+[01:21:58] look like get a bunch of GitHub repos,
+[01:22:00] try to install the repo, like most of
+[01:22:03] them probably, you know, fail and try
+[01:22:06] harder and then you use a um a language
+[01:22:09] model to give you the um the responses.
+[01:22:12] So in this uh this actually just came
+[01:22:15] out uh today. Um so you can take the
+[01:22:20] sweet zero idea and you can now scale up
+[01:22:22] to 12 million agent trajectories. Um the
+[01:22:26] nice benefit of three zero is that it's
+[01:22:28] just you know almost it's very
+[01:22:30] lightweight. Um here they use the sweet
+[01:22:34] ben rebench uh tasks. So in this one
+[01:22:37] remember they were trying to get things
+[01:22:39] to execute. They only got 32,000 of them
+[01:22:42] to execute and 120 of them didn't
+[01:22:44] execute. So you just but zero doesn't
+[01:22:46] care. you can use all of them. Um this
+[01:22:49] is a very small model because now this
+[01:22:52] data set is quite large. Um and so um so
+[01:22:59] you know I think as you can see the data
+[01:23:01] sets are you know getting more and more
+[01:23:03] sophisticated. You go from you know
+[01:23:06] environment free things like math to now
+[01:23:08] coding and now the coding data sets are
+[01:23:10] growing uh quite a bit. Um but the
+[01:23:13] general idea is that you know you have
+[01:23:16] these these prompts um which you know
+[01:23:20] there's kind of trade-offs. You can have
+[01:23:22] fully synthetic um you can have
+[01:23:24] semi-ynthetic where you have a real
+[01:23:26] environment and synthetic tasks or you
+[01:23:28] can have real um and the responses
+[01:23:31] generally are coming from just capable
+[01:23:35] models but they need also need to be
+[01:23:36] good teachers. Code environments are a
+[01:23:39] pain and you there's a lot of filtering
+[01:23:41] and other details which we don't have
+[01:23:43] time for. Okay, to summarize this
+[01:23:45] lecture, we talked about filtering. So
+[01:23:48] define what good looks like and then
+[01:23:50] train a lightweight classifier. Go over
+[01:23:52] your web crawl and you can get a a small
+[01:23:55] subset that matches what you're looking
+[01:23:57] for. Dduplication is important to avoid
+[01:24:01] overfitting and saving flops. uh mixing
+[01:24:05] um try mixture at small scales
+[01:24:06] extrapolate to large scale um and then
+[01:24:10] we looked at some you know post-raining
+[01:24:12] data um I will say that though that a
+[01:24:15] lot of the data work is can be very
+[01:24:18] grungy it's very domain specific um and
+[01:24:21] requires looking at concrete examples to
+[01:24:23] make these high quality data sets so
+[01:24:25] this lecture is not really
+[01:24:27] representative what data work is like
+[01:24:29] but hopefully I've given you a idea of
+[01:24:31] the data landscape out there. Okay, that
+[01:24:35] will be it for today.

@@ -1,0 +1,2581 @@
+[00:05] All right. Uh we'll get started. Um
+[00:07] sorry I uh the lecture slides for this
+[00:10] lecture was not up uh earlier today, but
+[00:13] um it is now up. So, if you want to have
+[00:15] that at your fingertips to look at, um
+[00:18] you should be able to get it through
+[00:20] uh the course website. Um but if not,
+[00:22] you can it's definitely up there on the
+[00:24] uh GitHub. Today, we're going to talk
+[00:25] about um what I think of as kind of like
+[00:28] more advanced uh architecture ideas. Um
+[00:31] so, last lecture was really about the
+[00:33] basic transformer and how, you know, we
+[00:36] might tweak different parts of the basic
+[00:37] transformer to get to a modern language
+[00:40] model.
+[00:41] Um now, I want to talk about things that
+[00:43] I think are much more advanced, much
+[00:45] more complex uh developments on top of
+[00:48] the usual transformer. And the two
+[00:49] things I'll talk about uh today, the
+[00:51] first one is um attentional
+[00:54] alternatives, ways of going to much
+[00:56] longer contexts using architectural
+[00:58] changes
+[01:00] that for the most part generally allow
+[01:01] for linear time dependence um on the
+[01:04] length of the sequence rather than
+[01:05] quadratic.
+[01:06] Um the second thing I want to talk about
+[01:08] is the idea of mixture of experts,
+[01:10] right? So, the first part is, you know,
+[01:12] modifying the attention block. The
+[01:13] second part is going to be modifying the
+[01:15] uh MLP part, right? And mixture of
+[01:17] experts are going to give us
+[01:19] significantly better utilization um in
+[01:21] terms of our hardware, in terms of
+[01:22] having more parameters um relative to
+[01:25] the compute that we have to spend on
+[01:27] these models. So, those are the two
+[01:29] parts and the two ideas um for today.
+[01:32] So, I'm going to start with attention
+[01:35] and I'm going to set the stage. Um it's
+[01:37] clear now that people want longer
+[01:39] context length, right? You want to pack
+[01:41] a lot of things into the context so that
+[01:42] your model has more knowledge, maybe
+[01:44] it's an agent that operates on lots of
+[01:46] things. If you look at, you know,
+[01:48] different models over time on the x-axis
+[01:50] over here and you know, the context
+[01:52] window size, this is in log scale, you
+[01:55] know, there's really a clear rush by a
+[01:57] lot of the the top LM vendors to provide
+[01:59] larger and larger context sizes to
+[02:02] support these kinds of, you know, more
+[02:03] complex workloads.
+[02:05] Now, how do we control these costs?
+[02:08] Well, you know, um
+[02:09] all right, oh not not yet. Um the right
+[02:12] plot also shows, you know, the ratio
+[02:13] between, you know, how much compute cost
+[02:15] is spent in the feed forward part of the
+[02:17] network versus the attention part of the
+[02:19] network as you increase the sequence
+[02:20] lengths. Um and you see that, you know,
+[02:22] the feed forward fairly large at the
+[02:24] start, um but grows linearly. Attention,
+[02:27] right, is an all-to-all connection
+[02:28] between all the different positions,
+[02:30] quadratic, so quickly outpaces feed
+[02:32] forward um as the sequence length grows,
+[02:34] right? So, um you know, it used to be
+[02:37] that for big models at like smallish
+[02:38] sequence lengths, feed forward was the
+[02:40] dominant cost. As you go to these longer
+[02:42] sequence lengths, attention increasingly
+[02:44] becomes um more and more of a problem,
+[02:47] right?
+[02:49] Now, what's kind of the basic toolkit by
+[02:51] which we can control these? And we've
+[02:53] already talked about these, or well, we
+[02:54] talked about one of these and we will
+[02:56] talk about another one of these. Um you
+[02:59] know, we can basically take things like
+[03:01] local attention um and combine them in
+[03:04] different kinds of hybrid ways to
+[03:07] control the very high cost of global
+[03:09] attention, right? Um if you're only
+[03:11] doing global attention once every eight
+[03:12] layers and all the other ones are these
+[03:14] like very local attentions, you've very
+[03:17] much controlled the cost.
+[03:18] The other thing you can do is systems
+[03:20] engineering. Um
+[03:21] I think what very underappreciated fact
+[03:24] is, you know, constant factors really,
+[03:26] really matter, right? Part of the theme
+[03:27] of this course is you need to pay
+[03:29] attention to the details and it's very
+[03:32] easy for people trained in like a more
+[03:34] classical theory-oriented computer
+[03:36] science tradition to be like, "Oh, yes,
+[03:38] it's the big O that matters, right?
+[03:40] Linear or quadratic."
+[03:41] Um but I think one of the biggest things
+[03:43] that has happened to, you know, contexts
+[03:45] and like attention cost is flash
+[03:48] attention, right? Flash attention, we'll
+[03:50] talk about this in a lot more detail
+[03:51] once we get to the systems lecture and
+[03:53] as you do the systems assignments, but
+[03:55] flash attention is really just a very
+[03:56] clever way of rearranging the um
+[04:00] attention operation into a much more
+[04:02] systems-friendly way to minimize uh
+[04:04] memory sort of transfer overhead.
+[04:07] And by doing so, you can get truly,
+[04:09] truly dramatic improvements in uh the
+[04:12] performance of your attention. So, you
+[04:13] know, base PyTorch is this blue, you
+[04:16] know, you can just kind of look at some
+[04:17] of the shorter sequence lengths, you're
+[04:19] doing like 30 to 40 um op uh flops per
+[04:22] sec, a teraflops per second. Um and then
+[04:24] you do flash attention, which is really
+[04:26] a constant factor systems improvement,
+[04:28] and you're getting these big, big
+[04:29] improvements like factors of two
+[04:31] improvements. And at some sizes, you
+[04:32] can't even fit this in memory anymore,
+[04:34] but with flash attention, where you're
+[04:35] not materializing these big attention
+[04:37] matrices anymore, you can continue to
+[04:39] run these, albeit, you know, somewhat
+[04:41] slowly, right? This doesn't fix any of
+[04:43] the quadratic cost issues, but constant
+[04:46] factors are very, very powerful.
+[04:48] Now, that said, you know, if we're going
+[04:50] to to five, 10 million tokens, these
+[04:54] tricks might not be enough. We want much
+[04:56] more radical, much larger gains in our
+[04:58] ability to handle long contexts. So,
+[05:01] this leads us to the question, is there
+[05:03] ways for us to have linear time or
+[05:05] linear dependence on the length of the
+[05:07] sequence?
+[05:08] And what would those kinds of things um
+[05:10] look like?
+[05:12] Okay, there we go.
+[05:14] Um it turns out that, you know, a lot of
+[05:18] people have tried a lot of different
+[05:19] things over the years. Um and I think
+[05:21] there are a few false starts, um but in
+[05:24] the recent years, I would say the last
+[05:26] two-ish years, there's been kind of an
+[05:28] emergence of a a set of recipes that are
+[05:31] fairly effective in linear time
+[05:33] attention that are now kind of
+[05:34] battle-tested at scale. Um and that's
+[05:36] kind of why
+[05:37] uh this is finally the first year when
+[05:39] I'm, you know, talking about linear time
+[05:40] attention because it's it's clear now
+[05:42] that these things really work at scale
+[05:44] and in production and so on.
+[05:46] Um
+[05:47] to really
+[05:49] um explain all of these different
+[05:50] methods that work well, I think you need
+[05:52] to really only understand one core idea
+[05:54] to start with and then we're going to
+[05:55] elaborate and build upon that idea.
+[05:58] Um and that idea to start with is the
+[06:00] associativity
+[06:01] um of multiplication. So, let's think
+[06:03] about how attention works. Um we can
+[06:06] write it in this compact notation where
+[06:07] we say, you know, the the attention
+[06:08] operation is going to be have Qs, Ks,
+[06:11] and Vs, right, with these, you know,
+[06:12] matrix dimensions up here.
+[06:14] Um and you know, I'm going to take my Qs
+[06:16] and the Ks and I'm going to have a
+[06:17] all-to-all interaction, right? All the N
+[06:19] positions are going to interact with
+[06:20] each other by matrix multiplication. And
+[06:22] then I'll normalize them through a
+[06:24] softmax, this this row over here, and
+[06:27] then I will multiply it with my my my
+[06:29] values V to get the attention outputs,
+[06:32] right? This is a classic, you know,
+[06:33] self-attention or whatever other
+[06:35] attention
+[06:36] uh operation.
+[06:38] Now, you know, for the moment, let's
+[06:40] forget that, you know, attention has a
+[06:42] softmax and then I'm just going to drop
+[06:44] the row, like forget it for the moment,
+[06:45] right?
+[06:46] Now, if we didn't have a row, maybe we
+[06:49] can actually change the complexity of
+[06:51] this operation. So, you know, if you
+[06:53] look at attention, it's, you know, N
+[06:54] squared DK, right? Because we're taking
+[06:56] this QK transpose multiplication.
+[06:58] But if row was the identity, I can just
+[07:00] move the parentheses around a little bit
+[07:02] and I can say, all right, instead of,
+[07:04] you know, QK transpose V, really I'm
+[07:06] going to have what I'm going to have is
+[07:08] Q K transpose V, right? And if we do
+[07:10] this reordering, um well, we've like
+[07:12] changed which part is quadratic, right?
+[07:15] Like instead of having the N squareds,
+[07:17] which were pretty terrible because these
+[07:19] Ns are very big, they're millions,
+[07:20] right? That's the context length.
+[07:22] Um instead, I can have dependence on uh
+[07:24] NDVD K, right? So, now we're multiplying
+[07:27] um essentially the key and the value
+[07:29] dimensions. These could be big in
+[07:31] principle, right? I can have a big
+[07:32] model, but these are usually on the
+[07:34] order of like thousands, tens of
+[07:35] thousands, right? No one has like a a
+[07:37] million coordinates in their
+[07:40] uh in their hidden uh dimensions.
+[07:43] And so, you know, this is a much more
+[07:44] favorable uh sort of, you know, uh term
+[07:47] to be dependent on compared to this N
+[07:49] squared term when we were, you know,
+[07:51] doing this original attention operation,
+[07:53] right? So, this is the first thing that
+[07:56] you should know, which is like
+[07:56] associativity of multiplication allows
+[07:59] us to change kind of the the dependence
+[08:02] on the sequence length.
+[08:04] Okay.
+[08:05] Um now,
+[08:07] the other thing that we can do now is,
+[08:09] you know, if we consider this
+[08:10] reordering, this like QK transpose V,
+[08:14] um
+[08:15] something that's even nicer about this,
+[08:16] and I think this has led to really a lot
+[08:18] of the research that, you know, I'm
+[08:20] going to mention in the next couple
+[08:22] slides, is that, you know, this matrix
+[08:24] multiply on the right in the
+[08:25] self-attention case looks just like an
+[08:27] RNN, right? Instead of writing it in
+[08:30] this dense form up here, I can write it
+[08:32] incrementally as I sweep left to right
+[08:34] on my context, you know, I can multiply
+[08:36] my Ks and Vs, right? And I can update
+[08:39] this thing S, which is a state, and I
+[08:41] can add it to my previous state. This is
+[08:43] kind of like incrementally multiplying
+[08:45] and accumulating my KVs, and I can
+[08:47] multiply it with my Q to get my output,
+[08:50] right? And this, you know, dense
+[08:52] operation up here and this RNN form, you
+[08:55] know, are kind of equivalent. And so,
+[08:57] you know, what have we done? Well, we've
+[08:58] started from linear attention on the top
+[09:01] left and then we've somehow gotten
+[09:03] something that looks very much like an
+[09:05] RNN. And what's nice about RNNs? Well,
+[09:07] RNNs are quite nice because at inference
+[09:09] time, right, I have this S, which is my
+[09:12] state, you know, it's fixed in size and
+[09:14] I'm just carrying that forward and
+[09:15] forward, right? So, RNNs are very nice
+[09:17] for inference reasons, um they are, you
+[09:20] know, not nice for training reasons, but
+[09:23] nice thing about linear attention is you
+[09:24] can use them in either way, right? You
+[09:25] can have it in this dense form, which
+[09:27] will be great for training, it's
+[09:28] parallel, or you can have it in this
+[09:30] sort of serial form like an RNN, which
+[09:33] is great for inference, right? So, you
+[09:34] can get the best of both worlds.
+[09:36] Now, um at least in terms of like
+[09:38] dependence of all these objects, this is
+[09:40] great, this is lovely. Um unfortunately,
+[09:42] this is linear, which is not very good.
+[09:45] Um
+[09:46] you know, this is really sort of the
+[09:47] starting point of our discussion. Um any
+[09:49] questions so far? This is really the
+[09:50] basics.
+[09:52] Okay.
+[09:53] Um
+[09:55] One cool thing is um there have been
+[09:57] people that have basically, uh um,
+[10:00] used this linear attention as part of
+[10:02] their, um,
+[10:04] of their attention mechanism. Um, so
+[10:07] Minimax M1, which is a fairly
+[10:09] large-scale, fairly high-performance
+[10:11] Chinese, um, open model, um, uses a 7:1
+[10:16] hybrid. So, seven, you know, linear
+[10:18] attention layers plus one full, uh,
+[10:20] softmax attention. Um, performance
+[10:23] generally strong. You can compare it to
+[10:25] a number of, you know, strong models
+[10:27] like, you know, Open as 03 or DeepSeek
+[10:29] R1, fairly competitive. And then, you
+[10:31] know, since it's linear attention, most
+[10:34] of the dependence on context length is
+[10:35] linear, you know, it's not fully linear
+[10:37] cuz you've got these softmaxes, but the
+[10:39] dependence is much, much milder, right?
+[10:41] Um,
+[10:42] so, you know, this is one example where
+[10:46] people have shown that this even this
+[10:47] basic linear attention, which is very,
+[10:49] very simple to understand, um, can be,
+[10:52] you know, used fairly effectively at
+[10:53] scale. As long as you've got some sort
+[10:56] of full, uh, quadratic connections, uh,
+[10:58] involved. Um, no one has thus far really
+[11:01] proven out, uh, fully linear time
+[11:03] attention mechanisms at scale. Uh,
+[11:05] everything that I'm going to talk about
+[11:06] in the next couple slides is a hybrid.
+[11:10] Okay.
+[11:11] So, now, you know, we've done linear
+[11:13] attention, but you might say, "Linear
+[11:15] attention's too naive and simple for me.
+[11:17] Like, this is not what I want. I want
+[11:18] some more like serious, complex,
+[11:22] um, neural network stuff to be
+[11:23] happening." Well, um, what you can now
+[11:26] do is, uh, oh, sorry. Went a little too
+[11:29] far.
+[11:30] Um, look at the RNN form of linear
+[11:33] attention. So, you know, I've put the
+[11:35] linear attention equation right here
+[11:36] just so you don't have to keep going
+[11:38] back and forth. Um, and we can add a a
+[11:40] small elaboration to, uh, linear
+[11:43] attention in order to get more
+[11:44] expressive updates. Um, and this is how
+[11:47] you end up getting Mamba 2. Um,
+[11:49] some of you may have heard of Mamba,
+[11:51] Mamba 2, Mamba 3 now, I think. Um, these
+[11:54] are a family of state space models, um,
+[11:56] by, uh, Albert Gu and Tri Dao and and
+[11:58] friends. Um, and, you know, they're
+[12:01] derived originally from like this kind
+[12:03] of state space theory and view, but
+[12:05] actually if you look at the mechanics
+[12:07] of, you know, what is being done, you
+[12:09] can actually see it as a very simple
+[12:11] elaboration of the linear attention
+[12:13] mechanism. And so, the idea is the
+[12:15] following, right? So, we start with
+[12:16] linear attention.
+[12:18] And you might say, "Really, the main
+[12:19] problem with linear attention is that
+[12:21] I'm always passing my state forward,
+[12:24] right?" We know from like the olden days
+[12:25] of LSTMs that it's important to know
+[12:28] when to pass information forward and
+[12:30] when to just not pass information
+[12:32] forward, right? To forget things and
+[12:33] send them to zero. So, what I'm going to
+[12:35] do is I'm going to be inspired by that,
+[12:37] and I'm going to add a gate gamma,
+[12:39] right? Gamma of T. Gamma of T is not
+[12:41] stateful. Gamma of T only depends on my
+[12:44] current inputs X of T. Um, and gamma of
+[12:47] T, um, is going to modulate how much of
+[12:50] my state I'm going to carry forward into
+[12:52] the future.
+[12:53] Now, if you think about this, you know,
+[12:54] the state-dependent terms are all these
+[12:56] S's. Um, this gamma is not
+[12:58] state-dependent at all. So, this means
+[13:01] that, you know, this is very simple to
+[13:02] compute, and there's still sort of this
+[13:04] duality. You can, uh, compute this Mamba
+[13:07] 2 term either as a big dense matrix
+[13:09] multiply or at inference time use it in
+[13:12] this sort of recurrent form, um, to, um,
+[13:16] uh, get nice inference improvements,
+[13:17] right? So, that's kind of the core sort
+[13:19] of conceit or view of this idea that,
+[13:21] you know, you can either use them in
+[13:22] parallel or sequence just like linear
+[13:24] attention, um, and people have now used
+[13:27] this at scale. So, NeMo Tron 3, I
+[13:29] mentioned, uh, briefly last lecture,
+[13:32] um, uses this idea of combining Mamba 2
+[13:35] as their sort of lightweight layer, and
+[13:37] of course, you've got your big softmax
+[13:39] attention every now and then, um, and
+[13:41] they sort of alternate this in various
+[13:43] ways to to manage their inference cost
+[13:45] expressiveness trade-off.
+[13:47] Um,
+[13:48] NeMo Tron, um, NeMo Tron 3 achieves, you
+[13:51] know, pretty good performance compared
+[13:53] to Qwen 3, uh, thinking as compared to
+[13:56] GPT-OSS, um, and because of all these
+[13:59] Mamba 2 layers, you know, has pretty
+[14:01] good throughput at fairly large context
+[14:03] length. So, you know, you can see that
+[14:05] it kind of works. Uh, at least these are
+[14:07] small frontier models, not like really
+[14:09] big frontier models, but, you know,
+[14:11] small frontier models, uh, that are open
+[14:13] source.
+[14:15] Cool.
+[14:17] So, now we've like built on this gating
+[14:19] idea, which is cool.
+[14:21] You might say, though, like, "Can we
+[14:23] just, you know, keep pushing this idea
+[14:25] further and like taking this recurrence
+[14:28] and making it sort of increasingly more
+[14:30] complex?"
+[14:31] Um, and kind of the rule of thumb in
+[14:34] some sense for what you can do with your
+[14:35] operations here is, as long as you're
+[14:38] gating the various terms in your RNN, so
+[14:41] to speak, with only input-dependent
+[14:43] terms. So, no state dependence, then
+[14:46] you'll still have this fairly nice
+[14:47] duality between sort of parallel
+[14:50] operations, which you can use for
+[14:51] training, and serial operations, which,
+[14:54] you know, you are going to use for for
+[14:55] inference. So, Gated DeltaNet is
+[14:58] probably, uh, among the most
+[15:01] widely used, I would say, um, state
+[15:04] space model now. I think it's been
+[15:05] tested in quite a few papers,
+[15:08] um, and there's, you know, a very nice
+[15:10] sort of,
+[15:11] uh, large-scale scale-up, um, in Qwen 3,
+[15:14] sorry, 3.5 for these models. So, let me
+[15:16] talk you through what Gated DeltaNet is
+[15:20] um, in comparison to Mamba 2.
+[15:22] So, Mamba 2 is, you know, as I have at
+[15:25] this top here, we take the linear sort
+[15:28] of recurrence, this state update. And
+[15:30] what I'm going to do is I'm going to
+[15:31] gate it with my gamma, right? Oh, I
+[15:33] forgot to explain this VT. Sorry, I I
+[15:35] apologize for that. Um, I added this for
+[15:37] completeness. Mamba 2 also has a
+[15:39] modification where they add what is
+[15:40] basically a residual layer to the YT
+[15:42] update. It's not really core to sort of
+[15:45] the state update or their arguments for
+[15:47] why this is a good idea, but I put it in
+[15:48] for completeness just to make sure, um,
+[15:50] I'm actually giving the true Mamba 2,
+[15:52] uh, updates rather than sort of a more
+[15:54] abridged version. Um, that only gets the
+[15:56] idea score ideas across.
+[15:58] Okay. Um, but you can ignore the VT for
+[16:00] now. This is really just like a
+[16:02] architectural improvement that's not
+[16:04] core to the state updates.
+[16:05] Um, Gated DeltaNet takes this idea in
+[16:08] some sense, um, and adds a second gate,
+[16:11] beta T. So, what does beta T do? Um,
+[16:14] beta T I think of as a no input
+[16:18] operation gate, right? If beta T is
+[16:20] zero, that basically means don't take
+[16:22] any of my current information, don't add
+[16:24] it into my state, right? Um, and I think
+[16:28] most or all of you are probably familiar
+[16:29] with LSTMs, right? This is very
+[16:31] reminiscent of the ideas in LSTM. You've
+[16:33] got gates that control, you know,
+[16:36] whether to forget and whether to put in
+[16:38] information from the current time step,
+[16:39] right? So, they operate in a very
+[16:41] similar set of principles, um, although,
+[16:43] of course, derived, I think, originally
+[16:45] in a very different way.
+[16:47] Now, the other thing that's interesting
+[16:49] about, uh, Gated DeltaNet, and this
+[16:50] comes from the the DeltaNet rather than
+[16:52] the Gated DeltaNet, is this, um, update
+[16:55] direction. So, instead of just gating
+[16:57] things, you could have made this 1 minus
+[16:59] beta T, for example. Um, what they do is
+[17:02] if you're going to do an update where
+[17:04] you're putting in this beta, what you're
+[17:05] going to do is you're going to try to
+[17:06] project out in some sense my current key
+[17:09] direction. So, the intuition here is I'm
+[17:11] going to be writing in information from
+[17:13] my current key, K of T.
+[17:15] And when doing that, not only do I want
+[17:17] to put in new information, I also want
+[17:19] to erase any previous keys that have
+[17:22] gone into it, right? That's one way that
+[17:23] you can think about updates. Like, not
+[17:25] just put stuff in, you know, I want to
+[17:26] clear out the current key that has gone
+[17:28] in. And that's why there's this blue
+[17:30] term, this identity minus beta T KT KT
+[17:32] transpose, which is essentially acting
+[17:34] as a projector that is projecting out
+[17:37] things in the KT dimension.
+[17:38] That's not exactly right because you're
+[17:40] not doing things like unit
+[17:41] normalization, but, you know, you kind
+[17:42] of get roughly the the intuition here.
+[17:45] Um,
+[17:46] the other thing I'll mention before I
+[17:47] kind of move on, oops, sorry, I have
+[17:49] this blue box here. I'll I'll move on
+[17:50] with Gated DeltaNet is, um,
+[17:53] that this has been reinvented in some
+[17:55] ways in in various settings. Um, this
+[17:58] update, this projector appears if you
+[18:00] try to solve certain kinds of like
+[18:01] meta-learning least squares problems.
+[18:04] So, it's been reinvented, um, in other
+[18:06] forms in, uh, fast weight programming or
+[18:09] test time training, where essentially
+[18:11] through very different design
+[18:12] principles, um, researchers from those
+[18:14] areas have basically ended up, um, with
+[18:16] the exact same kinds of solutions.
+[18:19] Um,
+[18:21] and the thing that I'll say here is, you
+[18:23] know, the Qwen 3.5 and the Qwen Next
+[18:25] models that were kind of predecessors to
+[18:27] that, um, some of the best open source
+[18:29] models available today, um, and they use
+[18:31] exactly this this architecture. They use
+[18:33] a 3:1 Gated DeltaNet attention hybrid,
+[18:36] um, very good, very reasonable
+[18:38] performance, um, strong inference
+[18:39] characteristics that you can see on the
+[18:41] right there, you know, Qwen
+[18:43] uh, Next has like much higher decoding
+[18:45] throughput relative to Qwen 3 as the
+[18:47] context length goes up and up and up.
+[18:49] Um, the middle panel is a comparison of
+[18:51] performance versus various like close
+[18:53] source models and like previous
+[18:55] generation models, this hybrid
+[18:57] architecture doesn't seem to hurt
+[18:58] performance very much at all.
+[19:01] Um,
+[19:03] the last thing,
+[19:04] um, that I will say is, you know, there
+[19:06] hasn't been that many great sort of
+[19:09] controlled studies of how hybrid
+[19:11] architectures perform. Um, there's maybe
+[19:13] one by ByteDance seed and UC Santa Cruz
+[19:16] folks where they compare things like
+[19:18] Mamba 2 and Gated DeltaNet and other
+[19:20] architectures as a function of how many
+[19:23] sort of hybrid layers you have. Um, some
+[19:26] of the results I would say are kind of
+[19:27] messy, but, you know, the things that I
+[19:29] would point at is this dash line over
+[19:30] here on this right panel. This guy is
+[19:33] full attention performance, and as you
+[19:35] go from left to right, this is
+[19:37] increasing the number of sort of
+[19:39] non-full attention layers. So, you know,
+[19:41] the the RNN layers, let's call them. You
+[19:43] know, are you increasing them as you go
+[19:44] to the right, and you see performance
+[19:46] degradation.
+[19:47] But maybe the thing to to see here is
+[19:50] that for some of the best architectures
+[19:51] that you have, like the yellow, the
+[19:52] orange, the blue, um these are like the
+[19:54] gated delta nets and like various other
+[19:56] uh variants, you know, you see that at
+[19:58] the low ratios, there's basically no
+[20:00] hit. And then uh once you pass a certain
+[20:02] point, you start to see more significant
+[20:04] degradation in performance uh in long
+[20:07] context performance in this case. Um as
+[20:09] you basically at the end as you go to
+[20:11] full RNN, you know, you have very
+[20:13] noticeable performance degradation in
+[20:14] all these architectures. Um the same is
+[20:16] true at various different other kinds of
+[20:19] evaluations. Um some of these I think
+[20:21] have been optimized by um the
+[20:23] architectures themselves, like single
+[20:24] key retrieval is a task that I think all
+[20:26] of these uh long context architectures
+[20:28] explicitly optimize for, but if you look
+[20:30] at QA performance, we sort of see the
+[20:32] same story, that as we increase the
+[20:34] amount of hybrid ratio, you know, we see
+[20:36] decreases in performance fairly steadily
+[20:38] and fairly clearly, ending up at this
+[20:40] pure point.
+[20:41] Okay.
+[20:42] Um any questions for for the linear time
+[20:44] attention stuff? I have one last
+[20:46] efficient attention thing to to talk
+[20:47] about, but yes.
+[20:49] In the beginning, um you talked about
+[20:51] like the parallel form of attention
+[20:52] versus the linear form, like
+[20:55] there.
+[20:56] Not not not at all.
+[20:59] Shouldn't they be like approximately
+[21:01] equivalent to slightly
+[21:03] degradation in performance?
+[21:07] Sorry, by by recurrent I mean uh
+[21:10] you know, I I meant RNN in general, like
+[21:11] any recurrent formulation. So, gated
+[21:13] delta net would be a recurrence. Um that
+[21:16] is not equivalent to this top one. This
+[21:17] is full softmax attention with the row,
+[21:20] right? The first step is where we drop
+[21:22] the row and then we become linear,
+[21:24] right? That's the very very first step
+[21:25] of any of these. So, this part is going
+[21:26] to be lossy and then after that, you
+[21:28] know, this linear form to, you know,
+[21:31] this recurrent form, this equivalence,
+[21:33] that is exact.
+[21:36] Good.
+[21:36] Yes.
+[21:38] What's the
+[21:40] ET actual ET like the
+[21:42] attention term below?
+[21:45] Oh, oh, oh, yes, yes, yes, yes.
+[21:47] Um yeah, this term, right? Yeah. Um so,
+[21:50] in the linear um attention form, what
+[21:52] we're really doing is, you know, we're
+[21:53] taking these KVs and we're, you know, uh
+[21:55] accumulating them with Qs, right? In the
+[21:57] dual form, that's kind of how this
+[21:58] operates.
+[22:00] Um
+[22:01] but you might actually want in your
+[22:03] outputs to also have some value from
+[22:04] your current time step. You might think
+[22:06] that oh, the value for my current time
+[22:08] step for my token is actually useful for
+[22:10] various things downstream. And so, this
+[22:12] acts a little bit like a residual
+[22:13] connection, where the value of my
+[22:14] current inputs directly pass through to
+[22:17] the outputs of my attention. And D is,
+[22:19] you know, another modulated gate, where
+[22:20] you can control the amount of pass
+[22:22] through that happens.
+[22:26] Good. Okay.
+[22:27] So, that's linear time attention.
+[22:29] There's a lot of really interesting
+[22:30] stuff. Um it's kind of also interesting
+[22:32] that a lot of the methods that have
+[22:34] gotten, you know, tested out really have
+[22:37] this nice simple linear attention style
+[22:40] recurrent form. Um there's a few
+[22:41] exceptions, but for the most part, a lot
+[22:43] of this has converged to almost very
+[22:46] LSTM-like objects in the end.
+[22:49] Okay.
+[22:50] Um
+[22:52] What do you want to say? Uh right, okay.
+[22:54] So, there's another alternative. Um what
+[22:56] I talked about was linear attention,
+[22:57] which has this, you know, very nice like
+[22:59] complexity theoretic, you know, uh
+[23:01] flavor to it. Um I want to talk about
+[23:03] another uh attention optimization, which
+[23:06] I did not talk about, but falls into
+[23:08] this family of like efficient attention
+[23:10] things that are kind of important. Um
+[23:13] so, DeepSeek in DeepSeek 3.2, I think,
+[23:17] um had uh DSA, um not do sparse
+[23:21] attention, that's DeepSeek attention,
+[23:23] um where what they do is instead of um
+[23:25] computing attention Oh,
+[23:28] that was not intentional pun.
+[23:29] Um instead of computing attention over
+[23:31] all the tokens, what you're going to do
+[23:33] is you're going to first have a
+[23:35] lightweight indexer that's going to
+[23:36] subset a bunch of tokens, right? So,
+[23:38] you're going to look at your very long
+[23:39] context and the indexer is going to pick
+[23:41] out, you know, some subset of these, um
+[23:44] much smaller than the full sequence, and
+[23:46] then you're going to do full attention
+[23:47] on that smaller subset, right? Um
+[23:50] So, the mechanics of this are pretty
+[23:52] simple, at least in the forward pass.
+[23:55] Um where what you do is you have, you
+[23:57] know, your normal Qs and Ks, um but then
+[24:00] you pass this through this indexer. And
+[24:02] what the indexer does is it takes the QK
+[24:03] inner products, it takes a ReLU, um and
+[24:07] then it's going to uh have these weights
+[24:10] that are derived from the preceding
+[24:11] tokens, and then this is going to give
+[24:12] you um the act sort of the the
+[24:15] activations for um each of the
+[24:17] positions. And then you're going to pick
+[24:20] this through a top K, where some number
+[24:22] of these, you know, top positions get
+[24:25] sort of included into my attention
+[24:26] computation, and I'm going to do my
+[24:28] usual attention computation that emits a
+[24:30] key value.
+[24:31] Um the nice thing about this is it's
+[24:34] very very sparse, um and if this indexer
+[24:37] is lightweight, now this bottom term,
+[24:39] where you're doing full attention, can
+[24:41] be done on a very small subset. Another
+[24:43] thing that both uh DSA and I think um
+[24:46] GLM uh show is that you don't actually
+[24:49] have to train the model with this, cuz
+[24:51] training with this like indexer thing is
+[24:53] is maybe pretty annoying and very
+[24:55] complex. What you do is you just train a
+[24:57] normal transformer, and when you do your
+[24:59] long context extension, you actually
+[25:01] then drop in this lightning indexer, and
+[25:04] then you train the model to sort of
+[25:05] handle this indexer in a sort of
+[25:07] extension stage that's separate from
+[25:09] pre-training. So, actually the
+[25:10] computational cost of doing this is
+[25:12] itself pretty light.
+[25:14] Um and I want to highlight, you know, in
+[25:16] in DeepSeek's
+[25:18] V3.2, where they they proposed DSA, you
+[25:20] know, this model is quite good. Like
+[25:22] V3.2, you know, matches all of the other
+[25:25] um frontier models at the time, like
+[25:27] Claude 4.5 Sonnet or Gemini 3. Um and
+[25:30] they also have this very nice plot where
+[25:31] they're showing, well, you know, our our
+[25:33] prefill, which is like the attending to
+[25:35] the the input, um and also decoding,
+[25:38] where you're actually generating, both
+[25:40] of these are very sort of favorable
+[25:42] scaling compared to the previous
+[25:44] generation of DeepSeek models that did
+[25:46] not use sparse attention. And that kind
+[25:47] of makes sense, right? If you're only
+[25:49] paying attention to a very small subset,
+[25:51] you're going to dramatically be reducing
+[25:52] your costs of doing attention.
+[25:56] Um and I think another nice orthogonal
+[25:59] sort of validation of this is GLM 5, um
+[26:02] which um came out last year. Uh
+[26:05] I think GLM 5 is one of the
+[26:08] you know, the best open models that are
+[26:10] available, like period. Um and they also
+[26:12] adopted this DSA approach, and they have
+[26:15] actually fairly nice ablations in their
+[26:17] paper, if you're if you're curious,
+[26:18] where they end up sort of comparing with
+[26:20] like oh, what happens if we do DSA with
+[26:22] some warm-up or, you know, just do DSA
+[26:25] or don't do DSA at all, you know, the
+[26:27] main thing that they're showing is if
+[26:28] they do full DSA training,
+[26:30] um you know, you don't lose very much in
+[26:32] performance relative to full
+[26:34] attention, even at long context
+[26:36] retrieval tasks um that are fairly
+[26:38] difficult to to do with
+[26:41] RNN-style architectures. So, this is a
+[26:43] totally alternative view of how to
+[26:45] reduce
+[26:46] uh attention costs. Notice, I'll I'll go
+[26:49] back one slide, this is not linear time,
+[26:52] right? The indexer still has to operate
+[26:54] on full all-to-all attention, cuz you
+[26:56] got these QK inner products that are not
+[26:58] going to be linear in cost, but you can
+[27:00] make this indexer much much cheaper, um
+[27:03] for example, by making this lower
+[27:05] dimensional or making this W very small,
+[27:08] um all of this can be made, you know,
+[27:09] much cheaper in its cost, right?
+[27:12] Okay. Um so, that's a totally
+[27:14] alternative view, works very well. I
+[27:15] won't talk much about this, but it turns
+[27:17] out that this idea of top K selection is
+[27:21] going to be core to the next part uh of
+[27:23] this lecture. I'll stop here for for any
+[27:25] efficient attention questions before I
+[27:26] move on to uh MOEs.
+[27:29] Yes.
+[27:31] So,
+[27:32] uh the the indexer, the time complexity
+[27:35] for that, is it
+[27:37] It's quadratic. Quadratic, yeah. Yeah.
+[27:39] That's right. Cuz it has to I mean, in
+[27:40] order to know what to select, it does
+[27:42] have to look at everything, right? Okay.
+[27:44] And there's no clever like state
+[27:46] transition stuff that happens here. It
+[27:48] is really brute force inner products.
+[27:49] So, if you're going through all of it
+[27:52] and then like afterwards, the step
+[27:54] afterwards is also quadratic as well,
+[27:56] how are we getting
+[27:59] It's It's I mean, it's kind of like a
+[28:00] systems-y trick almost. Like you're
+[28:01] going to do the indexer much more
+[28:03] lightweight, and there are many ways to
+[28:05] do that. You can do that in much lower
+[28:06] precision, which they talk about. You
+[28:08] can do it in um ways that are lower
+[28:10] dimensional by projecting the Qs and Ks
+[28:12] further just for the indexing. So, there
+[28:14] are lots of tricks that you can do here
+[28:16] that you can imagine, but the indexer is
+[28:17] going to be much more lightweight, so
+[28:18] the constant factors are very good. And
+[28:20] then the for the second one, even though
+[28:22] it's quadratic, it's quadratic on a
+[28:23] shorter context length, cuz it's top K,
+[28:25] we can control K. So, now it's this is
+[28:27] expensive, but small, right? So, it's,
+[28:29] you know, this is another one of these
+[28:30] things of um
+[28:32] sometimes don't get too stuck up on the
+[28:33] quadratic quadratic versus not.
+[28:35] Sometimes the constant factors are
+[28:36] really really important.
+[28:38] There's another question? Yeah.
+[28:43] That's right.
+[28:44] That's right. That's right. Or it's part
+[28:46] of like a continued pre-training style
+[28:47] thing. Because all the models, you know,
+[28:49] you don't train long context from
+[28:51] scratch for compute and various other
+[28:53] reasons, you train a shortish context
+[28:55] model first, and then you've got these
+[28:56] long context extension stages. And so,
+[28:59] the nice idea here is that, you know,
+[29:00] we're going to do the second phase
+[29:02] anyway, why don't we bolt the long
+[29:04] context, you know, cost savings on at
+[29:06] the same stage, right? And it's kind of
+[29:08] surprising that it works, you know,
+[29:09] honestly, that you can bolt on this uh
+[29:12] frankly scary-looking top K
+[29:15] non-differentiable object, but as you'll
+[29:17] see in the next part, um maybe you
+[29:19] shouldn't be so scared of top K
+[29:20] selection.
+[29:24] in the process, so is this also part of
+[29:26] the post another post-training step?
+[29:28] Yeah, the usual recipe that I am
+[29:30] familiar with with a lot of the
+[29:31] open-source models is that usually goes
+[29:33] like short context pre-training, long
+[29:35] context extension, then post-training.
+[29:39] Yes. Is the K here similar in length to
+[29:43] the short context length?
+[29:45] Yeah, that's right. Like you would pick
+[29:47] values that are like much closer to
+[29:48] short context performance and you would
+[29:50] bound it, right? So, regardless of the
+[29:51] input size, they would be bound.
+[29:54] Okay, actually many questions. I
+[29:56] appreciate
+[29:57] Are there general tests for the removal
+[29:58] of the soft max
+[29:59] for the context length?
+[30:03] Training stability issues. That's a good
+[30:05] question.
+[30:06] Um, I don't think so. I'm not aware of
+[30:08] like,
+[30:09] you know, documented linear uh soft max
+[30:11] causing lots of attentions. If anything,
+[30:13] soft maxes are usually more of the
+[30:14] problems for various reasons.
+[30:16] Um, so I think this would actually
+[30:18] improve the stability properties of the
+[30:19] architecture.
+[30:23] Um, can you briefly could you briefly
+[30:25] describe
+[30:26] the next level of deep learning
+[30:27] attention?
+[30:30] a better a better attention method
+[30:32] mechanism because because of the uh the
+[30:35] uh the
+[30:36] low community cost and the low latency.
+[30:39] Yeah. Can you elaborate what do you
+[30:40] mean? Like what kind of Like the
+[30:43] highlight
+[30:43] in highlight of what highlight in the
+[30:45] future is
+[30:46] a better attention mechanism.
+[30:48] The the yeah, the vast majority of the
+[30:50] Yeah, I don't know if I have good
+[30:53] predictions for what the future
+[30:54] attention architecture looks like. I
+[30:56] mean, my somewhat cop-out answer to this
+[30:59] is I think a lot of this will look like
+[31:01] we throw all of these tricks in, right?
+[31:03] In the same ways that architectures have
+[31:05] gotten very complex by taking all of
+[31:07] these successful recipes and throwing
+[31:08] them in. I think also that there's a a
+[31:11] even
+[31:12] uh broader layer or like a higher level
+[31:14] layer of basically using post-training
+[31:17] to to have the model manage its own
+[31:18] context, right? Compaction, retrieval,
+[31:20] all of these things are basically an
+[31:22] added layer on top. Um, I think a lot of
+[31:24] the the work that I imagine will be
+[31:27] integration of these different layers
+[31:28] because we've seen that, you know,
+[31:31] at least the linear time attention stuff
+[31:32] has converged a lot into LSTM-like or
+[31:35] linear attention-like architectures and
+[31:36] I don't really see that changing too
+[31:38] much in the in the near future.
+[31:41] Cool. Oh, yes. Well, last question. You
+[31:43] speak about like lower precision
+[31:45] attention, but
+[31:47] I think
+[31:48] is FP4 attention possible?
+[31:50] Um, I think the indexer is partially
+[31:53] motivated by things like this. Like FP4
+[31:55] attention
+[31:56] definitely possible.
+[31:58] Um, I think the drawback is that, you
+[32:00] know, the the loss of precision for
+[32:01] things like soft maxes where like small
+[32:03] underflow, overflow, these kinds of
+[32:05] things can really start to matter can
+[32:07] sometimes be pretty problematic. Um, and
+[32:09] so I think, you know, this motivation of
+[32:11] saying like, okay, like let's do
+[32:12] selection with low precision and then do
+[32:14] a full precision computation afterwards
+[32:16] cuz then the value vectors can be like
+[32:18] more finely added together and weighted
+[32:19] together.
+[32:21] It's a
+[32:22] uh approach that makes sense. I don't
+[32:23] know if there's,
+[32:25] you know, really good ways of um
+[32:27] of doing full attention in in FP4 or
+[32:30] even lower precision of some kind. Yeah.
+[32:34] Okay.
+[32:35] Um, okay, fine. One last question and
+[32:36] then we'll move on.
+[32:39] So,
+[32:39] compared to the transformers
+[32:42] state space models,
+[32:43] what's the downside
+[32:46] Is the training more complicated in the
+[32:48] state space
+[32:50] Yeah, so that's a good question. There
+[32:51] has to be some downside or otherwise
+[32:53] everybody Well, look, like the downside
+[32:54] I think is sort of expressive power,
+[32:56] right? Um, you know, the all-to-all
+[32:58] connection in in soft max attention is
+[33:00] incredibly powerful. It's also very easy
+[33:02] to train, right? Um, it used to be I
+[33:04] think, you know, compared to say an
+[33:05] LSTM, attention had the very strong
+[33:07] advantage of of like hardware
+[33:09] efficiency, right? You could you could
+[33:10] train in parallel. Um, I think the
+[33:12] reason why these state space models have
+[33:14] caught on, you know, despite their
+[33:16] similarity to LSTMs and similar
+[33:18] drawbacks in terms of representational
+[33:20] power is that now, you know, there's
+[33:22] this kind of well-understood duality
+[33:24] because of the linear attention sort of
+[33:26] thing that I talked about where you can
+[33:28] go from, you know, this RNN form to the
+[33:30] more dense matrix multiply form. And the
+[33:32] matrix multiply form allows for
+[33:34] computational efficiency. So, you know,
+[33:36] that trade-off has now been sort of
+[33:37] checked off, but you've still got the
+[33:39] trade-off of if you have a finite state
+[33:41] and you have to carry everything
+[33:42] through,
+[33:43] you know, you you're going to be losing
+[33:44] some information relative to just
+[33:46] carrying everything.
+[33:50] Sorry, what's the context length itself
+[33:56] Well, in state space you have to
+[33:58] basically kind of think about the
+[33:59] context length relative to the size of
+[34:01] your state, right? I mean, if you have a
+[34:02] the state the size of your context, then
+[34:05] you're good to go, but then you're
+[34:06] paying these like very large costs,
+[34:07] right? So, really the the point is the
+[34:09] free lunch is if you want a really tiny
+[34:11] state, it's really hard to compress all
+[34:13] the information in a big context, right?
+[34:15] It might be possible one day to to not
+[34:17] have any trade-offs, but I think thus
+[34:19] far that's where the trade-offs are
+[34:20] showing up.
+[34:22] Cool. Okay, so now I'm going to talk
+[34:23] about mixture of experts.
+[34:25] Um,
+[34:26] and I think mixture of experts are
+[34:27] important to talk about. Um,
+[34:29] conceptually they don't really change
+[34:31] the game. Like one way of thinking about
+[34:32] mixture of experts is they are just a
+[34:34] more efficient MLP, right? Like you take
+[34:36] your MLP and somehow someone gives you
+[34:38] just a more efficient MLP, that is kind
+[34:41] of what mixture of experts is. Um, but I
+[34:43] think you need to understand, you know,
+[34:45] what mixture of experts is. I think for
+[34:46] two reasons. One is kind of this slide
+[34:49] of like everyone's doing MOEs these
+[34:51] days. Everyone's shipping MOEs these
+[34:52] days. Um, you should understand what it
+[34:55] is if you're going to, you know, want to
+[34:56] be
+[34:57] uh
+[34:58] people who deeply understand language
+[34:59] models and how they work, right? So,
+[35:01] that's one reason. Um, the other reason
+[35:03] is that MOEs actually have some really
+[35:05] interesting
+[35:07] um sort of mechanical components to
+[35:09] them. Like if you look at how MOEs are
+[35:11] built and what primitives they use, you
+[35:13] will kind of quickly see MOE-like
+[35:15] primitives in many places. Um, and
+[35:17] you'll kind of realize, wow, I can do
+[35:19] more interesting things with neural
+[35:20] networks. So, there's a broader reason
+[35:22] why I think MOEs are interesting and
+[35:24] cool and you should learn about.
+[35:26] Okay. So, what is an MOE, right? MOEs
+[35:29] are very simple things in some ways.
+[35:31] They're just replacements of your MLP.
+[35:33] So, on the left is your usual MLP for a
+[35:36] transformer, right? You've got your
+[35:37] attention, you've got some
+[35:38] normalization, and then you've got a
+[35:40] feed forward, right? Right after that.
+[35:42] This is kind of where a lot of the
+[35:43] dense, big information processing
+[35:45] happens. Now, um what I can do instead
+[35:49] is let's say I take my big FFN and I'm
+[35:51] going to cut them up into smaller FFNs,
+[35:54] right? So, I have now have four feed
+[35:56] forward networks. Um, and let's say
+[35:58] actually let's say I don't cut them up
+[35:59] into smaller pieces. Let's say they're
+[36:00] the same size
+[36:02] as my original FFN. And somehow, right?
+[36:04] By some magic, I have a system that
+[36:06] tells me which FFN to pick for every
+[36:09] input, right? Now, what I've done is I
+[36:12] have 4x the parameters or at least for
+[36:14] my FFN, right? I have four FFNs worth of
+[36:16] parameters, but on any forward or
+[36:19] backward pass, right? I'm only going to
+[36:21] pay one FFN worth of cost, right? That's
+[36:24] great. So, in some sense, you know, the
+[36:27] original motivations for MOEs, if you
+[36:29] read the original papers, have this like
+[36:30] very um parameter-centric view. You
+[36:33] know, if you it start something like,
+[36:35] "Well, let's say you just wanted more
+[36:37] parameters because you believe more
+[36:38] parameters are good." It's like, okay,
+[36:40] good. If we want more parameters and we
+[36:42] don't want to pay the cost for more
+[36:43] parameters, you need something like
+[36:45] something on the right, right? So, this
+[36:46] is this is the mental model that you
+[36:48] should have for MOEs, right? You want to
+[36:50] increase parameters without affecting
+[36:52] your flops.
+[36:54] Now, why are they so popular, right?
+[36:57] Every model that you get on hugging face
+[36:59] or whatever these days are MOEs past a
+[37:01] certain size, right? Past a certain
+[37:03] size, everything that you get seems to
+[37:05] be an MOE. Um, and the reason is because
+[37:08] it seems to be the case that for
+[37:10] whatever reason, if you keep the total
+[37:12] compute the same, but you just increase
+[37:15] the number of sparse parameters, right?
+[37:18] Somehow the models are generally getting
+[37:21] better, right? So, this is uh
+[37:22] evidence maybe in favor of the view that
+[37:24] more parameters are in fact generally
+[37:27] good even if only a subset of them are
+[37:29] active at a time. Um, and I'm going to,
+[37:32] you know, refer to some of the original
+[37:33] Google papers extensively throughout
+[37:35] this lecture. This one's from uh Fedus
+[37:37] et al. in 2022 um where they were doing
+[37:39] I think the switch transformer for this
+[37:41] one. You know, and they're showing, oh,
+[37:42] as you increase the number of experts,
+[37:44] right? So, this is active parameter
+[37:46] stays the same, number of experts
+[37:47] increases, you know, your test loss for
+[37:50] language modeling is just decreasing,
+[37:51] decreasing, decreasing. That's lovely if
+[37:53] all you care about is your forward pass
+[37:55] flops.
+[37:56] Um, on the right you see sort of similar
+[37:58] things um as you, you know, you train
+[38:01] faster, right? As you increase uh your
+[38:03] training compute on the x-axis, if you
+[38:05] have more experts for the same amount of
+[38:06] training compute, you just get better
+[38:09] performance, right? So, for both
+[38:10] training and inference, um MOEs just
+[38:12] give you a free win, right? This is
+[38:14] pretty pretty wonderful. It's pretty
+[38:15] great.
+[38:16] Um
+[38:18] And this is really, you know, something
+[38:19] that's been
+[38:21] seen many times. This is the same plot
+[38:22] from before on the left from the Fedus
+[38:24] paper um last year, I think. Um,
+[38:28] AIQ folks put out this Olmo paper which
+[38:30] was their like open source mixture of
+[38:32] experts uh analysis and sort of training
+[38:35] paper and they see the same thing as
+[38:37] well. If you look at um training loss or
+[38:39] validation loss or sort of uh downstream
+[38:41] benchmark performance, you see that um
+[38:44] in training time, right? Um, these
+[38:46] models are doing much better as MOEs um
+[38:49] compared to their dense counterparts.
+[38:50] So, something like uh two times faster
+[38:53] or something like that um training an
+[38:55] MOE relative to a dense model. So, you
+[38:58] can really see the benefits of sparsity
+[38:59] here.
+[39:00] Um
+[39:02] And, you know, I think the proof is in
+[39:03] the pudding, but if you look at all the
+[39:05] MOEs that got released, you know, they
+[39:07] are much stronger than dense models in
+[39:10] terms of activated parameters, which is
+[39:12] what matters if you care about inference
+[39:14] flops, or really even, you know, just in
+[39:16] general the cost to train and serve
+[39:18] these systems, right? Like the the
+[39:20] all-in cost. So, when DeepSeek V2 and
+[39:22] like the earlier DeepSeek MOEs came out,
+[39:25] you know, it was really kind of a big
+[39:26] shift from a lot of these dense models
+[39:28] that everyone else was training. You
+[39:30] kind of saw that, wow, we have much
+[39:31] fewer active parameters, you know, just
+[39:33] as good if not better MMLU performance
+[39:36] uh compared to everyone else, right? So,
+[39:37] this is this is a really good stuff
+[39:39] happening with MOEs.
+[39:42] Okay. So, hopefully I've convinced you
+[39:44] that MOEs are like an interesting thing
+[39:46] that you should like spend your time
+[39:48] thinking about
+[39:49] and studying. Oh, right. And then one
+[39:51] last thing that I'll say for for why
+[39:53] this is important is MOEs give you
+[39:55] another axis of parallelization.
+[39:58] We'll talk about parallelization in
+[39:59] systems in
+[40:01] three three more lectures, I think.
+[40:04] But parallelization is actually one of
+[40:05] the really big important things in LLMs.
+[40:08] LLMs are very big. They don't fit in
+[40:09] single devices either to train or
+[40:11] inference. So, you want many different
+[40:13] ways of cutting up your model to
+[40:14] efficiently serve or train them.
+[40:16] Mixture of experts have this additional
+[40:18] nice thing that you can do where your
+[40:20] experts within each FFN naturally come
+[40:23] in different, you know, chunks, right?
+[40:25] Each expert is a natural chunk. You can
+[40:27] put them on different devices, and then
+[40:28] you can route the activations to
+[40:30] different devices. We'll talk about
+[40:32] expert parallel later, which is what
+[40:33] this is, but this gives you an
+[40:34] additional systems thing that you can
+[40:36] optimize, which is very helpful if you
+[40:38] want to sort of optimize your serving.
+[40:42] Okay.
+[40:43] Um in the west, you know, I think
+[40:45] there's been several open-source
+[40:47] releases that are big strong MOEs.
+[40:50] On the big model side, there was Llama 4
+[40:52] and
+[40:54] GPT-OSS from OpenAI. Unfortunately, I
+[40:56] guess open-source model releases in the
+[40:59] west have kind of stalled for the most
+[41:01] part. So, there aren't quite as many
+[41:03] being released now, but you know,
+[41:04] there's at least two good examples of
+[41:06] this.
+[41:07] You know, both top-tier models in their
+[41:09] own right.
+[41:10] Um
+[41:12] But I think a lot of the action for both
+[41:14] MOE research and training has happened
+[41:17] in China.
+[41:19] Qwen and DeepSeek
+[41:21] and some others like MiniCPM did some of
+[41:23] the earliest work kind of training and
+[41:26] popularizing MOEs. They continue to do
+[41:28] really great work on MOEs.
+[41:31] You know, if you look at some of the
+[41:32] early Qwen MOE models, this was Qwen 1.5
+[41:34] MOE.
+[41:36] You know, they showed that they're like
+[41:37] small 2.7 billion parameter active model
+[41:41] you know, was doing better than many of
+[41:42] the 7B models at the time. And I think
+[41:45] some of this early proof of work from
+[41:46] DeepSeek and Qwen really convinced
+[41:49] everyone else in the open-source
+[41:50] community that this was the right way to
+[41:52] go. Um
+[41:54] And speaking of DeepSeek, oh, was there
+[41:56] a question? Yes.
+[41:57] I guess one one question I had about
+[41:59] like the expert parallel. Like isn't
+[42:02] there like a communication bottleneck
+[42:03] that's built up because these experts
+[42:05] are communicating with each other?
+[42:07] Yes. So, in some sense, you pay the
+[42:10] communication cost of like shipping an
+[42:11] activation over. And you know, I will
+[42:14] not explain, but I will show you one
+[42:16] trick of like how you reduce that.
+[42:19] But in general, you're like trading
+[42:20] certain things off. You're getting more
+[42:22] aggregate flops. You're reducing your
+[42:23] memory use. In exchange, you're going to
+[42:25] pay for coms, right? So, you know, it's
+[42:27] highly dependent on your topology and
+[42:29] all these other things whether this is
+[42:31] going to be a net win.
+[42:33] Cool. Oh, yeah. I was going to say
+[42:34] during training though,
+[42:36] though they
+[42:37] During Okay, this is this is the
+[42:38] important part. During training, they
+[42:40] are also sparse, right? This is really
+[42:42] the key thing that makes MOEs hard. I
+[42:44] mean, I'm I'm, you know, spoilering sort
+[42:46] of the key idea from a few slides down,
+[42:50] but it would be very easy if we
+[42:51] activated all the experts during
+[42:53] training, right? Because then we get to
+[42:54] see, oh, which expert is good for my
+[42:55] input. So, you you get to learn how to
+[42:57] route. The hard thing about MOEs is that
+[42:59] during training, you only have, you
+[43:01] know, one or K experts active. So, you
+[43:03] don't know what happened with the rest
+[43:04] of them.
+[43:05] Right? You only know the ones that
+[43:07] activated. Despite this, you must
+[43:08] somehow learn to route. Right? So, it's
+[43:10] kind of got this RL bandit flavor to the
+[43:12] problem.
+[43:14] But we're not going to solve it with
+[43:15] either RL or bandit. So, we're going to
+[43:16] solve it with the power of heuristics
+[43:18] and deep learning magic, right? Okay,
+[43:19] yes.
+[43:20] What is the granularity of switching
+[43:22] between experts? Uh so, the granularity
+[43:25] as in like the scale at which we route
+[43:27] experts is at token level. If I don't
+[43:29] know if Okay, good. Good. That was the
+[43:30] question. Yes, at the token level. So,
+[43:31] every token gets an expert. And the
+[43:33] routers, you know, just to get your your
+[43:34] sort of like mental model correct, the
+[43:36] routers are super naive, right? They're
+[43:37] like a single matrix multiply between
+[43:40] your input and your whatever. And so,
+[43:42] you're not going to do anything
+[43:43] complicated. You don't know it's like a
+[43:44] medical question or not. You're like,
+[43:46] oh, this is a token that looks like it's
+[43:47] in, you know, I don't know, Japanese.
+[43:49] Let's route it to expert seven, right?
+[43:51] Yes. Uh yeah, so is there any upper
+[43:53] limit to parallelizing
+[43:54] [clears throat and snorts]
+[43:55] uh
+[43:56] these uh MOE models
+[43:59] in in training or inference? Yeah, in
+[44:01] general, there's upper limit to
+[44:02] parallelization because, you know, as
+[44:03] you shard over more and more devices,
+[44:06] the communication cost explodes, right?
+[44:08] You will Well, if we if we get the
+[44:10] assignment to design done correctly, you
+[44:12] will have to deal with some of these in
+[44:14] your assignment. We will we will ask you
+[44:15] to figure out the networking topology
+[44:17] and things like this that will
+[44:19] make sharding make sense. Or it's the
+[44:20] reverse. Given a networking topology,
+[44:22] you'll have to figure out how to shard
+[44:24] models and things like this. Yeah.
+[44:26] Good. Okay.
+[44:28] Um right.
+[44:30] DeepSeek, you know, now known for like
+[44:32] DeepSeek R1 and so on. But I think the
+[44:34] thing I really like about DeepSeek, and
+[44:36] originally this lecture was a, you know,
+[44:37] let's just go through a DeepSeek paper
+[44:39] lecture that very first iteration.
+[44:41] Um is that they've done actually really
+[44:43] good architecture and LLM science work
+[44:46] for a long time. And DeepSeek were one
+[44:48] of the earlier ones, you know, going
+[44:49] through and showing why MOEs are good.
+[44:51] And they have a lot of ton of good
+[44:53] ablation work on like, oh, what happens
+[44:55] if we use a dense layer? What if we use
+[44:57] hash routing? What if we use a switch
+[44:58] router? You know, all these different
+[45:00] kinds of design decisions you can see in
+[45:02] some of their earlier DeepSeek MOE
+[45:03] papers. So, if you're interested in a
+[45:05] lot of these questions like architecture
+[45:07] design and so on, I would suggest you
+[45:08] read their earlier DeepSeek papers.
+[45:10] There's a lot to learn from all of
+[45:11] these, right?
+[45:13] And of course, progress hasn't stopped.
+[45:14] You know, DeepSeek V3 and V3.2 and like
+[45:18] GLM and so on have built these like
+[45:20] wonderful very strong MOE models.
+[45:23] It's quite clear that this is kind of
+[45:24] where the future of these big models are
+[45:26] going to be for the foreseeable future.
+[45:29] At least the next couple years, I
+[45:30] imagine will be MOEs.
+[45:33] Okay. So, now the question is, why
+[45:35] haven't they they be
+[45:37] Why haven't they been more popular? In
+[45:40] many different ways, I feel like MOEs
+[45:42] caught on pretty slowly. You know, you
+[45:44] look at some of these papers like in
+[45:45] 2022, right? Google was studying and
+[45:48] really trying to like push MOEs. Um
+[45:51] but, you know, it's only in like 2024
+[45:53] onwards that MOEs really started to
+[45:55] catch on. Like why? Also, you know, if
+[45:57] you're doing LLM research of various
+[45:59] kinds, you're probably mostly working
+[46:01] with dense models. Like why not MOE
+[46:03] models if they're so nice, right? We can
+[46:04] save on compute.
+[46:06] Um there's a lot of complexities that
+[46:08] come from MOEs. Like it's not easy to
+[46:10] train a MOE or to use a MOE to or to do
+[46:12] many things.
+[46:13] Um you know, the infrastructure is very
+[46:16] complex. I mean, there were a couple
+[46:17] questions about parallelization, but
+[46:19] this is like generally right. That it's
+[46:20] hard to parallelize, you know, experts
+[46:23] in ways that are like efficient in
+[46:24] utilization. MOEs have a lot of
+[46:26] parameters. It's hard to fit them on a
+[46:28] single device.
+[46:30] And if you're training them, the MOEs
+[46:32] can really blow up on you. And you'll
+[46:33] see why in a few slides why MOEs are
+[46:36] just really hard to deal with. But
+[46:37] they're just not easy objects to work
+[46:40] with, right? I mean, there's good rules
+[46:42] of thumb now, but it's not easy.
+[46:45] Okay.
+[46:46] Um I'll briefly mention with one slide
+[46:48] that there are people that also, you
+[46:50] know, kind of mixture of experts the
+[46:52] attention block in transformers. There
+[46:55] have been a couple papers,
+[46:57] but they are much less common. And I
+[46:59] think the, you know, things that I have
+[47:01] seen is that they haven't been quite as
+[47:03] easy to tame or to to get to work
+[47:06] compared to just replacing the the FFN
+[47:09] or the MLP layer, right? So, I'm only
+[47:11] going to talk about the left. This is
+[47:12] basically uh what all the big models do.
+[47:15] Um people are not, for the most part,
+[47:17] sharding or sorry, splitting up
+[47:19] attention heads into experts.
+[47:23] Okay. So, that was kind of the broad
+[47:25] industrial overview of like MOEs and
+[47:28] like what the state of things are. Um
+[47:30] but now let's like talk about how you
+[47:31] design an MOE, how you think about an
+[47:33] MOE. So,
+[47:35] um to do that, I'm going to talk about
+[47:37] three different kind of
+[47:38] axes of variation, right? Um so, what
+[47:41] kinds of things can change for MOEs?
+[47:43] Well, you can change the routing
+[47:45] function, right? We know that MOEs have
+[47:46] this core thing of like a router has to
+[47:49] send tokens to experts, right? So, we
+[47:50] can change that. We can change the sizes
+[47:53] of the different experts, right? For a
+[47:54] given budget, you might have more
+[47:56] experts with fewer parameters or fewer
+[47:59] experts with more parameters. Um and
+[48:01] then finally, we're going to talk about
+[48:03] training, right? Because training is
+[48:04] going to be really difficult. Like once
+[48:05] you start to realize how MOEs work, you
+[48:08] realize, wow, it is not easy to train
+[48:11] something that routes tokens to
+[48:12] different places.
+[48:15] Okay. So, in all cases, we don't want to
+[48:18] activate all the experts, right? Like we
+[48:21] want to only have some subset of experts
+[48:23] active. Um and so, we are going to
+[48:26] always be choosing some top K. There is
+[48:29] different kinds of choices that you can
+[48:30] do.
+[48:32] You can have the token choose the
+[48:34] expert. You can have the expert choose
+[48:36] the token. So, each expert picks, you
+[48:37] know, their favorite tokens. Or you can
+[48:39] have each token uh pick their favorite
+[48:41] experts. Or you can somehow have this
+[48:43] like very complicated router that like
+[48:45] globally decides, oh yes, you token
+[48:47] should go to this expert and this other
+[48:49] token should go to that other experts to
+[48:51] try to like globally optimize
+[48:52] assignments.
+[48:54] Um
+[48:55] So,
+[48:56] basically almost all the MOEs do token
+[48:59] choice top K. And so, the token is going
+[49:02] to be the one to choose the experts. And
+[49:04] there's going to be K different experts
+[49:05] that get sort of selected to be in the
+[49:08] pool.
+[49:09] And you can sort of see, you know, this
+[49:11] is from the OLMo paper,
+[49:13] differences between token choice and
+[49:15] expert choice.
+[49:16] You see that token choice is going to
+[49:17] get, you know, lower validation losses,
+[49:19] higher downstream benchmark scores
+[49:22] compared to expert choice. Um There have
+[49:24] been successful expert choice models. I
+[49:25] mean, this also trains fine, you know.
+[49:28] But token choice has generally been much
+[49:30] easier to get working. It has been kind
+[49:33] of the standard for all of the models
+[49:34] that kind of we see today.
+[49:36] I think one of the llama four models was
+[49:38] maybe expert choice, but I don't think
+[49:40] that's necessarily a a strong vote of
+[49:42] confidence.
+[49:43] Uh
+[49:45] What?
+[49:46] I don't think I think that was one of
+[49:47] the unreleased llama four models, you
+[49:49] know, in my in my defense.
+[49:50] Um okay, so I think there's many
+[49:52] different ways that you can do routing.
+[49:55] So one of the ways that you can do
+[49:56] routing is you can actually have a small
+[49:59] small sort of
+[50:00] ML like a linear projection that says,
+[50:03] "Okay, I'm going to get my input. My
+[50:04] router is an inner inner product. Um
+[50:07] each expert has sort of a vector
+[50:09] direction and the sort of the closest in
+[50:11] inner product space will get selected."
+[50:13] This is by far the most common router.
+[50:16] It's used in the classic switch
+[50:17] transformer, the GShard, those two are
+[50:19] the early Google papers. It's used in
+[50:21] Grok, Mistral, Plan, DBRX, Deep Seek,
+[50:24] and others, right? Um the number of K
+[50:27] that you choose varies depending on, you
+[50:29] know, which paper you're looking at.
+[50:31] Um but for the most part, you know,
+[50:33] you're you're just taking inner
+[50:34] products.
+[50:35] Um one thing that has always been a
+[50:37] little mysterious to me um is that many
+[50:41] many papers have shown that actually you
+[50:43] don't need to do any sort of like
+[50:44] learned routing. You can just take your
+[50:46] X's, you can hash them, and send them to
+[50:48] different uh feedforward networks. And
+[50:50] actually this is fine, too. This
+[50:51] sometimes or this gives gains. Not as
+[50:53] much as top K, but somehow hashing-based
+[50:56] uh expert routing is also, you know,
+[50:57] something that people do. Common
+[50:59] baseline in papers.
+[51:00] Um not used in in deployment for for
+[51:02] real reasons for many reasons.
+[51:04] Um you can do RL to learn the routes.
+[51:07] You can basically have a router that's a
+[51:08] inner product router.
+[51:10] Um and you can sort of use reinforcement
+[51:13] learning to try to treat this router as
+[51:15] a kind of policy and then learn it. Um
+[51:18] You know, if you're a machine learning
+[51:19] like classic, you know, learning theory
+[51:22] type oriented person, I think this
+[51:23] should be the natural way to think about
+[51:25] the problem, right? You're like, "Okay,
+[51:26] what am I doing? It's kind of like a
+[51:28] bandit problem. I'm selecting one out of
+[51:30] K or K out of N.
+[51:32] Um and I don't observe all of them. This
+[51:35] is a bandit problem. I will use a bandit
+[51:37] or an RL algorithm, right?" Um used in
+[51:39] some of the earliest work because this
+[51:41] is kind of the natural way to think
+[51:42] about the problem like Bengio in 2013.
+[51:44] Um but it is not a common approach. Um
+[51:48] And I think the reason why it's not
+[51:49] common is because, you know, the
+[51:52] approaches needed to you do RL introduce
+[51:54] a lot of overhead in terms of both the
+[51:56] RL algorithm and the stochasticity.
+[51:59] Um
+[52:00] and what people have figured out is
+[52:02] there's a good set of heuristics like
+[52:04] these recipes that you can apply to this
+[52:06] very simple classic top K routing scheme
+[52:09] um that basically just has it working,
+[52:12] right? And so there's no reason to do
+[52:14] something much more complicated. Um I
+[52:16] will finally sort of mention, you know,
+[52:19] an idea that I think is really cool and
+[52:21] that I love as a person that likes
+[52:22] things that make sense. Um you can solve
+[52:24] a linear assignment problem where you
+[52:26] say, "Okay, I'm going to globally
+[52:27] compute kind of the score that says
+[52:29] like, oh, it would be um
+[52:31] this good for this token to go to that
+[52:33] expert." Right? So you compute this all
+[52:34] pairwise scores of how good the
+[52:36] assignments are. And you can use linear
+[52:37] assignment to exactly solve for the for
+[52:40] the optimal assignment from experts to
+[52:41] tokens. Um it's been used. It's been
+[52:44] shown to to do good things in some
+[52:46] cases.
+[52:47] Um hasn't been seen at scale at all, I
+[52:50] would think because it's, you know,
+[52:51] extremely expensive relative to the
+[52:53] others
+[52:54] uh to get working.
+[52:56] Okay.
+[52:58] Um so top K routing, as I said, is
+[53:00] basically the consensus routing
+[53:01] mechanism. Um how does this work? It's
+[53:04] very very simple. And if you, you know,
+[53:06] were were paying attention in the DSA uh
+[53:09] slide, this looks a lot like DSA, right?
+[53:12] Um you'll also notice this if you were
+[53:14] reading some other papers like H-Nets or
+[53:16] these other kinds of things. This will
+[53:17] appear in many different places. So this
+[53:19] is a good kind of pattern to be able to
+[53:21] to sort of recognize. Um so what you're
+[53:23] doing is you are going to
+[53:26] um
+[53:27] take in your inputs. Um and you're going
+[53:29] to take it through sort of a
+[53:30] feedforward. And then I'm going to
+[53:32] compute um some sort of scores. And the
+[53:34] scores that I'm going to compute is
+[53:36] going to be um
+[53:38] the softmax between the experts and sort
+[53:41] of my my inputs U. And then this S is
+[53:44] going to be the scores. And I'm going to
+[53:45] select the top K of those guys, and
+[53:47] that's going to be the gate that's going
+[53:49] to control each of my experts, right? So
+[53:51] so this is like input, this is the
+[53:53] residual term, this is the FFN. I've got
+[53:55] gates, and the gates are controlled top
+[53:57] K, right? This is kind of the equation
+[53:58] form of what you would imagine of a top
+[54:01] K router. And the only, you know, detail
+[54:03] that you're probably learning here is
+[54:05] how do I learn my gates? My gates are
+[54:07] just learned by taking inner product
+[54:09] between a weight for each expert and the
+[54:12] inputs that I have, right? Very very
+[54:14] lightweight, right? So there's nothing
+[54:15] complicated about the ways that I'm
+[54:17] going to select my gates.
+[54:19] Um
+[54:20] even within this simple thing, there's
+[54:22] been some innovation and variation from
+[54:24] uh DeepSeek
+[54:26] um and friends. Um DeepSeek MoE uh
+[54:29] pioneered this idea, which is now very
+[54:31] widely used, called shared experts.
+[54:34] Um
+[54:34] this is a very intuitive idea
+[54:37] um where, you know, in the classic top K
+[54:39] router you would have, you know, K
+[54:41] different Oh, sorry. In this case, N
+[54:42] different experts. Um and these experts,
+[54:45] you know, you would select amongst them.
+[54:47] But sometimes you might say, "Well,
+[54:49] there's some processing some very common
+[54:51] processing that I want to apply to all
+[54:53] tokens, right?" Like maybe you don't
+[54:55] want experts to be different every time.
+[54:57] You want some experts to always be
+[54:59] applied. And then some other experts to
+[55:02] be applied conditionally, right? So um
+[55:05] what DeepSeek MoE did was they took sort
+[55:07] of the uh original expert design. They
+[55:10] cut up the experts into smaller
+[55:12] finer-grained chunks. And some subset of
+[55:14] those fine-grained experts were were
+[55:17] sort of set as shared experts that are
+[55:18] always on, right? So these sort of
+[55:20] bypass the router. They always process
+[55:22] our inputs and they sort of go back on
+[55:24] the outputs. Oh, sorry.
+[55:26] Um
+[55:27] and this is a nice idea because it
+[55:30] turned out that, you know, if you have
+[55:31] this classic expert design, you were
+[55:33] just kind of reusing a lot of these
+[55:35] weights to do common modeling. And so
+[55:37] you can offload this into the one shared
+[55:38] expert, letting these guys specialize
+[55:41] even more. Um and you know, as I was
+[55:43] kind of saying, DeepSeek is really nice
+[55:46] in that they do careful ablations in a
+[55:48] lot of their papers. Um and so, you
+[55:50] know, they have this very nice ablation
+[55:52] where they look at, you know, zero
+[55:53] shared experts, and then you have these
+[55:55] big experts, 16 routed experts. And this
+[55:57] is really the old GShard Google design.
+[56:00] Um compared to, you know, they have very
+[56:03] fine-grained segmentation of experts and
+[56:05] one shared expert amongst these. And you
+[56:07] know, as you make the experts smaller
+[56:09] and smaller um and you have one shared
+[56:11] expert, you see significant gains from
+[56:14] both of those interventions. And and for
+[56:15] some of these, you know, the shared
+[56:16] expert has very significant improvements
+[56:18] like TriviaQA, Natural Questions. This
+[56:20] blue to yellow gap, right, is shared
+[56:22] experts or not.
+[56:24] So more experts, shared experts all
+[56:27] generally seem to help. And if you want
+[56:28] sort of more validation of
+[56:32] uh these claims and ideas, uh you see
+[56:34] this from Elmo as well. Elmo was I think
+[56:36] the nice uh western sort of carefully
+[56:39] controlled uh MoE study. They do things
+[56:41] like, "Oh, do shared experts help?" Um
+[56:44] they conclude that shared experts don't
+[56:45] help very much. Um and you know, number
+[56:48] of experts they show, you know, doing
+[56:49] fine-grained many experts is helpful. So
+[56:52] they disagree a little bit on the shared
+[56:53] expert point. Um
+[56:55] but, you know, they also have very nice
+[56:57] carefully controlled ablations.
+[56:59] Um many of the recent MoEs uh do follow
+[57:03] essentially the DeepSeek design. Um
+[57:05] you know, there were a couple of early
+[57:07] MoEs uh up until this point. Um
+[57:10] the the first three, you know, I I keep
+[57:12] giving Google praise for doing lots of
+[57:14] interesting things. You know, the first
+[57:15] three were from Google. Um Mistral,
+[57:18] DBRX, and Grok were some of the early
+[57:19] MoE attempts in the west. DeepSeek V1
+[57:22] comes up with sort of both the
+[57:23] fine-grained and shared expert design.
+[57:26] And then that sort of catches on and
+[57:27] everyone else sort of, you know, follows
+[57:28] from DeepSeek. I mean, it's a similar, I
+[57:30] would say, phenomenon to to the llama
+[57:32] design for dense transformers being, you
+[57:35] know, essentially the standard. DeepSeek
+[57:37] MoE and DeepSeek V3 are kind of the
+[57:39] standard design that people have copied
+[57:41] for the MoE side of things.
+[57:44] And if you look at like Qwen 3.5 or GLM
+[57:46] or any of these modern models, you
+[57:48] continue to see uh both shared experts
+[57:51] and fine-grained experts uh in
+[57:52] widespread use amongst all these people.
+[57:55] And so that's been a very battle-tested
+[57:58] um design.
+[57:59] Okay.
+[58:00] Um any questions? Oh, yes, good. Yeah,
+[58:02] if there is a
+[58:03] if there is a shared expert uh or there
+[58:05] are like few shared experts, right?
+[58:08] Uh how would
+[58:09] parallelization work in that case?
+[58:12] Um Yeah. So in the shared expert case,
+[58:14] you know, you wouldn't get any
+[58:15] parallelization savings. Like every
+[58:17] every activation has to route through
+[58:18] those. Like you can copy the shared
+[58:19] expert um
+[58:20] to basically eat memory savings to
+[58:22] reduce comms cost.
+[58:25] Cool.
+[58:26] All right. So that's kind of the sort of
+[58:29] design space of routers. Now I want to
+[58:31] talk about training MoEs. And this is
+[58:33] like, you know, it gets into really
+[58:36] surprising and I would say very deep
+[58:37] learning things about this. Um I think
+[58:40] initially when I was learning about
+[58:42] MoEs, I thought there's no way that we
+[58:43] can train these things well or like
+[58:46] reasonably. But it turns out there are
+[58:48] lots of, you know, tricks that when when
+[58:51] combined together like just really work
+[58:52] well um and robustly for for some
+[58:54] reason.
+[58:55] Um
+[58:57] so as was sort of raised in the previous
+[58:58] question, right? We don't want to
+[58:59] activate all the experts during
+[59:01] training, right? Because if we do that,
+[59:02] we're going to pay the full flops cost
+[59:03] of all of our experts. And we have a lot
+[59:05] of experts. So we need sparsity for
+[59:08] efficiency of training time.
+[59:09] But if we have sparsity, then gating
+[59:12] decisions are no longer differentiable.
+[59:14] And we also don't see all the different
+[59:15] counterfactual experts we could have
+[59:17] picked, right? So these are both big
+[59:19] problems.
+[59:20] Um so there are different solutions. We
+[59:21] could use RL to optimize our gating
+[59:23] policies. I already mentioned this, not
+[59:25] super popular.
+[59:26] Um you could do things like stochastic
+[59:28] perturbations, right? So if you're
+[59:29] familiar with like, you know,
+[59:31] explore-exploit bandit style stuff, you
+[59:33] could do some of that.
+[59:35] Now, the third one is you could kind of
+[59:36] have a whole bunch of weird heuristics
+[59:39] that, you know, deal with the fact that
+[59:41] the gating decisions are sparse to
+[59:42] balance out which experts go where.
+[59:45] Um you know, guess which one people use
+[59:47] in practice. I've been kind of hinting
+[59:48] at this. Um it's number three, right?
+[59:50] It's a it's a collection of really
+[59:52] interesting heuristics that end up
+[59:54] working.
+[59:55] Um I'll talk about uh the other two
+[59:58] first. Um they're not widely used. I
+[01:00:00] would I would, you know, open with that.
+[01:00:02] Um but I think it's useful to know. Um
+[01:00:04] so, some people have done, you know,
+[01:00:06] this is from Clark 2020, um research on
+[01:00:08] things like can you use RL to learn
+[01:00:10] routers? Um so, it does work. You can
+[01:00:12] use RL. This is the the green line over
+[01:00:14] here. Um that's one of the baseline
+[01:00:16] approaches. It works fine, but because
+[01:00:19] of the gradient variance and complexity,
+[01:00:21] it's not, you know, actually the optimal
+[01:00:23] thing to do. And even sort of some of
+[01:00:25] the approaches that are proposed in this
+[01:00:26] paper, you know, handily beat using
+[01:00:29] reinforce gradients for routing
+[01:00:31] decisions.
+[01:00:32] Now, something that's very close to the
+[01:00:35] idea of RL,
+[01:00:37] um but sort of starts to move more
+[01:00:40] towards this like heuristic world of
+[01:00:41] like, you know, uh
+[01:00:44] write down objectives and try things, um
+[01:00:46] is this idea of a stochastic
+[01:00:48] approximation. And it comes from um the
+[01:00:51] earliest
+[01:00:52] uh sort of MOE paper from Noam Shazeer
+[01:00:54] and others. Um where what you do is you
+[01:00:56] don't really make a hard decision during
+[01:00:58] training. What you do is you make
+[01:01:00] stochastic decisions. So, what you do
+[01:01:02] is, you know, you still have this sort
+[01:01:04] of routing uh setup. So, this H is sort
+[01:01:07] of the um you have the inner product
+[01:01:09] between your parameters and your inputs.
+[01:01:11] This is your, you know, standard routing
+[01:01:13] inner product. But then, instead of just
+[01:01:16] doing this, I'm going to uh inject some
+[01:01:18] noise that's kind of, you know,
+[01:01:20] dependent on the scale of the input. And
+[01:01:23] then that's going to be my H. And now,
+[01:01:25] I'm going to keep the top K and softmax
+[01:01:27] just like I was explaining with top K.
+[01:01:29] Um and then that's going to be, you
+[01:01:31] know, the the output that goes in to the
+[01:01:33] to my uh top K uh function.
+[01:01:36] Now, if you look at this, you know, what
+[01:01:38] is this doing? Well, it just means that
+[01:01:40] if you have two experts that are like
+[01:01:42] closely tied or it's like very close to
+[01:01:44] each other, then stochastically you'll
+[01:01:45] pick one of them and not the other,
+[01:01:47] right? And as you backprop, you're going
+[01:01:49] to backprop in a way that like, you
+[01:01:51] know, the the experts that are helpful
+[01:01:52] will get high weights. So, this, you
+[01:01:54] know, perturbation allows you to like
+[01:01:55] tiebreak and explore a little bit more,
+[01:01:58] and hopefully the gradient structure is
+[01:02:00] such that if an expert is helpful, um
+[01:02:02] it's going to sort of emphasize that
+[01:02:03] expert more and it will get higher and
+[01:02:05] higher weights in general, right? So,
+[01:02:06] this is one reasonable thing that you
+[01:02:09] can do. It leads to experts that are a
+[01:02:10] bit more robust, um and you the softmax,
+[01:02:14] you know, allows you to to learn how to
+[01:02:15] rank all these K experts, right? Rather
+[01:02:17] than just doing a hard selection of top
+[01:02:19] K, you're kind of waiting by these
+[01:02:22] elements.
+[01:02:25] Okay.
+[01:02:26] Um there's another sort of scheme that's
+[01:02:29] very closely related that's done in Fit
+[01:02:31] Fedus et al. in 2022, which does kind of
+[01:02:34] a uniform multiplicative perturbation.
+[01:02:36] Um they do this for the reason of like
+[01:02:38] hardening the experts, like making them
+[01:02:40] robust. Um
+[01:02:41] this was a useful thing to do, but this
+[01:02:44] was later removed in in later Google
+[01:02:46] papers that do sort of routing. And it's
+[01:02:48] not really clear that this is, you know,
+[01:02:50] necessary at all. Um you kind of see
+[01:02:52] later ablation showing that, you know,
+[01:02:54] not doing any any of these like
+[01:02:56] stochastic sort of robustness tricks, um
+[01:02:58] actually helps um with uh both stability
+[01:03:02] and overall quality of the final trained
+[01:03:04] MOE. Um
+[01:03:06] So, this kind of suggests, you know, you
+[01:03:07] don't need necessarily these stochastic
+[01:03:10] exploration terms.
+[01:03:13] So,
+[01:03:18] this takes us to what you actually do,
+[01:03:20] um which is a series of sort of
+[01:03:20] heuristics that, you know, in the end is
+[01:03:21] going to give us a working uh MOE.
+[01:03:24] And a lot of these have to do with
+[01:03:26] essentially balancing. So, what's the
+[01:03:29] problem if you just do normal gradient
+[01:03:31] descent ignoring any of these like
+[01:03:33] exploration exploitation concerns? Well,
+[01:03:35] what's going to happen is you're going
+[01:03:36] to first route your top K experts, and
+[01:03:39] then sort of the strongest of those
+[01:03:40] experts will get sort of more signal.
+[01:03:41] Your your backprop is going to say that
+[01:03:43] expert was good, you know, increase the
+[01:03:45] weight of that expert, right? Move that
+[01:03:46] parameter closer to that. So, you get
+[01:03:48] this rich gets richer effect where sort
+[01:03:50] of experts that are chosen get very
+[01:03:52] strong weights. Strong weights means
+[01:03:54] that they're selected more often, and
+[01:03:55] you they kind of run away taking on all
+[01:03:57] everything. And so,
+[01:03:59] this expert collapse phenomenon, or like
+[01:04:01] expert, you know, uh starvation
+[01:04:03] phenomenon, is a very very real problem.
+[01:04:05] Um and in some sense, this is the core
+[01:04:07] issue that you have to solve with sort
+[01:04:09] of heuristic training uh of MOEs. And
+[01:04:12] so, what do you do? Well, what you do is
+[01:04:15] you add a sort of heuristic loss um to
+[01:04:18] the total modeling loss. And this loss
+[01:04:20] is supposed to balance out the tokens
+[01:04:22] that go to different experts. Um and
+[01:04:25] sort of one approach, which is done in
+[01:04:26] the Switch Transformer over here, um
+[01:04:29] you can kind of look at what this does.
+[01:04:30] So, this is um
+[01:04:32] you have different experts going from uh
+[01:04:34] one to N, and you have a a batch of
+[01:04:37] tokens. And what you want to do is you
+[01:04:39] want to make sure that these two inner
+[01:04:41] products are kind of small. Okay, so
+[01:04:43] what is happening here? F is the
+[01:04:44] fraction of tokens that are dispatched
+[01:04:46] to any single tok uh any single expert.
+[01:04:49] And then P of I is kind of the softer
+[01:04:51] version. This is not just the whether
+[01:04:53] the token is dispatched to an expert,
+[01:04:55] this is the total probability mass of
+[01:04:57] the router that's allocated. Um and you
+[01:04:59] multiply these two two terms. Um and
+[01:05:02] this is like
+[01:05:04] at least to me, not a thing where you
+[01:05:06] would like derive it from first
+[01:05:07] principles. I think the easiest way to
+[01:05:09] kind of see what this thing is doing is
+[01:05:12] to take the derivative of this object.
+[01:05:13] So, if you take the derivative of this
+[01:05:15] with respect to P of I, and P of I
+[01:05:17] remember is the uh probability mass
+[01:05:19] allocated to an expert, well, the
+[01:05:22] derivative is going to be the fraction
+[01:05:24] of uh tokens that are allocated. So, in
+[01:05:26] some sense, you can think of this as a
+[01:05:27] penalty in the gradient space, where the
+[01:05:30] more tokens you get, the sort of more
+[01:05:32] negative gradient you get, right? So, so
+[01:05:34] this is trying to push down the the
+[01:05:36] probability mass on very popular experts
+[01:05:38] proportional to their fraction. Um and
+[01:05:41] that's kind of the action of this loss,
+[01:05:43] right? That's the way to think about it.
+[01:05:44] So, um
+[01:05:46] you know, the the objective itself in
+[01:05:48] equation four might not be clear to
+[01:05:49] start with, but once you sort of reason
+[01:05:51] about the action of the uh the gradient,
+[01:05:53] it becomes kind of clear what this is
+[01:05:54] trying to do, which is to push down
+[01:05:56] popular uh experts.
+[01:06:00] So, you know, then we can actually take
+[01:06:02] these ideas and essentially reconstruct
+[01:06:05] um Deep Seek V1 and twos uh MOE system.
+[01:06:09] So, what do you do to build Deep Seek
+[01:06:11] MOE? Well, you're going to do your
+[01:06:13] normal losses, and you're just going to
+[01:06:14] backprop straight through the experts,
+[01:06:16] ignoring all this non-differentiability
+[01:06:18] and like exploration concerns. But
+[01:06:20] you're going to add per expert balancing
+[01:06:22] that's identical to the Switch
+[01:06:23] Transformer, what I just showed you,
+[01:06:25] right? So, you're going to have this
+[01:06:26] loss that multiplies F, which is the
+[01:06:28] fraction, and P, which is the total
+[01:06:30] mass. Um
+[01:06:31] but, you know, Deep Seek folks, they're
+[01:06:33] very savvy with their sort of systems
+[01:06:34] design, so they don't just balance the
+[01:06:37] experts, right? They also want to
+[01:06:39] balance by device. So, if your experts
+[01:06:41] are allocated to some devices, so let's
+[01:06:43] say, you know, my machine over here has
+[01:06:44] four experts, this machine over here has
+[01:06:46] another four experts, um you want those
+[01:06:49] two machines to be balanced. So, both of
+[01:06:50] them are kind of running at full
+[01:06:51] utilization, right? So, you don't want
+[01:06:53] to just make the experts even, you also
+[01:06:55] want to ensure that the devices are
+[01:06:56] even, right? So, this is a secondary
+[01:06:58] objective. It acts in exactly the same
+[01:07:00] way. If you look at the function here,
+[01:07:02] instead of experts, you're just
+[01:07:03] operating on each device's fraction. You
+[01:07:06] apply the secondary device balancing
+[01:07:07] loss just for utilization reasons.
+[01:07:10] Um
+[01:07:11] in Deep Seek V3, um they have sort of a
+[01:07:14] per expert bias term that they use, um
+[01:07:18] and they use kind of a online learning
+[01:07:20] trick to uh sort of balance out experts,
+[01:07:23] sort of getting rid of some of these uh
+[01:07:25] auxiliary losses. Um
+[01:07:27] but sort of, you know, they they do in
+[01:07:30] in the end have to add some of these
+[01:07:31] auxiliary losses in order to ensure like
+[01:07:34] extreme imbalances don't happen. So, I
+[01:07:35] think, you know, I I add this as kind of
+[01:07:37] a side note that, you know, Deep Seek V3
+[01:07:39] and others have started to get rid of
+[01:07:41] some of these like, I would say, uglier
+[01:07:43] auxiliary losses, but there's no kind of
+[01:07:45] solution that fully gets rid of them
+[01:07:47] uh so far.
+[01:07:51] Okay.
+[01:07:52] Um the last thing I'll talk about with
+[01:07:54] load balancing losses is, you know, you
+[01:07:55] might ask like, do I need to deal with
+[01:07:57] this, right? It's all a bunch of
+[01:07:58] complicated heuristics. Um I wish I
+[01:08:01] could just get rid of the load balancing
+[01:08:02] loss, um but if you remove the load
+[01:08:04] balancing loss, you know, kind of the
+[01:08:06] effects are pretty catastrophic. Um
+[01:08:09] these are both from the Olmo paper where
+[01:08:11] they do this nice ablation of removing
+[01:08:13] the load balancing loss entirely. Um if
+[01:08:15] you have the load balancing loss, you
+[01:08:17] get this pink line at the top, very nice
+[01:08:18] normal curves. Remove the load balancing
+[01:08:20] loss, you know, your losses, you know,
+[01:08:22] significantly increase, um and your
+[01:08:24] training loss also is is not doing so
+[01:08:26] well. Maybe more tellingly, if you look
+[01:08:28] at, you know, which experts are doing
+[01:08:30] what, um
+[01:08:31] with load balancing and without load
+[01:08:33] load balancing, that's these bottom
+[01:08:35] panels over here,
+[01:08:36] you see a really really stark
+[01:08:37] difference. Without load balancing,
+[01:08:40] almost all the tokens are going to two
+[01:08:42] experts, right? The yellow expert uh and
+[01:08:44] the pinkish expert that you see here. Um
+[01:08:46] whereas if you have the load balancing
+[01:08:48] loss, even though we had this kind of
+[01:08:50] heuristic thing going on, all of these
+[01:08:52] experts are being utilized across the
+[01:08:53] tokens. So, we have the nice even
+[01:08:55] utilization, right?
+[01:08:56] Um so, we do kind of see that the load
+[01:08:59] balancing loss does what we'd expect.
+[01:09:00] And without it, you know, we've thrown
+[01:09:02] away a ton of parameters. Those experts
+[01:09:03] are doing absolutely nothing uh for most
+[01:09:06] of training.
+[01:09:07] Right? So, this is kind of how uh MOEs
+[01:09:10] are trained. Um and I think, you know,
+[01:09:12] just to to go back, this is pretty
+[01:09:14] surprising to me that you've got this
+[01:09:15] thing that's like kind of
+[01:09:16] non-differentiable, you're doing this
+[01:09:18] top K selection, and it's
+[01:09:20] honestly a pretty complicated object. Um
+[01:09:22] and all you really need to do is to just
+[01:09:24] add this balancing loss to even out the
+[01:09:26] experts, and then the rest of it you
+[01:09:28] treat it as if you can just pump
+[01:09:30] gradients through the system,
+[01:09:32] um and the model trains very nicely. Um
+[01:09:34] and I think a big part of this is, you
+[01:09:36] know, this dynamic that if an expert is
+[01:09:37] useful, you're going to reinforce it,
+[01:09:39] and that's a sort of positive re- uh
+[01:09:41] positive reinforcement cycle that's
+[01:09:42] nicely sort of balanced out by evening
+[01:09:45] things out, right? Those two dynamics
+[01:09:46] cancel each other out.
+[01:09:48] Um
+[01:09:50] Cool. Oh, and the and the final thing
+[01:09:52] I'll say is, you know, that same trick
+[01:09:54] is used in uh DSA, right? We already saw
+[01:09:57] the top K thing. It's used um in things
+[01:09:59] like H-Net if you're familiar with that.
+[01:10:01] That was a attempt to remove tokenizers.
+[01:10:03] Um and so I think you'll you'll see this
+[01:10:05] trick um
+[01:10:06] more often in the future, where this
+[01:10:08] idea of like top K selection and using
+[01:10:11] um load balancing or other kinds of
+[01:10:13] auxiliary losses to enable that
+[01:10:14] non-differentiability will be sort of a
+[01:10:16] ingredient of future architecture
+[01:10:18] design.
+[01:10:19] Yes.
+[01:10:20] Is there any way of relating mixture of
+[01:10:22] experts to like systems optimization,
+[01:10:24] but like
+[01:10:26] are they actually experts when you look
+[01:10:27] at them? Are they actually doing things
+[01:10:29] in different domains? Yeah, so some
+[01:10:32] papers have um a visualization of which
+[01:10:34] tokens are activated by which experts.
+[01:10:37] And because the routers are so simple,
+[01:10:38] it's not like, you know, experts are
+[01:10:40] like smart experts. They're not like
+[01:10:42] medical experts, legal experts, or
+[01:10:43] whatever. You do see that certain tokens
+[01:10:46] are routed to different things. Like,
+[01:10:47] you know, punctuations might be routed
+[01:10:49] to one expert, uh or like other symbols
+[01:10:51] might be routed to one expert. You know,
+[01:10:52] non-English language character sets
+[01:10:54] might be routed to another expert. Um
+[01:10:56] but it's not really something where you
+[01:10:58] can like look at it and be like, "Oh,
+[01:10:59] this is the Wall Street Journal expert."
+[01:11:01] or something, right? Um nothing like
+[01:11:02] that.
+[01:11:03] There's no semantics is maybe one way of
+[01:11:04] putting it. Yeah. Yeah. Why is there a
+[01:11:06] per expert loss
+[01:11:07] versus a per device loss?
+[01:11:10] That's what's interesting to this. Yeah,
+[01:11:12] the per expert loss, in principle, if
+[01:11:14] it's perfectly enforced, will also
+[01:11:16] enforce a per device balancing if your
+[01:11:17] experts are evenly split, right? Um but
+[01:11:19] I think at least my interpretation of
+[01:11:21] that is, you know, you don't want to
+[01:11:22] crank up the per expert loss so high
+[01:11:24] that you get true full uniformity, cuz
+[01:11:26] that has deleterious effects on training
+[01:11:28] dynamics. But per device is important
+[01:11:30] enough that you're willing to add on a
+[01:11:31] little bit of extra loss to encourage
+[01:11:33] per device balancing over others.
+[01:11:37] Cool. Okay. So now I'm going to talk a
+[01:11:39] little bit about the system side of
+[01:11:41] things um before we wrap up.
+[01:11:43] So
+[01:11:44] um training MOEs has additional fun
+[01:11:47] systems dynamics that are introduced. Um
+[01:11:50] when I talk about parallelism, I'm
+[01:11:52] mostly going to talk about, you know,
+[01:11:53] the the standard, let's call it, forms
+[01:11:55] of parallelism. You can you know, split
+[01:11:57] up your data into many small chunks. Um
+[01:12:00] or sorry, you can split up your data
+[01:12:01] over many small chunks. You can take
+[01:12:02] your one data set and split it up over
+[01:12:04] many sort of machines. Um you can do
+[01:12:06] model parallelism, where, you know, you
+[01:12:08] can take your model, and maybe you can,
+[01:12:10] you know, split up your model over uh
+[01:12:12] different machines. Um and you can
+[01:12:13] combine those two in various ways. You
+[01:12:15] can of course do that. Um but I think
+[01:12:18] the the thing that we realized is each
+[01:12:19] of those parallelism techniques has some
+[01:12:22] sort of limit, right? For data
+[01:12:23] parallelism, you know, you're maxed out
+[01:12:25] your batch size, right? Once you you hit
+[01:12:26] your batch size, you can't parallelize
+[01:12:28] by data anymore. For model size, there's
+[01:12:30] natural sort of like cut points where
+[01:12:32] you can cut your model. Once you exhaust
+[01:12:34] those, you can't parallelize anymore. Um
+[01:12:36] if you combine this with expert
+[01:12:37] parallelism, you got another additional
+[01:12:39] nice axis to parallelize on. Um and when
+[01:12:42] you do this,
+[01:12:44] um a lot of the the underlying
+[01:12:46] implementations for this allow you to
+[01:12:48] take advantage of uh sparse matrix
+[01:12:51] multiply that has been built in to GPUs.
+[01:12:54] Um so the another thing that I'll
+[01:12:55] mention is like if you're if you have
+[01:12:57] multiple experts, right? Let's say on
+[01:12:58] one GPU, um one way of thinking about it
+[01:13:01] is to say, "I'm going to have multiple
+[01:13:03] small matrix multiplies." But this is
+[01:13:05] not nice because you ideally want these
+[01:13:07] like bigger matrix multiplies where you
+[01:13:09] can reuse caches and do all sorts of
+[01:13:11] things. So instead, what you can do is
+[01:13:14] you can, you know, nicely leverage
+[01:13:16] sparsity, and block diagonal, of course,
+[01:13:18] is the most basic form, but you can use
+[01:13:20] much more sort of complicated forms of
+[01:13:22] structured sparsity that are sort of
+[01:13:24] natively supported in hardware um to
+[01:13:27] allow you to essentially multiply uh
+[01:13:30] sort of experts and inputs in very, very
+[01:13:32] clean ways uh very fast, right? So this
+[01:13:35] is another reason why MOEs are nice. If
+[01:13:37] you think about the the sort of
+[01:13:39] computation patterns of MOEs, they
+[01:13:41] almost correspond to these kinds of
+[01:13:42] structured matrix multiplications that
+[01:13:45] are very easy and efficient to support
+[01:13:46] in hardware, right? So there's this
+[01:13:48] hardware architecture co-design that's
+[01:13:50] kind of happening um with MOEs.
+[01:13:54] Um and in terms of parallelism, um one
+[01:13:57] thing I'll mention, this is a very
+[01:13:59] recent development. This is from uh
+[01:14:00] Neumitron 3. Um you know, as I I forgot
+[01:14:03] who asked this question, um
+[01:14:05] uh
+[01:14:06] you know, when we do this expert
+[01:14:08] parallelism, we have to be shipping
+[01:14:09] activations from device to device in
+[01:14:11] order to say like, "Oh, you belong in
+[01:14:13] that expert. I need to ship you over."
+[01:14:15] That can result in significant
+[01:14:17] communications overhead.
+[01:14:19] So some of the things that people have
+[01:14:20] started to think about is to say, "Well,
+[01:14:23] my shared expert, which, you know, I'm
+[01:14:24] not going to communicate, this can be,
+[01:14:26] you know, in big dimensions, but my
+[01:14:29] experts, I need to communicate those
+[01:14:31] activations. I want those to be in
+[01:14:32] smaller, lower dimensional vectors,
+[01:14:34] right?" So you might actually take your
+[01:14:36] your sort of residual stream and down
+[01:14:39] project it first, and then decide to do
+[01:14:42] sort of the collective communication
+[01:14:43] call of sending this activation out. And
+[01:14:46] that will significantly save on uh
+[01:14:48] communication without sort of fully
+[01:14:51] having the the drawbacks of having a
+[01:14:53] smaller hidden dimension size, right? So
+[01:14:55] So you can actually do these like kind
+[01:14:56] of projection tricks to to nicely
+[01:14:58] control uh the trade-off of uh
+[01:15:00] communication and uh having your MOEs
+[01:15:03] parallelized.
+[01:15:07] Okay. One final sort of uh trivia, let's
+[01:15:10] call it, detail uh of MOEs that I think
+[01:15:13] is fun, um but it has been solved in
+[01:15:15] recent years, is stochasticity. If you
+[01:15:17] do MOE sort of infrastructure naively,
+[01:15:21] what you'll find is that unless your
+[01:15:23] experts are sort of perfectly balanced
+[01:15:25] on your input sort of distribution,
+[01:15:27] you'll find that certain experts might
+[01:15:28] be much more popular than others.
+[01:15:30] And if, you know, some expert, like
+[01:15:31] let's say in this case expert zero, is
+[01:15:33] just a really popular expert, you're
+[01:15:35] going to actually start running into
+[01:15:37] situations where this expert sort of
+[01:15:38] queue of tokens just starts building up
+[01:15:40] and building up and building up, and
+[01:15:42] eventually you'll get to a point where
+[01:15:43] you say, "My queue is so long, I have to
+[01:15:45] start dropping tokens." right?
+[01:15:47] Um in the earlier generation of uh MOE
+[01:15:50] inference sort of infrastructure and
+[01:15:52] code, a lot of what happened was you
+[01:15:54] would just actually silently drop this
+[01:15:56] expert, and you just proceed on with
+[01:15:57] your computation as if nothing has
+[01:15:59] happened. You know, you just send a zero
+[01:16:00] back and pretend that that was fine. Um
+[01:16:03] and this means that, it, you know, you
+[01:16:06] you can have like these weird
+[01:16:07] stochasticities where if other users,
+[01:16:10] you know, sending queries that hit the
+[01:16:12] experts that you're using, then you
+[01:16:14] could actually get a worse result
+[01:16:16] because they would kind of bump you out
+[01:16:17] of the expert queue. You know, these
+[01:16:18] kinds of very strange things can happen.
+[01:16:20] Um but these days there's sort of
+[01:16:22] dropless architectures that have gotten
+[01:16:24] rid of a lot of these issues. So this is
+[01:16:26] no longer really a a issue. So
+[01:16:28] MegaBlocks and other sort of very common
+[01:16:30] open-source MOE
+[01:16:32] uh frameworks don't have this issue
+[01:16:33] anymore.
+[01:16:35] Okay. So the last thing that I'll talk
+[01:16:38] about in terms of the design of MOEs is
+[01:16:40] this issue of stability. Um we've
+[01:16:42] already talked about stability issues in
+[01:16:43] the context of um architecture design
+[01:16:46] last lecture.
+[01:16:48] But, you know, if you remember what I
+[01:16:49] said then, I said, you know,
+[01:16:51] exponentials are bad, divisions are bad,
+[01:16:54] which means soft maxes are, you know,
+[01:16:55] danger zone for stability issues. Now,
+[01:16:58] what have we done with um mixture of
+[01:17:00] experts? Well, we have introduced yet
+[01:17:02] another soft max in the routing, right?
+[01:17:04] Because we're going to do top K, we're
+[01:17:05] going to do soft max, and that's going
+[01:17:06] to be sort of how we route uh to
+[01:17:08] experts.
+[01:17:10] Now, um you know, people have long
+[01:17:13] noticed that the soft max operation in
+[01:17:15] MOEs are potentially very, very
+[01:17:17] dangerous. Um Barrett Zoph and others in
+[01:17:20] early days of sort of Google MOE design
+[01:17:22] sort of had an entire paper on MOE
+[01:17:25] stability, and this was one of the
+[01:17:26] things that they noticed. Um and you
+[01:17:28] know, I'm going to go into some of the
+[01:17:29] details. You know, you'll see the
+[01:17:31] solution fairly often for some of the
+[01:17:33] more sensitive and tricky parts. You
+[01:17:35] know, you might end up using something
+[01:17:36] like float32 for just the expert router.
+[01:17:39] Um you might have a Z loss as well here.
+[01:17:41] Um we've talked about Z loss before um
+[01:17:43] in order to control the soft max
+[01:17:45] stability issues that we saw.
+[01:17:48] Um Z loss, I think, was was quite
+[01:17:51] popular, actually,
+[01:17:52] uh to do MOE router work uh
+[01:17:55] MOE router stability even in the early
+[01:17:57] days. Um OLMo, which I've been talking
+[01:17:59] about extensively, has done ablations
+[01:18:01] on, you know, adding or removing Z loss.
+[01:18:03] You know, it's quite clear from these
+[01:18:04] very spiky training loss curves that Z
+[01:18:06] loss on the router um can be quite
+[01:18:08] helpful.
+[01:18:11] There are other issues with MOEs that
+[01:18:13] you can uh end up with. Um and I think,
+[01:18:15] you know, you probably all have
+[01:18:17] experienced this maybe recently if you
+[01:18:18] work with language models, um which is
+[01:18:21] that MOEs can be pretty annoying to
+[01:18:23] fine-tune. They have so many parameters
+[01:18:25] that if you're trying to fine-tune the
+[01:18:27] the um experts, you actually end up with
+[01:18:30] very sort of serious overfitting issues.
+[01:18:32] So you can kind of see
+[01:18:33] um that if you have your dense models,
+[01:18:35] train and val are, you know, fairly
+[01:18:37] close. They don't overfit crazily. But
+[01:18:39] if you look at the sparse, train and val
+[01:18:41] gap is, you know, extremely large as you
+[01:18:43] fine-tune these models for in this case
+[01:18:46] uh downstream task. Uh it was I think it
+[01:18:48] was one of the GLUE benchmark tasks.
+[01:18:51] Now,
+[01:18:52] um
+[01:18:53] you know, you could have a case where,
+[01:18:55] you know, you fine-tune um non-MOE
+[01:18:58] feedforwards. You could also fine-tune
+[01:19:00] just attention. These are pretty common
+[01:19:03] interventions that people uh do.
+[01:19:05] Especially the attention fine-tuning is
+[01:19:07] something that I see quite often with uh
+[01:19:10] MOE works recently. But if your model
+[01:19:13] has non-MOE layers, then of course you
+[01:19:15] can also just fine-tune those. And
+[01:19:16] Barrett Zoph and others, you know, were
+[01:19:18] were kind of arguing for those. Um and
+[01:19:21] of course there's also the uh kind of
+[01:19:22] bitter lesson version of this, which is
+[01:19:24] um you know, maybe you should just use
+[01:19:25] 1.4 million examples instead of, you
+[01:19:28] know, whatever number you have. If you
+[01:19:29] have a lot of data, you know, you can
+[01:19:30] retrain basically the MOE entirely
+[01:19:32] during your fine-tuning stage, and you
+[01:19:34] won't have quite as much of a
+[01:19:36] generalization gap.
+[01:19:39] Okay. Um, the last MOE specific trick uh
+[01:19:42] that I'll mention is uh this idea of uh
+[01:19:46] upcycling. This has actually become a
+[01:19:47] lot less popular in the last year. I
+[01:19:49] don't think I've seen a single upcycled
+[01:19:51] model this year. Um, but it's a cool
+[01:19:54] idea. And also, there were some very
+[01:19:55] nice models earlier on using this trick.
+[01:19:58] So, I I kind of want to mention this.
+[01:20:00] Um, so upcycling is this idea that, you
+[01:20:03] know, if you want that MOE, maybe you
+[01:20:05] can just take a dense model that you've
+[01:20:06] trained, and then you can instantiate a
+[01:20:08] MOE based on that dense model. And the
+[01:20:11] idea is you just copy everything,
+[01:20:13] including the MLPs. You just make a
+[01:20:15] whole bunch of copies from of these
+[01:20:17] MLPs. You have a router, which, you
+[01:20:20] know, have a random initialization. Um,
+[01:20:22] and then you just train this model. And
+[01:20:23] if you do this, then, you know, because
+[01:20:25] of the stochasticity of which inputs go
+[01:20:27] to where in the MLP, um you're going to
+[01:20:29] get these experts that start to
+[01:20:31] specialize. Um, and in the end, you'll
+[01:20:33] actually end up with a MOE.
+[01:20:35] Um, and in sort of some of the earliest
+[01:20:37] papers that proposed upcycling,
+[01:20:40] you know, they showed that an upcycled
+[01:20:41] method um could get, you know, much
+[01:20:43] better sort of uh language modeling sort
+[01:20:46] of val- in this case, accuracy uh
+[01:20:48] performance um sort of upcycling a dense
+[01:20:51] model rather than continuing to train
+[01:20:54] the same model. Um, which is kind of a
+[01:20:56] cool uh thing that you can show.
+[01:20:59] People have sort of validated this kind
+[01:21:01] of uh at scale in many ways. So, MiniCPM
+[01:21:04] is another sort of, you know, Chinese
+[01:21:06] model that, you know, I quite like
+[01:21:08] because they do a lot of carefully
+[01:21:09] controlled ablations. They had a MOE
+[01:21:12] where they took their MiniCPM 2.4B
+[01:21:14] model, they upcycled it to a 13.4
+[01:21:17] billion parameter model, and they got a
+[01:21:19] bunch of, you know, almost free wins
+[01:21:21] from doing that.
+[01:21:23] Um,
+[01:21:24] Qwen also, you know, when they did their
+[01:21:26] QwenMOE, initialized from their 1.8B
+[01:21:29] Qwen model, you know, they upcycled that
+[01:21:32] to a uh Qwen uh 1.5A 2.7B model, um and
+[01:21:37] they ended up with, you know, one of the
+[01:21:39] first and, you know, one of the very
+[01:21:40] high-performance uh models. It's one I
+[01:21:43] think one of the first larger-scale
+[01:21:45] upcycling successes. Of course, these
+[01:21:48] days, I don't think anyone's really
+[01:21:49] upcycling anymore because you don't
+[01:21:51] really train dense models and then
+[01:21:54] convert them. You might as well just
+[01:21:55] train your big, you know, hero run on a
+[01:21:58] MOE to start with, right? So, I don't
+[01:22:00] think we see this quite as much, but I
+[01:22:01] wanted to mention this because I think
+[01:22:03] it's an important thing to know in the
+[01:22:05] action space of mixture of experts
+[01:22:08] models.
+[01:22:11] Okay. So, the last thing I kind of want
+[01:22:13] to end with um
+[01:22:15] is I want to just walk us through the
+[01:22:16] DeepSeek models V1, V2, and V3. I think
+[01:22:19] there's kind of a lot to learn from the
+[01:22:21] evolution of DeepSeek models. And also,
+[01:22:22] if you're interested just in general
+[01:22:24] about MOEs or architecture design, I
+[01:22:26] would encourage that you read the
+[01:22:27] DeepSeek papers. I think they're very
+[01:22:29] well written. I think they have a lot of
+[01:22:30] details that are are worth digging into.
+[01:22:32] So, um the DeepSeek MOE architecture at
+[01:22:35] V1 um is is, you know, already actually
+[01:22:39] the prototype of a lot of different
+[01:22:40] modern MOEs. It's got the shared and
+[01:22:42] fine-grained expert structure. It uses
+[01:22:44] standard top-k routing with the
+[01:22:46] auxiliary loss balancing. I mean, in
+[01:22:48] some ways, I would say this is like the
+[01:22:50] prototypical like Platonic ideal of uh
+[01:22:53] of a MOE model. Um, DeepSeek MOE V2 kind
+[01:22:56] of just like scales this guy up, right?
+[01:22:58] So, you've got two shared experts, many
+[01:23:00] more fine-grained experts, um and you've
+[01:23:02] got this device routing um component,
+[01:23:05] and you've got a communication balancing
+[01:23:06] component. Both of these are essentially
+[01:23:08] adding auxiliary losses to optimize
+[01:23:11] systems. I think it's important to
+[01:23:12] realize that, you know, successful
+[01:23:14] language model training is not just
+[01:23:16] about, you know, deep learning, it's
+[01:23:17] also about really respecting your
+[01:23:19] system. So, that's right. So, DeepSeek
+[01:23:20] V2 is really a reflection, I think, of
+[01:23:22] this philosophy.
+[01:23:24] Um, and then um in DeepSeek MOE V3, you
+[01:23:27] know, they've still got the the shared
+[01:23:29] and fine-grained experts design, but
+[01:23:31] they've got sort of different ways of
+[01:23:33] doing balancing. They've got this
+[01:23:34] auxiliary they've got an aux loss free
+[01:23:36] ways of balancing the different um
+[01:23:39] experts. Um, and they've sort of
+[01:23:41] switched to using um sigmoid plus
+[01:23:43] softmax, which is a different way of
+[01:23:44] sort of weighting um their experts. But
+[01:23:48] really mostly similar.
+[01:23:50] Finally, since we're already here, we
+[01:23:51] might as well just walk through the rest
+[01:23:53] of DeepSeek MOE V3. They've got lots of
+[01:23:55] other cool things. I'm a big fan of of
+[01:23:58] how they think about systems. Um,
+[01:23:59] they've got multi-head latent attention,
+[01:24:01] where, you know, instead of doing QKV uh
+[01:24:04] sort of directly, what you're going to
+[01:24:06] do is you're going to represent them as
+[01:24:08] this as this lower-dimensional latency.
+[01:24:10] So, you have your hidden input, instead
+[01:24:12] of directly producing your Qs, Ks, and
+[01:24:14] Vs, you're going to first produce the C,
+[01:24:17] and then you're going to produce your
+[01:24:18] QKs and Vs as a function of that. And
+[01:24:21] that allows you to get sort of
+[01:24:22] significantly uh
+[01:24:24] improved savings. Instead of KV caching
+[01:24:26] all your Ks and Vs, I only need to store
+[01:24:29] these Cs, right? And the Cs are
+[01:24:31] hopefully lower dimensional, right? And
+[01:24:32] that's why it's called uh MLA, like
+[01:24:34] latent activation, because these Cs,
+[01:24:36] which are latent, are the KV cache
+[01:24:38] quantities that you need to save.
+[01:24:41] Um, the only complexity that you might
+[01:24:44] need to worry about is that this is
+[01:24:45] going to conflict with uh rope when you
+[01:24:49] you do sort of KV caching. Um, so you
+[01:24:51] have to be a little bit careful about
+[01:24:52] how, you know, you rotate different
+[01:24:54] dimensions and so on. Um, and sort of
+[01:24:56] the trick is you have non-latent
+[01:24:58] dimensions that encode positions, um but
+[01:25:00] I'm sort of not going to go into too
+[01:25:02] much more details about that. Finally,
+[01:25:05] something that I thought was a very cool
+[01:25:06] idea for MOE, I said DeepSeek MOE V3,
+[01:25:09] but hasn't caught on very much, is the
+[01:25:12] idea of MTP or multi-token prediction.
+[01:25:14] Instead of predicting one future token,
+[01:25:16] you predict multiple tokens um all at
+[01:25:19] once. That has sort of uh statistical
+[01:25:21] arguments for why that's a good idea.
+[01:25:22] Maybe it lets you predict the future a
+[01:25:24] little bit better. But also, there's
+[01:25:25] this nice systems argument that you kind
+[01:25:27] of now have a a speculative decoder
+[01:25:29] built in. Um, Percy will talk about that
+[01:25:32] when he talks about inference later. Um,
+[01:25:34] but it's a sort of a trick that you can
+[01:25:36] use to speed up your decoding from your
+[01:25:39] model.
+[01:25:41] Okay, I think we're roughly at time. So,
+[01:25:43] to put everything together, right? MOEs
+[01:25:45] are this kind of very clever idea to
+[01:25:47] take advantage of sparsity so that you
+[01:25:49] can have more parameters than you're
+[01:25:51] sort of paying for, right? So, you don't
+[01:25:53] pay for the the compute cost of all of
+[01:25:55] your parameters, but you are getting the
+[01:25:57] parameter benefits. Um,
+[01:25:59] you might initially think that this kind
+[01:26:01] of routing problem is very hard, but it
+[01:26:03] turns out that very simple things work
+[01:26:05] well even at scale. Um, and at this
+[01:26:08] point, it's kind of clear that MOEs are
+[01:26:09] here to stay. So, you should kind of
+[01:26:11] understand how they work and what they
+[01:26:12] are. Um,
+[01:26:13] thanks.

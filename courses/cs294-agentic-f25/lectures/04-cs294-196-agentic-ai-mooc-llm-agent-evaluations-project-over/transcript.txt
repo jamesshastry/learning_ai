@@ -1,0 +1,1949 @@
+[00:00] class we don't have any um speaker so I
+[00:05] think we will take this chance to give
+[00:08] some overview and some guidance on the
+[00:11] course project and especially we will
+[00:14] talk about the phase one of the project
+[00:16] which is building a green agent
+[00:19] um so Shu and I uh Shu is sitting there
+[00:21] so we will split the course and we will
+[00:24] talk about uh like in general why
+[00:27] evaluation matters how it's important
+[00:29] Jordan and how uh and provide some
+[00:32] instructions on how to build uh the
+[00:34] green engine for the course project.
+[00:40] So uh today's uh topic or today's
+[00:44] content we have lots to cover. So first
+[00:48] of all we will give a general
+[00:50] introduction of what is evaluation and
+[00:53] why it is important especially for LM
+[00:56] agents. Um and then we will um give some
+[00:59] quick overview of different types of LM
+[01:02] agent evaluations uh including for
+[01:04] example closedended evaluation and
+[01:06] open-ended evaluation and verifiable and
+[01:09] non-verifiable tasks and static or
+[01:11] dynamic benchmarks as well as uh like a
+[01:15] taxonomy of different agent evaluation
+[01:17] tasks. Um and then we will quick cover
+[01:22] like what is a good evaluation system
+[01:24] look like and then we will give some
+[01:27] case studies of how good evaluation
+[01:30] system should look like and hopefully
+[01:31] that can give you some sense of how to
+[01:34] build your own reent
+[01:38] and for the last part we will just dive
+[01:40] into our own course project and
+[01:43] introduce two types of evaluation we
+[01:46] want to build in the course project
+[01:49] which includes either integrating the
+[01:52] existing benchmarks or proposing new
+[01:54] benchmarks for the project.
+[01:58] Um okay so let's get started. Uh I I
+[02:01] will cover the first half and show you
+[02:03] will cover the second half.
+[02:06] So first of all why do we want to do
+[02:08] evaluation? Uh why is it important for
+[02:10] LMS or specifically LM agents?
+[02:14] So first of all evaluation I mean it's a
+[02:17] I I believe most of people understand
+[02:19] what evaluation means. The basically it
+[02:21] provides a systematic and reproducible
+[02:23] way to measure the performance of your
+[02:26] model of your agent. Um and the the
+[02:30] advantage of this evaluation is it can
+[02:32] provide a way a way to help people like
+[02:35] track the performance of like model
+[02:37] models. Um and they can understand what
+[02:40] the progress of the field is uh as well
+[02:43] as assessing the risk of the current
+[02:45] models as well.
+[02:49] And apparently we need to do evaluation
+[02:52] in every step of our procedure of
+[02:56] building AI models. So for example when
+[02:59] we build our AI models we there will
+[03:02] probably be uh a few steps. For example,
+[03:04] we first need to train a model. Um, and
+[03:06] then we need to do some quick testing of
+[03:08] the model. uh and then we select the
+[03:10] model to to find the best model with
+[03:13] with the best performance and then we
+[03:16] either will deploy the model that will
+[03:18] be disposable to the customers or any uh
+[03:22] end users or we will as you know
+[03:25] academic scholars we will just publish
+[03:28] some papers about the models uh and
+[03:30] probably open source it and and we
+[03:33] definitely need evaluation in every step
+[03:36] of this whole pipeline. For example, uh
+[03:38] during training, you need some kind of
+[03:40] metric to um optimize your model in the
+[03:44] first place because you need some loss
+[03:45] function to do to do training. And of
+[03:48] course, you also need to have some
+[03:50] validation loss to track the performance
+[03:52] of your model during the training proc
+[03:54] uh during the like training pipeline
+[03:56] such that you have you can have loss
+[03:58] curve that can give you some analysis of
+[04:00] how how the training goes and how the
+[04:02] model is performing. And then after
+[04:04] training you need to do evaluation on
+[04:06] the already trained model to get some
+[04:08] sense of how how well the training went
+[04:12] and how how is your performance look
+[04:14] like and of course you also need to you
+[04:17] also need this metric to select the best
+[04:19] model you have. Um and and then when
+[04:22] you're deploying the model and expose it
+[04:25] to customers or when you are publishing
+[04:27] papers about the models, you also need
+[04:29] evaluation which uh should be more uh
+[04:32] trustworthy and more uh more
+[04:34] standardized and reproducible such that
+[04:36] other people can either understand what
+[04:39] your model is doing, how your model is
+[04:40] doing and also like different other like
+[04:43] for example uh later papers can uh
+[04:46] compare with their models on the same
+[04:48] benchmark.
+[04:50] So basically we just need evaluation in
+[04:52] every step of the whole uh procedure of
+[04:55] devel uh developing AI models. So in in
+[04:58] a nutshell evaluation matters because it
+[05:00] enables a fair comparison and
+[05:02] reproducible comparison between
+[05:04] different models and different agents.
+[05:06] Uh and it can guide a a safe and
+[05:08] effective uh develop de development and
+[05:12] also it makes your models more reliable
+[05:14] and more trustworthy uh when when the
+[05:17] other people are using it.
+[05:21] And to be honest, benchmarks and
+[05:22] evaluations they are actually also um
+[05:25] pushing the progress of the whole field.
+[05:28] Um so if you look at like 10 20 years
+[05:32] ago or 10 years ago, there are lots of
+[05:34] benchmarks that's doing this. For
+[05:36] example, from the uh internet in early
+[05:39] earlier days and to recent language
+[05:42] modeling benchmarks such as ML MLOU
+[05:45] people are using these benchmarks to
+[05:47] track the performance of their model and
+[05:49] they understand how how how the
+[05:52] development is in the in the field. So
+[05:55] benchmark is really the key that's uh
+[05:59] determines like the future progress of
+[06:02] the whole field.
+[06:06] So that's some quick overview of
+[06:09] evaluation of uh general AI models or LM
+[06:13] models. Then what is difference between
+[06:16] LM evaluation and LM agent evaluation.
+[06:20] So the main difference um from my
+[06:23] spectre uh perspective is basically uh
+[06:26] LLMs they are a more simple models that
+[06:30] live in a more simple environment
+[06:31] because they are mostly static and they
+[06:34] all they only take texting and output
+[06:36] some text. But for agents they live in a
+[06:39] more complicated environment. For
+[06:41] example they need to use different tools
+[06:43] to complete different tasks. Um and they
+[06:46] need to have different kind of
+[06:48] capabilities. for example, they need to
+[06:49] plan uh and they have to use capability
+[06:52] and they probably also need to have some
+[06:54] memory or some multi-ub reasoning
+[06:56] capabilities as well. So in this sense,
+[06:58] LM agent evaluation is a little more
+[07:01] complicated than LM LLM evaluation.
+[07:06] And so what are the types of LM
+[07:10] evaluation or specifically LM agent
+[07:13] evaluations? So I will do some quick uh
+[07:17] categorization to help you understand
+[07:19] what kind of evaluation we might uh have
+[07:23] especially when you're doing your course
+[07:26] project you might need to do different
+[07:28] kinds of evaluations for different
+[07:30] tasks.
+[07:32] So hopefully this can give you um like a
+[07:35] quick uh understanding of how what kind
+[07:38] of evaluations we have.
+[07:41] So first of all we have in general we
+[07:44] have two types of evaluation. One is
+[07:47] close-ended and another one is
+[07:49] open-ended.
+[07:51] And for open-ended evaluation we also
+[07:53] have evaluation for verifiable tasks and
+[07:57] evaluation for non-verifiable tasks. And
+[08:01] and last lastly we also have evaluation
+[08:03] that is either static or that is
+[08:06] dynamic. So I will dive into each point
+[08:09] to give some quick introduction here. So
+[08:13] first of all closeended versus uh
+[08:16] open-ended evaluation. So this is
+[08:18] actually a pretty uh easy to understand
+[08:21] concept. Basically closed-ended
+[08:23] evaluation means your answer usually
+[08:27] just uh there are only a few possible
+[08:31] answers and there is only a limited
+[08:33] number of correct answers as well. Uh
+[08:35] for example, if the task is a
+[08:38] multi-choice uh problem, the answer
+[08:42] there are maybe only four answers A, B,
+[08:44] C, D. Uh and if it's a yes or no
+[08:46] question, there are only two answers
+[08:48] that's possible. Um so these kind of uh
+[08:51] tasks are more like easier to evaluate.
+[08:55] But for open-ended evaluations is much
+[08:58] more difficult to evaluate because the
+[09:00] output from the model can basically be
+[09:02] anything. uh it's basically a free form
+[09:06] text that can um have like like
+[09:09] unlimited number of possibilities.
+[09:13] So uh let's give some quick introduction
+[09:16] of each type. Um so first of all close
+[09:19] any tasks as we say uh there are limited
+[09:22] number of potential answers and limited
+[09:24] number of correct answers and the
+[09:26] advantage of this is this can en enable
+[09:29] a very automatic evaluation.
+[09:32] Um
+[09:34] and uh examples for closedended tasks
+[09:37] include for example some classic tasks
+[09:39] in natural language processing such as
+[09:42] sentiment analysis, intelment, uh name
+[09:45] entity recognition and all the all these
+[09:47] tasks. And basically for these tasks
+[09:51] since the number of possible answers are
+[09:53] limited usually you can use very simple
+[09:56] metrics to evaluate a task. For example,
+[09:58] you can use accuracy um or you can use
+[10:01] like precision or recall or the
+[10:03] combination of two which is F1 score
+[10:06] etc. Um so this is quite easy but uh the
+[10:10] disadvantage on the other side is is
+[10:13] actually very limited to only a certain
+[10:16] few tasks and actually most tasks out
+[10:19] there they are they cannot be evaluated
+[10:22] in a closed-ended way. So that will lead
+[10:26] us to open-ended tasks which is actually
+[10:29] more much more common in our uh daily
+[10:31] life. So basically open-ended tasks
+[10:34] means your the output from your model
+[10:37] can basically be anything. It can have
+[10:39] like uh infinite number of possible
+[10:42] answers. Um
+[10:45] and the examples of these kind of tasks
+[10:47] include for example uh storytelling. If
+[10:50] the task is to sell story based on topic
+[10:53] or it can also be um adapt your writing
+[10:56] style for example you input a draft for
+[11:00] your paper to chat GBT and it needs to
+[11:03] adapt the style such that it can sounds
+[11:05] more like a formal academia academic
+[11:08] paper.
+[11:09] So these tasks they are all open-ended
+[11:12] tasks and they are more difficult to
+[11:14] evaluate
+[11:15] and
+[11:17] uh within these open-ended tasks there
+[11:20] are also two types of uh open-ended
+[11:23] tasks. So which uh one of them is
+[11:25] verifiable task and another one is
+[11:28] non-verifiable task and we need two like
+[11:32] different kinds of evaluation methods
+[11:34] for these two kinds of open-ended tasks.
+[11:38] So what do I mean by verifiable and
+[11:40] non-verifiable?
+[11:42] So first of all the verifiable tasks it
+[11:45] means that these tasks usually
+[11:49] have an oracle or very clear criteria to
+[11:53] to judge if the eval uh if the output
+[11:56] from the model is correct or not.
+[11:59] Um so to give an example uh we can think
+[12:02] of math proving. So if you give a math
+[12:05] problem to a model and needs it needs to
+[12:08] prove the problem then there there are
+[12:10] lots of automatic math proving uh mass
+[12:14] proof checking uh system out there which
+[12:17] can automatically check if a math proof
+[12:21] is correct or not given the problem. So
+[12:25] that means for this task there will be
+[12:28] an Oracle system that can automatically
+[12:30] check the uh output.
+[12:34] And another example will be code
+[12:37] generation. For example, if you want the
+[12:39] model to do some lead code problems, um
+[12:42] then you can build some for example a
+[12:45] code interpreter to run the code that's
+[12:48] generated by the model and if the output
+[12:50] is correct and it it will be counted as
+[12:53] correct and the output is wrong then it
+[12:55] will be wrong.
+[12:56] So all these tasks they are verifiable
+[12:59] tasks which means you can uh to evaluate
+[13:02] this task what you what you only need to
+[13:04] do is just to follow this criteria and
+[13:07] build a oracle that can evaluate the
+[13:10] output from model. So this is relatively
+[13:14] uh easier
+[13:16] but for other tasks actually a lot more
+[13:19] tasks are actually non-verifiable
+[13:22] which means there are not very clear
+[13:25] criteria to judge if the output from the
+[13:28] model is correct or not or even is the
+[13:32] the the evaluation is probably not only
+[13:34] binary. It's not only correct or wrong.
+[13:36] It can also be like some outputs can be
+[13:39] better than other outputs as well. Uh
+[13:42] and one example of this would be
+[13:44] storytelling. For example, if you want
+[13:45] the CHBT to tell a story, then there's
+[13:49] not really absolutely correct story or
+[13:52] wrong story. Um and you need to judge
+[13:54] the story by different from different
+[13:56] perspectives. For example, if s uh if
+[13:59] the story has a has a clear logic or if
+[14:03] the wording is correct, if the grammar
+[14:05] is correct or if the storytelling is
+[14:07] redundant, so on and so on. So all these
+[14:10] perspectives you need to consider them
+[14:13] when you are building the evaluation for
+[14:16] these non-verifiable tasks and there's
+[14:19] only no
+[14:21] uh no clear criteria or an automatic
+[14:23] system that can directly evaluate the
+[14:26] model for evaluate the outputs for these
+[14:29] tasks.
+[14:30] So how do we how do uh how should we uh
+[14:34] actually build evaluation systems for
+[14:36] these non-verifiable tasks?
+[14:39] Usually there are two uh common
+[14:42] approaches. So one is just using human
+[14:44] evaluation and another one is using LMS
+[14:47] as a judge.
+[14:49] So first of all human evaluation
+[14:52] uh I mean it's very straightforward.
+[14:54] Basically you just ask bunch of humans
+[14:56] to evaluate the model evaluate output
+[15:00] and you can ask uh ask the humans to
+[15:02] evaluate the output from different
+[15:04] perspectives. For example, if the text
+[15:06] is fluent, if it's coherent or if is
+[15:10] there any factuality error, uh if the
+[15:13] style is good, uh if the grammar is
+[15:15] correct, uh all these kind of uh
+[15:18] perspectives
+[15:20] and human evaluation the the good thing
+[15:22] is they are usually pretty accurate and
+[15:25] they are usually regarded as the gold
+[15:27] standard for different tasks. But
+[15:30] apparently it also has uh lots of
+[15:32] issues. for example is very slow and
+[15:34] very expensive. Usually need to hire
+[15:36] lots of people to do evaluation. Um and
+[15:40] additionally there will be other issues
+[15:42] such as inter annotator disagreement.
+[15:45] For example, if you find three people to
+[15:48] evaluate your model, then maybe these
+[15:50] three people will have different
+[15:51] opinions on on the model outputs because
+[15:53] the evaluation is quite uh subject
+[15:56] subjective. So there is no uh guarantee
+[16:00] that different human will have the same
+[16:04] uh opinion or thoughts about your model
+[16:06] output.
+[16:07] Um so you need to deal deal with this
+[16:09] like variance of evaluation between
+[16:12] different annotators
+[16:14] and another
+[16:15] uh problem is there will be even
+[16:19] disagreement
+[16:21] uh for the same annotator across time.
+[16:24] For example, if you ask me what how this
+[16:26] story sounds like to me, uh if you ask
+[16:29] me this week and if you ask me next
+[16:31] week, I'll probably have different
+[16:32] answers for that. So there will also be
+[16:35] intraanimotator disagreement across a
+[16:37] time dimension.
+[16:38] And lastly, it's also not really
+[16:41] reproducible uh because you know uh due
+[16:44] to all these disagreements uh usually
+[16:47] human evaluations, they can just be used
+[16:49] as some kind of reference instead of
+[16:52] some gold uh reproducible benchmark
+[16:55] results for people to compare their
+[16:57] models with yours.
+[17:00] So with uh so so so another way to
+[17:05] evaluate these open-ended task will be
+[17:07] just using LMS instead of using humans
+[17:11] and using LMS there are lots of
+[17:13] advantage uh for example like for if you
+[17:16] use humans it's very expensive but if
+[17:18] you use LMS it's much cheaper um and
+[17:21] surprisingly LMS especially for like
+[17:24] these these state-of-the-art LLMs their
+[17:27] output are actually quite consistent uh
+[17:30] with human preference. So this means
+[17:32] lant can be used as a pretty good
+[17:36] surrogate for human evaluation
+[17:39] but with much much uh lower expense
+[17:43] but of course it will also have some
+[17:45] issues. Uh for example LMS can sometimes
+[17:48] be less reliable than humans. Um so this
+[17:52] means that you probably want to do some
+[17:55] uh small scale human evaluation on your
+[17:57] output as well such that you can make
+[17:59] sure that the LM evaluations and the
+[18:02] human evaluations are consistent
+[18:04] consistent enough
+[18:06] and also there are other issues such as
+[18:09] LM outputs can be pretty random um
+[18:12] because you know like when LM generates
+[18:14] text there when if you turn on the
+[18:16] random sampling then it will output
+[18:18] different out uh different text every
+[18:21] time. So this means you probably need to
+[18:24] for example repeat the uh repeat running
+[18:27] LM for a couple of times uh to get an
+[18:30] average of score or take a majority vote
+[18:33] from different um uh from different runs
+[18:36] of the LL.
+[18:38] Uh and also LMS might have different
+[18:41] biases. Um for example, some LMS they
+[18:43] are good at coding and some LMS they are
+[18:45] good at math. So if you want to remove
+[18:48] the bias from LMS, then one good thing
+[18:51] to do is probably uh choosing different
+[18:53] LMS that are good at different things
+[18:56] and then you use different LMS to
+[18:57] evaluate your model and then take for
+[18:59] example majority vote between these
+[19:01] different LLMs to get a more uh reliable
+[19:04] evaluation result.
+[19:07] Um and there are also some other
+[19:08] problems. For example, the
+[19:09] interpretability is poor or uh is the
+[19:13] elements are sometimes sensitive to the
+[19:15] prompts which means you probably need to
+[19:17] design better prompts or you use like
+[19:20] train of thought or reasoning modes to
+[19:23] get better evaluation from the LMS.
+[19:26] Um but basically LMS they are they have
+[19:30] their flaws. Um but they are usually
+[19:33] quite much cheaper than a human
+[19:35] valuation. So usually LM as a judge is
+[19:37] much more common uh uh to to use when we
+[19:42] are actually building our own green
+[19:44] agents. Um but uh the thing that
+[19:47] recommended is you should use some human
+[19:49] evaluation to do some small scale
+[19:51] crosschecking as well just to make sure
+[19:53] your LM judge is um reliable enough.
+[19:59] So that's basically two ways to evaluate
+[20:02] the open-ended tasks. one is human
+[20:04] evaluation and one is LM as a judge. Um
+[20:07] and uh lastly there are also different
+[20:12] like even for the same uh task there are
+[20:16] also different ways to build this
+[20:18] benchmark and there are two uh for
+[20:21] example there are two ways to build a
+[20:22] benchmark which is either a static
+[20:25] benchmark or a dynamic benchmark. So
+[20:28] here a static benchmark means that your
+[20:31] test cases in your benchmark is usually
+[20:33] fixed. Um and these benchmarks are very
+[20:36] very common in like the past um and many
+[20:40] years. For example, Imageet, MMLU,
+[20:42] they're all static benchmarks and um
+[20:46] they are pretty commonly used because
+[20:48] they enable very direct and reproducible
+[20:52] uh comparison between different models.
+[20:54] like if you run your model on this
+[20:56] benchmark today and 10 years later you
+[20:58] will have the same performance. So this
+[21:00] is very reproducible which is good for
+[21:03] uh academic publishing or uh comparison
+[21:07] between models from different companies
+[21:10] and but recently there are more and more
+[21:13] dynamic benchmarks appearing in the
+[21:15] field. Uh so dynamic benchmarks means
+[21:18] that the test cases in the benchmark is
+[21:20] not actually fixed. they are usually
+[21:24] continuously updated or periodically
+[21:26] regenerated every week or every month uh
+[21:30] or every season. So the advantage of
+[21:34] this dynamic behavior is that uh you can
+[21:37] actually make your benchmark to stay
+[21:39] relevant with the real world data
+[21:41] shifts. uh for example uh if the since
+[21:45] like there are more and more content on
+[21:46] the internet that's generated by LLMs
+[21:48] then you can probably need to update
+[21:50] your benchmark as well to adapt to this
+[21:53] uh distributorship of the data and
+[21:56] another advantage is it's harder to
+[21:58] overfitit or to be gamed because
+[22:03] um like these test cases are updated uh
+[22:07] in a periodic way. So you cannot just
+[22:10] take the test cases as a training data
+[22:12] for your model to to hack your
+[22:14] performance.
+[22:16] Um and there are some examples of this
+[22:19] for example Dynaben which is actually is
+[22:21] proposed two three years ago and there
+[22:24] are more recent works such as live
+[22:25] codebench. Um and to be honest I think
+[22:29] dynamic benchmarks are more recommended
+[22:31] uh when we're building green engines but
+[22:33] it's not required. You can still build
+[22:36] static benchmarks if you want, but
+[22:38] dynamic benchmarks have lots of
+[22:40] advantages compared to the static ones.
+[22:44] So, uh I think it would be good to have
+[22:46] some sense of like what these benchmarks
+[22:49] are look like and uh what kind of
+[22:51] benchmarks you should build for
+[22:52] different tasks.
+[22:55] Okay, so that's basically uh different
+[22:58] types of evaluation that we can think
+[23:00] of. Uh so we have closed-ended task, we
+[23:03] have open-ended task and for open-ended
+[23:05] task we have a verifiable and
+[23:08] non-verifiable task and lastly we also
+[23:10] have static and dynamic evaluation of
+[23:12] the of the task
+[23:14] and and then for
+[23:18] that's basically for like general LM
+[23:20] evaluation and for LM agent evaluation
+[23:23] we have some
+[23:26] so first of all we have lots of
+[23:28] benchmarks for evaluating LM agents out
+[23:30] there.
+[23:32] So we have um we can probably categorize
+[23:35] them into um different categories.
+[23:40] So first of all like some evaluations
+[23:43] they are trying to evaluating the
+[23:45] capability of uh like specific agent. So
+[23:49] they they only focus on one capability
+[23:51] for example planning or reasoning but
+[23:54] their task is usually not fixed. they
+[23:56] probably will have different tasks to
+[23:58] evaluate the same capability
+[24:01] and some other evaluations they are more
+[24:04] focusing on specific application for
+[24:06] example coding or mass proving instead
+[24:09] of focusing on a specific capability of
+[24:11] the agent
+[24:13] um and of course there are some
+[24:14] evaluation uh benchmarks that focus on a
+[24:17] general set of applications so these
+[24:20] benchmarks are built um targeted at like
+[24:24] a generalist AI agents
+[24:27] So I will spend a few minutes to just to
+[24:31] um introduce what kind of benchmarks we
+[24:33] already have now for each of these
+[24:35] categories.
+[24:38] So first of all uh first of all there is
+[24:40] a paper uh which basically surveys
+[24:43] different kinds of benchmarks of the in
+[24:46] the current field. So the link is uh at
+[24:50] the top uh bottom uh bottom right
+[24:53] corner. So if you are interested you can
+[24:56] just click and you can uh give give a
+[25:00] quick look to get a sense of like what
+[25:03] kind of benchmarks we have now for LM
+[25:05] agents.
+[25:07] Um but first of all uh for we have
+[25:11] benchmarks that's evaluating on a
+[25:13] specific capability of the agent. For
+[25:15] example, we have benchmarks that
+[25:17] evaluates the planning capability or
+[25:19] multi-step reasoning capability of
+[25:21] agents. And examples of those include
+[25:24] for example some math u uh some math
+[25:26] benchmarks such as GSM B uh 8K and math.
+[25:31] And also there is Mint and other
+[25:34] benchmarks as well.
+[25:36] And we also have benchmarks that's
+[25:39] evaluating uh the function calling and
+[25:41] tool using the ability.
+[25:44] And there are a few examples here for
+[25:45] example toolbench or API bench.
+[25:49] And there are also benchmarks that
+[25:51] evaluates the self-reflection capability
+[25:54] uh or the memory capability of the
+[25:56] agents. For example, there is MGBT I
+[25:59] think is from Berkeley
+[26:01] um and there is also uh local which is
+[26:04] also a pretty good benchmark.
+[26:07] So all these benchmarks they are
+[26:08] evaluating a single capability of
+[26:10] agents. Um but I think in our course
+[26:14] project there are lots uh lots of the uh
+[26:18] benchmarks or tasks they are actually
+[26:20] evaluating on a specific application of
+[26:22] the agent and so for example there are
+[26:25] lots of benchmarks out there that's
+[26:27] evaluating how agents can use uh can
+[26:30] browse webs
+[26:32] for example there is visual web arena
+[26:34] and web arena that both evaluates how
+[26:37] web browsing an agent can do
+[26:41] and there are also O soft engineering
+[26:42] agents for example Sweetbench and
+[26:44] Swebench verified which I think Julie
+[26:47] will also give you introduction uh like
+[26:48] deeper introduction to
+[26:51] and there are scientific agents for
+[26:53] example uh science QA or science world
+[26:57] and also some conversation agents as
+[26:59] well
+[27:01] um and I think the survey is not quite
+[27:03] complete on all the categories of the
+[27:05] applications and I think we added a few
+[27:09] more categories here I think some of
+[27:11] them are also in the list of the green
+[27:14] agents you can find uh for the for the
+[27:16] cross project. For example, there are
+[27:18] some agents for uh safety and for cyber
+[27:21] security for example the red code or
+[27:23] cyberg uh bounty bench which I think
+[27:26] some of them are also from Berkeley and
+[27:28] there are also agents for other fields
+[27:30] such as legal or healthcare or finance.
+[27:35] So I think there are basically you can
+[27:37] build agent for any task you want and we
+[27:39] encourage you to propose your own task
+[27:42] um for the course project
+[27:46] and also there are some benchmarks that
+[27:48] evaluate on a general set of
+[27:50] applications uh which means the
+[27:52] benchmark includes like different kinds
+[27:54] of tasks but I think this is kind of out
+[27:56] of out of scope uh of our course project
+[27:59] so I'll just skip it.
+[28:02] Okay. So, um that's basically a good uh
+[28:05] quick uh overview of what kind of
+[28:07] benchmarks for LM agents we have. Um now
+[28:11] let's talk about something that's a
+[28:13] little bit more uh closer to our cross
+[28:16] project which is how should we actually
+[28:19] build a good evaluation system? How do
+[28:21] you make sure your green agent uh is
+[28:24] good?
+[28:26] Um so I think one paper I encourage
+[28:29] everyone to check is this one which uh I
+[28:33] already put also put on the bottom right
+[28:35] corner of the slide. So basically this
+[28:37] paper is about some best practices of
+[28:40] building agent evaluations. So you can
+[28:42] just take a look of the paper and um I
+[28:46] think there are some useful information
+[28:47] there that can probably help you when
+[28:49] you're building your own green engine.
+[28:52] Um so so this is a figure that I did a
+[28:55] screenshot from the paper. Basically
+[28:58] here it's proposing two metrics
+[29:03] that's uh that uh get that that can help
+[29:06] you verify if your agent evaluation
+[29:08] agent is good. So one is task validity
+[29:11] and one is outcome validity.
+[29:14] Basically task validity means that
+[29:17] you're so so assume you're you're
+[29:20] building benchmark to test the
+[29:23] capability of an agent. Then first of
+[29:25] all the first thing you need to ensure
+[29:27] is that the success of the task is
+[29:30] actually reflecting the target target
+[29:34] capability of your agent. So you need to
+[29:36] make sure that if the agent successfully
+[29:38] complete a task it will mean that the
+[29:41] target the cap it probably has the
+[29:43] target capability. So this is task
+[29:45] validities and this is more relevant to
+[29:48] how you build a whole uh task and
+[29:51] environment
+[29:52] and uh the other thing which is uh more
+[29:55] relevant to building green is how uh we
+[30:00] need to also ensure the outcome validity
+[30:02] which means that
+[30:04] the evaluation results output by your
+[30:06] green agent should be true uh faithfully
+[30:10] reflecting the success of the task. So
+[30:13] and so that means that if your
+[30:15] evaluation result is good, it means that
+[30:17] the agent should be completing the task
+[30:20] successfully.
+[30:21] So I think outcome validity is one key
+[30:25] metric that can uh that you can track to
+[30:28] make sure you are building a good green
+[30:30] agent.
+[30:32] And so I I have a I took a few
+[30:36] screenshots from the paper that gave
+[30:38] some suggestions on what kind of outcome
+[30:41] validity you need to make sure when
+[30:43] you're building different green engines
+[30:44] for different tasks.
+[30:47] Uh so we have first of all we have
+[30:49] outcome validity for judging text
+[30:52] results. For example, if your task is
+[30:54] only the output of the task is some text
+[30:57] and you need to judge if the output text
+[30:59] is good, then there are a few ways to
+[31:03] judge if the output text is good. U for
+[31:06] example, there can be some simple
+[31:07] metrics such as stream matching or
+[31:09] substream matching. If you're if you
+[31:11] have a ground truth text and you want to
+[31:13] compare the text from the uh competing
+[31:16] agent to the ground truth, then your
+[31:18] green agent should be comparing these
+[31:21] two texts using either stream matching
+[31:23] or substream matching which is pretty
+[31:25] easy magic. Um and of course you can
+[31:28] also use lm as a judge to compare the
+[31:30] similarity between the output text and
+[31:32] the ground trousers text as well.
+[31:34] So when you're using these these
+[31:36] different kind of uh approaches to to
+[31:39] judge the text results here are some uh
+[31:43] some things you need to keep in mind uh
+[31:46] to ensure the outcome validity. So first
+[31:49] of all when you're using stream matching
+[31:52] or substream matching you need to make
+[31:54] sure that uh you're not um you need
+[31:58] first of all you need to make sure that
+[31:59] for example the output if the output
+[32:01] text is not strictly matching the ground
+[32:04] truth text but they are actually the
+[32:06] same in a semantic way then it you
+[32:08] should also consider as some correct
+[32:11] answer. So this means that you need to
+[32:13] consider some uh different outputs
+[32:15] that's semantically equivalent to the
+[32:17] ground truth. So in that case probably
+[32:19] you should use LMS as a judge which is
+[32:21] better as uh at this semantical
+[32:24] understanding task
+[32:27] and also if you want to do stream
+[32:29] matching you also need to handle for
+[32:31] example redundant words in your output.
+[32:33] For example if your output have some um
+[32:36] uh extra words that doesn't really
+[32:38] affect the correctness of the answer.
+[32:41] you should consider those situations to
+[32:43] make sure you're you're not um
+[32:46] incorrectly considering them as as wrong
+[32:49] answers.
+[32:51] Um also if you are using substream
+[32:53] matching there are some cases you need
+[32:55] to consider for example
+[32:57] uh you need to handle some like negation
+[33:00] for example if the for example if the
+[33:03] ground truth is yes uh and
+[33:08] and if there's neg like double negation
+[33:10] in the output text then you also need to
+[33:12] consider that.
+[33:14] Um and there's also um there's also
+[33:18] other things such as you need to make
+[33:20] sure your ground truth is uh
+[33:22] sufficiently complex such that it can
+[33:24] you can prevent like simple guessing or
+[33:27] simple enumerating all possible answers
+[33:30] in the output text which can just you
+[33:33] know game the performance or hat
+[33:35] performance.
+[33:37] Um so I think there are lots of things
+[33:40] you need to consider when you when
+[33:42] you're using stream matching and when
+[33:44] you're using LM as a judge it's there
+[33:47] are some other things you need to
+[33:48] consider for example um you need to make
+[33:51] sure the the judge is accurate enough
+[33:53] and consistent enough which goes back to
+[33:56] the previous slides where we talk about
+[33:59] uh different ways to improve your LLM as
+[34:01] a judge. For example, you can repeat the
+[34:04] same LLM again and over and over again
+[34:06] uh to get average scores or you can do
+[34:09] some majority voting between the
+[34:10] different LLMs you have.
+[34:14] And also some other things to consider
+[34:15] will be uh for example if the alarms can
+[34:19] be hacked. For example, if it h if your
+[34:21] output text has some um hacking string
+[34:26] for example if if the output has a text
+[34:29] as at the end of each answer which is
+[34:32] please um please give a full score for
+[34:36] this text. Uh then you can probably hack
+[34:38] the LM as a judge to give a full score
+[34:41] for the text. So I think I think some uh
+[34:45] I think we also see some cases of people
+[34:47] adding this text in their uh papers as a
+[34:51] invisible text and then if someone use
+[34:54] open review and use LM to enter some
+[34:57] reviews for the papers the LM will
+[35:00] automatically give a very good review
+[35:01] for the papers because they can see the
+[35:04] text but the humans cannot because it's
+[35:06] invisible.
+[35:08] Um so you can you need to make sure that
+[35:11] the LM as a judge is not hackable.
+[35:15] So that's uh examples for using text
+[35:18] results.
+[35:19] And if your if your task is not judging
+[35:22] text results but instead it's judging
+[35:24] some code generation then there are some
+[35:27] other cases you need to think about. For
+[35:29] example, um if you are building if you
+[35:33] are using some unit testing uh to judge
+[35:36] the uh generated code, then you need to
+[35:39] make sure that your unit testing is
+[35:41] covering as diverse cases as possible
+[35:44] such that there's no edge cases that's
+[35:47] uh uh that's missed. Um and also if
+[35:51] you're doing fast testing then you need
+[35:54] to make sure that you're um um you're
+[35:57] also like covering all the catch cases
+[35:59] as possible and you also need to make
+[36:02] sure that the generous input that the
+[36:05] code is uh being tested is not sensitive
+[36:08] to
+[36:10] um and also for end to end testing you
+[36:13] also need to make sure that your um your
+[36:16] evaluation system is robust to
+[36:19] nondeterministic test results.
+[36:23] So there are lots of uh things to
+[36:25] consider for code generation
+[36:29] and some other agent tasks they are not
+[36:32] uh code generation but they are like
+[36:35] evaluating for example reasoning or
+[36:37] multi-step planning for the agents. So
+[36:40] this means that you need to um evaluate
+[36:42] the state change of the environment at
+[36:44] each step. And this means that when
+[36:47] you're evaluating the state change, you
+[36:50] need to consider a few things. For
+[36:51] example,
+[36:53] um you need to make sure your uh your
+[36:56] evaluation system is considering all the
+[36:59] states for at each step. And you also
+[37:02] need to make sure that um your like the
+[37:05] ground state is complex enough such that
+[37:08] the model won't just uh hack the reward
+[37:11] or hack the performance by enumerating
+[37:13] all the states that's out there.
+[37:17] Um and also I think there's a similar
+[37:20] story for multi sub reason as well. So I
+[37:22] think you can check the paper there to
+[37:25] see more information about that.
+[37:29] Um and I lastly what I want to uh add to
+[37:34] this to these slides is u there are some
+[37:37] ways that evaluation can also go wrong.
+[37:40] I think there's a another paper which
+[37:42] gives a pretty good survey of of this.
+[37:44] So you can also take a look. So
+[37:45] basically in general when you are
+[37:48] building your evaluation systems you
+[37:50] need to make sure that your um so your
+[37:53] data is the first of all your data is
+[37:55] not noisy or biased. to make sure your
+[37:57] test data is like accurate and diverse
+[38:00] enough such that it's co it's it's
+[38:01] covering every aspect of the task. Um
+[38:05] and then you also need to make sure that
+[38:08] your evaluation is practical instead of
+[38:10] just testing on some uh toy examples.
+[38:13] And of course we need to again we need
+[38:15] to make sure the valuation is not
+[38:17] hackable. We need to make sure it's
+[38:18] robust enough. Uh and at the same time
+[38:21] also want it to be challenging enough
+[38:23] such that uh there won't like not all
+[38:27] models will achieve like 100%
+[38:30] performance on your benchmark which just
+[38:32] which is just meaningless.
+[38:35] Um, okay. So, I think those are some uh
+[38:40] like general introduction or overview of
+[38:44] different
+[38:45] things you might need to consider uh
+[38:48] when you're building your green agents.
+[38:50] So, I think Shuy later uh will give some
+[38:54] deeper introduction or some like deeper
+[38:56] studies of different uh good evaluation
+[38:59] systems out there. So he will do some
+[39:01] case studies. Uh and then he will also
+[39:04] talk about um some like how like what
+[39:09] kind of uh a agent benchmarks we need to
+[39:12] build in our course project and what are
+[39:14] the guidelines for building those
+[39:15] agents.
+[39:16] &gt;&gt; Okay. Thanks Bon for the introduction of
+[39:19] LM eval and agent eval. Uh and now I'm
+[39:22] going to talk about some case studies of
+[39:25] good debel systems and some specific
+[39:27] requirements and instructions of how to
+[39:30] build a green agents for this course
+[39:32] project.
+[39:35] Yeah. So first of all um we're going to
+[39:38] present some case studies covering a
+[39:41] variety of applications domains to
+[39:44] showcase what a good benchmark is and
+[39:48] how to construct such a good benchmark.
+[39:50] So in order to um create some a good
+[39:54] agentic bench a good benchmark for
+[39:56] agentic evaluation like there are some
+[39:59] certain um key ingredients that it
+[40:02] should contain like so first of all uh
+[40:05] you want to specify the goal of this
+[40:07] benchmark and what to evaluate and you
+[40:10] need to be clarify about uh what's the
+[40:13] task to evaluate what's the specific
+[40:15] task you want to run and what is the
+[40:18] involvement that your agent will um run
+[40:24] uh in to a to solve this task like what
+[40:27] kind of tools it can as it can get
+[40:29] access to and uh use those tools to
+[40:32] gather information to do actions to
+[40:35] really solve the task. And in the end um
+[40:39] it also needs to contains the necessary
+[40:42] parts of how to evaluate the outcomes of
+[40:44] the agent execution like um defining the
+[40:49] metric and performing the evaluation
+[40:53] loop to really evaluate the results to
+[40:56] see if the agent accomplish the tax well
+[40:59] or not. And uh we need to have a data
+[41:04] collection pipeline to collect all those
+[41:06] necessary tax data and also the
+[41:09] evaluation data for uh to run this
+[41:12] benchmark. The general principles uh of
+[41:16] a good agentic benchmark um could be um
+[41:20] will have like uh several perspectives.
+[41:23] So in general it would be great if um it
+[41:27] cont it covers some uh actual relevant
+[41:30] real world applications. So this
+[41:32] benchmark can be useful and um it is
+[41:36] also good to have different difficulty
+[41:38] levels. So we can have a deeper
+[41:41] understanding of um the cap of the
+[41:45] required capability of agents to um
+[41:49] solve like a different kinds of tasks
+[41:51] with different level of difficulties and
+[41:54] importantly we also want benchmark to um
+[41:58] to be hard to get contaminated which
+[42:00] means um there won't there won't be
+[42:03] easily a data leakage in the LMS or LM's
+[42:06] agents training data to um who uh gave
+[42:10] us a force um sense of the capabilities
+[42:14] of the agents um due to the fact that it
+[42:17] actually memorized the benchmark data
+[42:20] and also we want the uh benchmark to be
+[42:24] hard to get saturated which means um the
+[42:27] benchmark won't be like the LM like
+[42:31] after the introduction of the benchmark
+[42:33] uh after like a few months of the
+[42:35] introduction of the benchmarks or even
+[42:36] like a few weeks we don't want the LM
+[42:38] times to just allow agents to just get
+[42:41] his performance to climb from like maybe
+[42:44] a few percent or like feel 10 to 20%
+[42:47] just suddenly get into like 80 or 90% to
+[42:51] um almost make this benchmark obsolete.
+[42:54] So we don't want it to be uh saturated
+[42:57] um easily.
+[43:00] Yeah. So here I'm going to talk about um
+[43:03] a few cases um that um represent
+[43:08] many different applications to give you
+[43:10] a understanding on that of how we can
+[43:14] construct a good agentic for different
+[43:18] domains. The first example um I want to
+[43:21] talk about is this cyber gene and all
+[43:25] cyber security and the goal of this
+[43:27] benchmark is to evaluate an agent's
+[43:30] cyber security capabilities by testing
+[43:33] its abil ability to reproduce some real
+[43:35] world vulnerabilities at a large scale.
+[43:39] Uh more specifically the task uh such
+[43:43] agent or the such agent for cybering
+[43:45] will do is that you will be given a
+[43:47] vulner vulnerability description and the
+[43:51] prep patch codebase and executable.
+[43:54] Then the agents must generate a proof of
+[43:57] concept PC test that successfully
+[43:59] triggers the vulnerability in the
+[44:01] corresponding unpatched codebase.
+[44:04] Uh and obviously the environment we will
+[44:07] provide the benchmark we will provide
+[44:09] for the agent is a containerized sandbox
+[44:12] that contains the necessary tools um to
+[44:16] run the programs to um test for the
+[44:20] cyber security purpose.
+[44:24] Um this benchmark it has already been uh
+[44:27] widely adopted
+[44:30] um
+[44:32] practice to um measure the cyber
+[44:35] security capability of LM agentic
+[44:38] systems um like for example of
+[44:42] anthropics latest system car frontier
+[44:44] model release like the cloud 4.5
+[44:47] includes a cyber results
+[44:50] um to showcase um how good clocked 4.5
+[44:54] can do in the cyber security domains
+[44:57] like as shown in the figure in this
+[44:59] slides.
+[45:04] Uh more specifically you know we talk
+[45:06] we're going to talk about the data
+[45:08] generation pipeline to create this
+[45:11] benchmark and how to evaluate the um
+[45:14] outcomes of agents that uh performs on
+[45:18] this benchmark.
+[45:20] So this benchmark is created by building
+[45:24] from um relevant data set called ARVO
+[45:28] and addition and and some historical
+[45:32] real world vulnerabilities found by
+[45:34] another project called OSS fuz which is
+[45:38] the fing continuous fuzzing project for
+[45:41] open source software. So um the creators
+[45:44] of this benchmark um take examples from
+[45:48] those u data sets and to create a high
+[45:50] quality set for this severing and the
+[45:54] procedure of performing um performing
+[45:57] this creation is that they reconstruct
+[45:59] pre and post patch commits and
+[46:02] executables and include the ground truth
+[46:05] PC's from those data.
+[46:08] uh then the creators rephrase uh those
+[46:12] data or those process data into concise
+[46:15] vulnerability descriptions with the help
+[46:18] of LMS and manual inspection to make
+[46:21] sure that those um data samples are
+[46:24] correct. So is this the data creation
+[46:28] procedure of this leveraging benchmark
+[46:31] and for evaluation
+[46:33] um the benchmark will execute the final
+[46:37] P generated by the LM agent on pre patch
+[46:40] and post batch builds and will count
+[46:43] successes for different purpose like for
+[46:46] different evaluation purpose like
+[46:48] specifically will con success if uh
+[46:52] these results either triggers the target
+[46:54] vulnerability ility only for pre patch
+[46:57] which is for reproduction and or it will
+[47:01] or it will come success if it triggers
+[47:03] any vulnerability post patch uh which is
+[47:05] for the purpose of post patch finding
+[47:08] and in the end the uh the overall
+[47:10] successful rates the overall success
+[47:12] rates will be reported back
+[47:16] u and this procedure evaluation
+[47:20] procedure is run while runtime
+[47:22] sanitizers
+[47:24] uh for the crash hash and stack trees in
+[47:26] uh so this is a verifiable u procedure
+[47:29] instead of using like lms or like human
+[47:32] to do sub subjected charging
+[47:36] and a interest an important perspective
+[47:38] of this benchmark is that it also
+[47:40] includes a data contamination analysis
+[47:43] um by evaluating vulnerability examples
+[47:47] uh samples from the data set that are
+[47:49] only found after the um targeted um LM
+[47:53] agents knowledge cutoff of so in this
+[47:55] way there is no way for the LM agents to
+[47:57] memorize the existing samples in the
+[48:00] benchmark which gave us a fair um and
+[48:03] objective evaluation of the LM's agents
+[48:06] capabilities on those examples and by
+[48:08] comparing LM's performance on those
+[48:11] specific subset on the with the it
+[48:14] performance on the overall data set we
+[48:16] can also measure how severe data
+[48:19] contamination happens in for this
+[48:22] benchmark. So this is actually a pretty
+[48:25] good example um of how to build a robust
+[48:28] benchmark that can uh be valuable um
+[48:32] over time and I recommend you take a
+[48:34] deeper look at the paper um to see how
+[48:37] this is actually done in details. Oh,
+[48:40] and by the way, all the uh intro case
+[48:43] studies covered in today's lecture for
+[48:46] all of the those case studies, we
+[48:47] include the uh URLs uh beneath the title
+[48:52] um like on the slides. So, you can
+[48:54] always click into it to check out
+[48:56] details if you want to learn more about
+[48:58] them.
+[49:00] And the second case I would like to talk
+[49:03] about is this fallbench which uh is
+[49:06] valuating an agent's ability to reliably
+[49:09] interact with users and APIs while
+[49:11] constantly following complex domain
+[49:13] specific policies. So this is an API
+[49:16] agent and it's actually a very famous
+[49:18] and widely used API agents um benchmarks
+[49:23] to evaluate API agents capability. The
+[49:26] tax is that the agents will resolve a
+[49:28] simulated user goal. For example, return
+[49:31] a product using uh provided API tools
+[49:34] through a multi-term dynamic
+[49:36] conversation with domains like retail or
+[49:39] airline customer service.
+[49:42] Uh so the providing involvement
+[49:45] um will thus be the um the set of API
+[49:50] tools for each domain um like the retail
+[49:54] and airline domains and along with the
+[49:57] specific policy document for the LM
+[49:59] agent to follow. Um and then LM power
+[50:04] simulator will be act will be acting as
+[50:07] a user to interact with the agent uh for
+[50:10] solving those um problems through API
+[50:13] requests.
+[50:17] The datas of this benchmark is generated
+[50:20] by first having some manual design of
+[50:23] schemas or APIs or policies and then
+[50:26] using LMS to do synthetic data
+[50:29] generation. Specifically, GBD4 was used
+[50:32] to produce the uh original sampling
+[50:36] codes and uh humans will then do the
+[50:39] verification and polishing those uh
+[50:42] initial codes. Uh and then the human um
+[50:47] will also do some authorizing and
+[50:50] iterative validation
+[50:53] um with some with some sample agent runs
+[50:56] testing to ensure that each tax is
+[50:59] actually having a unique endstate
+[51:01] outcome to make the benchmark diverse
+[51:04] and enough to have good coverage of the
+[51:07] capability want to uh evaluate. And the
+[51:11] evaluation is also pro programmatic and
+[51:15] verifiable.
+[51:16] So the success is is determined by
+[51:19] comparing the final database state after
+[51:22] the agent execution to the annotated
+[51:25] goal state. So in this way we will know
+[51:27] whether the agent uh successfully
+[51:29] accomplished the tax or not. Uh for the
+[51:32] matrix uh the benchmark will report a
+[51:34] pass at one which stands for the average
+[51:37] success and passet k which is basically
+[51:41] uh performing the attacks for k times
+[51:43] and um measuring all k successes across
+[51:48] uh indep indivi independently uh
+[51:54] distributed wrongs to capture the
+[51:56] reliability and consistency.
+[52:01] And an improved version of the tall
+[52:03] bench is called tall square bench which
+[52:06] shifts from uh shift from the single
+[52:08] control in tall bench to the dual
+[52:11] control um um showing a decentralized
+[52:15] partially observable marov decision
+[52:18] process. So in this case like both agent
+[52:21] and user uh can act while tools in a
+[52:24] shared world stressing coordination and
+[52:27] guidance. So not only agent can use
+[52:30] tools but also the users will be able to
+[52:32] like use tools to interact with the
+[52:34] agent.
+[52:36] So uh the main differences in the tax
+[52:39] and environment compared to tallbench is
+[52:41] that tallbench was single db uh single
+[52:44] database uh with agent tools and with uh
+[52:49] use with a large language model only
+[52:51] user that um don't need to use tools but
+[52:54] to square bench as two database two
+[52:58] databases both the agent DB and the user
+[53:00] device DB and separate tool sets for
+[53:03] each of them. The user is also an LM
+[53:06] simulator constrained by its own
+[53:08] available set of tools and observers
+[53:10] observable state of the um environment.
+[53:17] The data generation pipeline for this
+[53:19] benchmark is that uh so previously tall
+[53:22] bench used the manual schema APIs with
+[53:25] LM generated data that manual uh
+[53:28] scenario authorizing and uh validation
+[53:32] while squarebench
+[53:34] um uses more complicated and
+[53:37] comprehensive data creation bench uh
+[53:40] pipeline which utilizes LM drafted
+[53:43] product requirements documents
+[53:46] um to generate those code uh to guiding
+[53:49] the generation of those code mock
+[53:52] databases and unit test um along with
+[53:55] the user databases and the user only
+[53:57] tools and then the same programmatic
+[54:00] composition
+[54:02] uh and then uh a programmatic
+[54:05] compositional task creation will be
+[54:07] performed from those atomic subtext
+[54:10] um with some um
+[54:14] with some uh
+[54:17] uh with with some creative procedures
+[54:20] such as like in in this solution and
+[54:22] assertion and auto verification to make
+[54:25] sure that this compositional task are
+[54:28] successfully created from each of the
+[54:31] procedures. So in in this way we uh
+[54:33] square bench uh can create a benchmark
+[54:37] that contains a complicated uh
+[54:40] multi-step
+[54:41] um multi-step components to further uh
+[54:47] measure the LM's capabilities or more
+[54:50] challenging API tool calling task and
+[54:54] the evaluation is designed
+[54:57] um in in the following way that tall
+[55:01] bench will evaluate through an endstate
+[55:03] database comparison as we talked about
+[55:05] earlier. While to square bench
+[55:08] introduces some additional categorical
+[55:10] checks instead of instead of only
+[55:13] checking the end state database. It will
+[55:16] also do some involvement assertions,
+[55:19] communication assertions or natural
+[55:21] language assertions, action assertions
+[55:24] to um perform um checks for different
+[55:28] components or different steps of the
+[55:31] given of a given task to do a more
+[55:35] comprehensive measurement and analysis
+[55:38] of how agent performs on a given task.
+[55:42] And for the metric, since those are all
+[55:45] um verifiable comparisons, we can just
+[55:48] report the results of those um those
+[55:51] comparisons by reporting
+[55:53] uh the posit one and pass K.
+[56:00] Yeah. And here is another uh interesting
+[56:03] benchmark called GDP evo. So previously
+[56:06] we were mostly talking about some um
+[56:08] agent some agents uh who do some certain
+[56:14] uh tasks related to like tool use or
+[56:17] computer use um like finding cyber
+[56:20] security vulnerabilities or um calling
+[56:24] tools to uh for like uh airline customer
+[56:28] service or so. uh here uh we are going
+[56:33] uh I'm going to talk about another a
+[56:36] completely different kind of benchmark
+[56:37] introduced by open AAI called GDP val
+[56:40] which has a goal of measuring LM
+[56:42] performance on economically valuable
+[56:45] real world knowledge work uh work task
+[56:49] and um which will compare the AI
+[56:52] deliverables to industry experts across
+[56:56] diverse occupations.
+[56:59] So this is a um actual AGI benchmark uh
+[57:04] or like more AGI relevant benchmark.
+[57:08] So how this benchmark is constructed is
+[57:10] that each test is a realistic work
+[57:12] assignment with reference files and
+[57:14] context. Um while the models will be
+[57:18] instructed to produce a oneshot
+[57:20] deliverable such as like a documents or
+[57:23] slide deck or spreadsheet diagram media
+[57:26] for those um given task.
+[57:31] Um and for this like more real world
+[57:36] related uh different type of benchmark
+[57:39] uh the data generation is also performed
+[57:41] in a different way like the task will be
+[57:44] authored by VAT professionals um which
+[57:48] has an average of 14 years of experience
+[57:52] and the multi-step review like most
+[57:55] around five runs will be performed um on
+[57:59] those um task. task plus the LM based
+[58:03] validation. The prompts used to uh
+[58:06] create those tags mirrors day-to-day
+[58:09] work and include attachments.
+[58:12] Uh while the goal deliverables for
+[58:15] evaluating those tags um experts own
+[58:18] solutions. So these are very um
+[58:21] expensive and strict test uh data
+[58:24] generation procedures. So um the so the
+[58:28] purpose of providing this uh case study
+[58:31] is just to give you guys um
+[58:33] demonstration of how a completely
+[58:35] different kind of benchmark is
+[58:37] constructed. It may be a little bit
+[58:39] distant away from what you are actually
+[58:42] going to do for the projects for this
+[58:44] class, but it's a pretty important and
+[58:47] interesting case to just learn about.
+[58:51] And the evaluation is performed by
+[58:53] having blinded expert graders from the
+[58:55] same occupations of the test to rank uh
+[58:59] the AI results versus human deliverables
+[59:03] to see which ones is better or worse or
+[59:08] or tied and the efficiency measured by
+[59:12] time or cost of uh performing of getting
+[59:16] each deliverable for the tax will also
+[59:18] be compared. So this is a good example
+[59:21] of a benchmark that has low
+[59:23] contamination risk and hard to get
+[59:26] saturated since the task covered in this
+[59:29] benchmark requires domain experts
+[59:32] um and tied to real real world concrete
+[59:37] work product.
+[59:43] So the last case study um I'm going to
+[59:46] introduce is this one called CRM arena.
+[59:50] So uh it's more about um task that
+[59:55] evaluates some enterprise agents like
+[59:58] LRM agents capability to perform some
+[01:00:02] workflows that essential to um some
+[01:00:05] enterprise needs. So the goal of this
+[01:00:08] CRM arena is to evaluate LM agents on
+[01:00:11] professional customer relationship
+[01:00:13] management. The CRM workflows in a
+[01:00:16] realistic enterprise sandbox. Um and
+[01:00:19] this sandbox is performed is provided by
+[01:00:21] so this arena is created by Salforce and
+[01:00:25] uh they will uh which is a very
+[01:00:29] representative CRM provider company and
+[01:00:32] they will just use it own sandbox to
+[01:00:34] construct the environment.
+[01:00:36] So the task covers nine tags across
+[01:00:39] three personas service agent, analyst
+[01:00:42] agent, manager agent and uh those tags
+[01:00:46] will include um some b um some
+[01:00:50] representative workflows such as new
+[01:00:52] case routing, knowledge QA, top issue
+[01:00:55] identification, monthly trend analysis
+[01:00:57] like etc etc all those like enterprise
+[01:01:01] related u workflow uh works workloads
+[01:01:06] The environment as I mentioned earlier
+[01:01:08] is the live salebox Salesforce sandbox
+[01:01:12] uh called simple demo or SDO um which
+[01:01:16] provides UI and API access and the
+[01:01:21] agents will perform actions while some
+[01:01:25] while a SQL tool a SQL similar tool
+[01:01:28] called SOQL or like SOSL or function
+[01:01:32] calls to interact with the environments.
+[01:01:36] Um
+[01:01:40] yeah so to curate datas for the CRM
+[01:01:44] arena uh the creators of this benchmark
+[01:01:48] also utilize LM to perform synthetic
+[01:01:52] data creation on the Salforce service
+[01:01:54] cloud schema and it designs a few latent
+[01:01:58] variables
+[01:02:00] um such as like agent skill customer
+[01:02:04] shopping habit to categorize the diff u
+[01:02:09] what kind of tags we want to measure the
+[01:02:12] agent to perform to create realistic
+[01:02:16] costal patterns to curate those tailored
+[01:02:19] data
+[01:02:20] and uh in detailed mini batch prompting
+[01:02:24] for the LMS performed to generate those
+[01:02:27] sample data and then uh dduplication
+[01:02:32] um through stream m dduplication process
+[01:02:35] through stream matching and do
+[01:02:37] verification for both for both format
+[01:02:41] and content. Um I also performed to make
+[01:02:45] sure the qu to ensure the quality of the
+[01:02:49] data is good before actually uploading
+[01:02:53] them. And it also applies several tricks
+[01:02:56] such as like paraphrasing using LMS to
+[01:03:00] uh ensure uh query diversity.
+[01:03:04] The evaluation for this tax is also
+[01:03:07] automatic metric. Um like
+[01:03:12] the benchmark applies different type of
+[01:03:15] metric for different task included. For
+[01:03:19] example for knowledge QA it applies the
+[01:03:21] F1 metric and use exact match on ground
+[01:03:26] truth ids for all other task. It also
+[01:03:30] reports some um performance uh different
+[01:03:33] performance metrics such as pass to
+[01:03:35] report the agents multi multi-term
+[01:03:38] multi-rom reliability and consistency
+[01:03:43] and for such enterprise workload
+[01:03:45] efficiency is also an important
+[01:03:47] consideration. So it also reports the
+[01:03:49] number of turns performed by the agents
+[01:03:51] or number of tokens spent and number of
+[01:03:53] cost uh and the cost in dollars used to
+[01:03:57] uh accomplish such task. So uh when you
+[01:04:01] are building your benchmark um also make
+[01:04:04] sure to consider the different
+[01:04:05] perspective you want to measure uh
+[01:04:08] different perspectives of the
+[01:04:09] capabilities you want to measure for the
+[01:04:10] LM agents like not only is it
+[01:04:13] performance on accomplishing the tasks
+[01:04:16] but also the efficiency and task
+[01:04:19] efficiency and cost of the agent to um
+[01:04:24] finish those task. So this these are
+[01:04:28] some examples of the case studies of um
+[01:04:32] some um existing good agent benchmarks.
+[01:04:38] And now um you have learned about some
+[01:04:42] uh important principles or uh
+[01:04:44] considerations uh you should think about
+[01:04:47] when building uh benchmarks and
+[01:04:50] evaluating them. Now let's talk about um
+[01:04:54] the spec the actual part of this project
+[01:04:57] or the actual agents you're going to
+[01:04:59] build which is the green agents and um
+[01:05:04] let me now introduce what are green
+[01:05:07] agents and what's what specifically
+[01:05:11] um you need to build it.
+[01:05:15] So green agent um as we introduced
+[01:05:20] earlier in the class is the agent used
+[01:05:23] to testing
+[01:05:25] u another agent or the actual comp
+[01:05:28] competition or participant agent to
+[01:05:30] solve the task. So the motivation of
+[01:05:33] this is like math exams are designed by
+[01:05:36] math teachers and physics exams are
+[01:05:39] designed by physics teacher. Like
+[01:05:41] different assessments
+[01:05:43] um of a of a task should also be defined
+[01:05:48] or different assessment or different
+[01:05:49] task should also be defined by a special
+[01:05:53] hosting agent
+[01:05:55] uh which is the green agent in this
+[01:05:58] case. And the job of it is to determine
+[01:06:01] the type of assessment and define the
+[01:06:04] specific tasks to be performed in this
+[01:06:07] assessment.
+[01:06:09] Uh while the other agents involved in
+[01:06:13] this assessment are called participant
+[01:06:16] agents or competition agents or white
+[01:06:19] agents. Uh which is the second part of
+[01:06:22] this class. Uh which is the focus of the
+[01:06:25] second part of this this class. And
+[01:06:26] you're going to work on building the
+[01:06:29] white agents after you first um finish
+[01:06:32] building the green agent to perform all
+[01:06:35] those like uh to to be in charge of
+[01:06:37] those assessments and evaluation.
+[01:06:43] More specifically, the responsibilities
+[01:06:46] of the green agents um includes
+[01:06:50] preparing the environment for the white
+[01:06:53] agent to wrong or for the benchmark to
+[01:06:56] wrong and it also needs to distribute
+[01:06:58] the test tags to the participant white
+[01:07:01] agents and then collecting their results
+[01:07:05] after the white agents finish. We will
+[01:07:08] verifying it will verify the involvement
+[01:07:11] is wrong correctly. So we know that the
+[01:07:13] benchmark is performed correctly and
+[01:07:16] then uh ring agents will gather those
+[01:07:20] statistical results and report back to
+[01:07:22] the agent based platform. So we can we
+[01:07:26] we uh we can get the um results of how
+[01:07:31] our agents performed.
+[01:07:36] Um yeah, so they are specifically
+[01:07:40] designed to serve as the evaluators
+[01:07:44] um which we have talked about a few
+[01:07:46] times. And um another analogies uh that
+[01:07:50] you can think of is that CR agents can
+[01:07:52] act as the technicians at the repair
+[01:07:54] shop. like he will be in charge of
+[01:07:56] orchestrating the entire evaluation
+[01:07:59] process from sending the data to the
+[01:08:01] white agents ensuring the involvement is
+[01:08:03] run correctly collecting the responses
+[01:08:06] from the white agents and performing the
+[01:08:10] uh evaluation
+[01:08:12] u loop to gather the matrix on those
+[01:08:16] results. Of course the matrix is also um
+[01:08:19] design implemented orchestrated by the
+[01:08:22] green agent itself.
+[01:08:24] So specifically will interact with the
+[01:08:27] platform through um protocols like MCP
+[01:08:31] or gateway or just sending API requests.
+[01:08:34] Um it can request the permissions and
+[01:08:37] resources from platforms and submit the
+[01:08:40] res results to the platform to uh so um
+[01:08:45] the users so uh we can view those
+[01:08:49] results. Let me repeat what what he
+[01:08:51] asked. So the question is like uh can I
+[01:08:55] so could we could I pro uh provide a
+[01:08:58] specific example of how do we turn those
+[01:09:01] benchmarks introduced on the paper to
+[01:09:04] building the actual green agent for it
+[01:09:07] and uh we're going to introduce this
+[01:09:09] this in the later slides and uh Shia
+[01:09:12] who's who's also here and who's the uh
+[01:09:15] creator of agent be will also provide a
+[01:09:18] very concrete example uh in the end of
+[01:09:22] this lecture to u to demonstrate um how
+[01:09:28] you should actually do this.
+[01:09:32] Yeah. So let me continue the
+[01:09:34] introduction of um the green agent
+[01:09:37] assessment flow.
+[01:09:40] So specifically the agent B platforms
+[01:09:44] will first confirm that all agents
+[01:09:46] including the green agent are online and
+[01:09:48] reset.
+[01:09:51] So it will then send the tasks to the
+[01:09:54] green agent including the URLs of the
+[01:09:56] participant agents to be tested
+[01:09:59] and green agents will orchestrate the
+[01:10:03] inter the interaction assigning tags
+[01:10:06] supervising execution managing tools or
+[01:10:08] environments and continuously reporting
+[01:10:12] updates back to the platform.
+[01:10:16] Then at the end the green agent will
+[01:10:17] submit the matrix which it defined
+[01:10:20] through its implementation. So you will
+[01:10:22] implement this workflow. So this is
+[01:10:25] basically um a more organized and
+[01:10:29] structures bullet points of what I
+[01:10:31] introduced in the earlier slides like
+[01:10:33] how the full assessment flow will be run
+[01:10:36] in our agent based platforms
+[01:10:42] and overall the green agent details what
+[01:10:45] matrix get measured and will carry out
+[01:10:47] the full procedure of performing those
+[01:10:51] valuation and um deriving the matrix.
+[01:11:01] So now uh what what will be the
+[01:11:05] necessary components of a green agent?
+[01:11:08] Um so we have already talked about the
+[01:11:12] workflow and or the assessment flow and
+[01:11:16] based on that information um we can kind
+[01:11:20] of know that there are some following um
+[01:11:24] necessary components that the green
+[01:11:25] agent need to have to uh successfully
+[01:11:29] perform such assessment flow. So
+[01:11:33] typically you will include a data set of
+[01:11:35] the test tags. So it will have the data
+[01:11:38] to um serve as the inputs. We'll have a
+[01:11:42] predefined testing process um which for
+[01:11:46] example which agent to test first in
+[01:11:48] what order task send and all tools are
+[01:11:52] provided for the green agent and white
+[01:11:55] agent. Um and this will be implemented
+[01:11:58] by you um for the green agent. You also
+[01:12:02] have uh the involvement or where the tax
+[01:12:06] run like access to additional tools or
+[01:12:09] MCP modules required for the test along
+[01:12:12] with instructions for the white agents
+[01:12:14] on how to use them.
+[01:12:20] So agentbased platform provides a
+[01:12:23] prompbased toolkit to help you quickly
+[01:12:25] spin up a prototype green agent. And so
+[01:12:28] you can first uh use these examples to
+[01:12:33] understand the platform and get started
+[01:12:36] on uh thinking about how to build a
+[01:12:39] actual green agent for the task of your
+[01:12:41] choice.
+[01:12:42] For more which is corresponding to the
+[01:12:46] following points for more rigorous and
+[01:12:48] complex testing such as read workflows
+[01:12:51] or custom environments. Um
+[01:12:55] you should you can also handcode the
+[01:12:57] logic of a green agent. And for this
+[01:13:00] class project we expect most green
+[01:13:02] agents from unit two and three and four
+[01:13:05] groups to be coding based green agent.
+[01:13:08] And if you only taking this course for
+[01:13:10] one unit you can just take a look at the
+[01:13:12] prom based toolkit and use it to um
+[01:13:16] build a green agent for your task.
+[01:13:20] So ultimately as long as uh so the Asian
+[01:13:23] bit platforms have some have provided
+[01:13:26] some pretty good flexibility and
+[01:13:28] ultimately as long as it complies the
+[01:13:31] tax or the benchmark complies with the
+[01:13:33] A2A protocol any web service can serve
+[01:13:36] as a green agent and I think this is
+[01:13:39] could be a little bit abstract at this
+[01:13:41] point and we can talk about this later
+[01:13:43] when we really get into the agent based
+[01:13:45] platform.
+[01:13:49] Okay. And more specifically um for the
+[01:13:53] class project we should uh there are two
+[01:13:56] types of projects for building green
+[01:13:58] agents that you can choose from like
+[01:14:01] from integrating an existing benchmark
+[01:14:04] to building a new benchmark.
+[01:14:09] For the type one green agent integrating
+[01:14:11] existing benchmark the goal is to adapt
+[01:14:13] an existing benchmark that is already
+[01:14:16] published or tested. such as the those
+[01:14:18] including the case studies I talked
+[01:14:20] about earlier and integrate this
+[01:14:22] benchmark as the green agent in the
+[01:14:24] agent based platforms um such as the
+[01:14:28] three bench verified for software
+[01:14:29] engineering and terminal bench for um
+[01:14:32] those terminal tool use or task
+[01:14:38] for for this type of um bring agents you
+[01:14:41] can just largely reuse the existing
+[01:14:43] evaluation matrix or rubrics that's
+[01:14:45] already that has already come with the
+[01:14:48] benchmarks of your choice and you just
+[01:14:50] need to make sure to integrate them into
+[01:14:53] the agent bits uh to wrap them into a
+[01:14:55] green agent and the sample ideas we
+[01:14:59] provided in the following doc uh also
+[01:15:02] introduced in the first lectures all
+[01:15:04] fall into this type one uh green agent.
+[01:15:07] So most of you guys will be doing the
+[01:15:09] type one if you haven't submitted a uh
+[01:15:13] new benchmark proposal in the scope.
+[01:15:19] The main workflows of building typ green
+[01:15:21] agents includes three steps. Uh step one
+[01:15:25] is the is pretty straightforward which
+[01:15:28] is the integration of the benchmark to a
+[01:15:31] green agent. you you need to convert
+[01:15:34] problem formats to the corre correct
+[01:15:36] formats that can be uh used by the green
+[01:15:40] agent and agent B like the uh wrapping
+[01:15:43] them through A2A protocol. Um you need
+[01:15:46] to implement data set loaders and
+[01:15:48] interfaces to load the benchmarks
+[01:15:50] introduced uh to to load the data
+[01:15:53] introduced by those benchmarks and in
+[01:15:56] the end you need to perform a quality
+[01:15:58] checks or analysis for the correctness
+[01:16:01] of the green agents and reproducibility
+[01:16:05] of the benchmark.
+[01:16:10] So after finishing the integration and
+[01:16:15] uh we want to have we want to have a
+[01:16:18] benchmark quality analysis to check the
+[01:16:22] quality and reliability of the existing
+[01:16:24] benchmark that you just integrated into
+[01:16:28] uh into a green agent.
+[01:16:30] And this includes like a manual
+[01:16:32] validation like you should also take a
+[01:16:35] look. So you should not only just
+[01:16:37] integrate this benchmark uh without
+[01:16:40] actually thinking about whether it's
+[01:16:43] good or not. You should also perform and
+[01:16:45] instead you should also perform this
+[01:16:46] manual validation like sample sampling
+[01:16:48] and checking the data correct data
+[01:16:51] correctness clarity and difficulty that
+[01:16:54] introduced by the original benchmark and
+[01:16:57] also checking whether the metric and
+[01:16:59] judge introduced by the original
+[01:17:03] benchmarks align with the true tax
+[01:17:05] success. So uh which is this evaluator
+[01:17:08] track and that generally uh analyze the
+[01:17:14] bias and limitation of this benchmark to
+[01:17:17] highlight any gaps or weaknesses um of
+[01:17:20] the benchmark.
+[01:17:26] And for step three, uh after having the
+[01:17:30] benchmark quality analysis, you have a
+[01:17:32] pretty good understanding of uh what the
+[01:17:35] benchmark does well and uh what the
+[01:17:38] creation of this benchmark does well and
+[01:17:41] what it doesn't do that well like what
+[01:17:44] is what what what is it limitation.
+[01:17:47] So uh in step three we ask you to uh
+[01:17:52] think about doing a correction and
+[01:17:54] expansion of this existing benchmark
+[01:17:56] like if there are an obvious errors in
+[01:17:59] the benchmark uh just correct the
+[01:18:01] benchmark correct those errors and if
+[01:18:04] the benchmark has limited coverage or is
+[01:18:07] kind of like a bias or um um not very
+[01:18:12] representative you can expand the
+[01:18:14] benchmark to improve its quality or
+[01:18:16] science or diversity to make it more
+[01:18:19] useful.
+[01:18:21] So to give you a concrete example of how
+[01:18:25] to do this step three or also relevant
+[01:18:28] to step two because you need to do a
+[01:18:30] good step two to do the step three. Uh
+[01:18:32] let me introduce
+[01:18:35] um let me use the sweet bench and sweet
+[01:18:37] bench verify as a great example of um
+[01:18:42] those two procedures those two steps.
+[01:18:46] So sweet bench verify is an improved
+[01:18:49] version. Um it's a verified version of
+[01:18:52] swbench and nowadays actually everyone
+[01:18:54] is using sweet bench verifies and people
+[01:18:56] seldom use sweet bench anymore. That is
+[01:19:00] because like the original swbench has
+[01:19:02] some problems. The author of the
+[01:19:04] SWEBench verified found that some task
+[01:19:07] in the original SWE had under specified
+[01:19:10] issue descriptions or overly specified
+[01:19:13] or overly specific or misaligned task uh
+[01:19:17] test. So this created um
+[01:19:21] some and also there are setup frictions.
+[01:19:25] So all those factors combined together
+[01:19:27] sometimes cause like false negatives or
+[01:19:30] uh in the evaluation and in this way the
+[01:19:33] speed bench is actually not um
+[01:19:38] accurate enough to measure the software
+[01:19:41] engineering capability of a given LMS or
+[01:19:43] LM agents. So because of this um the
+[01:19:49] other uh proposed the following
+[01:19:51] correction like they added human
+[01:19:55] verification performed by 93 93
+[01:19:58] professional developers on the
+[01:20:02] 1700 ex on the 1700 samples from the
+[01:20:06] original Swedbench
+[01:20:08] and this verification flag several
+[01:20:11] issues and 38.3% % of those issues. Uh
+[01:20:17] 38.3%
+[01:20:18] of those samples have under
+[01:20:20] specification issues. 61.1%
+[01:20:24] contain unfair unit tests and in total
+[01:20:29] 68.3%
+[01:20:31] of samples are actually not in high
+[01:20:33] quality and a filter out by this
+[01:20:36] verification procedure.
+[01:20:38] This results in a filter subset of 500
+[01:20:42] verified text which becomes the SWEBench
+[01:20:46] verified benchmark.
+[01:20:50] And the outcome of doing this
+[01:20:52] improvements of the SWE bench getting us
+[01:20:55] the SWE bench verifies
+[01:20:58] um is that now um a high quality subset
+[01:21:03] of SW bench is curated with enhanced
+[01:21:06] text diversity and also difficulty
+[01:21:09] balance. This make this makes the SW
+[01:21:13] bench more trustworthy, replica,
+[01:21:16] replicable and comprehensive. For
+[01:21:19] example, GP40 reaches 33.2% 2% resolve
+[01:21:25] on the SWE bench verified while you can
+[01:21:28] only get like 16% on the original SWE
+[01:21:30] bench using the best scaffold indicating
+[01:21:33] prior underestimation of the capability
+[01:21:36] given the difficulty of the tax not uh
+[01:21:40] significantly changed
+[01:21:42] and those differences are mainly due to
+[01:21:45] the fact that sometimes there are low
+[01:21:48] quality samples in the original
+[01:21:49] benchmark that get filtered out um by
+[01:21:52] the affformentioned procedures in the
+[01:21:55] creation of Swbench verified.
+[01:22:02] Yeah. So uh if you're interested uh
+[01:22:06] please take a look at uh the link
+[01:22:08] provided uh in the slide to check the
+[01:22:11] details of how subbench verify is
+[01:22:14] constructed by exam analyzing the
+[01:22:16] limitation of SW bench and doing those
+[01:22:20] new data creation and this will provide
+[01:22:22] valuable insights for how to do a good
+[01:22:25] step two and step three of this green
+[01:22:27] agent requirements
+[01:22:32] And yeah, so uh those are the
+[01:22:36] instructions for the type one uh green
+[01:22:39] agent and for the type two um some
+[01:22:43] people uh some students submitted
+[01:22:46] requests to introduce their own
+[01:22:48] benchmarks of interest. So in this types
+[01:22:51] you want to build a new benchmarks.
+[01:22:55] Um
+[01:22:57] and for such type we have a requirements
+[01:23:01] that uh the introduce new benchmarks
+[01:23:06] will ideally be some realistic daily
+[01:23:08] tags uh that can showcase aic reasoning.
+[01:23:13] Um so we want the tax to be useful and
+[01:23:18] requires reasoning. So our agent is from
+[01:23:20] cloud
+[01:23:22] and the scope of this type of green
+[01:23:25] agents are also differ also differed by
+[01:23:28] units. For one unit students you can uh
+[01:23:30] similarly you can just focus on prompt
+[01:23:33] design and simple data generation for
+[01:23:35] the new benchmark. But for students who
+[01:23:38] are taking this course for more than one
+[01:23:40] units, you should also include um robust
+[01:23:44] evaluation rubrics and some multi-rong
+[01:23:46] setups of how to do the data creation,
+[01:23:49] do the evaluation
+[01:23:51] um
+[01:23:53] to uh for the new benchmarks introduced.
+[01:23:59] Yeah, as I mentioned, the task
+[01:24:01] introduced should reflect useful real
+[01:24:03] world scenarios such as like organizing
+[01:24:05] calendar, scheduling meetings, managing
+[01:24:08] to-dos. Uh the evaluation is ideally
+[01:24:11] some automatic or lightweight human
+[01:24:13] checks. So you can so it'll be realistic
+[01:24:16] to create a robust evaluation in the
+[01:24:19] scope of a course project. And and
+[01:24:23] another important point I want to
+[01:24:25] highlight here is that given the recent
+[01:24:28] trend of multi- aent, we encourage you
+[01:24:31] to build multi- aent benchmarks. For
+[01:24:34] example, uh your benchmark the task that
+[01:24:37] you ask the agent to perform the the
+[01:24:40] task to perform not only requires one
+[01:24:43] agent but uh can can be completed
+[01:24:47] better by more than one agents. For
+[01:24:50] example, having a synthesizer of
+[01:24:52] proposing
+[01:24:53] uh different compo of solving different
+[01:24:57] components of a task or proposing
+[01:24:59] different solutions and having a
+[01:25:01] analyzer agent to uh analyze the
+[01:25:04] results. Um
+[01:25:08] so uh it'll be great that you can think
+[01:25:12] more about introducing multi- aent when
+[01:25:15] building new benchmarks.
+[01:25:19] Okay. So uh previous so uh here we have
+[01:25:24] talk about finished talking about all
+[01:25:26] the um detailed general requirements for
+[01:25:31] building the green agents and now uh the
+[01:25:34] following slides will introduce some
+[01:25:36] stepbystep checklist for building your
+[01:25:38] green agent which is basically a more
+[01:25:41] structured and organized
+[01:25:44] um materials that you can uh refer to
+[01:25:48] when building the green agents have
+[01:25:50] covered the previous requirements that I
+[01:25:53] talked about. So uh in this lecture I
+[01:25:57] probably will not um go over them in uh
+[01:26:01] great details since uh they're mostly uh
+[01:26:05] very concrete instructions and you can
+[01:26:08] take a look at them uh later after the
+[01:26:10] class and because of the time it will be
+[01:26:13] more useful to have sen to uh
+[01:26:18] just present an example of agent be to
+[01:26:20] actually give you a very concrete
+[01:26:22] showcase of how to um build a green
+[01:26:25] agent for uh very concrete example task.
+[01:26:31] Yeah. So, but I'll still go over the
+[01:26:34] step-by-step checklist
+[01:26:36] um
+[01:26:39] in uh Yeah. So the first the first thing
+[01:26:45] uh is to choose the task you want to
+[01:26:46] evaluate on like for example choosing
+[01:26:49] one from the exam existing benchmarks
+[01:26:52] you're going to build a type one green
+[01:26:54] agent or introduce a new benchmark if
+[01:26:57] you're going to do type two like a
+[01:26:59] ticket booking agent. And secondly,
+[01:27:02] after choosing your task, uh the first
+[01:27:06] thing to think about is to design the
+[01:27:08] environment that the agents being tested
+[01:27:11] needs to run in in all uh to complete
+[01:27:16] the task uh of your choice. So we need
+[01:27:19] to think about uh what should be
+[01:27:21] included in the environment like what
+[01:27:23] tools the environment should provide
+[01:27:25] that the agent can interact with and um
+[01:27:29] as a result what actions that the agent
+[01:27:32] can make to um to interact with the
+[01:27:37] environment to get new to um apply
+[01:27:40] changes to gather new informations from
+[01:27:43] feedbacks from the environment. So uh
+[01:27:47] uh as listed here the involvement
+[01:27:49] feedback to the agent after each action.
+[01:27:55] And after involvement, the third step is
+[01:27:58] that uh you want to be clear about what
+[01:28:02] metrics that your green agent evaluates
+[01:28:04] with like what's the metric that what's
+[01:28:08] the what's the right metric to measure
+[01:28:10] whether the participant or white agents
+[01:28:14] um accomplish the task in high quality.
+[01:28:18] So your first uh so you also want to
+[01:28:21] design such metrics early in building
+[01:28:25] the cing agent like right after um being
+[01:28:30] clear about the involvement.
+[01:28:33] So for example uh for booking a ticket
+[01:28:36] probably the only important metric is
+[01:28:39] just the success rate like whether the
+[01:28:41] ticket is booked or not uh for this kind
+[01:28:43] of simple task. Uh but if you want to do
+[01:28:48] more um like if you want to make the
+[01:28:53] agents actually useful uh for the same
+[01:28:56] example of building booking a ticket you
+[01:28:58] definitely don't just want to book any
+[01:29:00] arbitrary available tickets. You also
+[01:29:02] want to book a ticket that is both
+[01:29:04] convenient and cheap. So you want to
+[01:29:07] also design metrics that take those
+[01:29:10] factors into considerations like how
+[01:29:12] cheap the ticket is, how how cheap the
+[01:29:14] ticket is and whether the ticket
+[01:29:16] satisfies users requirements etc.
+[01:29:24] And then uh having the matrix settled uh
+[01:29:28] you want to design task cases to curate
+[01:29:32] the test data to evaluate your green
+[01:29:36] agent on. So uh the green agent will um
+[01:29:41] gather the results of white agents on
+[01:29:43] those test data and then apply the
+[01:29:46] matrix on the outcomes of the white
+[01:29:49] agents on those test data. So you can
+[01:29:51] have a uh sufficiently
+[01:29:55] um you you can have some good test cases
+[01:29:57] that have a sufficiently sufficient
+[01:29:59] coverage um to evaluate the performance
+[01:30:04] of your web agent.
+[01:30:09] Yeah. Uh another useful materials uh in
+[01:30:13] addition to those checklist um is the
+[01:30:18] new ribs data sets and benchmarks track
+[01:30:21] check uh guidelines. So this is
+[01:30:25] basically um
+[01:30:28] track introduced by new conference that
+[01:30:31] specifically focus on the introduction
+[01:30:34] of data sets and benchmarks which uh in
+[01:30:39] their uh official uh website. Um it
+[01:30:44] contains many useful
+[01:30:47] uh information that you can consider and
+[01:30:50] instructions
+[01:30:51] uh on how to build a good benchmarks
+[01:30:54] that uh is actually useful for the AI
+[01:30:58] community and that's actually useful in
+[01:31:00] the real world. So this is also a very
+[01:31:04] good materials that you can take a look
+[01:31:07] when building the green agent.
+[01:31:15] Yeah, in the end um the grading rubric
+[01:31:20] for we are having the following grading
+[01:31:23] rubrics and they are uh for the for the
+[01:31:26] green agent and uh they differ they have
+[01:31:30] some differences for uh for two types of
+[01:31:35] um green agent that of your choice. So
+[01:31:38] for type two like the new benchmarks we
+[01:31:41] mainly graded. So we we want to uh
+[01:31:46] we we want to see that the benchmark has
+[01:31:49] a important and important goal
+[01:31:53] and
+[01:31:55] that the task you introduce is actually
+[01:31:57] useful and
+[01:32:00] and also we want to uh want to we want
+[01:32:04] to see that the benchmark is also novel.
+[01:32:06] So uh
+[01:32:09] in a way that it covers new capability
+[01:32:11] space that uh is not well addressed by
+[01:32:16] the old existing benchmark. So we cares
+[01:32:19] about this goal and novelty of your
+[01:32:21] introduced benchmark.
+[01:32:23] And we also um measure some different
+[01:32:26] factors such as the scope and scale uh
+[01:32:29] of your benchmark. The evaluator quality
+[01:32:31] like whether the metrics are clear and
+[01:32:34] valid and whether you perform uh
+[01:32:37] rigorous validations
+[01:32:39] uh like the manual checks of the
+[01:32:42] evaluation outputs of the green agents
+[01:32:45] and as well as other factors like
+[01:32:47] reliability, quality assurance, realism
+[01:32:50] and impact of the benchmark.
+[01:32:55] for the existing benchmark track. Uh in
+[01:32:58] addition to most of the uh rubrics are
+[01:33:01] similar that uh since those um those
+[01:33:05] important things to care about are
+[01:33:07] universal despite of uh what type
+[01:33:10] despite whether you're building a green
+[01:33:12] agent for existing benchmark or a new
+[01:33:14] benchmark. But uh uh difference uh to
+[01:33:18] the previous case is that instead of
+[01:33:20] novelty since you are just perform you
+[01:33:23] just just integrating an existing
+[01:33:25] benchmark in this case we care more
+[01:33:27] about faithfulness like whether your
+[01:33:29] implementation of the green agent
+[01:33:31] actually reproduce the results from the
+[01:33:34] original benchmark
+[01:33:36] uh excluding the improvements of uh you
+[01:33:38] made and the flaws you fixed.
+[01:33:42] Yeah. So here are the everything about
+[01:33:46] the uh slides of green agents and in the
+[01:33:50] end of the slides that will be uploaded
+[01:33:53] to the website we'll also put some
+[01:33:55] useful links such as the green agent
+[01:33:57] project ideas which you probably already
+[01:34:00] have seen many times uh just to put it
+[01:34:03] here to for your convenience and also
+[01:34:06] some reference uh and credits um of the
+[01:34:09] materials covered in this class uh or
+[01:34:13] the slack slide decks that will also be
+[01:34:15] useful for you to take a look to learn
+[01:34:17] more about how to perform good
+[01:34:19] evaluation.

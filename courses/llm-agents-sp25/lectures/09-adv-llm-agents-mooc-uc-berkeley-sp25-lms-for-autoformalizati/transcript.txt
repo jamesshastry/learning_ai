@@ -1,0 +1,1108 @@
+[00:00] And hey uh it's great to see you here.
+[00:02] Um I'm Caillou and um I will talk about
+[00:05] former reasoning meets LMS towards AI
+[00:08] for mathematics and
+[00:11] verification. Okay. Um so we are now
+[00:14] kind of in a arm race of large language
+[00:16] models in which every leading company
+[00:20] releases a new model um in every a few
+[00:23] months. Um so at the center of this arm
+[00:27] race is mass and coding. For example
+[00:30] when open AI introduces 01 uh you
+[00:33] typically see this kind of uh charts
+[00:35] showing that its capability in various
+[00:38] on various benchmarks. Uh and you see um
+[00:41] the mass competition like AIM and coding
+[00:45] competition like code forces are usually
+[00:47] highlighted. And similarly when Google
+[00:50] released Gemini and when XAI released
+[00:54] Grock they also highlight the capability
+[00:56] in mass and
+[00:59] coding. And in uh November 19 in
+[01:03] November 2023 XTX Markets which is a
+[01:08] British hedge fund launched the A IMO
+[01:11] prize. That's $10 million for AI that
+[01:15] can win a gold medal in IMO. And not
+[01:18] long after that in July 2024 uh Google
+[01:22] deep mind announced that uh alpha proof
+[01:24] and alpha geometry have achieved the
+[01:27] silver medal level. I guess that's the
+[01:30] content of the last lecture. Um and if
+[01:33] you want to go beyond um high school
+[01:36] competition math, we have this um
+[01:38] applica AI, it introduced a benchmark
+[01:42] called Frontier Math. Um which includes
+[01:46] research level mathematical questions
+[01:48] that's curated by professional
+[01:50] mathematicians. Um, and not long after
+[01:54] that,
+[01:55] OpenAIO3 announced that it can solve u
+[01:58] more than 20% of that. And which came as
+[02:01] a surprise because when Frontier Mass
+[02:04] benchmark was released, people thought,
+[02:06] okay, this is going to be um it's going
+[02:09] to take a few years for language models
+[02:11] to make real progress. But uh really
+[02:13] after less than one year, we have uh
+[02:16] groundbreaking results from OpenAI.
+[02:19] So why are people interested in math and
+[02:23] coding? Um why are they often
+[02:25] highlighted? Um one reason is that math
+[02:28] and coding are proxies for uh complex
+[02:32] reasoning and planning and reasoning and
+[02:34] planning. They're not only important for
+[02:37] human intelligence, but they are also
+[02:39] one of the major challenges for current
+[02:42] language models. Um, and they can really
+[02:45] unlock unlimited applications if you can
+[02:48] make language models be able to reason
+[02:50] and be able to plan. For example, you
+[02:53] can have them uh do travel planning for
+[02:55] you and also uh have language model
+[02:58] agent scheduling calendar event uh
+[03:01] calendar invites for you. Um, and the
+[03:04] second reason that people are interested
+[03:06] in math and coding is they are
+[03:08] relatively easy to evaluate bas um for a
+[03:11] math problem. you can check the if the
+[03:13] answer is correct and for coding you can
+[03:16] run the unit test to see if they can
+[03:18] pass all the tests. Um but if you ask
+[03:20] your language model to write a like a
+[03:22] crime fiction or uh you ask it to
+[03:25] compose a symphony it's going to be much
+[03:28] much harder to evaluate. Um you can
+[03:31] argue
+[03:32] that like crime fiction also involve
+[03:36] reasoning and composing a symphony
+[03:39] definitely need planning. So they also
+[03:41] need reasoning and planning but they are
+[03:42] just not as easy to
+[03:46] evaluate. Um so I put it relatively easy
+[03:50] here because um that as we will come
+[03:53] back we don't think checking the answers
+[03:56] or running the unit test is a perfect
+[03:58] evaluation. We are just arguing that
+[04:00] it's a reasonable evaluation and uh we
+[04:02] will revisit this point later in the
+[04:05] rest of this lecture.
+[04:08] Uh okay so we know language models are
+[04:11] racing to be good as math and coding. Um
+[04:14] and next we want to briefly introduce
+[04:17] the main techniques behind them like how
+[04:19] do we train language models to solve
+[04:22] math problems. Um here we focus on math
+[04:25] but the discussion largely also applies
+[04:27] to coding as well. uh and we will see
+[04:30] later that math and coding are deeply
+[04:33] connected and state-of-the-art mass
+[04:36] language models are trained using mainly
+[04:38] two techniques. Uh one is supervised
+[04:41] finetuning or SFT and the other is
+[04:44] reinforced learning or RL and we're
+[04:47] going to present a very high level view
+[04:49] uh and emphasizing the need for data and
+[04:52] for uh
+[04:54] verifiability. Uh starting with SFT. So
+[04:57] in SFT you have a base model that's a
+[05:02] generic language model pre which trained
+[05:04] on internet scale data
+[05:06] sets and to learn mathematics you give
+[05:10] it additional data that's focused on
+[05:12] mathematics. So you can grab web pages
+[05:15] from mass overflow or you can have uh
+[05:19] papers from
+[05:20] archive and the result of this
+[05:22] fine-tuning uh is called the base mass
+[05:25] language model. Um well it's it has seen
+[05:28] a lot of mathematics but it still hasn't
+[05:31] yet learned how to solve problems. So
+[05:34] the next step is to uh give it a lot of
+[05:37] problems and with uh with detailed
+[05:40] step-by-step solutions for these
+[05:42] problems. Uh and optionally you uh in
+[05:46] the solution you can use external tools.
+[05:50] So here the model is trained to produce
+[05:53] not only natural language reasoning but
+[05:55] also uh it can call external tools like
+[05:58] Python. So this is this is an example of
+[06:01] a problem it can
+[06:05] solve. So the most important thing in
+[06:08] this pipeline uh as you can see is data
+[06:11] set.
+[06:12] uh you need data set for continue
+[06:15] pre-training that's the web documents uh
+[06:18] collected from web uh from the mass
+[06:21] forums like stack overflow and you also
+[06:24] have to uh to annotate a lot of data for
+[06:27] further fine-tuning uh consisting of
+[06:30] problems with step-by-step solutions and
+[06:33] uh I I would say um collecting this data
+[06:36] set is one of the most expensive part in
+[06:39] this pipeline because uh it cannot be
+[06:42] fully automated. You need human uh to
+[06:45] annotate the data to clean the data and
+[06:48] to uh to transform the data into into
+[06:51] the data set that can you can
+[06:53] use. So what if um our data set has only
+[06:58] the final answer but not the
+[07:00] intermediate steps. Um this is a
+[07:03] scenario where uh you don't want humans
+[07:06] to annotate uh data very expensively but
+[07:10] maybe uh you can more cheaply get the
+[07:12] data um that has only the final answer.
+[07:16] So can we still use this data set to
+[07:18] train the model and the answer is yes we
+[07:21] can use reinforcement learning to train
+[07:23] the model to generate solutions with
+[07:26] only the problem and the final answer.
+[07:29] Here's how it works. So you have the
+[07:31] problem and you give it to the uh
+[07:33] language model and the model generates a
+[07:36] solution that has uh intermediate steps
+[07:39] and that also has a final solution. Um
+[07:42] and you can check if the final solution
+[07:44] is correct. You you uh by comparing it
+[07:47] with the ground truth. So here it's a
+[07:49] correct uh it's a correct
+[07:51] solution uh and the model can also
+[07:54] generate incorrect solution and you can
+[07:56] check. So uh this the result of this
+[07:59] verification um can be used as reward
+[08:02] signal in reinforced learning and you
+[08:05] can use algorithms like GRPO to optimize
+[08:09] the model to achieve high rewards. Um
+[08:12] well you you can uh treat the reward for
+[08:14] a correct solution to be one and if it's
+[08:17] incorrect solution the reward is going
+[08:19] to be zero. So this approach is is very
+[08:22] simple approach and a very powerful
+[08:23] idea. Um it's actually the idea is there
+[08:26] for several decades uh but it was first
+[08:30] shown to work for uh for training
+[08:32] reasoning language models by deepseek R1
+[08:35] that's fairly recently and this idea is
+[08:38] getting uh a lot of momentum um just to
+[08:41] see how much momentum it has uh just one
+[08:43] month ago um two pioneers in
+[08:46] reinforcement learning Richard Sutton
+[08:48] and uh Andrew Bau uh won the ACM touring
+[08:52] award.
+[08:54] So here uh in reinforcement learning the
+[08:57] key is really uh the verifiability. So
+[09:01] you have to be able to verify the
+[09:03] results. You have to be able to tell if
+[09:05] the solution is correct or not.
+[09:07] Otherwise you don't have the reward. Um
+[09:10] so if the solution has a final answer
+[09:13] that's a number if it has a numerical
+[09:15] solution you you can always check by
+[09:17] comparing with the ground truth. But
+[09:19] what if it's a theorem proving problem?
+[09:21] So you are asked to generate a proof but
+[09:24] there's no really no auto uh well no no
+[09:28] no no easy way to tell if the proof is
+[09:30] correct or not. Can we still do
+[09:31] reinforcement learning? Um we will re
+[09:34] revisit this point in the later of this
+[09:36] part of this
+[09:37] talk. So here we have covered the main
+[09:40] techniques to train language models for
+[09:43] math uh supervised learning and
+[09:45] reinforce learning. Um I would say uh
+[09:48] any state-of-the-art uh mass language
+[09:51] models is uh kind of like a um it's a
+[09:55] combination of a very strong base model
+[09:57] and these two techniques for post
+[10:00] training and maybe more importantly uh
+[10:03] marvelous engineering efforts. So the
+[10:06] algorithms are very straightforward.
+[10:08] Pretty much every leading industry lab
+[10:11] is using the same algorithm. But what
+[10:13] what really matters is who has the
+[10:15] better infrastructure, better
+[10:17] engineering and the better data
+[10:21] set. So um then we will ask will AI soon
+[10:25] solve mathematics since we have this
+[10:27] very powerful recipe. Um and the answer
+[10:30] is definitely no. So we have a few gaps.
+[10:34] So the the first gap is how do we go
+[10:36] from pre college math to advanced math?
+[10:41] um existing successes um as we see
+[10:44] they're mostly limited on uh pre-ol math
+[10:48] like IMO or AM and if you give language
+[10:52] models more advanced mathematical
+[10:54] problems they still struggle so this
+[10:55] quote is from Terry to uh who is one of
+[10:58] the uh most prominent mathematicians um
+[11:01] nowadays and he said um he played with
+[11:05] open AI1 and he finds they still
+[11:08] struggle with the most advanced research
+[11:11] mathematical tasks. Um well this is kind
+[11:14] of uh expected because mathematical
+[11:17] research is by definition novel and but
+[11:21] since it's novel you don't have a lot of
+[11:23] data to train language
+[11:25] models and um also 01's O3's results on
+[11:31] frontier math as we mentioned before um
+[11:34] they are on advanced mathematical
+[11:36] problems but they comes with a few
+[11:38] caveats um well the first caveat is um
+[11:42] there are financial ties between uh
+[11:44] epoch AI and open AI that uh were later
+[11:48] uh disclosed but I would say more
+[11:50] importantly
+[11:52] um there's a difference between frontier
+[11:55] math and the real mathematical research
+[11:57] the problems in mathemat frontier math
+[12:00] are designed to have numerical solutions
+[12:03] so they are advanced they are very
+[12:05] advanced math but they are designed to
+[12:07] have a numerical solution so this is
+[12:09] kind of counterintuitive because uh we
+[12:11] we know most uh problems in advanced
+[12:14] math they don't have numerical solutions
+[12:17] uh but they designed the benchmark in
+[12:19] this way uh in order for the models to
+[12:23] be
+[12:25] evaluated and so this is related to an
+[12:28] the second gap um current models are
+[12:31] very good at guessing the answer but how
+[12:34] do we get it to write
+[12:36] proofs and and recent study has found
+[12:39] language models still strugg struggle in
+[12:41] writing even very basic proofs. Um so
+[12:44] putnam bench puten is the mathematical
+[12:48] competition for undergrads. Uh and uh
+[12:51] people recently tried using open AI's
+[12:54] reasoning model uh on putname and here's
+[12:57] the results. Um I'm very unimpressed by
+[13:00] chat GPT in the recent putnam exam. Um
+[13:04] and it can most answers are worth one or
+[13:08] two points out of 10 points. So this is
+[13:12] uh checked by human mathematician and
+[13:15] recently in another paper uh researchers
+[13:18] evaluated um language models proofs for
+[13:22] the USA
+[13:24] uh exam and they showed that all the
+[13:27] models scored uh around 5%. So which is
+[13:31] pretty
+[13:32] low and the errors those language models
+[13:36] are making can be they can be pretty
+[13:39] easy to spot once they you pointed them
+[13:41] out. Uh but if it's in a long proof it's
+[13:44] very hard to detect them. So here's the
+[13:46] example. Um we are asking the model to
+[13:48] prove a very simple
+[13:51] inequality. Um so if ABC satisfy some
+[13:54] condition and then there should be some
+[13:56] you have some results. And here it's
+[13:59] making an arrow. Uh when it tries to
+[14:02] multiply an existing inequality by a
+[14:06] positive number, uh it should preserve
+[14:09] the direction of the inequality, but it
+[14:11] flipped the direction. So that's that's
+[14:14] a very simple arrow if you point it out.
+[14:20] So
+[14:21] um we argue that current language models
+[14:25] the current approach for training
+[14:26] language models um is not sufficient for
+[14:30] solving these problems. Um because it
+[14:34] relies heavily on on data and on
+[14:37] verifiability and when you work with
+[14:40] advanced mathematics as we said you
+[14:42] don't have enough data. The data is very
+[14:44] scarce. Uh and when you work with
+[14:46] proofs, you don't have
+[14:48] verifiability. Um and in in the in
+[14:51] advanced mathematics, most problems
+[14:54] requires
+[14:56] proofs. So if language models are not
+[15:00] enough, what else do we
+[15:02] need? In a recent position paper we
+[15:04] released on archive, uh we argue that
+[15:07] one important missing point is uh formal
+[15:11] reasoning. Um here formal reasoning
+[15:14] means you uh you ground mathematical
+[15:16] reasoning in formal systems and formal
+[15:19] systems they can include like uh first
+[15:21] order logic, higher order logic,
+[15:23] dependent types theory or even computer
+[15:26] programs and their
+[15:28] semantics and the role of formal system
+[15:30] here is to try to verify the proofs and
+[15:33] provide automatic feedback on the
+[15:35] proofs. Um so this is very useful
+[15:38] because the feedback it provides can uh
+[15:41] mitigate data scarcity. You can have the
+[15:44] model learn from automatic feedback and
+[15:46] you don't need to collect as much human
+[15:50] created data. And second uh now you can
+[15:53] do verification which uh enable you to
+[15:56] evaluate the model rigorously.
+[15:59] So therefore we argue that uh to move
+[16:02] forward we really need to integrate
+[16:04] formal reasoning into the current
+[16:08] approach. So uh we're going to very
+[16:11] briefly introduce uh ling which which is
+[16:14] a kind of formal system we focus on in
+[16:17] this talk. Um and it it's also used in
+[16:21] alpha proof. So I guess people already
+[16:22] have some familiarity on link. Um so
+[16:25] here is a pro here's a programming link.
+[16:28] In this program you first define natural
+[16:31] numbers. So a natural number is either
+[16:33] zero or a successor of another natural
+[16:36] number. And then you define addition
+[16:38] between two natural numbers. So this is
+[16:40] just a recursive function. And then you
+[16:42] can state and prove some theorems about
+[16:44] natural numbers and addition. For
+[16:46] example, you can prove a a plus b equals
+[16:49] to b plus a.
+[16:52] And this here is only one file in ling.
+[16:56] And if you are using ling to write
+[16:58] formal mathematics, it's similar to
+[17:01] using Python or another programming
+[17:03] language to develop software. So you
+[17:06] have one file um and this file has a
+[17:09] proof uh and the proof is uh it has
+[17:13] semantics. So it you are starting it
+[17:16] corresponds to a proof tree. At the root
+[17:19] of this tree is the original theorem you
+[17:21] want to prove. Um, and every step in
+[17:25] this proof decomposes the proof goal
+[17:27] into uh several simple sub goals. And
+[17:31] you can do that recursively until all
+[17:33] the sub goals are solved. And this is
+[17:36] one file. And files are organized into
+[17:38] larger units like uh a project can can
+[17:41] have many files. Um, and the project can
+[17:45] be open sourced on GitHub. For example,
+[17:47] uh in your project, you can uh define
+[17:50] real numbers and someone else project
+[17:52] can build on your definitions of real
+[17:54] number and they can formulate for
+[17:56] example uh like optimization theory. So
+[18:00] this is similar to how you develop
+[18:02] software and one example of using AI
+[18:07] with ling is alpha proof. uh that's the
+[18:10] content of the last lecture and they uh
+[18:13] it's a it's a very successful example
+[18:15] and it uses ling to uh generate a lot of
+[18:19] theorems and uh a lot of proofs and use
+[18:23] and verify those proofs and do search
+[18:25] and reinforce learning to learn the
+[18:27] model. So in in the rest of this lecture
+[18:30] we will be talking about mainly two
+[18:32] tasks uh at the center of using ling uh
+[18:37] and AI. So first is theorem proving. Uh
+[18:40] in theorem proving your input is a
+[18:43] theorem statement and you want the model
+[18:46] to generate a proof. Here both the
+[18:49] statement and the proof are written
+[18:51] formally in ling uh and the link can
+[18:54] check if the proof is correct or not. So
+[18:56] there's no room for the model to
+[18:58] hallucinate. And the other task is auto
+[19:01] formalization. In auto formalization you
+[19:03] have the informal mathematics for
+[19:05] example from a textbook and you want to
+[19:08] use your model to translate it into
+[19:10] formal mathematics.
+[19:13] So uh next we will be first focusing on
+[19:16] theorem proving. Um a very
+[19:19] straightforward way to do theorem
+[19:20] proving is you just give the model what
+[19:23] you want to prove and you ask the model
+[19:25] to generate a step in the proof or you
+[19:28] can ask it to generate the entire proof
+[19:30] and um well because they if you if you
+[19:34] can generate the next step you can uh
+[19:36] kind of using search to chain steps
+[19:38] together into a complete proof. So uh I
+[19:41] would say um like the central problem
+[19:44] here is how do you generate the next
+[19:46] step
+[19:49] um and a very straightforward solution
+[19:51] is uh okay we have human written formal
+[19:53] proofs um and we can train a model to uh
+[19:58] to to do supervised learning on those
+[20:00] data so that the model can learn how to
+[20:02] generate the next step and this idea has
+[20:05] been uh actually here for um like for a
+[20:09] while uh and earlier work used classical
+[20:12] machine learning algorithms like uh K
+[20:14] nearest neighborhoods and around 2019
+[20:18] people have started to use uh deep
+[20:20] neuron networks for this task and even
+[20:22] later people are starting to use large
+[20:24] language models um and I would say um
+[20:28] until the use of large language models
+[20:31] uh we really see a boost in the
+[20:34] performance because the model can uh
+[20:37] acquire a lot of mathematical knowledge
+[20:38] during pre-training and use that
+[20:41] knowledge in theorem
+[20:43] proving. Um so we will be mainly talking
+[20:48] about this paper called uh Lindojo which
+[20:51] was published in new
+[20:53] 2023. Um so well it in this paper we
+[20:58] provide uh open-source data sets tools
+[21:01] and models for theorem proving link. uh
+[21:04] and compared to previous approaches the
+[21:07] main difference is uh first we are
+[21:09] completely open uh previous approaches
+[21:11] are uh are private and they don't
+[21:14] release the data set and models uh and
+[21:16] they they were done uh in private labs
+[21:20] and second we propose a new model to uh
+[21:24] generate the next step in the proof so
+[21:27] here's an overview um so in ling uh we
+[21:31] can extract data from human written link
+[21:34] code. uh we extract about uh 10,000
+[21:39] theorems and proofs and for each proof
+[21:42] we have the steps in the proof and we
+[21:44] also have uh the the lamas used in the
+[21:47] proof and also the definitions of these
+[21:49] lamas and after extracting this data set
+[21:52] we use this data set to train a machine
+[21:54] learning model and once the model is
+[21:56] trained the model can interact with ling
+[21:59] to prove new theory and so here is the
+[22:03] model we introduced for This task it's
+[22:05] called uh retriever augmented prover or
+[22:08] reprover. Um the motivation is that when
+[22:10] you prove a theorem you almost never
+[22:13] start from scratch. You use existing
+[22:17] lamas. Um and in order to use existing
+[22:20] lamas the model have to know what lemas
+[22:22] are there and try to decide whether a
+[22:24] lamas is useful. So here given a proof
+[22:27] state that's the goal you want to prove
+[22:29] and also given a library of lamas. So we
+[22:32] we first do retrieval uh in this phase
+[22:36] we encode everything into vector. So the
+[22:38] state is is now a vector and each lama
+[22:42] becomes a vector. Uh and we compute the
+[22:44] similarity between the state and each
+[22:47] lama. Uh and we use the result to
+[22:50] retrieve the uh the top
+[22:52] lamas. And after the lamas are
+[22:54] retrieved, we combine the lamas with the
+[22:57] state and use another language model to
+[23:00] generate the next step.
+[23:03] Um so here uh the model is very simple
+[23:06] but the really important point is how do
+[23:10] you get the data set and uh as we said
+[23:12] in uh lin dojo you can extract the data
+[23:16] set from link uh like from l projects
+[23:19] like mass li and other limb
+[23:21] product. So here is a summary of a
+[23:25] typical
+[23:26] neurothe um so on the left you see a
+[23:29] tree. So that's the tree doing proof
+[23:32] search. You have a initial state and
+[23:35] your model can generate multiple
+[23:37] potential next steps and you can run
+[23:39] those steps which gives you the next
+[23:41] proof state and you can do that
+[23:43] repeatedly until you find a proof. Um so
+[23:46] for this part you can use any search
+[23:48] algorithm like uh DFS or moncology
+[23:51] search and the second part is uh how do
+[23:54] you generate the next step. So on the
+[23:57] right you see um at each node in this
+[24:01] proof the tree you have the current
+[24:03] state. So you give the current state to
+[24:05] the language model and it generates
+[24:08] suggestions for you. And here optionally
+[24:11] the language model can take uh a form
+[24:14] library which is the library of lamas
+[24:17] you can use.
+[24:21] And so after the lindogo work we've seen
+[24:24] uh a bunch of work trying to improve on
+[24:27] that. For example, one thing you could
+[24:29] do is um what we call expert iteration.
+[24:33] So which is
+[24:34] um so you have a prover even if it's not
+[24:38] very good you can use it to prove some
+[24:40] uh to attempt to prove some new theorems
+[24:43] and in this process you will get some
+[24:45] new proofs and once you get the new
+[24:47] proofs you can add them into your
+[24:49] training set. So now you have a better
+[24:50] training set and you can use the better
+[24:52] training set to train a better approver
+[24:54] and you can iterate. Uh so in in this
+[24:57] way uh we show that if you run for more
+[25:01] iteration the performance usually
+[25:03] improves until you uh you hit some
+[25:05] saturation
+[25:07] point. So uh we've seen a very simple
+[25:10] way to build a theorem proving model.
+[25:13] you just extract human written proofs
+[25:16] and you train a language model to
+[25:18] generate the next step in the proof. Um
+[25:21] okay, but we would say um it's it's a
+[25:25] great step but it comes with
+[25:27] limitations. So the first limitation is
+[25:30] um still data because language models
+[25:33] work well only if you have a lot of
+[25:36] training data and the amount of human
+[25:38] written proofs on the internet is very
+[25:41] limited compared to say Python
+[25:44] code and also another limitation is
+[25:48] inherit to the task of theorem proving
+[25:50] so if you think uh think about other
+[25:53] tasks that AI has been successful like
+[25:55] playing go. So what's the difference
+[25:57] between playing go and uh proving a
+[26:00] theorem? Um the main difference is in go
+[26:03] you have a 19 by9 board. So the possible
+[26:06] action you can take is uh is constrained
+[26:08] by the size of the board. It's finite.
+[26:11] But in mathematics um arguably you can
+[26:14] uh your action space is infinite. So
+[26:16] there's infinite number of thing you
+[26:18] could potentially do when proving a
+[26:20] theorem.
+[26:21] So since the action space is infinite,
+[26:23] it's really hard to cover this entire
+[26:26] space. Uh if you have only learn from
+[26:29] human created data sets and even if you
+[26:32] use reinforced learning, uh it's very
+[26:34] hard to explore the space efficiently
+[26:37] doing reinforcement learning. Um that's
+[26:39] a good question. So in in the work we've
+[26:41] been we've we have talked up to now, we
+[26:44] are just using supervised learning. Uh
+[26:47] so uh there's no curriculum involved.
+[26:50] But if you use reinforced learning, it's
+[26:51] natural to have the model first learn
+[26:54] from relatively simple examples and then
+[26:57] try to generalize. Uh and if you look at
+[27:00] more recent work in using reinforcement
+[27:03] for the improving uh one major
+[27:05] difficulty is how how do you choose um
+[27:09] examples to present to the model. So you
+[27:12] want examples to be not too easy but
+[27:14] also not too hard.
+[27:19] So um how do we solve the limitation
+[27:23] regarding the uh action space? Um so in
+[27:26] a more recent work we try to take a step
+[27:29] in that direction. Um but we choose a
+[27:31] very limited domain as a as a
+[27:35] playground. So we prove inequalities in
+[27:39] mass olympiate. Um so inequalities in
+[27:42] math Olympia is like you have a few uh
+[27:45] real numbers like ABC and they satisfy
+[27:48] some precondition and you want to prove
+[27:50] a post condition like this and we choose
+[27:53] this domain because the proofs in this
+[27:55] domain is highly regular. Uh so here is
+[27:59] what humans would do. Uh humans would do
+[28:02] typically two things. One is uh you uh
+[28:05] you can apply an existing lema like amgm
+[28:08] inequality or koshwas inequality and the
+[28:11] other thing people typically do is to
+[28:14] rewrite the current formula into into a
+[28:17] form so that an existing lama becomes
+[28:20] applicable. Uh but even with these two
+[28:23] kind of actions the action space is
+[28:24] still very big. uh for example for
+[28:27] proving this particular inequality uh
+[28:30] you can apply AMGM uh and AMGM can be
+[28:33] applied in more than one way. So you uh
+[28:35] you have more you have very big
+[28:37] branching factor and uh you can also
+[28:40] apply other inequality like the T2
+[28:43] inequality and you can also potentially
+[28:45] choose to uh rewrite the formula into
+[28:48] this form. So here the uh the action you
+[28:51] can take is essentially infinite. So uh
+[28:55] how do we navigate this um this kind of
+[28:57] infinite action space? So one thing we
+[29:01] do be uh before trying to solve the
+[29:03] problem is okay let's try to see how 01
+[29:06] solve this problem and we give a lot of
+[29:08] inequality problems to 01 and we
+[29:11] manually check their proofs. So as a
+[29:14] result um we find a lot of errors in
+[29:17] their uh in the O1 produced proofs um
+[29:20] and we checked 20 examples. Um 01
+[29:25] preview proved none of those examples.
+[29:28] Uh and the more powerful O3 and also
+[29:31] deep uh DeepSync R1 uh also only
+[29:34] improved three or four out of 20
+[29:36] examples. uh whereas a typical gold
+[29:39] medalist like a human gold medalist can
+[29:41] prove at least 15. So um then let's come
+[29:45] to our method. So as we said we
+[29:49] categorize the steps you can take in
+[29:51] this particular problem into two kinds.
+[29:54] Um first we call it scaling. um scaling
+[29:58] is you uh you apply an existing lama
+[30:02] like cautious watts to a part of the
+[30:05] current formula. So in this example uh
+[30:09] you find that the left part of the
+[30:11] formula um c can be can be used for
+[30:15] koshwats and which gives you the result
+[30:19] on the right hand
+[30:20] side. Um so what's special about scaling
+[30:25] is the number of scaling you can do is
+[30:28] finite. This is because okay you only
+[30:30] have a finite number of lamas and each
+[30:33] lama can be applied in only a finite
+[30:35] number of ways. So it's actually
+[30:37] possible to enumerate all the scalings u
+[30:41] all all the possible scalings in this
+[30:43] space. And uh besides scaling another
+[30:46] category is called rewriting. Uh
+[30:49] rewriting is you you are given a formula
+[30:51] and you want to trans transform the
+[30:53] current formula into another form. Um
+[30:56] and rewriting is very different from
+[30:58] scaling in the sense that the space is
+[31:00] infinite. So given any formula there are
+[31:02] infinite number of ways you can uh you
+[31:04] can rewrite it. Um so the key insight
+[31:07] here is that after we make this
+[31:09] categorization our algorithm can
+[31:12] enumerate all the possible scalings uh
+[31:15] using a symbolic algorithm whereas the
+[31:17] rewriting like the infinite space can be
+[31:21] handled by large language models.
+[31:24] So uh we combine the next step generated
+[31:28] by the symbolic algorithm with language
+[31:30] models and we use some heristics to
+[31:33] filter the results to reduce the number
+[31:36] of goals you have to improve search and
+[31:39] as a result um we solved a much
+[31:43] more problems compared to deepse R1 and
+[31:47] also uh also 03. So here on the top you
+[31:51] see our proved four theorems humans can
+[31:54] prove 15 whereas uh our system uh called
+[31:57] lips can prove 16 theorems and at the
+[32:01] bottom we evaluate our system with uh a
+[32:05] few benchmarks and compare with existing
+[32:07] method. So here's one example one
+[32:10] interesting example proof discovered by
+[32:12] our system. Um so here it's interesting
+[32:16] because it's from uh Ian Chen who is a
+[32:19] IMO coach for the team USA and uh he has
+[32:22] a problem set and uh he said uh this
+[32:25] problem has no hope to be solved by AMGM
+[32:29] but we find that the proof discovered by
+[32:32] our system uses only AMGM uh combined
+[32:36] with clever rewriting. Uh so it can
+[32:38] actually find proofs that humans do not
+[32:41] know how to find.
+[32:43] So here's a takeaway. Um the challenge
+[32:46] in theorem proving is uh how do you
+[32:49] efficiently explore a potentially
+[32:51] infinite action
+[32:52] space? And while this is a very hard
+[32:55] problem, but if you are working on a
+[32:57] specific domain of mathematics, you can
+[32:59] use domain insight to structure the
+[33:02] action space uh so that the action space
+[33:05] become more feasible.
+[33:07] But it is an open problem of uh like
+[33:10] whether you can generalize this approach
+[33:12] to be domain general. So after talking
+[33:16] about theorem proving um we will be
+[33:18] going to auto formalization and
+[33:21] uh like feel free to re uh to bring it
+[33:24] up any questions any time.
+[33:27] So in auto formalization we have
+[33:30] informal mass and we have formal mass
+[33:31] and we want the model to be able to
+[33:33] build a bridge between them like
+[33:35] translating from informal to
+[33:38] formal and here actually we have two
+[33:42] slightly different sub problems. First
+[33:45] is how do we auto formalize the theorem
+[33:47] statement um and second is how do we
+[33:51] auto formalize the proofs. uh in
+[33:53] statement auto formalization the model
+[33:55] only take the statement and prove the uh
+[33:57] and produce the statement in in link. Um
+[34:00] but in proof auto formalization the
+[34:02] model have uh the informal statement the
+[34:05] informal proof and also the formal
+[34:07] statement and it only produce the formal
+[34:11] proof. So these two sub problems have
+[34:15] different uh challenges. Let's talk
+[34:18] about statement formalization first. For
+[34:20] formalizing the statement, it's really
+[34:22] hard to do the
+[34:24] evaluation because for example uh here
+[34:27] the informal statement says there exists
+[34:30] an infinite number of primes and the
+[34:32] formal statement says for any natural
+[34:34] number n uh there exist a p that's uh
+[34:38] greater than or equal to n uh p is
+[34:40] prime. So, so this is obviously a
+[34:43] correctation of the informal system
+[34:46] because it implies the infinity. Uh, but
+[34:49] the problem is it's not the only
+[34:51] incorrect solution. So, if uh if we
+[34:54] produce this solution, we change p
+[34:57] greater than or equal to n to p strictly
+[35:00] greater than n. Um, well, essentially
+[35:03] it's the same. And we can even make it
+[35:05] more different. We can uh make n also a
+[35:08] prime. And for any human you can easily
+[35:11] see okay this three statements well they
+[35:14] are slightly different but they are
+[35:16] essentially the same thing. Um but this
+[35:19] creates a problem for machine learning.
+[35:20] So if the machine learning model
+[35:22] produces one of them how do you know if
+[35:25] it's equivalent to the ground truth?
+[35:28] uh you may want to say okay uh can I uh
+[35:30] like check the logical equivalence u but
+[35:33] the reality is this kind of uh checking
+[35:36] the equivalence between two theorem is
+[35:38] computationally invisible in
+[35:41] general and uh in practice researchers
+[35:44] have resorted to heristics or human
+[35:46] evaluation uh but if human if you rely
+[35:50] on human evaluation it's going to be
+[35:51] very expensive and not reproducible and
+[35:54] if you uh if you resort to proxy matrix
+[35:57] or heristics it's not going to be
+[36:00] accurate. So that's a challenge for
+[36:02] evaluating the auto formalized
+[36:04] statement. How about
+[36:05] proofs? Proofs we have another
+[36:08] challenge. Um human written proofs are
+[36:11] even if they are very rigorous they are
+[36:12] not rigorous enough to be formalized. Uh
+[36:15] they often have holes like one uh kind
+[36:19] of ho like mathematicians often say okay
+[36:22] this case is left to the reader. So if
+[36:24] if it's left to the reader, your model
+[36:26] has no way to figure it out from the
+[36:29] text. It has to figure it out by their
+[36:31] own. And there are more subtle holes in
+[36:34] the proof that we will cover later. But
+[36:36] in for the model to be able to auto
+[36:38] formalize the proof, it kind of have to
+[36:41] fill in all those kind of gaps which can
+[36:43] be very difficult. So we've covered two
+[36:46] key challenges in auto formalization.
+[36:48] For statement we don't have a reliable
+[36:50] automatic evaluation and for proofs um
+[36:53] the model have to fill in all the
+[36:55] reasoning gaps and in this project we
+[36:58] want to address both problems. So that
+[37:01] sounds very intractable but a lesson we
+[37:04] learned in this project is that um since
+[37:06] intractable in general can be made
+[37:08] tractable if you restrict to a very
+[37:11] specific domain and the domain we choose
+[37:14] is uklidian geometry um ukidian geometry
+[37:18] uh it's it's one of the oldest branches
+[37:20] of in mathematics uh and it has been
+[37:23] used to test human intelligence for more
+[37:26] than 2,000 years and recently it has
+[37:28] become like of a interested by the AI
+[37:32] community because of the alpha geometry
+[37:34] work where uh they have a AI that can
+[37:37] solve IMO level geometry.
+[37:41] So in this work we uh we show that
+[37:45] ukidian geometry is not only a good
+[37:48] domain for theorem proving it's also a
+[37:50] good domain for
+[37:51] automalization and more concretely we
+[37:54] collect a benchmark called ling uklit uh
+[37:57] in uklidian geometry it consists of 48
+[38:01] problems from uh Uklit elements book one
+[38:05] and more than 100 problems from uni geo
+[38:07] which is an an existing data set. So
+[38:11] let's look at one example in our data
+[38:15] set. So this is directly from uh UK
+[38:19] elements. It's proposition one from book
+[38:21] one. It's uh basically you have two
+[38:24] points A and B and you want to show that
+[38:27] it's possible to construct a equilateral
+[38:29] triangle. Uh so for each problem you
+[38:32] have the diagram and the informal
+[38:35] theorean statement and also the informal
+[38:38] proof. And when constructing the
+[38:40] benchmark, we try to manually formalize
+[38:43] this problem in link. So on the right
+[38:46] hand side is our formalization in link.
+[38:49] Um as you can see, it corresponds very
+[38:52] closely to the informal version like the
+[38:56] first step is you you draw a circle BCD
+[39:00] uh that's centered at A and uh the C B
+[39:03] should be on the circle. uh and the
+[39:05] second step is you draw another circle
+[39:07] and you try to find their intersection
+[39:10] and you connect everything u and then
+[39:12] that's a equilateral triangle. So there
+[39:14] are only uh like five or six steps in
+[39:17] the in the formal proof and each step
+[39:20] corresponds perfectly to uh to what's
+[39:23] what's being done in the informal proof.
+[39:26] Uh and we did this for all the 48
+[39:29] theorems and proofs in uh Uklid elements
+[39:32] book one. And this is aesthetically very
+[39:36] pleasing for me uh because um to the
+[39:39] best of our knowledge we are actually
+[39:40] the first to formalize uklid elements in
+[39:44] a proof assistance like link um and well
+[39:48] we we want to keep the proofs very
+[39:51] faithful in the sense that there's a
+[39:53] direct correspondence between formal and
+[39:56] informal and as we will see see later
+[39:59] this is not always uh
+[40:01] trivial and during In this process, we
+[40:04] find a few very interesting arrows in
+[40:07] UCL elements. Um, I think we can
+[40:10] probably go over one of those arrow just
+[40:12] to see how formalization can help you
+[40:15] check mathematical proofs rigorously and
+[40:17] uncover bugs in a proof that you may
+[40:20] think it's already very
+[40:22] rigorous. So, this is proposition 24
+[40:26] from Uklid's book one. Uh it says if you
+[40:29] have two triangle um and then um the two
+[40:33] triangles have two pairs pairs of edges
+[40:38] equal to each other. So AC equals to DF
+[40:42] and A equals to DE. So blue equals to
+[40:46] blue, red two equals to red. And the
+[40:49] angle A is bigger than angle D.
+[40:53] So uh you want to show that BC is
+[40:56] greater than EF. Um well this is doesn't
+[41:02] look very difficult and uh I'm going to
+[41:04] show the original proof by
+[41:07] Uklid. So first you try to move the
+[41:11] triangle from the left to overlap with
+[41:13] the triangle on the right. uh so C will
+[41:17] become
+[41:18] G and then you try to connect F and G.
+[41:23] So now the problem becomes uh proving EF
+[41:28] greater than EG.
+[41:31] Uh this is easier because EF and EG are
+[41:34] now in the same triangle and according
+[41:36] to a previously proved theorem in the
+[41:39] same book in in in the same triangle a
+[41:42] bigger angle corresponds to a bigger
+[41:46] edge. So you only have to
+[41:49] prove the relationship between these two
+[41:52] angles. You have you have to prove the
+[41:54] big angle here is indeed bigger than the
+[41:57] small angle. So how um just notice that
+[42:01] we have a isosilus triangle here. We
+[42:04] have dgf uh dg equals to df and by a
+[42:10] previously proved lama in an isocles
+[42:13] angle in an isocles triangle you have
+[42:15] two angles equal to each other. Um so
+[42:20] then you can you can argue that the
+[42:22] bigger angle is bigger than the uh DFG
+[42:28] because like uh it's a supererset of the
+[42:30] BFG uh and the DFG is equal to DGF and
+[42:35] the DGF is bigger than the smaller angle
+[42:39] then you have proved the bigger angle is
+[42:41] bigger than smaller angle. Okay so this
+[42:43] is very trivial but uh the proof is
+[42:46] actually wrong. Um, anyone knows why?
+[42:49] No. Okay. Um, well, well, technically
+[42:52] it's not wrong for this diagram, but
+[42:55] what if they look like this? Um, so let
+[42:58] me try to replay the proof. First, move
+[43:02] the triangle to the left from the left
+[43:04] to the right. Second, connect G and F.
+[43:08] Now, we want to prove uh EF greater than
+[43:12] EG.
+[43:14] uh and we want to use this associates
+[43:16] triangles alpha. So this alpha are equal
+[43:20] and we want to prove x greater than y uh
+[43:24] using alpha which does not work directly
+[43:28] because in the previous diagram alpha is
+[43:30] a part of x but now alpha is outside x
+[43:34] and y so you cannot use it as angle in
+[43:36] the middle anymore. So the original
+[43:38] argument break in this diagram um so how
+[43:42] do we fix this proof? But luckily it's
+[43:44] fixable otherwise we will we will
+[43:46] probably publish a bigger paper. Um so
+[43:51] um first notice that the angle bge
+[43:56] that's alpha + y it's a inner angle in a
+[44:00] triangle so it's smaller than pi. That's
+[44:02] trivial. And second 2 pi minus alpha
+[44:06] minus x that's df is also smaller than
+[44:10] pi. If you add these inequalities
+[44:13] together, alpha will cancel out and you
+[44:15] get x greater than y. Um, so it can be
+[44:18] fixed but as you see this proof is quite
+[44:22] different from UK proof. Uh, so that's
+[44:24] we why we think UK has made an error
+[44:27] here or technically it's not an error.
+[44:30] It's like this proof has two cases. This
+[44:33] these two cases are slightly different
+[44:35] and one case is more challenging than
+[44:37] the other but you uh
+[44:41] omitted the more challenging case and
+[44:42] focused on the easy
+[44:44] case. Okay. Uh maybe that's a very
+[44:47] interesting digression that's not
+[44:49] related to AI, but it showed um how AI
+[44:52] and link can make things more rigorous.
+[44:55] So let's go back to the to AI. Um so in
+[45:00] our benchmark we uh the first thing good
+[45:04] about it is it enables you to check
+[45:06] whether the auto formalized theorem
+[45:08] statement is correct. So here's how we
+[45:10] check if the statement is correct. We
+[45:12] have a ground truth and we want to check
+[45:14] if it's logically if the model generated
+[45:16] statement is logically equivalent to the
+[45:18] ground truth. Um so given two theorems
+[45:21] T1 and T2 we check it by proving T1
+[45:25] implies T2 and T2 also implies T1. And
+[45:30] here we use a automated reasoning tool
+[45:32] called SMTP solver. Um but if you
+[45:36] remember I said this is infeasible but
+[45:38] how it becomes feasible now and it turns
+[45:41] out now it's feasible because the
+[45:44] theorems in uklidian geometry takes a
+[45:47] particular form they are not general
+[45:49] theorems um so problems in tractable in
+[45:53] general can be made tractable in a
+[45:55] specific
+[45:58] domain and so that's how we check the
+[46:01] the statement another problem is uh auto
+[46:04] formalizing the proofs. So here in
+[46:07] uklidian geometry we want to show that
+[46:10] um we show that um there is a wellknown
+[46:14] kind of gaps in the proofs we call
+[46:16] diagrammatical reasoning gaps. Um I'm
+[46:19] going to show that using an example. So
+[46:21] proposition one from uclit elements book
+[46:23] one. Given two points a and b you can
+[46:27] construct a lit equilateral triangle.
+[46:30] Here is Uklit's proof. Uh draw a circle
+[46:32] centered at A and U B is on the circle.
+[46:36] Uh draw another circle centered at B. A
+[46:38] is on the circle. Take their
+[46:40] intersection C and connect everything.
+[46:43] You get a equilateral triangle. Um
+[46:46] anyone disagree with this proof? No.
+[46:48] Okay. Um the problem is did we prove C
+[46:52] actually exists? Uh did we prove these
+[46:55] two circles actually have an
+[46:57] intersection? Um we didn't. And actually
+[47:01] if you try to prove it because so this
+[47:03] is proposition one. So to uh to prove
+[47:06] this proposition you can only use the
+[47:07] axims. There's no existing lamas and you
+[47:11] if you try to use ukl a xims to try to
+[47:14] prove um these two circles intersect you
+[47:18] cannot prove it actually. Um so it's not
+[47:21] provable. Um but no one bothers to prove
+[47:25] it because it's just so obvious in the
+[47:27] diagram. it becomes a problem if I want
+[47:30] to translate this proof in ling. When I
+[47:32] formalize the proof in ling, ling does
+[47:34] not know what is the diagram or what is
+[47:36] obvious in the diagram. Um so I kind of
+[47:39] try have to formalize what is obvious in
+[47:42] the diagram. I I believe this uh I I was
+[47:45] in the in the zoom last in the last
+[47:49] lecture. I believe someone asked a
+[47:50] question about how do we formalize
+[47:53] ukidian geometry in ling. Uh I think
+[47:55] this is very closely related to that
+[47:57] question to formalize uklidian geometry
+[48:00] in ling the most important thing or one
+[48:02] of the most important thing is how do
+[48:05] you formalize the concept of being
+[48:07] obvious in the
+[48:08] diagram and luckily this uh this problem
+[48:12] has actually be solved before uh so this
+[48:16] is u work from uh Abigard who is a
+[48:21] professor in philosophy uh now in CM MU
+[48:25] um so agate essentially identified a set
+[48:28] of axims that's not in Uklit's axim
+[48:32] system it you can think of it as a like
+[48:34] a unspoken aim or hidden axim and so
+[48:38] what is being obvious in the diagram it
+[48:42] is just uh if a fact is a consequence of
+[48:46] those aim then it's obvious in the
+[48:48] diagram uh so now we have a
+[48:50] computational meaning of obviousness in
+[48:52] the diagram and we can implement a
+[48:55] automated reasoning algorithm to try to
+[48:58] derive things that are
+[49:00] obvious. So uh let me put everything
+[49:03] together. So in this work we have a
+[49:06] benchmark. So in the benchmark we have a
+[49:08] diagram we have informal math and we
+[49:11] have a ground truth formal statements
+[49:13] that's written by human. So now um we
+[49:16] use a model to do autoformalization. it
+[49:19] generates a formal theorem and we can
+[49:23] check whether it's equivalent to the
+[49:25] ground truth using SMT solvers to prove
+[49:29] that they imply each other. So after
+[49:32] checking the statement equivalence the
+[49:34] model can also do proof auto
+[49:37] formalization say it generates this
+[49:39] proof and we give this proof to Ling.
+[49:42] ling will identify a a set of holes in
+[49:45] the proof and we give those holes to the
+[49:49] to SMP solver which will tell us if the
+[49:53] holes are obvious in the diagram and if
+[49:56] everything works then we conclude okay
+[49:59] this is a correct formalization. So what
+[50:02] our benchmark really do here is we
+[50:04] provide um like a protocol that you can
+[50:08] use to rigorously evaluate
+[50:12] autoformalization and um so after
+[50:15] collecting this benchmark we also did
+[50:16] some very simple experiments um using
+[50:19] just GPT4 and the GPT4 vision and uh
+[50:23] here we don't train the model we just
+[50:25] give a few uh demonstration to the model
+[50:28] and ask it to autoformalize the theorem
+[50:30] statement
+[50:31] Um so blue here is GPD4 and green is
+[50:36] GP4V which also takes the diagram as
+[50:39] input and um so here are two takeaways
+[50:42] one is um if you look at the x-axxis you
+[50:46] is how many demonstration demonstrations
+[50:48] you give to the model so if you give the
+[50:50] model more demonstration is going to do
+[50:52] better uh but even if you give five
+[50:56] demonstrations or even more um the model
+[50:58] get only about 20% % which is pretty
+[51:01] low. Uh which shows autoformalization is
+[51:05] very challenging. And if you compare
+[51:08] green with blue, you see green is a
+[51:10] little bit better. Uh which shows if you
+[51:12] give the diagram to the model, um it it
+[51:15] has a stronger understanding of the
+[51:17] geometry
+[51:19] problem. And here are some takeaways. Um
+[51:22] we identified two challenges in
+[51:24] autoformmalization. For theorem
+[51:26] statement, you don't know how to
+[51:27] evaluate. uh for the proofs uh there are
+[51:30] too many holes in the human written
+[51:32] proofs and we address them by limiting
+[51:36] to a specific domain. So in this domain
+[51:39] we can build a equivalence checker to
+[51:42] for the statement and we can build a
+[51:44] tool that can fill in all the gaps. Um
+[51:48] but still the open problem is really how
+[51:51] do you generalize across uh a broader
+[51:54] set of mathematical domains. Um so now
+[51:59] we've covered both task auto
+[52:01] formalization and theorem proving u and
+[52:03] this is the end of this lecture and I'm
+[52:05] happy to take questions.

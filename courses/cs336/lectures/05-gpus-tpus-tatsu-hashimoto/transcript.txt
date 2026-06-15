@@ -1,0 +1,2245 @@
+[00:05] Okay. Uh we will get started. Um now
+[00:08] we're going to start the systems portion
+[00:10] of the class. Um so we've been doing a
+[00:13] bunch of neural network stuff for the
+[00:14] last two lectures. Um and now we're
+[00:17] going to start getting into um GPUs,
+[00:19] parallelization,
+[00:21] um and inference. and systems I think is
+[00:24] going to be I think part of the stack
+[00:26] that is most reasonable in a way in the
+[00:29] sense that you can like reason through
+[00:30] all the pieces um and there will be kind
+[00:32] of like logical steps that you can go
+[00:34] through to get the result so it's very
+[00:36] different and satisfying um but when you
+[00:39] first start interacting with GPUs um it
+[00:42] will feel a little bit like uh both
+[00:44] magic and like a very strange device
+[00:46] that you're interacting with I don't
+[00:48] really know um as a kind of class survey
+[00:51] how many of you have ten like a GPU
+[00:53] programming class of any kind. Okay, so
+[00:56] this is this is pretty good. Like that's
+[00:57] like a fourth, maybe a little bit less.
+[00:59] Um, but I think when you first interact
+[01:01] with these things, it's actually a
+[01:02] little bit of magic. So it's good to
+[01:04] understand. Um, and I think you know
+[01:07] deep neural networks feel like magic,
+[01:09] but also GPUs can too. Um, sometimes
+[01:12] people will show you plots like this. Um
+[01:15] part of this lecture I think my promise
+[01:16] to you is that by the end of this
+[01:18] lecture you will understand what this
+[01:19] plot is or why this plot looks the way
+[01:21] it does. Um and this is you know how
+[01:23] much throughput you're getting on a
+[01:25] matrix multiply where the x-axis is your
+[01:28] dimension. And you might think well you
+[01:30] know maybe bigger matrix multiplies are
+[01:32] always more throughput because you have
+[01:33] more work to do. Well you've got all
+[01:35] these kind of crazy patterns happening
+[01:37] where like at certain sizes your map
+[01:39] moles are much much slower than others.
+[01:41] Why? you know, you'll need to understand
+[01:42] that you also need to understand some
+[01:45] basics of how to sort of mentally think
+[01:47] about a GPU in order to build fast
+[01:49] algorithms. And even if you're not a
+[01:51] systems person, I think probably not all
+[01:53] of you or even a majority of you are
+[01:55] systems people, but if you're thinking
+[01:57] about architectures or just generally
+[01:58] reasoning about these things, you kind
+[02:01] of need to understand the hardware model
+[02:03] of how your, you know, model is going to
+[02:05] execute in order to make an effective
+[02:07] model, right? Thinking back to uh
+[02:09] Percy's initial lecture, right? Big part
+[02:11] of scaling is making sure you use your
+[02:13] resources effectively. And without
+[02:14] understanding your systems, you will
+[02:16] never be efficient at using your
+[02:18] resources.
+[02:20] Um, and you know, I am not a systems
+[02:23] person, surprise. Um, and so before I
+[02:25] start, I want to, you know, make sure to
+[02:27] point you towards resources that I think
+[02:28] are very good and very useful and that I
+[02:30] used um, in making this lecture. Um,
+[02:33] Horus he has, you know, really
+[02:35] incredible blogs and explainers of, you
+[02:37] know, how GPUs work. There's an
+[02:38] enthusiast group CUDA mode um that loves
+[02:41] to talk about um uh GPUs and CUDA
+[02:44] kernels and so on. Um and there's a TPU
+[02:47] and now what?
+[02:48] >> They're GPU mode now. They changed their
+[02:49] name.
+[02:50] >> Okay, fine. GPU mode. Um and uh the TPU
+[02:55] book, but now it's also a GPU book by
+[02:57] the Google folks. Actually, this is a
+[02:58] really incredible resource. So, if
+[03:00] you're really excited or interested by
+[03:01] any of the stuff I talk about today, I
+[03:03] would strongly encourage you to look at
+[03:05] uh that book. can they also have
+[03:07] exercises um that you can work through
+[03:10] and your assignment will have things
+[03:11] that look a little bit like those
+[03:12] exercises so you can get a little bit of
+[03:14] a preview of what we will um send you to
+[03:17] later. Great. Okay. So this lecture is
+[03:21] going to be in three parts. The first
+[03:22] part is really I would say just like
+[03:24] broad introductory material on GPUs.
+[03:27] This is going to be just the hardware
+[03:28] model just how the programming of the
+[03:31] GPU kind of works. um because the GPU is
+[03:33] kind of a foreign device and I want you
+[03:35] to understand philosophically how
+[03:37] they're different from CPUs. Um and once
+[03:39] you do that, we're going to talk about
+[03:41] um I think six different tricks um
+[03:43] important tricks to get a GPU to go
+[03:45] fast. These are just kind of building
+[03:47] blocks of how you can start to you know
+[03:49] manipulate your code um in order to make
+[03:52] it run efficiently on a GPU. And then
+[03:54] finally, the last part where we put all
+[03:55] of this together is going to be we're
+[03:57] going to walk through flash attention
+[03:58] and this will be kind of our victory
+[04:00] lap. we will say actually at this point
+[04:01] we understand everything we need in
+[04:03] order to you know in reinvent our own
+[04:05] flash attention and to understand all
+[04:07] the different components right so that's
+[04:08] going to be kind of the the goal that
+[04:10] we're going to be building towards uh by
+[04:12] the end of lecture
+[04:14] okay so we haven't gone to scaling yet
+[04:17] but you know from Percy's introductory
+[04:19] lecture or you know just generally
+[04:21] following language modeling you know we
+[04:23] kind of know that if we have more
+[04:24] compute on hand we can get you know
+[04:27] better language models right this is
+[04:28] kind of the currency by which we
+[04:30] operate. So if we have faster hardware
+[04:32] or if we have better utilization or you
+[04:34] know we have more chips and then we have
+[04:36] improved parallelization all of these
+[04:38] can drive progress right. Um and so in
+[04:41] some sense the game for the last few
+[04:43] years has been how can we bring more
+[04:45] compute to bear in training models and I
+[04:47] guess in the last year or so um how can
+[04:49] we bring more compute to bear in the
+[04:51] inference of these models right so
+[04:52] compute is just extremely important and
+[04:54] systems is part of that so if we were
+[04:57] talking about this in the '9s I think
+[04:59] the things that we would be focusing on
+[05:00] is clock speed right we would be saying
+[05:02] things like well you know how we make
+[05:04] computers go fast is we have a CPU that
+[05:06] executes instructions serially and we
+[05:08] make those instructions go faster and
+[05:10] faster, right? I mean, this type of
+[05:12] scaling where transistors got smaller
+[05:14] and clock speeds got faster, you know,
+[05:16] called Dennard scaling um held quite
+[05:18] well for for a while. Really the 2000s
+[05:21] um was about when this kind of scaling
+[05:23] tapped out. Um and one sort of
+[05:25] interesting side note, right, the number
+[05:27] of transistors of course has continued
+[05:29] to go up, but making transistors smaller
+[05:32] does not necessarily mean that your
+[05:33] transistors go faster, right? They don't
+[05:35] move at a faster clock speed. there's
+[05:37] fundamental physical reasons why you
+[05:39] know you don't actually continue to get
+[05:40] benefits of smaller and smaller
+[05:42] transistors at a certain point. So this
+[05:44] old approach of like making your clocks
+[05:46] faster making instructions execute
+[05:48] faster is not going to work right. So
+[05:50] how do we you know get LMS to continue
+[05:53] to scale in this world where we can't
+[05:55] just make things faster in sort of this
+[05:56] frequency sense
+[05:59] right and that's you know where the GPU
+[06:01] shows up and sort of parallel scaling in
+[06:03] general right um Percy's going to talk
+[06:05] about sort of more advanced topics next
+[06:07] lecture but after that's going to be
+[06:08] parallelism right parallelism and GPUs
+[06:11] are both kind of part of the same
+[06:12] paradigm instead of making things go
+[06:14] faster serially with your your clock
+[06:16] going faster and faster and faster
+[06:18] instead you're going to you know scale
+[06:19] horizontally right? Have more things
+[06:21] executing your your instructions in
+[06:23] parallel. And so this is kind of the
+[06:25] story of GPUs. This one slide really I
+[06:27] think or one picture summarizes you know
+[06:29] the state of parallel scaling which is
+[06:31] you know in the early days of you know
+[06:33] K20s and M40s you had you know
+[06:36] respectable but somewhat pitiful by
+[06:37] today's standards flops and all of a
+[06:40] sudden around P100s and V100s this curve
+[06:42] takes off and you get super exponential
+[06:45] scaling in the amount of floatingpoint
+[06:47] operations that you can do uh sort of
+[06:48] yearbyear right this is kind of a
+[06:50] remarkable plot in the amount of compute
+[06:52] that we can bring to bear um and so you
+[06:55] So GPU scaling has really driven almost
+[06:58] all of the compute scaling that we've
+[07:00] seen. Um and we'll talk about all the
+[07:02] different components that we have here.
+[07:04] Um you know I'll highlight them here
+[07:06] just to put them into your head. You
+[07:08] know at at the V100 era in 2017 we start
+[07:11] getting tensor cores. That's one of the
+[07:12] big hardware uh innovations. And then in
+[07:15] the in the next few years we're seeing
+[07:17] you know uh uh structured sparity and
+[07:20] FPA and all these sort of lower number
+[07:22] formats also driving our our flops
+[07:24] forward. And we're going to see uh sort
+[07:26] of what that means in detail uh in a
+[07:28] little bit.
+[07:31] So how is a GPU different from a CPU?
+[07:33] Those that have, you know, interacted
+[07:35] with a GPU already know this. We'll move
+[07:36] on to more advanced things in a minute.
+[07:38] But for the rest of you, I think it's
+[07:40] very important to understand the the
+[07:41] model like the philosophy in some sense
+[07:43] of how they're different. So a CPU is
+[07:46] designed for quick serial execution
+[07:48] where you have sort of complex branching
+[07:50] logic, complex conditionals, complex
+[07:52] control flows. Because of this, a CPU
+[07:55] generally speaking has really big
+[07:56] control units and it has a few alus um
+[07:59] that can do sort of mathematical or
+[08:01] other operations, but this is meant to
+[08:03] run very quickly, right? So you want to
+[08:04] go as fast as possible and sort of have
+[08:06] low latency. The the time between when
+[08:08] you get an instruction and when you
+[08:09] complete it should be very very short,
+[08:11] right? That's kind of the general CPU
+[08:13] design philosophy.
+[08:14] In contrast, the GPU is really about
+[08:17] throughput, right? And you know the the
+[08:19] plot on the right I think is a great
+[08:21] pictorial illustration of the when you
+[08:24] change these philosophies what you end
+[08:25] up getting. So in a GPU, maybe you
+[08:27] dispatch a task. It takes a long time
+[08:29] for it to finish, right? It might be
+[08:31] that you process a task and then you
+[08:33] stop and then you go work on another
+[08:34] task and then you go back and work on
+[08:36] another task. But in general, right,
+[08:38] even though your tasks don't finish
+[08:39] quickly, you know, you're getting large
+[08:41] aggregate throughput across all of your
+[08:43] tasks. And what enables this is having
+[08:46] tons and tons of lightweight cores,
+[08:48] right? So a GPU has hundreds and
+[08:50] hundreds of sort of compute units that
+[08:52] are sort of packed into a chip and all
+[08:54] of these can execute in parallel, right?
+[08:55] Okay. So, this is a very different mode
+[08:57] of programming and thinking compared to
+[09:00] a CPU.
+[09:01] Okay. Um, and I want to demystify what a
+[09:05] GPU is. I don't want you to think of it
+[09:06] as like a, you know, set of pieces of
+[09:09] text on Nvidia SMI. I want you to like
+[09:11] be able to sort of visualize what the
+[09:13] hardware is of a GPU. Um, I think this
+[09:17] picture is, I think, usually used as a
+[09:20] pictorial illustration of what a GPU is.
+[09:21] I think this is a great logical picture
+[09:23] of what's happening inside of a GPU. So
+[09:26] a GPU um the basic unit of a GPU is SM,
+[09:30] a streaming multipprocessor. And a
+[09:32] streaming multipprocessor is kind of
+[09:34] like a core. It's its own independent
+[09:36] compute unit that has, you know,
+[09:38] subcomponents that it can use uh to
+[09:40] accelerate its computation and it has
+[09:42] access to certain kinds of memories that
+[09:44] it can connect to. Right? So each SM,
+[09:47] you know, building on this idea of
+[09:49] parallelism, it's not a single sort of
+[09:51] compute unit. It has streaming
+[09:53] processors inside of it that can then
+[09:55] execute different threads in parallel.
+[09:56] But SM is kind of the the discrete
+[09:59] compute unit. We'll see why uh later
+[10:01] when I get to the programming model. Um
+[10:03] each SM you can think of as kind of a
+[10:05] core almost. Um and GPUs have tons of SM
+[10:08] like a A100 will have 128 SM. Each of
+[10:11] these can be independently programmed
+[10:13] and they can independently execute
+[10:14] different jobs and they have access to
+[10:16] to sort of global memory outside of it.
+[10:21] Um, and the other thing that we will see
+[10:23] that's kind of the the sort of compute
+[10:25] story of a GPU. Um, but we will see
+[10:27] throughout this lecture that a really
+[10:29] really important part of this story is
+[10:31] not just the compute part but the memory
+[10:33] part. Right? Modern sort of hardware and
+[10:36] LM optimization is really defined by the
+[10:38] memory. And so we need to understand
+[10:41] what the memories are and where they
+[10:43] live. So when we talk about memory,
+[10:45] there's different kinds. Um there's
+[10:48] different levels of caches that are
+[10:49] connected to a GPU. There are registers
+[10:52] which are even more limited and even
+[10:54] faster. And then you have global or high
+[10:57] bandwidth memory. Um and as you can kind
+[10:59] of see from this table, this is a
+[11:01] benchmarking that that some folks did of
+[11:04] uh I think this was the A100 uh
+[11:06] latencies. you know the L1 and shared
+[11:08] memory these are very fast right in
+[11:10] something like 20 to 30 cycles you can
+[11:12] kind of read and get data from them if
+[11:14] you're hitting the L2 cache much slower
+[11:16] and if you're hitting global memory you
+[11:18] know that's 10 times slower than the L1
+[11:20] cache this is a big difference in your
+[11:22] speed right and this global memory is
+[11:24] kind of what you normally think of as a
+[11:26] you know highle programmer as a GPU
+[11:28] memory right when an H200 tells you I've
+[11:31] got 144 gigs of memory you're talking
+[11:33] about global memory right you're not
+[11:35] talking about shared or L1 cap
+[11:37] Now physically where do these things
+[11:39] live? Well, global memory, you know,
+[11:41] usually are these kind of memory chips
+[11:43] that live outside of your sort of
+[11:45] compute unit, whereas L2 and L1 cache,
+[11:48] they kind of live physically in the chip
+[11:50] itself, right? So, this is kind of the
+[11:51] the picture of a GPU chip. Um, and you
+[11:54] see all these SM, these green blocks are
+[11:57] SMS. Um, and you see L2 right here, and
+[12:00] the L1 is inside of each of SMS, right?
+[12:04] So, so they're physically much closer to
+[12:06] the compute units. That's why their
+[12:07] latency is so much better, right? Um,
+[12:10] and you might say, okay, then if shared
+[12:13] memory is so nice, why don't you build a
+[12:14] whole chip out of shared memory, um,
+[12:17] it's much more expensive, hundreds of
+[12:18] times. It's also much more power hungry,
+[12:21] right, from the way that these memories
+[12:22] are built. Um, and so this is the reason
+[12:24] why if you're building a practical
+[12:26] accelerator, often you don't want to
+[12:28] just, you know, have a giant amount of
+[12:29] shared memory. You want to have the sort
+[12:31] of hierarchy of memory, right, and use
+[12:33] it effectively. Um I think uh Grock
+[12:36] right which was recently acquired by
+[12:38] Nvidia was a design where you just had
+[12:40] these giant amounts of SRAMM right and
+[12:42] for certain workloads like inference
+[12:44] this is very helpful um but still for
+[12:47] most accelerators you're going to have
+[12:48] this hierarchy that you're going to
+[12:49] really have to respect uh in order to
+[12:51] make anything run fast
+[12:54] >> yes
+[12:56] the shared memory L1 cache
+[12:58] >> uh yeah so the the shared memory is you
+[13:02] know and the L1 cache I guess kind of
+[13:04] operate differently. The cache is really
+[13:05] just a cache thing that that is storing
+[13:08] recently accessed data elements. Shared
+[13:10] memory is a programmable element that
+[13:12] you'll actually interact with that you
+[13:13] can like put things in and out of.
+[13:19] Okay, cool. Right. So that's the memory
+[13:21] story and keep that in mind because it's
+[13:23] going to keep coming back. The memory
+[13:24] hierarchy, that's a really important
+[13:25] object. Now, okay, we have the hardware
+[13:29] mental model in place and now we're
+[13:30] going to start talking about the
+[13:32] software and programming model of a GPU.
+[13:34] Um, so there's three different important
+[13:36] players that live in the execution model
+[13:38] of a GPU. Um, so there's a thread and if
+[13:41] you're familiar with multi- um, uh,
+[13:44] parallel programming of any kind, you
+[13:45] know what a thread is, right? A thread
+[13:47] is a sort of lightweight thing that's
+[13:49] running in parallel and doing some work,
+[13:50] right?
+[13:51] um in a GPU. An important thing about
+[13:53] the threads is they follow the SIM key
+[13:57] model, which means that all of the
+[13:58] threads that you have are executing the
+[14:01] same exact instructions, right? Um
+[14:04] they're going to have different inputs,
+[14:05] which means that the threads can
+[14:06] actually do separate useful work, but
+[14:08] the instructions they execute have to
+[14:10] all be the same, right? And this is this
+[14:12] has important implications for both the
+[14:14] efficiency of your code as well as the
+[14:16] programming model, right? If the threads
+[14:18] can do all sorts of different stuff, it
+[14:19] becomes very hard to program, right?
+[14:21] GPUs are this trade-off between
+[14:22] programmability um and efficiency. Now,
+[14:26] a block is a group of threads. And the
+[14:29] reason why a block is a relevant object
+[14:31] is that a block is guaranteed to run on
+[14:34] a single SM. And remember, an SM has a
+[14:36] shared memory. And so, you can think of
+[14:38] a thread as doing work in parallel.
+[14:40] Blocks have a access to a shared pool of
+[14:43] memory. that will become very important
+[14:45] later when we talk about this idea
+[14:46] called tiling where these blocks are
+[14:48] going to be reusing the same pieces of
+[14:50] memory. Finally, um a warp is
+[14:54] essentially kind of the scheduling unit
+[14:56] of um what is happening inside the GPU.
+[14:58] Threads are going to execute in groups
+[15:01] of 32 consecutively numbered threads.
+[15:03] That is a warp, right? This decreases
+[15:05] the overhead of a scheduleuler deciding
+[15:07] which threads to run. But essentially,
+[15:09] these are kind of the important three
+[15:11] terminology items for a GPU. I might say
+[15:13] something like, oh, you know, we're
+[15:15] going to have different warps executing.
+[15:16] That's what I mean here. That's a basic
+[15:18] unit of 32 threads that execute
+[15:20] together. Yes, you mentioned that all
+[15:23] threads execute the same instructions.
+[15:24] So is that all threads in a block or all
+[15:26] threads in a warp?
+[15:27] >> All threads in a warp are going to be
+[15:29] executing.
+[15:32] >> Cool. Yeah.
+[15:34] >> So theul decides which warp the next
+[15:37] instruction goes to.
+[15:38] >> That's right. or or sorry the
+[15:39] scheduleuler decides which which warp is
+[15:41] going to be executing next
+[15:45] and on what SM and so on. Yeah,
+[15:48] cool. Okay. Um and so in the memory
+[15:51] model of a GPU um you know device code
+[15:54] can read from registers. Registers are
+[15:56] some some of the fastest and most local
+[15:58] uh items. This might be storing things
+[16:00] like memory addresses of you know where
+[16:02] you might need to your arrays start and
+[16:04] end. That's a place where you might
+[16:05] store things in registers. Um then
+[16:07] you've got local memory. This is local
+[16:10] to within your your single SM. You've
+[16:12] got shared memory that can be accessed
+[16:14] sort of within your block. So if you
+[16:16] have something you want to transfer
+[16:18] across threads or you want to have
+[16:20] information that is going to be reused
+[16:21] across threads, those are going to live
+[16:23] in shared memory. You can of course then
+[16:26] read out or sorry read from global
+[16:28] memory, right? The the DRAM that's far
+[16:29] away um as long as you're willing to pay
+[16:32] sort of the latency hit of waiting for
+[16:34] data to come to you from global memory.
+[16:36] Um, and there's also sort of constant
+[16:38] memory, which I don't think I've seen
+[16:39] very much used in in various programming
+[16:41] things. Um, that you can use as well.
+[16:44] Now, you can even sort of transfer to
+[16:46] and back from host memory, right? When I
+[16:48] say host memory, that means sort of CPU
+[16:50] memory that lives on the machine. Um,
+[16:52] you can do this if you need to offload
+[16:54] beyond the size of your GPU. This is
+[16:55] kind of the set of things that you can
+[16:57] do um in your memory, right? And and
+[17:00] really the key thing the most important
+[17:02] part of this this uh sort of memory
+[17:04] model is that as soon as you go outside
+[17:06] of your shared memory things are going
+[17:08] to be slow. So grouping the blocks to
+[17:10] sort of decrease the amount of global
+[17:12] memory reads is going to be the name of
+[17:14] the game throughout this lecture.
+[17:18] Okay. Now I'm going to talk for two
+[17:20] slides two slides about TPUs. Um the
+[17:24] majority of this lecture is about GPUs
+[17:26] mainly because I think you know if you
+[17:28] all go out and you you know write your
+[17:30] code and you build your models is
+[17:32] probably going to be on GPUs for most of
+[17:34] you. Um but I think it is very important
+[17:37] that we talk about TPUs both because I
+[17:39] think TPUs are cool and becoming more
+[17:41] popular but also because TPUs are kind
+[17:43] of like the alternative evolution of
+[17:45] GPUs and you can kind of see what's the
+[17:47] same what's not. Um it's very
+[17:49] interesting to see uh how TPUs work as
+[17:51] well, right? So actually what's very
+[17:54] interesting is that TPUs are very
+[17:56] similar to GPUs at a high level. This is
+[17:58] kind of conversion evolution. If you
+[18:00] want to build a energyefficient
+[18:02] accelerator that does machine learning,
+[18:03] you kind of end up at the same place. Um
+[18:06] so the core mental difference between a
+[18:08] TPU and a GPU that you should kind of
+[18:10] keep in mind is that TPUs are in some
+[18:13] sense simpler. They're more optimized
+[18:14] for the machine learning workload. um
+[18:17] they have light or weight control units
+[18:19] and they have much bigger matrix
+[18:21] multiply units um and so you know they
+[18:24] have the same basic structure that I'll
+[18:26] talk about for um for sorry for GPUs
+[18:30] where they will have a specialized
+[18:31] circuit to multiply matrices they will
+[18:34] have components that can do parallel
+[18:36] vector operations and they will have you
+[18:38] know some control system they have a
+[18:41] very similar looking memory structure
+[18:43] where they have slow memory which is
+[18:45] called high bandwidth memory and then
+[18:47] they have a even faster local memory
+[18:49] called SMEN or shared memory. Right? So
+[18:51] this looks very very similar to the
+[18:53] architecture of a GPU. Really the
+[18:55] difference is in is in how these things
+[18:57] are sized and the flexibility of these
+[19:00] operations. Um and I would say oh and
+[19:04] the main difference that I won't get
+[19:05] into today is the networking for these
+[19:07] accelerators. So if you're thinking
+[19:09] about what is the big difference between
+[19:10] a TPU and a GPU, actually the biggest
+[19:12] differences come in networking, not in
+[19:14] the individual chips because really the
+[19:16] chips, you know, they live to just
+[19:18] multiply matrices.
+[19:20] Um, and this is from the Jax book, you
+[19:22] know, which is a really lovely resource.
+[19:24] Um, but they have these two tables. They
+[19:27] have a section on GPUs where they
+[19:28] describe how to essentially map GPU
+[19:30] ideas to TPU ideas. And whatever I say
+[19:33] today about what's on the left here, you
+[19:35] know, you can map directly to the TPU.
+[19:37] But the important thing you know at this
+[19:39] point in the lecture to notice is that
+[19:41] for every sort of concept in the GPU
+[19:44] there's a corresponding concept in the
+[19:46] TPU and this you know mapping is
+[19:47] actually pretty precise like a tensor
+[19:49] core in a GPU which is the matrix
+[19:51] multiply unit corresponds almost exactly
+[19:53] to an MXU which is a matrix multiply
+[19:55] unit in the tensor core and if we're
+[19:57] getting into really nitty-gritty details
+[19:59] they actually use the same underlying
+[20:01] you know like circuitry right they're
+[20:02] both uh what's called a systolic array
+[20:04] which kind of streams data in and out to
+[20:06] to do a matrix multiply. So the
+[20:08] architecture is very similar. Now, how
+[20:10] are they? Oh, sorry. Yes.
+[20:12] >> Do you know like what a typical system
+[20:14] size is on the GPU versus
+[20:16] >> uh I do not know that off my head. I'm
+[20:18] sorry. I'll have to look that up. Yeah.
+[20:21] >> Okay. Um so the main difference um
+[20:25] between these two is the number of
+[20:27] different units that we have. Um so if
+[20:30] we look at Oh, actually I I'll mention
+[20:31] one very very confusing thing before
+[20:33] before I move on. Sorry. uh TPUs call
+[20:35] their streaming multipprocessors tensor
+[20:37] cores. GPUs call their matrix multiply
+[20:40] units tensor cores. They are named
+[20:42] exactly the same thing. So you will have
+[20:43] to disambiguate them based on context.
+[20:45] Uh if someone says tensor core for a TPU
+[20:47] that means a processor. If someone says
+[20:49] tensor core for GPU they mean a matrix
+[20:51] multiplier. Um so if you look at a GPU
+[20:55] uh a typical GPU like a H100 might have
+[20:58] something like 132 uh streaming
+[21:00] multipprocessors. That's a lot of
+[21:02] processors. um a TPU will only have two
+[21:05] units, right? There's only two separate
+[21:07] units running in parallel. Now, um the
+[21:11] GPU, if we just look at the matrix
+[21:12] multiply units, will have 528 matrix
+[21:16] multiply units, whereas a TPU will have
+[21:18] just eight, right? Um and these are, you
+[21:20] know, roughly scaled to be comparable
+[21:22] looking objects. Um why is it that it's
+[21:24] this way? Well, the TPU is relying on
+[21:27] much bigger, smaller numbers of matrix
+[21:29] multiply units, whereas the GPU is
+[21:31] relying on smaller but much more
+[21:33] numerous uh matrix multiply units. And
+[21:35] you can kind of imagine that if you have
+[21:37] a small number of many matrix multiply
+[21:39] units, it's going to give you more
+[21:40] flexibility. You can program them to do
+[21:42] this and that. Whereas a TPU, you're
+[21:44] locked in to big big matrix multiplies,
+[21:46] right? And so um there was a funny
+[21:48] situation in a recent paper that I wrote
+[21:50] where you know we did a batch size sweep
+[21:52] and it goes all the way down to 64 and
+[21:54] it stops at 64. Why is that? Because the
+[21:56] tensor core refuses to accept anything
+[21:58] smaller than a 64dimensional input
+[22:00] there. Right? It it has to be big matrix
+[22:01] multiplies. Um so this is the main
+[22:04] difference. But as you can see GPUs and
+[22:06] TPUs share a lot of similarities. They
+[22:08] rely on a memory hierarchy between fast
+[22:10] memory and slow memory. And they have a
+[22:12] matrix multiply unit. And because of
+[22:14] that, the core concepts that I'm
+[22:16] teaching you today is going to transfer
+[22:17] over between GPU and TPU, right? The the
+[22:20] basic ideas are always going to be the
+[22:21] same for that reason. Um, and this is
+[22:23] really convergent evolution. There are
+[22:24] only so many ways to sort of cost
+[22:27] effectively allocate memory and there's
+[22:29] only so many ways to multiply matrix
+[22:30] very fast, right? There's some design
+[22:32] decisions uh that are different, but
+[22:33] otherwise you end up at the same place.
+[22:36] Okay, cool. So that's TPUs
+[22:39] and Right. Good. Um and GPUs I think
+[22:42] have been enormously successful because
+[22:45] it allows for you know easy scalability
+[22:48] for things like matrix multiplies. If
+[22:49] you want more throughput you just keep
+[22:51] adding SMS right as long as your memory
+[22:53] bandwidth can handle those SMS um you
+[22:55] get more and more throughput. Um the
+[22:58] programming is you know something we
+[23:00] don't think about but it's deceptively
+[23:01] easy right if you were to try to write
+[23:03] you know lower level machine code
+[23:05] looking stuff like ptx um it's actually
+[23:07] doable because it's all simp right it's
+[23:10] not like you're programming every single
+[23:12] thread you know you're saying okay here
+[23:13] are my instructions here are my inputs
+[23:15] now run them on all of my inputs right
+[23:17] it's something that maybe you all are
+[23:18] already familiar with with things like
+[23:20] applying applying or using functional
+[23:23] programming finally um I haven't talked
+[23:26] much about thread threads. But whenever
+[23:28] you're doing GPU programming, these
+[23:30] threads are always very lightweight.
+[23:31] They can be stopped, started at any
+[23:33] time. The scheduler can decide that,
+[23:35] okay, I have another warp that's, you
+[23:37] know, better to run. So, I'm going to
+[23:38] stop you and start this one. Um, and
+[23:40] it's very sort of quick to sort of swap
+[23:42] in these jobs. That allows for much
+[23:44] higher throughput if certain jobs are
+[23:46] stalled or have some property that's
+[23:48] lowering throughput.
+[23:51] Okay, so that's the benefit of GPUs, you
+[23:54] know, as a hardware model. it's been
+[23:55] enormously successful. Um, and I think
+[23:58] even in the early days before tensor
+[24:00] cores sort of were implemented, you
+[24:02] know, people realized that, you know,
+[24:04] commodity graphics hardware, this
+[24:05] massive parallelism would be very
+[24:07] effective for, you know, scientific
+[24:09] computing. Um, so, you know, this is one
+[24:11] of the original papers on using graphics
+[24:13] hardware for fast matrix multiplies. Um,
+[24:16] and this is a really really cool sort of
+[24:17] hacker work. you know, people figured
+[24:19] out, well, we have these shaders that
+[24:21] are implemented, but we can program
+[24:23] specific shaders that will actually give
+[24:25] us sort of matrix multiplies and
+[24:27] different rendering settings actually
+[24:29] give us faster matrix multiplies. And
+[24:31] that's that's a sort of really cool
+[24:33] computer science things you can do. But
+[24:35] nowadays, you do not have to do this.
+[24:36] You do not have to manually program your
+[24:38] GPUs to do matrix multiplies because as
+[24:41] of the V 100, um, Nvidia decided, you
+[24:43] know, here is a piece of hardware that
+[24:45] will do your matrix multiplies for you.
+[24:48] Um and once that hardware sort of
+[24:50] existed, maples became the sort of one
+[24:53] privileged operation in machine
+[24:55] learning. Right? So at this point
+[24:56] there's a gigantic gap in sort of the
+[24:58] throughput that you're going to get
+[25:00] between sort of parallelizable but non
+[25:03] matrix multiply operations versus amount
+[25:05] of [clears throat] operations you can do
+[25:06] in a matrix multiply. Right? So this is
+[25:09] one of the reasons why sort of any near
+[25:11] future machine learning architecture
+[25:13] that we see that scales with compute is
+[25:15] going to have a matrix multiply in it.
+[25:17] Right? because this is the the one way
+[25:18] that you can really effectively get a
+[25:20] lot of compute throughput. Um more than
+[25:24] 10 times faster than any other
+[25:26] floatingoint operation that you can do
+[25:29] uh in a GPU.
+[25:31] Okay.
+[25:33] And then um the last sort of hardware
+[25:35] thing that I'll end with I think this is
+[25:36] the last slide of this section um is
+[25:39] that different components of the GPU are
+[25:41] scaling at different rates over time. Um
+[25:44] we know that the GPUs are getting faster
+[25:47] and faster. This is just like a thing,
+[25:48] right? As well as CPU, you know, uh
+[25:50] overall compute throughput is getting
+[25:52] faster and faster. So that's the gray
+[25:53] line, right? That's pretty fast. We're
+[25:55] getting faster and faster improvements
+[25:56] in the total floatingpoint operations.
+[25:59] Um green is our memory bandwidth. This
+[26:01] is how fast we can transfer data. That's
+[26:03] growing comparatively slowly. Blue is
+[26:06] parallelism. This is how fast we can
+[26:08] connect different GPU devices. That's
+[26:10] also going very slowly. And what does
+[26:12] this mean? This means that if you're out
+[26:14] here kind of in the early days of GPU
+[26:16] programming, probably you weren't
+[26:17] thinking much about memory because you
+[26:19] were you compute wasn't that much faster
+[26:21] than your memory transfer. But now as we
+[26:23] go more and more to the right of this
+[26:25] plot, we're going to see a bigger and
+[26:27] bigger gap between compute and memory.
+[26:28] And that's why a lot of the optimization
+[26:30] I'm talking about today are memory
+[26:32] optimizations. Right? As we go further
+[26:34] to the right, we're going to see memory
+[26:35] and communication bottlenecks more and
+[26:37] more. And so it's going to take more and
+[26:39] more work to fully utilize the hardware
+[26:41] that we have. Okay, so that was our sort
+[26:46] of very basic overview of GPUs. I can't
+[26:49] possibly, you know, give you a 20inut
+[26:51] lecture that fully helps you understand
+[26:54] what the GPU hardware is, but hopefully
+[26:55] you have a flavor, right? The mental
+[26:57] model should be GPUs are massively,
+[26:58] massively parallel. They execute
+[27:00] instructions all at the same time. Um,
+[27:03] compute scales really fast, really,
+[27:05] really fast and even faster than memory,
+[27:07] which means memory is really important.
+[27:09] And because memory is important,
+[27:11] everything we do has to respect the
+[27:13] memory hierarchy, right? As much stuff
+[27:15] that we do goes into shared memory and
+[27:17] not global memory, right? So, this is
+[27:18] kind of hopefully your understanding of
+[27:20] GPUs. And if you have this
+[27:21] understanding, at least you you'll
+[27:23] understand uh all the basics necessary
+[27:26] to to uh internalize the next part uh of
+[27:28] this lecture. Okay, I can pause for a
+[27:30] moment here in case people have hardware
+[27:32] questions or anything else before I move
+[27:34] on to the next part.
+[27:36] Yes.
+[27:38] >> So before V100s, there was no matrix
+[27:41] multiplier unit.
+[27:43] >> Yeah. Yeah. There was no tensor core
+[27:44] that like specialized to a map. Yeah.
+[27:46] The tensor core is a V100 edition.
+[27:48] Before that you would be programming
+[27:50] manually. Of course you have so many SM
+[27:52] and so many like ALUS that you can still
+[27:54] do quite good throughput. But you know a
+[27:56] specialized circuit for matrix multiply
+[27:58] really you know changes the game for
+[28:00] them. Oh yeah back there
+[28:02] >> what was the difference between the
+[28:03] share memory and the L1 cache?
+[28:05] >> Uh the cache just operates on its own
+[28:07] like you don't get to control the L1
+[28:08] cache
+[28:10] >> is O2 slower than L1 just because of the
+[28:14] physical distance or does it also differ
+[28:16] some other way?
+[28:18] >> Yeah I mean physical distance is a big
+[28:19] part of it. I mean they are if I believe
+[28:22] if I remember right they're both SRAMM
+[28:23] like that's one of the reasons why
+[28:25] global memory is much slower but the
+[28:27] physical distance and the interconnects
+[28:28] that are used are the reasons why it's
+[28:30] slower. Yeah this is not inherent by the
+[28:33] way um one additional side thing is that
+[28:35] the the equivalent L2 cache in TPUs is
+[28:38] much faster um because they make
+[28:40] different design trade-offs on silicon
+[28:41] to to enable that. That's one of their
+[28:43] selling points. Yes. If the compute
+[28:46] memory gap keeps growing, do you think
+[28:48] that affects the way future chips will
+[28:50] be laid out? Like just
+[28:52] >> Yeah. Or or maybe the future chip kind
+[28:55] of budget splits. Um, one of the things
+[28:57] that I really didn't want to talk about,
+[28:59] but now you forced me to, is kind of the
+[29:01] inference landscape for hardware is
+[29:03] actually even more crazy. Um so one of
+[29:05] the things that people started doing I
+[29:07] think last year was something called
+[29:08] prefill uh decode disagregation where
+[29:12] the prefill part which is very heavy
+[29:14] matrix multiplies is one chip and then
+[29:16] the decode part for your for your
+[29:18] inference which is more memory bandwidth
+[29:20] limited is another chip right um and
+[29:23] some of the models I think this was uh
+[29:25] stepf fun 3 uh which is a Chinese open
+[29:28] source model even has a thing where they
+[29:29] like try to disagregate different layers
+[29:31] so an attention will go to one chip
+[29:33] optimize for one thing or one
+[29:34] accelerator and then MLPS will go to a
+[29:37] different accelerator, right? Um, and so
+[29:39] you're starting to see like if this gap
+[29:41] grows, any sort of clever tricks to, you
+[29:44] know, utilize your very precious fast
+[29:45] memory becomes very valuable. And you
+[29:47] start to see this very heavily in
+[29:49] inference, which is even more memory
+[29:50] bound than training. Yeah. Cool. Oh,
+[29:54] yeah.
+[29:55] >> How many warps are in a block?
+[29:57] >> How many warps are in a block?
+[30:01] >> Uh, do I know that? I don't think I know
+[30:03] that outside my head. I think it's also
+[30:05] hardware dependent.
+[30:07] Okay, good. Um, okay. So, the second
+[30:10] part of this lecture is now you all have
+[30:12] a general sense of what a GPU is and how
+[30:15] it works. Now we are going to talk about
+[30:17] all of the basic tricks to make uh
+[30:19] workloads fast on a GPU. These are kind
+[30:22] of basic components that you can kind of
+[30:23] put together to make things fast. And to
+[30:26] keep us kind of motivated, um, one of my
+[30:29] goals by the end of this section is to
+[30:31] explain this plot to you. Right? So this
+[30:33] plot, as I said before, has a very
+[30:34] simple picture. It's the size of the
+[30:37] matrix, a square matrix that I'm
+[30:38] multiplying. I'm m multiplying two
+[30:40] square matrices. Um, and this y-axis is
+[30:43] how many items I'm processing per
+[30:45] second. So this is the throughput,
+[30:46] right? Um, and as I'm going to the
+[30:48] right, in general, throughput is going
+[30:50] up because I have bigger matrices. I
+[30:52] have more work to do. And so, you know,
+[30:54] if I have a lot more work, I can keep my
+[30:55] hardware more utilized, right? But
+[30:57] there's all sorts of strange patterns
+[30:58] here. And we kind of want to understand
+[31:01] why are there strange patterns here?
+[31:02] Why? And how can we be at the very top
+[31:04] of that curve rather than the bottom,
+[31:06] right? So, that's what I'm going to be
+[31:07] talking about in the second part. Okay?
+[31:10] And you know, Percy already mentioned
+[31:12] this. This is the roof line model, but
+[31:14] the plot I showed before looks a little
+[31:16] bit like this classic roof line model,
+[31:19] right? This looks like there's a
+[31:20] diagonal part and then a flat part,
+[31:22] right? And this is what we expect right
+[31:24] the roofline model says up until a
+[31:26] certain point we will be memory limited
+[31:29] right we're memory limited so no matter
+[31:31] how much you know compute you give me um
+[31:33] my sort of throughput is not going to go
+[31:35] up um at some point you have enough work
+[31:38] per unit uh sort of uh memory movement
+[31:41] that I can keep sort of my compute units
+[31:44] completely saturated and past that point
+[31:46] having bigger and bigger sort of units
+[31:48] of work does not help me anymore right
+[31:50] no matter how much sort of extra work
+[31:52] you give me that doesn't help because
+[31:54] you know I fully saturated by matrix
+[31:56] multiply units. So this is what we
+[31:58] expect out of the classic roofline model
+[32:00] where you know as we sort of have faster
+[32:03] memory we can kind of push this upwards
+[32:05] but there's a memory bound region which
+[32:06] is diagonal and then a computebound
+[32:08] region which is flat right this is kind
+[32:10] of what we expect now if you want to
+[32:13] make sure that your code runs
+[32:15] efficiently on a GPU really what you
+[32:17] need to do is you need to be on this
+[32:19] flat part right as soon as we're at this
+[32:20] flat part there's nothing else to do
+[32:21] we're at maximum throughput right so we
+[32:24] want to prevent ourselves from being in
+[32:26] this diagonal part which means we want
+[32:28] to increase the operational intensity.
+[32:30] The amount of computation we do per
+[32:32] memory read needs to be high enough. So
+[32:35] that's what we need to do and there's
+[32:37] six different tricks that we will talk
+[32:39] about. Actually some of these are are
+[32:41] not sort of memory tricks. The first one
+[32:43] only there are six different tricks that
+[32:44] are maybe necessary to understand to
+[32:46] make GPUs go fast. The first one's a
+[32:49] little bit different in flavor but then
+[32:50] the rest of them will have this flavor
+[32:51] of trying to minimize memory movement as
+[32:54] much as possible.
+[32:57] The first one is kind of a GPU specific
+[33:00] thing and it relates to one of the
+[33:02] things I said before um the SIM key
+[33:04] model. So in a GPU every thread is
+[33:07] executing the same thing. Now what
+[33:10] happens if you write an if statement on
+[33:12] a piece of code that executes on a GPU
+[33:14] right on a CPU it's quite clear what
+[33:17] happens on a CPU you know you will
+[33:19] either pick one branch or the other you
+[33:20] will execute that branch and you will
+[33:22] move on with your life right in a GPU um
+[33:24] you will do something actually quite
+[33:25] different and slightly counterintuitive
+[33:28] um every thread has to execute the same
+[33:30] instruction so actually every thread
+[33:32] will kind of execute both the if and the
+[33:34] else but if you're not part of the if
+[33:36] branch you will just mask out that
+[33:38] computation you just sit idle, right?
+[33:40] And so whenever you have a conditional,
+[33:42] your mental model for the execution kind
+[33:44] of looks like this. You know, part of
+[33:46] your threads will diverge based on this
+[33:48] if statement. Some of them will go to
+[33:50] the bottom branch, some of them will go
+[33:51] to the top branch. And the bottom branch
+[33:53] ones will execute first, top branch ones
+[33:55] will wait, and then the top branch ones
+[33:56] will execute, and the bottom branch ones
+[33:58] will wait. Right? So in order to execute
+[34:00] an if statement, you're actually sort of
+[34:03] walking through both of these. And then
+[34:05] some of the threads are just waiting
+[34:06] doing nothing if they're if they're on
+[34:08] the wrong side of the branch. Um, and
+[34:10] this is called control divergence. Um,
+[34:12] and this is nice in some ways because it
+[34:14] simplifies programming. It's not nice in
+[34:16] that you now have these big compute gaps
+[34:18] where your GPU is doing nothing, right?
+[34:21] Um, this is one of the reasons why you
+[34:22] really do not want to write if
+[34:24] statements. um you know if you look at
+[34:27] GPU code like if you have a relu you'll
+[34:29] often find you're like multiplying with
+[34:30] zeros or multiplying with masks instead
+[34:32] of doing like an if statement where
+[34:33] you're updating half right because uh
+[34:35] because a multiplication is going to all
+[34:37] kind of go at once and an if statement
+[34:39] might actually have to wait two clock
+[34:41] cycles or something like this two
+[34:42] operations
+[34:44] okay so that's the first thing but you
+[34:46] know that's a sort of separate story
+[34:48] from all this memory stuff which is kind
+[34:50] of the main narrative or the main story
+[34:52] of this um the first one which you don't
+[34:55] really have to do too much for, but I
+[34:58] think is one of the most important ones.
+[34:59] And hardware-wise, I think where Nvidia
+[35:01] is investing the most effort is low
+[35:03] precision computation. Um, and if you
+[35:06] look at this plot, I've brought, you
+[35:07] know, Bill Di back to the slide. Um,
+[35:10] this super exponential growth, where
+[35:12] does this really come from? Um, actually
+[35:14] a pretty non-trivial part of this, you
+[35:17] know, is number representations. You
+[35:19] start at FP32, you go to BF-16, and then
+[35:22] you go to int8. you just keep decreasing
+[35:24] the precision of your numbers. And of
+[35:27] course, if you have half the bits, you
+[35:28] have half the bits to move. And so
+[35:30] you've have your memory movement, right?
+[35:32] And so you've solved the memory
+[35:34] bottleneck for at least a little bit.
+[35:36] Um, you know, this is a dumb example,
+[35:40] but you know, I'm just going to really
+[35:41] drill it in there. You know, let's say I
+[35:43] have a rel on a vector of size n. If I'm
+[35:46] on float 32, I need to do one read,
+[35:48] right? to read my number. I need to do
+[35:50] one right after I've computed my value.
+[35:52] That's going to be four bytes per
+[35:54] operation. Total of eight bytes for my
+[35:56] memory access. I only have one flop
+[35:59] worth of operation. So that's eight
+[36:00] bytes for a flop. You know, if I have
+[36:03] the precision, of course, I've haved the
+[36:05] number of bytes per up. I've, you know,
+[36:08] haved the number of bytes that I need to
+[36:10] move per flop. Sorry, this is the
+[36:12] inverse of arithmetic intensity. Uh
+[36:13] arithmetic intensity should be reverse
+[36:15] of this, right?
+[36:19] Now that's a very simple example, but
+[36:22] actually how low precision works in a
+[36:24] modern GPU is actually very complicated
+[36:26] and actually either very cool or very
+[36:29] crazy depending on how you sort of think
+[36:31] about, you know, how cool things are.
+[36:33] Um, so when you do a matrix multiply,
+[36:36] let's say you have a tensor core that's
+[36:37] operating in lower precision. How does
+[36:39] that actually work in practice? Well,
+[36:42] you're actually not going to keep
+[36:43] everything in low precision. you're
+[36:45] going to downcast before you take your
+[36:47] product. And when you sum up your
+[36:49] partial summons in your matrix multiply,
+[36:51] you're going to do this in full
+[36:52] precision. And then you might emit your
+[36:54] outputs or your your results in FP32.
+[36:57] And part of I think the reason why low
+[36:59] precision is actually kind of a black
+[37:01] art is not because you can just like
+[37:03] decrease precision. Anyone can do that.
+[37:05] Um you have to figure out which of your
+[37:07] operations has to be in which number
+[37:09] format, right? So, you know, matrix
+[37:11] multiplies, maybe both your weights and
+[37:13] activations can be low precision. If I'm
+[37:15] doing a soft max, maybe I need to do
+[37:17] that in FP32. Or if I'm doing an
+[37:19] exponential, maybe that also needs to be
+[37:21] FP32. Or maybe I can get away with
+[37:23] BF-16, right? So, you know, I think uh
+[37:26] it took several years really to to get
+[37:29] low precision training to be the state
+[37:31] that it is today. And a lot of that work
+[37:33] was you know slow incremental empirical
+[37:36] work figuring out which of these
+[37:38] operations we can sort of downcast how
+[37:40] we can downcast them and how we can
+[37:42] preserve stability of training while
+[37:44] making as much of our training and and
+[37:46] inference uh low precision as possible.
+[37:50] Um people have been pushing this further
+[37:53] and further. I think, you know, once you
+[37:54] think about how hard it is to pay for
+[37:57] fast memory, you realize if only I can
+[37:59] cut my precision by another factor of
+[38:01] two, right? Like people really really
+[38:02] want to do that. Um, and so, you know,
+[38:05] FP8, you know, was kind of the the next
+[38:09] frontier, I would say, of low precision.
+[38:11] Um, once you get to FP8, there's no
+[38:13] longer a standard canonical format that
+[38:16] everyone uses. Like if you're using um
+[38:18] FP or sorry 16 bits, you're probably
+[38:20] using BF16, right, for a lot of what
+[38:22] you're doing. But with FPA, there's
+[38:24] going to be E4 M3, which stands for uh
+[38:27] four bits of exponent and three of
+[38:30] mantisa, or there's going to be E5 M2,
+[38:32] which is more exponent, fewer mantisa,
+[38:34] right? Because these are used in
+[38:35] different places. There's no
+[38:37] oneizefits-all once you start to get to
+[38:38] so few bits. But I think the thing
+[38:41] that's really interesting is uh the more
+[38:44] advanced low precision number formats
+[38:46] that are coming out with the new
+[38:48] hardware. So I'll talk briefly about
+[38:49] MXFP8 because it's both cool and what it
+[38:52] does to training is uh strange to say
+[38:55] the least. Um so in FP8 the traditional
+[38:59] version of training what you have is
+[39:00] that all of your let's say activations
+[39:03] are in 8 bits, right? So this is up here
+[39:05] and then you're going to have a scaling
+[39:06] factor in 32 FP32 that's going to allow
+[39:09] you to scale this up and down. Why do
+[39:11] you have a scaling factor? The scaling
+[39:13] factor is necessary because you only
+[39:15] have four bits of exponent let's say
+[39:17] right that's so few bits of exponent
+[39:19] you're going to quickly over underflow.
+[39:21] So you need the scaling factor to kind
+[39:23] of keep you in the right right range so
+[39:25] you can keep some information right. Um
+[39:28] well people realized um this is not
+[39:31] optimal because a single matrix might
+[39:33] have very different magnitudes right one
+[39:35] part of my sequence might have much
+[39:37] bigger sort of activations than another
+[39:39] so um instead of having a single scaling
+[39:42] factor why don't we have many scaling
+[39:44] factors right so MXFPA and sort of these
+[39:47] multi-caling factor uh formats that are
+[39:49] sort of much more advanced now have many
+[39:52] scaling factors each of these scaling
+[39:54] factors corresponds to the relevant
+[39:57] colored submatrix, right? So the first
+[39:58] four elements in this matrix corresponds
+[40:01] to this first scaling factor and so on
+[40:03] and so forth. Now I have more scaling
+[40:05] factors. These scaling factors are
+[40:08] actually going to be uh in lower
+[40:10] precision. These are going to be eight
+[40:11] bits as well. They're going to be E8 M0.
+[40:14] So they only have exponent bits. So
+[40:15] they're all powers of two um you know in
+[40:18] uh 8 bits. So you have to make these
+[40:20] trade-offs.
+[40:22] Now um
+[40:24] what was going to say? Okay, so MXFPA is
+[40:26] going to use more mantisa in the
+[40:28] elements. Scale factors are themselves
+[40:30] FPA. Um, and you're going to have one
+[40:32] scale factor every 32 elements in your
+[40:34] matrix. Okay, I'm going to pause here.
+[40:36] Uh, don't read the third thing. Now,
+[40:38] think for a moment. What is the problem
+[40:40] with this design? Like what is the big
+[40:42] issue if you do something as clever as
+[40:44] this?
+[40:47] So, the big issue here is let's say I
+[40:49] want to transpose this matrix. the
+[40:51] transpose of this matrix does not have
+[40:53] the same pattern so to speak scaling
+[40:55] pattern as this matrix right and so now
+[40:58] it used to be that a transpose of a
+[41:00] matrix was simple I just transpose this
+[41:02] matrix I don't have to re-quantize I
+[41:04] don't have to do anything now
+[41:06] transposing this matrix is very
+[41:07] complicated because I now have to
+[41:09] potentially re-quantize this whole
+[41:11] matrix to fit this 1 out of 32 pattern
+[41:14] that I have um and so what happens
+[41:17] internally when you actually use MXF fpa
+[41:20] And I found this to be crazy but also
+[41:22] kind of cool is that when you're
+[41:24] training your model with this thing, it
+[41:25] actually creates two copies of every
+[41:27] quantized matrix. One for your original
+[41:29] matrix, one for the transpose. So if you
+[41:32] ever want to transpose, you have the
+[41:33] transpose version waiting for you,
+[41:35] right? Um and that's kind of how you get
+[41:36] around this, which I think is a is a
+[41:38] crazy and cool thing. Um, the point here
+[41:40] is maybe not to to emphasize the GPU
+[41:43] trivia, but the point here is that once
+[41:45] you start getting to these FP8, FP4
+[41:47] formats, things start getting pretty
+[41:49] exotic because the amount of exponent
+[41:51] and and sort of mantisa loss that you
+[41:53] have are pretty extreme. So, you have to
+[41:55] be very clever about how you do this.
+[41:57] Um, and as I said, you know, if you were
+[41:59] to go and really train a model FPA,
+[42:01] which I think a lot of frontier labs are
+[42:03] doing for the compute benefits, um, you
+[42:05] know, you have to be very careful,
+[42:07] right? Um, this plot does show kind of
+[42:10] what I was saying. So, every time you
+[42:11] quantize, you're going to quantize one
+[42:13] way and you're going to transpose and
+[42:15] quantize. So, you're gonna have both
+[42:16] copies. And then the other part, which I
+[42:18] told you about a few slides ago, is
+[42:20] you're only going to quantize certain
+[42:22] layers that you think are safe to do so,
+[42:24] right? And this is another trial and
+[42:25] error thing that you have to figure out,
+[42:27] right? Um, and but once you have all
+[42:28] this together, you have the big benefits
+[42:30] of training an FPA, which is that when
+[42:32] you're doing those matrix multiplies,
+[42:34] you're probably going to get 20 to 30%
+[42:37] savings, maybe more depending on the
+[42:38] size of your matrix. Um, unfortunately,
+[42:40] it's not going to be a 2x speed up
+[42:42] because you have to do all these
+[42:43] quantization operations, right? There's
+[42:45] a big overhead doing this. So, it's not
+[42:46] free. Yes.
+[42:48] So, I remember from the like reading
+[42:50] that like the first layer and the last
+[42:52] layer hard to quantize. Do you have any
+[42:54] intuition about that?
+[42:55] >> That's right. That's right.
+[42:58] I don't know if I have intuitions for
+[42:59] the first layer. The last layer I think
+[43:01] being hard to quantize is because you
+[43:03] know it is kind of a first order factor.
+[43:04] It drives a ton of the loss and so I
+[43:06] think you end up getting like both
+[43:08] instability and big loss uh increases if
+[43:10] you attempt to quantize the very last
+[43:12] layer.
+[43:14] Okay. Um I put this up there almost
+[43:16] because I think it's so ridiculous. You
+[43:18] know the next frontier this is already
+[43:19] implemented MXFP4. Um the entirety of
+[43:22] MXFP4 can be shown to you in this slide.
+[43:25] it's -6 to six. You know, you you have
+[43:29] all the possible values. Um, but now
+[43:31] that you understand MXFP8, you can also
+[43:33] understand how this thing works. You
+[43:35] know, you're going to have a structured
+[43:36] block where each block is going to be
+[43:38] one of these four bits. Um, you're going
+[43:40] to have uh every 16 of these numbers,
+[43:42] you're going to have one scaling factor
+[43:44] and that scaling factor will itself be
+[43:46] uh FP8. This is a E4 M3 scaling uh for
+[43:49] those scaling factors. Um, these are
+[43:52] there has been a paper that has trained
+[43:54] with FP4. I don't think I've heard of
+[43:56] anyone successfully training in the
+[43:58] wild, you know, real big serious models
+[44:01] with FP4. Um, but I think this is
+[44:03] coming, right? Like the next generation
+[44:04] of models will probably be FP4.
+[44:07] Okay, so that was low precision. I think
+[44:10] it's really cool that you can really
+[44:11] push the limits so far that, you know,
+[44:13] you're ending up with just plus 6 to
+[44:15] minus 6 and yet you can do interesting
+[44:17] things with matrices in that precision.
+[44:20] Now, oh yeah, there's a question.
+[44:23] >> So, is this only for
+[44:27] like matrices that you could apply this
+[44:30] um like not just symbols?
+[44:33] >> Yeah. So, you can you can quantize
+[44:35] anything. You can quantize the
+[44:36] activations after a relu for example,
+[44:38] but there just isn't as much of a of a
+[44:40] need to. So, like a map mole, if you
+[44:42] quantize that, you can get really big
+[44:44] throughput improvements, right? And
+[44:46] that's why if you look at the MXFPA
+[44:48] training one, you know, these are all
+[44:50] map moles that are getting FPA
+[44:51] quantized. Um the overhead is probably
+[44:53] not worth it for for most like
+[45:00] hardware parts.
+[45:03] >> Well, it's not exclusive to that. Yeah.
+[45:05] Like you can always do lower precision
+[45:07] stuff and then it will decrease your
+[45:08] memory movement. This is true. But for
+[45:10] the others, it doesn't quite make sense.
+[45:12] >> This isn't any like like hardware
+[45:14] limitations. It's not a limitation, but
+[45:16] there is hardware support for all of
+[45:17] this, right? So, it is baked in, a bunch
+[45:18] of this is baked into the hardware to
+[45:19] accelerate it. Um, yeah,
+[45:22] >> you've positioned this as a as an
+[45:24] improvement for memory bandwidth or well
+[45:27] requiring less memory bandwidth, but is
+[45:29] there a computer as well?
+[45:31] >> Yes. Yes. For sure. For compute, you get
+[45:33] basically linear improvements for just
+[45:35] multiplying the quantized numbers. But
+[45:37] the fact that you have to quantize and
+[45:38] dequantize means that the benefits are
+[45:40] more diluted.
+[45:43] >> Yeah. Do you have to train on the
+[45:44] scaling factor?
+[45:46] >> Uh the scaling factor is an
+[45:48] implementation dependent choice. Like
+[45:49] depending on the library for example,
+[45:50] you might get different ways of
+[45:52] quantizing and dequantizing. Um training
+[45:55] is a is a strong word, but you might
+[45:57] have quantization factors that like scan
+[45:59] through and pick the max min or you
+[46:01] might have scaling factors that look at
+[46:02] historical running statistics and then
+[46:04] use those. I wouldn't really call them
+[46:05] training per se. Um at inference, you
+[46:07] might fit them more.
+[46:08] >> So there are gradients.
+[46:10] >> At inference time, you might. Um at
+[46:11] training time, you would not. Yeah.
+[46:13] >> Yeah.
+[46:14] >> Is there has anything been done with
+[46:15] structured sparity? Like
+[46:17] >> I guess we had it but
+[46:19] >> yeah there's a lot that's been done with
+[46:20] structured sparity and I mean are I
+[46:22] think one successful example of a
+[46:24] structured sparse operation that people
+[46:26] use.
+[46:30] >> Yeah. Right. So I mean a lot has been
+[46:32] done. Chris Ray here has done a lot with
+[46:34] you know lots of different kinds of
+[46:35] structured matrices. Um I think the
+[46:37] benefits of that like you know in terms
+[46:39] of the compute benefits versus the
+[46:41] representation losses I think has kind
+[46:43] of washed out. Um I don't think it's a
+[46:44] bad idea but empirically it hasn't I
+[46:46] think necessarily panned out. Oh yeah.
+[46:50] >> A lot of like squeeze that we've been
+[46:52] talking about
+[46:53] decad
+[46:55] what is current approach is it like
+[46:57] train in full precision or half
+[47:00] precision and then like distill into
+[47:03] like a quantized model that you can run
+[47:05] on your Apple computer things like that
+[47:06] like what what is like set up for this?
+[47:08] >> Yeah I mean there's a combination of
+[47:10] like you probably want to train a bigger
+[47:12] model and then quantize down. Um there's
+[47:15] various kinds of like quantization
+[47:17] scaling laws and and papers that people
+[47:18] have written like precisely
+[47:20] characterizing the the trade-offs here.
+[47:22] Um I think the state-of-the-art involves
+[47:25] combining both like quantization aware
+[47:27] training to some extent and like model
+[47:28] scaling with u post- training
+[47:30] quantization of various kinds like yeah
+[47:32] um there's a lot that I think is not
+[47:35] fully well understood. Um even industry
+[47:37] teams that I've talked to are sort of
+[47:39] talking about still doing like science
+[47:40] of quantization. So yeah. Okay. So the
+[47:43] other trick um this one is much more of
+[47:45] like a conceptual programming thing um
+[47:48] is operator fusion. It's it's fairly
+[47:50] simple idea but you'll be surprised at
+[47:52] like how much this doesn't already
+[47:54] happen. Um so think of a GPU as a
+[47:56] factory. You've got your memory
+[47:57] warehouse and you've got your little
+[47:58] compute factory and you've got a little
+[48:00] bell conveyor going back and forth,
+[48:02] right? Um if you scale up your compute,
+[48:05] you're going to be bottlenecked by your
+[48:06] little bell conveyor. And this will be
+[48:09] worse if you have many operations,
+[48:10] right? Like imagine I've got lots of
+[48:12] different operations I need to do and
+[48:14] I'm going to ship my you know raw
+[48:15] materials to my factory and back and
+[48:17] forth and back and forth. This is a lot
+[48:19] of memory bottleneck that you're paying
+[48:21] for, right? And lots of sort of duplex
+[48:22] birectional memory bandwidth. Now
+[48:25] wouldn't it be better if I just had a
+[48:26] one giant factory that would take all
+[48:28] the raw materials and ship back my
+[48:29] finished products, right? Um this way I
+[48:31] only have to pay for memory bandwidth
+[48:33] twice. Very s very simple idea. This is
+[48:36] operator fusion, right? Um
+[48:39] and this appears very often, right? If
+[48:41] you write a very simple um let's say
+[48:44] computation of sin^ squar plus cosine^
+[48:46] squar, what does the pitor torch
+[48:47] computation graph look like? It looks
+[48:49] like this. You got your x, I do my sign,
+[48:51] I do my cosine, I square it on both
+[48:53] sides, I add them, and I get my output,
+[48:55] right? Um naively, if you don't do
+[48:58] anything smart, what this will do is
+[49:00] each of these will be a factory, so to
+[49:02] speak, right? you will read and write
+[49:04] from global memory each one of each time
+[49:06] one of these is called, right? Um, and
+[49:08] you will incur quite a bit of memory
+[49:10] cost every time you do so. So, this is
+[49:13] pretty painful. Um, and you can imagine
+[49:16] instead of doing that, why don't I just
+[49:18] write GPU code that reads once from
+[49:21] global memory, does the whole thing
+[49:23] right, inside the inside the the SM as I
+[49:26] talked about before, and then after it's
+[49:27] done inside the SM, I'm going to write
+[49:29] it back to global memory, right? single
+[49:30] sort of kernel uh that does all these
+[49:33] operations. This is called fusion,
+[49:34] right? Um and anything that's easy like
+[49:38] this like this is a very easy fusion.
+[49:39] It's like a graph that I can sort of
+[49:41] just you know squish down into a single
+[49:42] unit. Um a compiler can automatically do
+[49:46] this for you. So torch compile which is
+[49:47] a compiler for PyTorch or Jax compile
+[49:50] which is you know Jax's compiler which
+[49:52] is more deeply integrated into Jax. Both
+[49:55] of these will fuse these kinds of basic
+[49:57] things into a single CUDA call.
+[50:00] Um I'll talk a little bit more about uh
+[50:03] uh fusion later but I think this is you
+[50:05] know the advanced versions sometimes
+[50:07] require sort of manual intervention but
+[50:08] the simple versions you can just think
+[50:10] of as you know compilation will solve
+[50:11] your problems. Okay the third idea is
+[50:14] recomputation. So we know in back
+[50:16] propagation what what do we do? Well we
+[50:19] go forwards upwards up on the tree. This
+[50:21] is from Percy's 221 class. You know you
+[50:23] go upwards on the tree and you keep
+[50:25] track of activations right? you store
+[50:26] these little activation numbers and then
+[50:29] when I go backwards I'm going to use the
+[50:31] activations that I stored to compute
+[50:33] sort of the backwards signal down my my
+[50:35] tree right we all know back prop to some
+[50:37] extent so you know we know what this is
+[50:40] but also now you know we're looking at
+[50:42] this not from the perspective of like
+[50:43] mathematics how do we compute a gradient
+[50:45] we're thinking about this from the
+[50:46] perspective of systems right like how do
+[50:48] we minimize our memory well if we think
+[50:51] about what's happening let's say I have
+[50:53] something simple I have x sigmoid
+[50:55] sigmoid sigmoid note right each of these
+[50:57] sigmoids is going to generate in the
+[50:59] computation graph some sort of residual
+[51:01] right or some sort of a activation that
+[51:03] I need to to track so I I after my first
+[51:06] operation I have S2 second operation S1
+[51:09] and then when I need to do my backwards
+[51:10] pass it will consume S2 S1 and my output
+[51:13] or sorry the gradient at my output and
+[51:15] I'm going to push this backwards towards
+[51:17] the the derivative of my input right so
+[51:19] if I count the number of memory reads
+[51:21] and writes it's going to be one memory
+[51:22] read for X three memory rights for S2 S1
+[51:25] one out and then on the backwards pass
+[51:27] this is sort of flipped right so this is
+[51:29] a total of eight memory reads and writes
+[51:31] um very low arithmetic intensity because
+[51:33] I'm just stacking a bunch of sigmoids
+[51:36] now what can I do instead well what I
+[51:39] can do is I can just throw away all of
+[51:42] the activations normally you wouldn't do
+[51:44] this right like why would I want to
+[51:46] recomputee something but imagine you're
+[51:48] in a world where computation is super
+[51:50] super cheap you just have abundant
+[51:51] computation you're not using all of your
+[51:53] units but your memory is very expensive
+[51:55] like any read and write has a lot of
+[51:56] penalty. Then you might prefer this
+[51:58] computation graph where I read an X and
+[52:02] then I'm going to do sigmoid sigmoid
+[52:03] sigmoid output. I'm going to store this
+[52:05] output. I have to write this because
+[52:06] that's the output of my graph. But now
+[52:08] in the backwards pass, right, my
+[52:10] backwards graph is going to get in D out
+[52:12] and sort of on the fly I'm going to
+[52:15] reforward the X and then compute the
+[52:17] activations on the fly right where I
+[52:19] need them. Right? So now this is going
+[52:20] to be two memory reads for the D out and
+[52:22] the X and one memory right for the DX.
+[52:24] Right. So I've gone from eight total
+[52:26] memory accesses to just five. Right? So
+[52:29] now I have 5/8 the total memory
+[52:31] accesses. Same computation, but I've
+[52:34] spent a little bit of extra compute and
+[52:35] saved a little bit of extra memory.
+[52:37] Right? This is the another very
+[52:38] important trick. We don't normally think
+[52:40] about this because usually we're
+[52:42] concerned with like just computing the
+[52:44] gradient, but once you have a systems
+[52:46] mindset, you start to to think about
+[52:47] recomputation.
+[52:50] Cool. Okay. Trick number four. Um this
+[52:54] is another sort of memory trivia thing
+[52:55] but surprisingly becomes important. Um
+[52:58] and also why sometimes it's important to
+[53:00] understand the hardware model of what
+[53:02] you are you're interacting with. Um so
+[53:06] global memory which you know is the big
+[53:07] memory that lives outside the the chip
+[53:10] um is DRAM and DRAM uh because of the
+[53:13] way that it is structured um actually
+[53:16] comes in bursts. What that means is when
+[53:18] I access let's say the very first
+[53:20] position, I don't actually get the just
+[53:22] the first value. I can read off all four
+[53:24] of these first values for free. And
+[53:27] that's because the way the memory cells
+[53:28] are lined up, there's kind of these
+[53:30] blocks of memory units. And then when I
+[53:33] sort of activate an amplifier, I can
+[53:34] just read out all of these almost for
+[53:36] free, right? The way that it's sort of
+[53:38] structured in parallel allows me to read
+[53:40] blocks of memory. That kind of makes
+[53:42] sense, right? As a hardware model. Um,
+[53:44] and so this is called a burst section.
+[53:46] And so whenever a section is accessed,
+[53:48] all the other locations can also get
+[53:50] delivered for free, right? And you won't
+[53:52] pay for them, so to speak. Um, and so,
+[53:55] you know, you might have something like
+[53:56] 128 bytes worth of a burst. That means a
+[53:59] single read will return potentially 128
+[54:02] bytes worth of data as long as it lives
+[54:04] in the same contiguous block. So this
+[54:07] means that if you have your reads
+[54:09] arranged contiguously where they're all
+[54:11] together, it's going to go much faster.
+[54:14] um and to use a term um you say that a
+[54:17] memory access is coalesed. So so that
+[54:19] word means if all of the threads in a
+[54:22] warp fall in the same burst. So what
+[54:24] that means is let's say I have you know
+[54:26] three threads and all three of my thread
+[54:29] or sorry four threads I have four
+[54:31] threads and my four threads uh live
+[54:33] inside of a single burst section right
+[54:35] or they're reading from this burst
+[54:36] section then this is coalesed right um
+[54:38] because they're sort of using up all of
+[54:40] this entire burst section um and I'm
+[54:42] fully utilizing this very nice property
+[54:44] of DRAM memory um and you know uh so if
+[54:48] I have you know multiple warps you know
+[54:51] I'm going to have different multiple
+[54:52] burst sections but you can efficient
+[54:54] read out of memory by sort of grouping
+[54:55] together your memory reads.
+[54:58] Um why oh yeah
+[55:02] why does the pattern like this this sort
+[55:05] of shape
+[55:06] >> which one like this
+[55:07] >> like this one? Yeah.
+[55:08] >> Yeah. So, so um as far as I understand,
+[55:11] you know, the memory cells are arranged
+[55:13] in a grid and your amplifiers for like
+[55:15] deciding which cells to read sort of
+[55:17] operate at a column-wise level and like
+[55:19] activating the voltage for this is often
+[55:21] a thing that takes a significant amount
+[55:23] of time. So once you've like selected
+[55:25] the column, readouts of multiple
+[55:27] elements within that column are much
+[55:28] comparatively cheaper.
+[55:29] >> But this is this is to like select to to
+[55:32] read that upper upper red cell, right?
+[55:36] Or
+[55:36] >> or yeah, right. So if I want to read
+[55:38] this for example, right? Like you know
+[55:40] I'm saucing this or maybe it's columns
+[55:41] that are cheap in this diagram at least.
+[55:43] But you know if I'm trying to read this,
+[55:45] you know, I might get this whole row for
+[55:47] free, right? Because I've addressed this
+[55:48] whole row.
+[55:49] >> Okay. So I don't get a T for free. I
+[55:50] just
+[55:51] >> you don't get a T for free. Yeah.
+[55:54] Okay. Good.
+[55:56] Okay. Um Okay. So So you're saying like
+[55:59] Tatsu, why are you telling me uh DAM
+[56:01] trivia? Um the reason why I'm telling
+[56:03] you DAM trivia is because you know think
+[56:06] about matrices right matrices you often
+[56:08] want to read in big blocks right because
+[56:10] you're going to do mat moles and certain
+[56:12] kinds of memory accesses on mat moles
+[56:15] are sort of privileged they're they're
+[56:17] much more nicely structured than others
+[56:19] and sometimes you can take advantage of
+[56:20] this to get very very fast memory reads
+[56:22] so uh the the pneummonic or you know the
+[56:25] thing that I remember is if you have
+[56:26] threads and you have a row major matrix
+[56:29] so you know it's sorted where you know
+[56:31] each row is sort of how you your indexes
+[56:34] are increasing. Um threads that move
+[56:36] along the major axis are not coalesed.
+[56:39] And to to really make make this visual
+[56:41] actually I like this diagram on the
+[56:43] right. Imagine I have this 4x4 matrix
+[56:46] where this is row major. So it's sorted
+[56:48] in the order uh of you know the yellow
+[56:51] block comes first, the red block comes
+[56:52] next and so on and so forth. This is the
+[56:54] linear ordering uh sort of in memory
+[56:56] address. This is kind of the matrix that
+[56:59] you know I'm trying to store. Now
+[57:01] imagine that I have threads that are
+[57:03] trying to read um each column each clock
+[57:06] cycle. So I read a column, I move to the
+[57:07] right, I read a column, I move to the
+[57:09] right. If I'm doing that at the very
+[57:11] first iteration, I hit this element,
+[57:13] this element, this element, this
+[57:14] element. Notice that each one of these
+[57:17] limit a different burst window and I've
+[57:19] read the entire vector so to speak,
+[57:21] right? Or the entire matrix, sorry, so
+[57:23] to speak, even though all I wanted was a
+[57:25] single column, right? Now imagine if I
+[57:27] was reversed, if I was flipping this
+[57:29] matrix, I could read the entire sort of
+[57:31] block. Every thread will get its read in
+[57:33] a single sort of read of the memory,
+[57:35] right? Um so coallescent can give you
+[57:39] significant improvements in sort of
+[57:40] reads from large contiguous uh
+[57:43] structures like matrices. So this is one
+[57:45] reason why you might want to think a
+[57:46] little bit about row versus column
+[57:48] versus other kinds of ordering.
+[57:51] Okay. Um the last one that I want to
+[57:54] talk about and this is the big one. Um,
+[57:55] and maybe the most important idea, I've
+[57:58] like saved it for last, is the idea of
+[58:00] piling. And I think this one has
+[58:02] probably the the big impact on
+[58:04] performance. Um, tiling, I think more
+[58:07] than any other idea is this idea of
+[58:10] trying to do as much as you can with the
+[58:12] memory hierarchy. So what we want to do
+[58:14] is we want to group our memory accesses
+[58:16] as much as possible and sort of shared
+[58:19] memory accesses should be done together
+[58:21] and they should be done on shared
+[58:22] memory. So the way that we the reason
+[58:25] why it's called tiling is I'm going to
+[58:26] cut up the things that I need. I'm going
+[58:28] to tile my space and each tile will be
+[58:31] loaded into my shared memory. And once
+[58:33] that tile is loaded, I'm going to
+[58:34] repeatedly read from that tile and do as
+[58:36] much as I can. So let's think about the
+[58:38] matrix multiply case. I want to multiply
+[58:40] you know this matrix and this matrix and
+[58:42] this uh matrix on the right bottom. This
+[58:45] is my output, right? This is sort of
+[58:47] where I'm writing my matrix out. This is
+[58:48] a pretty standard notation for this. Um
+[58:51] now if I want to do this right uh I'm
+[58:54] going to be reading you know as I'm
+[58:55] reading through the threads multiple uh
+[58:57] sorry the same entry will be read
+[58:59] multiple times and to be precise each
+[59:01] entry will be read n times uh in an n
+[59:03] byn matrix multiply right naively um so
+[59:07] you might think right if I'm reading
+[59:09] this entry let's say m0 multiple times
+[59:11] instead of hitting global memory each
+[59:13] time why can't I sort of group all those
+[59:16] memory accesses together and the nice
+[59:19] thing about matrices is that there's a
+[59:20] very natural grouping, right? Um, and
+[59:23] this is to essentially cut the matrix up
+[59:26] into submatrices and then load them and
+[59:28] then operate upon them, right? So, here
+[59:30] is a very simple algorithm. I'm going to
+[59:32] cut up my matrices into sort of 2x two,
+[59:35] you know, submatrices and then I'm going
+[59:37] to load different tiles. So, I'm going
+[59:39] to first load the m00 tile, the top left
+[59:41] here. I'm going to load the n00 tile,
+[59:44] the top left of my top matrix, and I'm
+[59:46] going to load those into shared memory.
+[59:48] Right? So I'm going to pay the cost of
+[59:50] transferring those slowly from global
+[59:51] memory once. But once they're in shared
+[59:54] memory, I can read and write very fast
+[59:56] with those tiles, right? This output
+[59:58] tile will also be for now in shared
+[01:00:00] memory. And I will operate on these
+[01:00:02] submatrices entirely, right? So I'll
+[01:00:04] multiply these two submatrices and I'll
+[01:00:06] put the partial sum into my output
+[01:00:08] submatrix. So that allows me to to do a
+[01:00:10] bunch of reads and writes all in the
+[01:00:12] shared fast memory and then I can write
+[01:00:14] it back out when I'm done. Um, what does
+[01:00:18] the math look like? Well, in the
+[01:00:19] non-tiled case, I already told you,
+[01:00:21] right? Each element of my input is going
+[01:00:24] to have to be read n times when I do
+[01:00:25] this big n byn matrix multiply. Um, if I
+[01:00:29] tile them with a tile size of t, then
+[01:00:32] each input is going to be read n over t
+[01:00:34] times from global memory and then t
+[01:00:36] times within each tile, right? And this
+[01:00:38] kind of makes sense the extreme, right?
+[01:00:39] If t is equal to n, I read it once from
+[01:00:41] global memory and access it n times in
+[01:00:44] shared memory, right? And this is great
+[01:00:46] because it's a T times reduction in
+[01:00:47] global memory access. If you have big
+[01:00:49] big shared memory tiles, it means that
+[01:00:51] you can dramatically reduce your global
+[01:00:53] memory access on something like a maple.
+[01:00:56] Um,
+[01:00:58] cool. Tiling. Okay. Yes.
+[01:01:00] >> So, are you doing this because you can't
+[01:01:03] >> Yes. Yes. Yes. Yes. That's right. Yeah.
+[01:01:05] Like you know if you were building one
+[01:01:08] of these like uh very fancy alternative
+[01:01:10] accelerators like rock or something
+[01:01:12] which is all SRAMM then yeah you just
+[01:01:14] put the whole matrix in there and you're
+[01:01:15] very fast for the whole thing but very
+[01:01:17] expensive. Very very expensive. Yeah.
+[01:01:19] >> And then this also [clears throat]
+[01:01:20] happens.
+[01:01:28] So like and then you just keep adding
+[01:01:30] that cell again and again. Is that kind
+[01:01:32] of
+[01:01:33] >> you mean like are you asking um whether
+[01:01:35] this kind of like splitting happens at
+[01:01:37] like the accelerator level
+[01:01:38] >> for a tile across
+[01:01:40] >> yeah GPU this will be one tile
+[01:01:43] >> that's right yeah so so data parallel
+[01:01:45] you can think of as this like that's uh
+[01:01:46] you know if I have data on this axis and
+[01:01:48] weights here if I cut it on one of the
+[01:01:50] axes that's kind of data parallel tensor
+[01:01:52] parallel could be another kind of
+[01:01:53] parallelism all these parallelism look a
+[01:01:55] little bit like tiling in some ways yeah
+[01:01:58] cool okay um oh yeah Yeah. So for this
+[01:02:02] trick and the previous one, can I assume
+[01:02:03] that you know a library like Python will
+[01:02:06] just do that?
+[01:02:07] >> Piling. Yes. Yes. Yes. Yeah. So like any
+[01:02:10] like maple kernel that you call will do
+[01:02:11] tiling underneath. Yeah. That's right.
+[01:02:13] Um if you're doing some sort of exotic
+[01:02:15] operation, you might want to think about
+[01:02:16] tiling like things happening, right? You
+[01:02:18] want to be able to locally reuse your
+[01:02:20] your uh reads. Um but I will say um even
+[01:02:26] PyTorch or something is not perfect. And
+[01:02:28] so, you know, we will talk about some of
+[01:02:30] the imperfections that will happen. Um,
+[01:02:32] so tiling is very very powerful as an
+[01:02:34] idea, but it's also complex. You can
+[01:02:36] actually end up with some like really
+[01:02:38] subtle things happening with tiles. So
+[01:02:40] imagine I have a tile size of 1281 128.
+[01:02:43] You know, if my matrices are 256 x 256,
+[01:02:46] life is good. I've got four tiles,
+[01:02:48] right? Perfectly cut. Now imagine I
+[01:02:50] increase my coordinate size by one.
+[01:02:52] Right? Now I've generated two very
+[01:02:55] skinny tiles with basically nothing
+[01:02:57] inside of them. Right? So now you kind
+[01:03:00] of realize, you know, actually this tile
+[01:03:02] sidings sizing thing is actually pretty
+[01:03:05] complex. Depending on my matrices, I
+[01:03:07] might need to adjust my tile sizes to
+[01:03:10] somehow, you know, trade off my memory
+[01:03:12] bandwidth versus, you know, this
+[01:03:14] gigantic empty space where I'm doing
+[01:03:15] nothing, right? Um, so you know, you
+[01:03:18] have to tile sizes is actually a thing
+[01:03:21] that you optimize. Okay, so like coales
+[01:03:23] memory accesses, the size of your shared
+[01:03:25] memory and accelerator and the sizes of
+[01:03:27] your matrices all affect you know which
+[01:03:29] tiles are optimal and um if you know
+[01:03:33] about different options in PyTorch you
+[01:03:35] know there's a compiler option called
+[01:03:36] max autotune. I don't know how many of
+[01:03:38] you have used this or know about this.
+[01:03:39] You know, you turn on that flag for the
+[01:03:41] next 15 minutes, PyTorch is going to
+[01:03:42] like, you know, run an endless series of
+[01:03:45] benchmarking tests and you'll realize
+[01:03:47] actually what it's doing is it's like
+[01:03:48] trying all sorts of different tile sizes
+[01:03:50] on your matrices and trying to figure
+[01:03:51] out which one is actually faster. Um,
+[01:03:53] and you'll find that you'll get, you
+[01:03:54] know, non-trivial benefits from actually
+[01:03:56] optimizing these things. Um the other
+[01:04:00] thing that you'll find related to
+[01:04:02] coalesing is if your tiles uh or if your
+[01:04:05] matrices are the wrong size. What you
+[01:04:07] can do is that your attempt to read a
+[01:04:09] tile might actually trigger a lot of
+[01:04:11] memory reads. So imagine I I have this
+[01:04:14] nice world where you know I have uh
+[01:04:17] let's say this blue one is the row and I
+[01:04:19] want to read this nice tile and my burst
+[01:04:21] sections are sort of the width of the
+[01:04:23] tile. And in this case, if I do sort of
+[01:04:25] four reads, you know, I'm good to go
+[01:04:26] because because of the burst sections,
+[01:04:28] I've read this entire submatrix, right?
+[01:04:30] So good memory reads from coallesing.
+[01:04:32] Now imagine I shift the matrix size by
+[01:04:34] one. Now I've bumped this first row
+[01:04:36] over. So this blue box now lives over
+[01:04:39] here. Um, and there's no way for me to
+[01:04:41] coales my reads to read a single tile in
+[01:04:43] one go, right? Because now all these
+[01:04:45] things are sort of ragged and
+[01:04:46] misaligned. So I need to do at least two
+[01:04:47] tiles worth of reads to read out this
+[01:04:50] one tile, right? So, you know, there's
+[01:04:52] actually a lot of complexities involved
+[01:04:54] in optimizing tile reads once you start
+[01:04:57] thinking about coalesing and all these
+[01:04:58] other things. And so, in this case, what
+[01:05:00] you have to do is padding in order to
+[01:05:02] line up essentially the the boundaries
+[01:05:04] of the burst sections um with uh the
+[01:05:07] tile sizes that you have. Okay. Um and
+[01:05:11] this is why you end up getting stuff
+[01:05:13] like this, which seems very mysterious.
+[01:05:15] Um I think this is one of my favorite
+[01:05:17] weird ones, right? Andre Karpathy when
+[01:05:19] he was doing nano GPT speedrun said well
+[01:05:22] you know when I increased my vocap size
+[01:05:23] to 5257 to 5304
+[01:05:27] um you know I got a 25% speed up right
+[01:05:30] um and it's kind of weird to have to pad
+[01:05:34] in order to get a speed up but maybe it
+[01:05:36] makes sense once you realize things like
+[01:05:37] this right padding can start to shift
+[01:05:40] the the rows and columns so that you
+[01:05:41] actually get very efficient reads
+[01:05:43] whereas at other times you do not.
+[01:05:45] >> Go ahead. Is there a is there usual
+[01:05:51] like tile size that you should be taking
+[01:05:52] into account?
+[01:05:53] >> You don't want to think about tile sizes
+[01:05:55] per se because tiles you should normally
+[01:05:57] think of as like a lower level systems
+[01:05:58] thing unless you're writing your own
+[01:06:00] kernels. But you do want to think about
+[01:06:01] the size of your matrices.
+[01:06:02] >> Okay, but you want your size of your
+[01:06:04] matrices to be divisible by the file
+[01:06:06] size.
+[01:06:06] >> You want to be right. So, so you want it
+[01:06:08] to be I'll talk about that in a moment.
+[01:06:10] Right? Generally powers of two ideally
+[01:06:12] divisible also by like 32.
+[01:06:15] Right? Okay. So now we can talk about
+[01:06:17] this matrix mystery over here. Um we
+[01:06:20] have essentially all the pieces that we
+[01:06:22] need to understand this. So we'll walk
+[01:06:23] through this um one by one. Um we've
+[01:06:26] already talked about compute intensity,
+[01:06:27] right? The roof line plot. You need to
+[01:06:28] have enough work for each memory read in
+[01:06:31] order for you to be able to saturate
+[01:06:33] your compute unit. That's what's driving
+[01:06:34] the sort of diagonal upward trend. So
+[01:06:36] that one is done. Now let's talk about
+[01:06:38] some of the other ones. First one's
+[01:06:40] tiling, right? Um if we look at each of
+[01:06:43] these lines and we color them based on
+[01:06:45] um essentially the the divisibility uh
+[01:06:48] of the matrices, you will find that you
+[01:06:51] know the blue ones are essentially only
+[01:06:53] divisible by one. They're not even
+[01:06:55] they're not even even. Um yellow ones
+[01:06:57] are sorry orange ones are divisible by
+[01:06:59] two, right? Um green is divisible by
+[01:07:02] eight. K red is 16 and then purple is
+[01:07:05] 32. And you see, you know, that the ones
+[01:07:08] that are not divisible by, you know, one
+[01:07:10] or just one or just two actually have
+[01:07:12] very bad throughput. But once you start
+[01:07:15] to get to sort of higher multiples, you
+[01:07:17] start to essentially get no sort of
+[01:07:19] diminishing or sorry, no uh penalties,
+[01:07:21] right? Like 16 or 32 perform equally
+[01:07:24] well. And this is really it's not
+[01:07:25] because of like somehow powers of two
+[01:07:27] are magic or something like that. It's
+[01:07:28] because 16 and 32 are sufficiently large
+[01:07:31] that it has the right sort of burst
+[01:07:33] window property. It sort of fits the
+[01:07:34] whole burst window in now. And so you
+[01:07:36] can get coalesed reads into your entire
+[01:07:38] tile and it has a major impact on
+[01:07:40] alignment. Um
+[01:07:42] now if we look at sort of what's
+[01:07:44] remaining if we look at this orange line
+[01:07:46] we'll sometimes see this weird periodic
+[01:07:48] behavior where suddenly performance will
+[01:07:50] drop right and this is very weird
+[01:07:52] because I'm just multiplying matrices.
+[01:07:54] Why does adding a single extra dimension
+[01:07:56] suddenly kill my throughput? Um and this
+[01:07:59] is you know I think using all the things
+[01:08:01] that we learned is kind of fun to to to
+[01:08:03] get to this end. Um Percy calls this uh
+[01:08:05] GPU trivia. So I think he hates this
+[01:08:07] one, but I love this one. Um so why is
+[01:08:09] it that going from here to here I get
+[01:08:11] such a big drop in throughput? Well um
+[01:08:14] it happens between 1792 to 1793. Um and
+[01:08:18] why does this happen? Well, I'm using a
+[01:08:20] tile size of 256x128.
+[01:08:23] So that means how many tiles are there?
+[01:08:25] Well, there's 98 at 1792, but once I
+[01:08:29] bump myself up to 1793,
+[01:08:32] well, actually, I've increased both tile
+[01:08:34] sizes by one, so I now have 120 tiles.
+[01:08:37] Okay, so I have 98 tiles before and I
+[01:08:39] have 120 tiles now. That's bad, but it's
+[01:08:43] not this bad, right? This drop is
+[01:08:44] gigantic. Well, it turns out the reason
+[01:08:46] why it's so dramatic is because a A100
+[01:08:49] has 108 SM, right? and 98 tiles fits in
+[01:08:54] 108 SM, but 120 tiles does not fit in
+[01:08:57] 108 SM, right? And so you you finish
+[01:09:00] doing 108 SM and you're like, well, I've
+[01:09:01] got 12 more of these guys. I got to I
+[01:09:03] guess process them and most of your your
+[01:09:06] GPU is sitting idle, right? So you can
+[01:09:08] end up with these very weird effects
+[01:09:09] once again where, you know, by bumping
+[01:09:11] up your tile size by one, suddenly you
+[01:09:13] need to wait a whole another cycle for
+[01:09:15] you to process a bunch of tiles, right?
+[01:09:18] Um that's called wave quantization.
+[01:09:20] Okay, so that was all for for part two.
+[01:09:22] Um, how do we make machine learning
+[01:09:24] workloads go fast on a GPU? Well, a lot
+[01:09:27] of the story is really just about
+[01:09:29] memory, memory, memory, memory, right?
+[01:09:31] So, how do we reduce the amount of
+[01:09:32] memory access we have to do? Well, let's
+[01:09:34] coalesce our memory reads together.
+[01:09:37] Let's fuse our operations together so we
+[01:09:39] don't have to read as much. And for the
+[01:09:41] things that we have to read no matter
+[01:09:43] what, well, let's reuse the memory,
+[01:09:45] right? So shared memory uh move things
+[01:09:47] to shared memory and reuse it as much as
+[01:09:49] possible which is tiling. And then
+[01:09:51] finally maybe you can trade other
+[01:09:53] resources that you have for memory and
+[01:09:55] that's quantization and recomputation
+[01:09:57] right like so all these ideas um very
+[01:10:00] much relate to this idea of like memory
+[01:10:02] is our bottleneck how do we deal with
+[01:10:03] that right cool okay um any questions
+[01:10:07] for the last finishing yeah
+[01:10:10] >> we just bump up
+[01:10:13] >> very expensive very energy I mean there
+[01:10:15] there's two reasons one is it's you know
+[01:10:17] just expensive to build SRAMM also very
+[01:10:20] difficult because it has to be
+[01:10:21] physically close like you know signal
+[01:10:22] propagation is hard and I think a third
+[01:10:24] reason is that SRAMM and DRAM are just
+[01:10:26] kind of different storage mechanisms
+[01:10:29] like SRAMM needs to be powered the whole
+[01:10:30] time to hold value very energy hungry
+[01:10:34] and so you know if you're thinking about
+[01:10:35] total cost of ownership energy
+[01:10:36] consumption maybe you don't want a giant
+[01:10:38] SRAMM chip you really want to be using
+[01:10:40] it where you need it
+[01:10:42] >> yes
+[01:10:44] those things scale up like 32 or like
+[01:10:48] like if you offer it in terms of like
+[01:10:51] 64.
+[01:10:52] >> You mean like does it help if I go
+[01:10:53] higher?
+[01:10:53] >> Yeah.
+[01:10:54] >> No, because I think you know this is
+[01:10:55] really it's kind of like as long as it
+[01:10:57] divides by your burst size then you're
+[01:10:59] good to go, right? It's a divisor
+[01:11:00] property. Um there are other phenomena
+[01:11:02] where you might get benefits from you
+[01:11:04] know larger divisor but not not here.
+[01:11:07] Uh yes [snorts]
+[01:11:11] >> that's just the number of SMS. You will
+[01:11:12] have to ask Jensen for that. I do not
+[01:11:13] have an answer for you. Yes.
+[01:11:15] So yeah, going back to the to the
+[01:11:19] hardware side, sorry. Uh not this
+[01:11:21] related but uh I it just occurred in my
+[01:11:24] mind. Have you studied uh GPU uh versus
+[01:11:28] uh CUR versus wafer scale engine?
+[01:11:31] >> Yeah, I mean I think sitting over there
+[01:11:34] knows much more about wafer scale stuff
+[01:11:36] than I do. We were we were talking about
+[01:11:37] last after last lecture how difficult
+[01:11:40] the compilation was because if you have
+[01:11:41] something wafer scale then you have like
+[01:11:43] wave interference effects and all sorts
+[01:11:44] of horrible things that happen. That's a
+[01:11:46] world that I'm not familiar with but I
+[01:11:48] think is much more complicated than what
+[01:11:49] we have here. Okay, cool. All right. So
+[01:11:52] now I think we can talk about uh in some
+[01:11:54] sense the finale uh which is we've
+[01:11:56] learned a bunch of things about GPUs. It
+[01:11:58] would be nice if we can tie that all
+[01:12:00] together to essentially be able to
+[01:12:02] reproduce or understand something that I
+[01:12:04] think is really important in advance
+[01:12:05] which is flash attention. Okay, so flash
+[01:12:07] attention is one of the big I think
+[01:12:09] improvements in attention capabilities
+[01:12:12] in a while and it's all systems, right?
+[01:12:14] So it's going from just PyTorch's naive
+[01:12:17] implementation of attention to a single
+[01:12:19] very cleverly fused kernel um you know
+[01:12:22] this is from the original paper but
+[01:12:23] you've got this dramatic improvement in
+[01:12:25] the latency uh of serving these things
+[01:12:27] and as I showed you in uh I think two
+[01:12:29] lectures ago right flash attention is is
+[01:12:31] a nice memory efficient way of computing
+[01:12:33] things so you can do bigger and bigger
+[01:12:35] attention and you can see you know a lot
+[01:12:37] of the gains are going to come from um
+[01:12:39] uh improvements in the amount of memory
+[01:12:42] that is transferred from HBM which is
+[01:12:44] the uh the global memory, right? Okay.
+[01:12:46] So, what what do they actually do? If
+[01:12:48] you read the paper, you know, they'll
+[01:12:50] say, okay, we we just do two things. We
+[01:12:51] apply tiling and recomputation, right?
+[01:12:54] And then we do it in a way that allows
+[01:12:56] us to do things sub quadratically in the
+[01:12:59] number of memory accesses. I think we
+[01:13:01] understand all of those components now.
+[01:13:02] So, let's see what's actually happening.
+[01:13:05] So, remember attention computation,
+[01:13:07] right? Has a couple things. It has a kq
+[01:13:10] v and we do a you know multi matrix
+[01:13:13] multiply with the k's and the q's and
+[01:13:15] then we have a matrix multiply with a v
+[01:13:16] at the end and have a soft max in the
+[01:13:18] middle. Right? So those are the
+[01:13:19] operations that we need to deal with.
+[01:13:21] Three matrix multiplies and one soft
+[01:13:23] max. So we have matrix multiplies. We
+[01:13:26] know how to do them now. Right? So we're
+[01:13:27] going to do a tiled matrix multiply. Um
+[01:13:30] figure one from the paper is literally
+[01:13:31] just tiled matrix multiplies. Right?
+[01:13:33] We've seen this before. We're taking our
+[01:13:35] inputs our k's and q's. We're cutting
+[01:13:38] them up and we're just multiplying them
+[01:13:39] sort of chunk by chunk on a tile and
+[01:13:41] then after we do the computation we
+[01:13:43] write them out. Nothing fancy or special
+[01:13:45] here. The thing that is tricky about uh
+[01:13:48] flash attention and you'll see this in
+[01:13:50] the assignment is there's a big global
+[01:13:52] softmax on the whole thing, right? So we
+[01:13:55] can't just do this naively because the
+[01:13:57] softmax is a global operation that ties
+[01:13:59] everyone together, right? [snorts] So it
+[01:14:00] connects all the different tiles
+[01:14:02] together. it might not seem obvious how
+[01:14:04] to tile uh attention. The key trick and
+[01:14:08] once you see this, this is really the
+[01:14:10] the core I guess idea or observation.
+[01:14:13] Once you see this, the rest is very
+[01:14:14] simple. Normally to comput a soft max,
+[01:14:16] you would do it kind of this way as
+[01:14:17] shown in this uh plot here, which is you
+[01:14:21] would exponentiate all of your elements.
+[01:14:23] You would subtract the maximum for
+[01:14:24] numerical stability reasons and then you
+[01:14:26] would normalize that, right? Standard
+[01:14:27] softmax. Now there's a different way of
+[01:14:29] computing this online and I think once
+[01:14:31] you sort of realize it it's kind of
+[01:14:33] simple which is you're going to sort of
+[01:14:35] as you go compute the normalized softmax
+[01:14:38] and every time you encounter a bigger
+[01:14:40] number than what you've seen before
+[01:14:42] you're going to sort of swap out the
+[01:14:43] maximum right um and so you have an
+[01:14:45] online way of computing sort of the soft
+[01:14:47] max as you go. The only tricky thing of
+[01:14:50] course being the max and the way we deal
+[01:14:52] with the max is we keep track of the max
+[01:14:54] and then we sort of swap it out and
+[01:14:55] correct for it every time we see a new
+[01:14:57] maximum. Otherwise, this is really just
+[01:14:58] an online running sum of an exponential
+[01:15:01] um from everything that we've we've seen
+[01:15:03] before. And of course, at the end,
+[01:15:04] you'll just divide everything by the
+[01:15:05] accumulator that you've computed online.
+[01:15:08] Now, the important thing about the
+[01:15:09] online softmax is because it's online
+[01:15:11] and it goes kind of block by block or or
+[01:15:14] piece by piece, we can compute this tile
+[01:15:16] by tile, right? I don't need to see the
+[01:15:17] rest of the tiles in order to compute
+[01:15:19] this. So I can compute the softmax for
+[01:15:21] my tile and then I can sort of save the
+[01:15:23] partial results maybe write them back to
+[01:15:25] global memory um and then just sort of
+[01:15:27] continue on with my day. So this allows
+[01:15:29] us to now break up sort of all the
+[01:15:31] different uh interacting pieces into
+[01:15:33] something simpler. So this I think is a
+[01:15:37] uh I think this was from flash attention
+[01:15:39] two or maybe three I think it's two. Um
+[01:15:41] I like this visualization which shows
+[01:15:43] you you know which parts are being
+[01:15:45] tiled. So the dashed blocks are being
+[01:15:47] done tiled in SRAMM. The blue boxes are
+[01:15:51] the ones that are in high bandwidth
+[01:15:52] memory, the global memory. And what you
+[01:15:54] see is let's say we do the KQ you know
+[01:15:56] inner product. You know these are tiled
+[01:15:58] matrix multiplies and they're stored in
+[01:16:00] SRAMM and we keep them in the SRAM and
+[01:16:02] we compute this exponential. And then
+[01:16:05] similarly in this tile we're going to
+[01:16:07] compute this running softmax. And I'm
+[01:16:09] going to move to my next tile and I'm
+[01:16:11] going to do the same thing, but now I'm
+[01:16:12] going to keep sort of the partial
+[01:16:14] running sums of my softmax as I go. I
+[01:16:17] can keep them sort of in shared memory
+[01:16:18] or in registers or elsewhere. This is a
+[01:16:20] very small number of things to keep
+[01:16:22] track of. At the end, after I've
+[01:16:23] computed all these exponentiated
+[01:16:25] quantities and my normalizers, it's very
+[01:16:27] simple to just multiply it with a v once
+[01:16:29] again in the tiled form and then divide
+[01:16:31] at the very end. Right? Um, this allows
+[01:16:34] me to essentially take the attention
+[01:16:36] operation, cut it up into these small
+[01:16:38] tiled chunks, um, and then go. Finally,
+[01:16:42] um, you've got, uh, fusion. You're going
+[01:16:44] to do both of these together, right, as
+[01:16:46] much as you can without going back and
+[01:16:48] forth. Um, and then I'm not going to
+[01:16:50] cover this or talk about it. Uh, but
+[01:16:52] what you can do is you can, um, in the
+[01:16:54] backward pass recomputee everything that
+[01:16:56] you need. Right? So the the last piece
+[01:16:58] of of uh flash attention is if you saved
+[01:17:02] your activations, you still have this n
+[01:17:03] squed sized activation that you're going
+[01:17:05] to need to save for your attention.
+[01:17:06] Instead of saving that, throw it all
+[01:17:08] away and recomputee everything tile by
+[01:17:10] tile on the backward pass. Right? So
+[01:17:12] it's got the recomputation piece as
+[01:17:13] well. Okay, that gives you flash
+[01:17:16] attention. Now we've seen all the
+[01:17:17] different tricks in action. Um and
+[01:17:20] that's essentially all there is, right?
+[01:17:21] A lot of the tricks that you see for for
+[01:17:23] efficient implementation and how to use
+[01:17:25] GPUs well boil down to those kinds of
+[01:17:28] ideas. So to put it all back together,
+[01:17:30] right, important to understand the
+[01:17:32] hardware. The hardware in in our case,
+[01:17:34] the GPU is powering scale and compute.
+[01:17:36] And we need to understand really all the
+[01:17:39] way to the low-level details to to fully
+[01:17:41] grasp why we make certain decisions.
+[01:17:43] Like I think, you know, I don't want you
+[01:17:45] guys to to be the the kind of people
+[01:17:46] that cargo col, you know, 32 multipliers
+[01:17:48] for your matrices. I want you to really
+[01:17:50] understand you know why we do those
+[01:17:52] things and that goes all the way down in
+[01:17:53] my opinion to the hardware level. Um the
+[01:17:56] other thing is that you know the current
+[01:17:59] you know way that compute is growing
+[01:18:01] means that we really want to think about
+[01:18:03] map moles those are the core operations
+[01:18:05] that are very arithmetically dense and
+[01:18:08] because of the the gap between compute
+[01:18:10] and memory we need to think very
+[01:18:11] carefully about data movement right and
+[01:18:14] then finally um things like flash
+[01:18:15] attention I think are really cool you
+[01:18:17] there's also like architecture work
+[01:18:19] that's like very hardware aware um
+[01:18:21] thinking carefully about the hardware
+[01:18:23] when we do things like architecture
+[01:18:25] is, you know, critical to good
+[01:18:27] performance for future systems. Thanks,

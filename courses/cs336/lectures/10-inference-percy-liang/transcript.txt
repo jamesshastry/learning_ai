@@ -1,0 +1,1863 @@
+[00:05] All right, let's get started.
+[00:08] So last time Tatsu talked about scaling
+[00:10] laws and we're going to take a little
+[00:12] bit break from that um and talk about an
+[00:16] inference. Um so the problem of
+[00:18] inference is very simple. you've trained
+[00:22] a model and you're given a prompt and
+[00:24] you want to produce the response usually
+[00:27] as accurately and as quickly as you can.
+[00:31] So inference turns out to be um only one
+[00:35] lecture but it's actually of growing
+[00:37] importance
+[00:39] and it shows up in many places. So
+[00:42] clearly once you've trained a model, you
+[00:44] don't just sit there and um if you're a
+[00:47] researcher, you put a plot in your paper
+[00:49] of here's how my model works. But um for
+[00:52] everyone else, you actually want to use
+[00:53] this model. So what does use look like?
+[00:56] It could be chatting with an AI
+[00:58] assistant or chatbot. It could be doing
+[01:00] code completion. Um these days agents
+[01:03] are very popular and uh that requires
+[01:06] inference. Um batch data processing as
+[01:09] well. Um
+[01:12] it's also useful for evaluation um for
+[01:16] evaluation that requires generation in
+[01:18] particular and it's also used inside
+[01:21] training if you're doing reinforcement
+[01:22] learning you need to have a model you
+[01:24] generate rollouts and you score them and
+[01:27] you update the weights appropriately. So
+[01:29] inference shows up all over the a place
+[01:32] and you know efficiency as the is the
+[01:36] you know theme of this class really
+[01:38] matters more than ever here and even if
+[01:42] you just look at the actual use um kind
+[01:45] of app uh vantage point you know
+[01:48] training is a onetime cost. It could be
+[01:51] very expensive. It is very expensive but
+[01:52] once you're done with it that's it. But
+[01:55] inference is a repeated cost. you you
+[01:58] kind of incur them every single day. Um
+[02:01] so you know OpenAI is estimated to
+[02:04] produce 8.6 trillion tokens a day. Um
+[02:09] and just for reference DeepS v4 which
+[02:12] came out earlier this year was trained
+[02:14] on 32 trillion tokens.
+[02:16] So in less than four days the number of
+[02:18] tokens that OpenAI has to produce and
+[02:21] therefore the com compute is um you know
+[02:24] at least DeepC V4 and of course you know
+[02:28] even the frontier models might be
+[02:30] trained on more tokens but still
+[02:32] inference um the number of tokens
+[02:33] generated is is going to be higher.
+[02:37] So that's just a you know some
+[02:38] perspective
+[02:40] and moreover I think this the importance
+[02:43] of inference has grown in the last year
+[02:46] because you know once upon a time we
+[02:48] thought of language models as primarily
+[02:50] as chat bots or assistants where you put
+[02:54] in a prompt you get back a response and
+[02:57] presumably the goal of the human is you
+[02:59] read the response. But now as we move
+[03:02] more into a gentic world, what it looks
+[03:05] like is that a query goes in and the
+[03:09] agent is going to do a bunch of stuff.
+[03:11] It's going to think, it's going to
+[03:12] reason, it's going to call some tools,
+[03:14] it's going to introspect and at the end
+[03:16] of the day, it will produce some output
+[03:18] for a human to read. So the most of the
+[03:22] tokens that the agent produces is
+[03:23] actually not for uh reading.
+[03:27] And so you should really think about the
+[03:29] number of tokens generated as really the
+[03:31] compute spent. And there's no sort of
+[03:33] limit. If you have an ambitious enough
+[03:35] problem, you're going to need much uh
+[03:38] much compute and a lot of tokens, right?
+[03:42] So if you were in the chat world, maybe
+[03:44] inference um you after a certain point
+[03:47] it's fast enough because humans can only
+[03:49] read so fast. But for an agent, you
+[03:53] know, there's no kind of limit to how
+[03:55] much value you can get out of squeezing
+[03:57] more out of inference.
+[04:00] So there's a lot of people doing
+[04:02] inference. Um on the commercial side, um
+[04:06] of course all the the closed API
+[04:08] providers have to serve their models. So
+[04:10] inference is a big deal for them. And
+[04:13] there is also a bunch of providers
+[04:15] serving open weight models um and
+[04:18] providing inference um as well. And in
+[04:20] the open source community, there's a
+[04:22] bunch of packages. Uh, so VLM is
+[04:24] probably a popular one, kind of a a a
+[04:26] go-to. Um, SG lang is another one that's
+[04:31] u particularly good for agentic
+[04:32] workloads, but maybe not as popular um
+[04:35] yet. And then there's tensor RT from
+[04:37] Nvidia, which is really, you know, fast,
+[04:39] but it's more narrow. Um and then llama
+[04:42] CPP if you want to run inference on your
+[04:45] um on CPU um this is a popular you know
+[04:49] package.
+[04:50] Okay so hopefully I've argued that
+[04:52] inference is is huge. Um if you can make
+[04:56] inference you know twice as fast or even
+[04:59] 10% faster that is a big deal. So now
+[05:02] the question is what does fast mean? So
+[05:05] there's a few metrics that capture the
+[05:07] notion of fast and they're going to be
+[05:09] applicable and in different settings and
+[05:12] have different trade-offs. So one metric
+[05:15] of fast is time to first token or TTFT.
+[05:19] This is essentially how long a user
+[05:21] waits before any generation happens. So
+[05:24] you put in a query into uh TGBT and uh
+[05:30] some number of you know milliseconds um
+[05:34] um passes by and then and then from the
+[05:37] point the first token comes in that is
+[05:39] that is the time and this is generally
+[05:41] useful for interactive applications
+[05:43] because um that latency where you're
+[05:46] just waiting and doing nothing is is the
+[05:49] longer that is the worse the user
+[05:50] experience and as soon as tokens come in
+[05:53] it doesn't maybe have to be that fast
+[05:55] because if you're going to read it
+[05:56] anyway, um you can't read that fast.
+[06:00] So the second metric is latency. Um and
+[06:03] this is from the standpoint of an
+[06:05] individual user. How fast are tokens
+[06:07] appearing for one query? This is also
+[06:10] important for interactive you know
+[06:12] applications. Um so basically this is
+[06:15] how fast the tokens are kind of
+[06:16] streaming through.
+[06:19] And then a second related concept is is
+[06:21] throughput measuring tokens per second.
+[06:24] This is how fast tokens are appearing
+[06:26] for many queries. So latency or one over
+[06:30] latency and throughput are clearly very
+[06:33] related, right? It's it's very kind of
+[06:36] aligned of the you know in general many
+[06:38] interventions will make latency and
+[06:40] throughput you know better. But uh as
+[06:43] we'll see later there's actually a
+[06:45] trade-off here. And throughput is useful
+[06:48] for if you're doing a bunch of batch
+[06:50] processing, right? You just want you
+[06:52] have, you know, a pabyte of data and you
+[06:54] want to process it with a language
+[06:56] model. Um, you just want that job to get
+[06:58] done. It doesn't matter if one uh query
+[07:01] is coming in faster, sooner or later.
+[07:04] Okay.
+[07:06] So, what determines the efficiency by
+[07:09] either any of these metrics of of
+[07:12] inference? Um so the the high level bit
+[07:16] is as follows and this is kind of a you
+[07:19] know maybe one high level bit to
+[07:21] remember from the lecture is that um
+[07:23] when you're doing training you see all
+[07:26] the tokens at once because in supervised
+[07:28] fine-tuning you see all the tokens and
+[07:31] you can parallelize over the sequence
+[07:33] remember think about in the transformer
+[07:35] the calculation for attention MLP um the
+[07:38] sequence is just a dimension so it's a
+[07:40] big tensor that gets multiplied um And
+[07:43] so you essentially process all the
+[07:44] tokens at once.
+[07:47] In inference, you can't do that. You
+[07:50] have to generate because of the auto
+[07:52] reggressive nature of inference token
+[07:54] sequentially one at a time. So this is a
+[07:57] fundamental problem of why inference is
+[08:01] a very different workload than training
+[08:03] because you can't paralyze across the
+[08:05] sequence dimension. And therefore, as
+[08:08] we'll see later, it's going to be harder
+[08:09] to have high arithmetic intensity or uh
+[08:12] fully utilize the compute.
+[08:15] Okay.
+[08:18] All right. So, let's uh let's go on. So,
+[08:21] first I'm going to just maybe of a
+[08:23] preview of what's in this lecture. Um
+[08:26] first, I'm going to do some math to
+[08:28] understand um the arithmetic intensity
+[08:32] and um throughput and latency. how to
+[08:35] think about that for a transformer. Um,
+[08:37] and then I'm going to talk about various
+[08:39] uh techniques to reduce the uh the cost
+[08:43] by you know making the KV cache smaller,
+[08:46] quantizing model pruning um and then
+[08:48] finally I'll talk about speculative
+[08:50] decoding and then some kind of uh
+[08:52] practical concerns.
+[08:55] All right, so um this is going to be a
+[08:57] bit of a review mostly kind of swapping
+[08:59] in make sure we're on the same page with
+[09:01] respect to notation. uh much of this
+[09:03] lecture is based on the scaling book
+[09:05] from Google on um you know transformers
+[09:08] and inference. So I do recommend that
+[09:10] people go check it out. It's very nicely
+[09:13] um written and some of the picture um
+[09:15] the figures are um you know uh
+[09:18] generously um lifted from that book. Um
+[09:22] okay so um just to establish a bit of
+[09:26] notation to understand this uh this
+[09:28] diagram. Um so we're going to use
+[09:31] symbols um think about in ops to denote
+[09:35] dimensions um but also their kind of
+[09:38] length. So B is going to be the the
+[09:39] batch dimension and also the number of
+[09:42] sequences. Uh T is going to be the
+[09:43] sequence dimension which is also the
+[09:45] number of tokens. D is the model
+[09:46] dimension. Um H is the head dimension.
+[09:49] Okay. So if I'm going to write this um
+[09:53] this is taking a a product between a
+[09:55] tensor with dimensions B, T and D. um
+[09:59] and another matrix of D and H and I
+[10:01] produce BT th. So what is going on here
+[10:05] is that there are some dimensions marked
+[10:07] red which are going to be contracting.
+[10:10] These dimensions appear in both uh
+[10:12] operands and disappear from the um the
+[10:15] results and then there's going to be
+[10:17] other um regular dimensions in black
+[10:20] that appear only in one operand and stay
+[10:23] in the result. Okay, so this is kind of
+[10:26] the general form. Um another case is if
+[10:29] you have blue dimensions um that means
+[10:32] they're they're batching dimensions and
+[10:34] they appear in both but stay in the
+[10:36] result they do not get um contracted or
+[10:39] reduced. Okay. So the interpretation
+[10:41] here as we'll see later is that we have
+[10:44] this tensor for every uh sequence and
+[10:46] token position you have a a vector and
+[10:48] you want to multiply that by a you know
+[10:50] a matrix.
+[10:52] Um and then here you're basically taking
+[10:55] a bunch of dotproducts uh between uh two
+[10:57] you know tensors. Okay. So with that in
+[11:01] mind this in all its full glory is the
+[11:04] description of uh a transformer block.
+[11:08] Um so it looks a little bit like a
+[11:09] circuit diagram. There's a lot of
+[11:10] details here but I actually find this
+[11:13] probably the most um kind of crisp
+[11:16] definition of what a transformer is. you
+[11:19] know you see a lot of description of
+[11:20] transformer and frankly a lot of them
+[11:22] are kind of you know it's hard to
+[11:24] understand what is exactly happening
+[11:26] this one basically tells you exactly the
+[11:28] shapes of the tensors and allows you to
+[11:30] reason about the the the dependency so
+[11:34] um for a transformer block you take the
+[11:36] x um which is the activations of one
+[11:38] layer you feed it through attention and
+[11:40] then you feed it through mlp
+[11:43] um and and just as a kind of a quick
+[11:47] refresher um the the x you um projected
+[11:52] using a query matrix um a key matrix and
+[11:55] a value matrix. Um you'll see here that
+[12:00] um we have um n which is the number of
+[12:04] heads and h is a dimension of each head.
+[12:06] So the query matrix is um batch time
+[12:09] sequence time number of heads times the
+[12:11] head dimension. Um and k and v instead
+[12:15] of having n we have k which we'll see
+[12:17] later. um which we have a potentially
+[12:20] smaller number of um key value heads. Um
+[12:23] and then this is the tension operation
+[12:26] um where notice that there's batching
+[12:28] dimensions um so B appears in in both
+[12:32] and we're contracting over the head um
+[12:35] you know dimension and we'll come back
+[12:37] to why this B being in both makes uh
+[12:41] inference uh hard um why attention is
+[12:44] kind of a bottleneck there. Okay, so
+[12:46] just kind of hold on to that thought.
+[12:48] Um
+[12:49] and the MLP is is kind of very you know
+[12:53] simple and straightforward. Um you just
+[12:55] do some you know map malls. This is the
+[12:58] um the the gating um um you know matrix.
+[13:03] This is the up projection and the down
+[13:04] projection. So um I think you guys have
+[13:06] implemented this so I don't want to
+[13:07] belabor it but just to swap in the
+[13:09] notation. Um by convention we're going
+[13:12] to assume that um in the MLP um the MLP
+[13:19] up projects the D-dimensional model
+[13:22] dimension into four times that. So f is
+[13:24] always you know think about as 4D
+[13:26] whenever you see f um and then the model
+[13:29] dimension gets split across the n heads.
+[13:32] So um the model dimension is always
+[13:34] equal to number of heads times the head
+[13:36] dimension. Um and then the
+[13:40] uh the number of uh heads gets split in
+[13:43] the case of group query attention into
+[13:46] the number of groups and the number of
+[13:48] heads uh per uh group. Um and finally we
+[13:52] have two variables S and T which both
+[13:55] represents the um kind of the sequence
+[13:58] dimension and the difference is that S
+[14:00] is going to be represent the number of
+[14:03] um input tokens to pro and T is going to
+[14:06] represent the number of output tokens.
+[14:08] So in training time these two are the
+[14:10] same because we're predicting all the
+[14:12] out um the same um inputs as outputs. Um
+[14:15] at inference time uh t is going to be
+[14:17] one and s is going to be the input.
+[14:23] Okay, so another review for arithmetic
+[14:25] intensity. So I talked about this in the
+[14:27] second lecture. So just as a warm-up,
+[14:29] suppose I'm multiplying two matrices, a
+[14:31] B by D matrix and a D by F matrix. So
+[14:35] intuition B is the batch dimension, D is
+[14:37] a hidden dimension or the model
+[14:38] dimension and F is a projection
+[14:40] dimension in the MP. Um so remember what
+[14:45] is arithmetic intensity? I have to count
+[14:48] flops and I have to count um the amount
+[14:50] of memory moved. Okay, so we can we can
+[14:54] do this as follows. So um what do you
+[14:58] have to do to multiply these matrices?
+[15:00] Um now remember the systems you know
+[15:03] lectures um you have to read x from um
+[15:06] hpm
+[15:08] and if you're storing everything in bf16
+[15:11] which is the case for for inference um
+[15:13] we're going to have 2 * b * d you're
+[15:16] going to read w that's going to be
+[15:18] another 2 * d * f um you're going to do
+[15:21] the mold so that's um number of flops is
+[15:25] 2 * b * d * f and um and then you're
+[15:30] going to write it back.
+[15:33] Okay, so every time you read and write
+[15:36] it's basically the basically number of
+[15:38] entries. It's a kind of a quadratic like
+[15:40] term and mammals are are cubic and
+[15:43] remember um this is going to be
+[15:45] important because that's how you're
+[15:46] going to get high arithmetic intensity.
+[15:48] So number of total number of flops is um
+[15:52] you know the the cubic and then um the
+[15:55] bytes transferred is the sum of the
+[15:57] reads and writes.
+[16:00] Okay. So remember arithmetic intensity
+[16:02] is how much compute we do per bite
+[16:04] transferred and we want this to be high.
+[16:06] So the intensity is is going to be equal
+[16:10] to um you know flops over bytes
+[16:14] transferred. And I'm representing all
+[16:15] these things symbolically because it
+[16:17] will be uh easier to to see and work
+[16:20] with rather than numbers.
+[16:23] Um one kind of just you know
+[16:26] simplification we can make is that
+[16:28] suppose that the batch dimension here is
+[16:30] much less than d and f then we can
+[16:33] simplify this. So um in particular what
+[16:36] this is doing is saying d= c * b and f=
+[16:39] c * b and let c go to infinity. So both
+[16:42] D and F are really large and B is
+[16:44] smaller and this just reduces to
+[16:47] intensity of B.
+[16:51] Okay. So the upshot of that is that um
+[16:55] remember when we did arithmetic
+[16:56] intensity for um um you know matt mole
+[16:59] it's was something like n over n over
+[17:02] three um and this is the kind of the
+[17:06] analog where instead of just having you
+[17:08] know one variable for dimin having
+[17:11] square matrices we have non-square
+[17:13] matrices.
+[17:15] Okay. So just to compare so the
+[17:17] accelerator intensity of uh um hardware
+[17:21] is um you look at the flops per second
+[17:24] in in the in the spec sheet. You look at
+[17:27] how much memory bandwidth how fast
+[17:28] memory gets moved between HPM. You
+[17:31] divide and that is the accelerated
+[17:33] intensity.
+[17:35] And now you compare your computational
+[17:38] computations intensity with your
+[17:40] accelerator intensity. And if it's
+[17:43] greater then you're compute bound which
+[17:46] is good. If you're less then you're
+[17:48] memory bound and that's bad. So in this
+[17:51] case uh for H100 for this particular map
+[17:55] operation you're compute bound if um the
+[17:58] batch size is greater than 295.
+[18:03] So here's an extreme case. So suppose
+[18:06] you just have one example. Okay. Um what
+[18:11] happens? you have one example, then your
+[18:13] arithmetic intensity is going to be one
+[18:16] and this is going to be memory bound.
+[18:20] Um, and you can kind of see what's going
+[18:22] on here. You're reading this DF matrix.
+[18:25] Um, but B is only one. So you're
+[18:27] effectively doing only two * D * F
+[18:31] flops. Um, so you know that's and this
+[18:35] is basically kind of the workload that
+[18:37] you'll see in inference. You don't get
+[18:39] these like full matrices. you get these
+[18:40] like very thin um matrices or tensors.
+[18:45] Okay, let me stop there in case there's
+[18:48] any questions.
+[18:50] Yeah, in the transformer
+[18:53] I just want to confirm sorry
+[18:59] uh across
+[19:04] across.
+[19:05] Yes. Can I search cross? Across across
+[19:08] across across you can't just cross.
+[19:12] [clears throat]
+[19:13] Yeah. Should that be across K moves
+[19:16] instead of G? I'm having trouble with
+[19:19] the connection. [snorts]
+[19:21] >> Um, let's see. So, the number of groups
+[19:26] here is uh
+[19:30] wait, I'm just making sure. So, K is the
+[19:33] number of key value heads
+[19:36] and um so you have Q sorry G is that G
+[19:43] per KV head. Um
+[19:47] so
+[19:48] >> my understanding is like each
+[19:51] key had
+[19:56] >> yeah correspond if we break down the n
+[20:00] into a g then that means g is the query
+[20:05] i that means we have ks that's my
+[20:09] >> okay so um I think yeah I think you're
+[20:12] right so k should be the number of uh
+[20:15] groups and g should be the number of uh
+[20:18] the you know heads per one of those
+[20:20] groups.
+[20:21] >> Yeah. Okay. Thanks for that. I'll fix
+[20:23] that later.
+[20:28] Okay.
+[20:29] Um so let's talk a little bit more about
+[20:31] the arithmetic intensity of inference.
+[20:34] Okay. So um here's how
+[20:37] uh to think about what's happening in
+[20:41] inference. Let's say you just do it
+[20:42] naively.
+[20:44] So here is um a prompt never going to
+[20:47] give you um going to the transformer um
+[20:50] and the transformer is u does you know
+[20:53] generates keys and values and
+[20:55] activations and at the end of the day it
+[20:58] generates uh logits over the output
+[21:01] vocabulary
+[21:02] and you sample a token and that token um
+[21:06] gets concatenated with um the prompt and
+[21:10] then you just do this again. you
+[21:12] generate never, you attach that to the
+[21:14] prompt and so on and so forth. Okay, so
+[21:17] this is the most naive thing. If you
+[21:18] have a black box that takes a sequence
+[21:21] and outputs a distribution of a tokens,
+[21:24] which is exactly what transform does,
+[21:25] you can just apply this repeatedly.
+[21:28] Okay, so this is uh works but this is
+[21:32] really bad because each time you
+[21:36] generate one token um you actually take
+[21:40] order t² time where t is the number of
+[21:42] you know tokens that you've uh generated
+[21:44] so far. So generating t tokens is
+[21:46] actually key uh cubed.
+[21:50] Okay, because the the attention is
+[21:52] already t squared and you have to do
+[21:55] that you know one for every once for
+[21:58] every token.
+[22:01] So this is um you know pretty bad but
+[22:04] the observation is that you don't
+[22:06] actually have to do this. Um a lot of
+[22:10] the work can actually be shared across
+[22:12] prefixes. So for example, if you're over
+[22:14] generating never versus you're
+[22:15] generating up, you're actually computing
+[22:17] a lot of the same key values for um you
+[22:20] know never going to um give. So these
+[22:24] tokens they shouldn't change. Okay. And
+[22:27] this is because it's a causal you know
+[22:29] transformer. If it's birectional then if
+[22:31] you attach a token then everything
+[22:33] changes. But if it's causal then the
+[22:35] activations here don't change um based
+[22:38] on any tokens you append.
+[22:42] So with that observation, the first
+[22:45] obvious thing is to store a KV cache in
+[22:48] HPM
+[22:50] so that between successive token
+[22:52] generations, you can just reuse the KV
+[22:54] cache. So that means when you are um
+[22:57] trying to uh you know generate GANA, you
+[23:02] don't actually have to compute all the
+[23:04] keys and activations of these previous
+[23:07] um previous uh tokens. So this is what
+[23:11] it looks like with a KV cache. Okay. So
+[23:13] um there's going to be two stages
+[23:15] prefill. So you get the prompt and you
+[23:19] populate the KV cache which is the set
+[23:21] of key and value pairs that the
+[23:23] transformer computes. Um and then you
+[23:26] generate the logic just the same
+[23:28] computations we did before. And now um
+[23:31] now you have the KV cache here um and
+[23:35] then this distribution which you sample
+[23:37] a token. And now you feed that through
+[23:39] the transformer which you know uses this
+[23:43] cache um and then produces a both uh the
+[23:48] distribution of the next tokens but a
+[23:50] new KV which is the the basically
+[23:53] activations corresponding to the token
+[23:55] up
+[23:57] and then this gets fed in. So now you
+[24:00] have the commmented KV cache, you have
+[24:02] this um logits, you sample and then that
+[24:05] feeds to the transformer. You output the
+[24:08] distribution of next tokens as well as
+[24:10] the the next um the new token which you
+[24:14] add to the KV cache and so on so forth.
+[24:19] Okay. So the KV cache formally is for
+[24:22] every you know sequence so there's B of
+[24:25] them for every token um there's s of
+[24:28] them and for um every layer in every
+[24:32] head you store each dimensional vector.
+[24:38] Okay. And just to reiterate for
+[24:39] inference, there's prefill. You're given
+[24:42] a prompt. You encode um the prompt into
+[24:46] these uh you know vectors. And this is
+[24:49] parallelizable just like in training
+[24:51] because you see the entire prompt, you
+[24:52] can compute the um the KV cache and then
+[24:56] in generation you generate the new
+[24:58] response tokens, you know, sequentially.
+[25:00] But at least you don't have to pay for
+[25:03] um generating the KV cache of the tokens
+[25:05] that you already looked at.
+[25:08] Okay. So, is everyone comfortable with a
+[25:10] KV cache? Any questions about this?
+[25:22] All right. So, let's try to figure out
+[25:25] um the flops and memory IO for both MLP
+[25:29] and attention layers. Um, so remember S
+[25:33] is the number of tokens we're kind of
+[25:34] conditioning on and T is the number of
+[25:37] tokens we're generating. Um, so we're
+[25:39] going to do this sort of abstractly and
+[25:41] then later we'll specify to the prefill
+[25:43] where T equals S and generation T equals
+[25:46] 1.
+[25:48] So for the MLP layers and through all of
+[25:51] this I'm just going to look at the
+[25:52] mammals because the the mammals are the
+[25:54] thing that actually uh require a lot of
+[25:57] work. everything else can be um is not
+[26:00] that many flops um and can be
+[26:03] potentially fused into the mammal too.
+[26:06] Um okay, so let's do this uh
+[26:08] calculation. So it's the same as the
+[26:10] matrix uh calculations. I'm not going to
+[26:12] maybe be labor step through every single
+[26:15] detail here, but just the form is you
+[26:18] read X from um high memory. um you read
+[26:25] all the parameters,
+[26:27] you you compute the um up projection
+[26:32] um and then you know you write it to
+[26:34] HPM, you compute the the um the gate um
+[26:40] and you write it HPM and then you uh
+[26:45] compute
+[26:47] the basically the down projection of
+[26:50] that and you write it um to HPM.
+[26:54] Okay, so the number of flops is uh you
+[26:56] know depends on P B and T and DNF. So
+[27:00] batch size, sequence length, um model
+[27:03] dimension and the fe forward dimension
+[27:06] uh MLP dimension and the bytes
+[27:09] transferred is um you know this
+[27:12] expression.
+[27:15] Okay. So now you can compute the
+[27:16] arithmetic intensity which again is
+[27:18] flops divided bytes you know
+[27:20] transferred. Um so this is some
+[27:23] expression. Um we're going to assume
+[27:25] that just like before B * T is much
+[27:28] smaller than DN DNF. Um and with that
+[27:33] then we see that intensity is um you
+[27:35] know B * T.
+[27:38] Okay. So this is analogous to just the
+[27:41] ML case. There's more matrices and
+[27:43] there's like more dimensions but
+[27:44] fundamentally it's kind of the same
+[27:46] thing and it makes sense. MLP is
+[27:47] basically a big mammal.
+[27:50] Okay. And it also makes sense because
+[27:53] the the batch dimension and the sequence
+[27:56] to length dimension are sort of
+[27:59] everything is independent right in for
+[28:02] the MLP um they don't interact.
+[28:04] Attention's different story and so you
+[28:08] know B * T so as long as you have um you
+[28:12] know in the prefill if you make B * T
+[28:15] large enough large batches long
+[28:16] sequences you'll be fine. Now let's look
+[28:19] at generation. So remember generation um
+[28:22] there's two problems here. One is that
+[28:25] gen generation t equals one. Okay,
+[28:28] you're only generating one um token at a
+[28:32] time. And uh so that means your
+[28:34] arithmetic intensity is going to be B.
+[28:37] But B what in generation is the number
+[28:40] of concurrent requests.
+[28:43] And so if you're in a sort of batch
+[28:44] setting, you kind of can control that.
+[28:46] But if you're let's say serving a
+[28:48] chatbot, it's the number of concurrent
+[28:50] requests is essentially um you know how
+[28:53] many users concurrent users there are
+[28:55] which can be high can be low. So it's a
+[28:57] bit unpredictable it can be changing
+[28:59] over time. So that's something we're
+[29:00] going to address when we talk about um
+[29:03] um you know continuous batching.
+[29:06] But overall, this is not bad, right?
+[29:10] Because as long as there you have large
+[29:11] batches, um the sequence length isn't
+[29:14] going to really help you, but you have
+[29:16] large batches, you should be good. So
+[29:19] now let's look at the attention layer.
+[29:22] Um so again, S is in the previous tokens
+[29:24] already generated. T is the number of
+[29:26] tokens you want to generate logits for.
+[29:29] Um so in attention
+[29:31] you read um the the QV
+[29:36] uh you know matrices from HPM
+[29:40] um you compute the tension
+[29:43] um you you know compute the softmax
+[29:45] which doesn't really matter um and uh
+[29:48] compute the the value you know matrix
+[29:51] and then you write the result to HPM
+[29:54] okay so the flops is B * S* T * and the
+[29:59] bytes transferred is uh this expression.
+[30:03] So this should you know all the the
+[30:06] everything is a mammal right so this is
+[30:08] should be um always you know one degree
+[30:12] higher of a polinomial than um the bytes
+[30:15] transferred because it's a mammal. The
+[30:17] only question is you know what is that
+[30:20] factor look like? So that factor for
+[30:22] attention is s * t over s plus t.
+[30:28] Okay.
+[30:29] So, so let's look at the prefill. So,
+[30:33] prefill um what this is saying is that
+[30:37] the pre-fill intensity is um is s over
+[30:40] two when t equals s. So, this is good,
+[30:44] right? Because as long as you have long
+[30:45] sequence lengths um for attention,
+[30:49] you're going to maintain high arithmetic
+[30:51] intensity.
+[30:54] Um notice that the batching dimension
+[30:56] doesn't um happen here. I'll explain a
+[30:59] bit you know why um later but for
+[31:02] generation
+[31:04] this is bad news right so the the
+[31:08] generatedation intensity is s over s +
+[31:11] one and that's less than one or even
+[31:14] let's just call it one and arithmetic
+[31:17] intensity remember one is bad we want it
+[31:19] to be something like 295 for h 100 to be
+[31:22] to saturate the compute and so
+[31:26] you know this is really the bottleneck.
+[31:29] So we did all this analysis um for you
+[31:32] know MLP attention um you know pre-fill
+[31:36] generation and we've found this to be a
+[31:38] bottleneck. So let's try to contemplate
+[31:41] why uh this is a bottleneck.
+[31:45] Um so unlike MLPS so MLPS for generation
+[31:50] is actually okay as long as your
+[31:51] sequence is um sorry is your um uh you
+[31:56] know batches large enough.
+[31:59] So the problem with um
+[32:03] this uh ML you know attention is that
+[32:07] you know let's look at MLPS every
+[32:10] sequence hits the same MLP weights.
+[32:14] Okay, so these don't depend on B. Um
+[32:17] whereas in attention layer each sequence
+[32:20] has its own KV cache. So these all
+[32:24] depend on you know P.
+[32:26] Um and so you can think about this as um
+[32:34] what's what's going on here is that you
+[32:37] know in the MLP case having B being big
+[32:42] actually is is helpful because you kind
+[32:45] of get to load these MLP weights you
+[32:47] know kind of once um and you can kind of
+[32:49] use it for all your sequences
+[32:52] right that's how you get high arithmetic
+[32:54] intensity because you use a simplifying
+[32:57] a bit you load it once you do all your
+[32:59] batch processing and then that that is
+[33:01] that is good whereas in attention you
+[33:04] can't you know all these depend on B so
+[33:08] increasing B doesn't help it's like
+[33:10] every for every sequence you're
+[33:12] basically doing a matall so they're all
+[33:16] in independent so you know doing more
+[33:19] matt malls isn't uh helpful just like
+[33:22] remember in the very beginning um I
+[33:25] showed you this example, this also has
+[33:28] pretty bad uh arithmetic intensity. It's
+[33:31] not not a mammal because we're
+[33:33] essentially batching by um a coordinate.
+[33:37] And this is essentially basically the
+[33:39] same as doing a dot product, which has
+[33:40] horrible um uh arithmetic intensity. And
+[33:44] remember this is in the attention. This
+[33:46] B blue B is like the cause of why um the
+[33:50] tension is uh arithmetic intensity
+[33:53] doesn't scale with B and why that is a
+[33:55] bottleneck.
+[33:58] Okay to just summarize here so prefill
+[34:01] is compute bound generation is man
+[34:03] memory bound. So if you look at the MLP
+[34:06] intensity for the
+[34:09] um for prefill it's B * S great prefill
+[34:13] for in um for attention intensity S
+[34:17] over2 not as good but workable um
+[34:20] generation MLP intensity also workable
+[34:24] requires long uh concurrent requests but
+[34:27] it is really the generation intens
+[34:29] attention intensity which is a
+[34:31] fundamental bottleneck and you just
+[34:35] that's it. You you just have to if
+[34:37] you're sticking with a transformer, you
+[34:38] can't uh really, you know, improve this.
+[34:43] Okay. Uh pause there for questions.
+[34:57] So now whenever you hear people say, oh,
+[35:00] inference is memory bound, um you know
+[35:02] why.
+[35:07] Okay. So let's now use these um
+[35:11] intuitions and calculations to think
+[35:14] about our um you know inference metrics
+[35:17] throughput and latency and also TTFT.
+[35:21] All right. So inference is memory bound.
+[35:25] um the the now the main I mean in some
+[35:30] ways this simplifies a lot of things
+[35:31] because when we think about how long
+[35:33] things take you just look at how much
+[35:35] memory needs to be transferred okay
+[35:38] because uh assuming you overlap uh
+[35:42] communication and computation the
+[35:44] bottleneck is going to be just the
+[35:46] amount of memory that you have to deal
+[35:48] with. Okay. So in some ways it's nice
+[35:51] because it's simple but in other ways
+[35:53] it's um frustrating that your
+[35:55] accelerators are sitting there not doing
+[35:57] anything.
+[35:59] Um okay so let's walk through example.
+[36:04] So for llama 2 13B
+[36:07] um on a H100. So what is the latency and
+[36:10] the throughput?
+[36:12] Okay so remember llama 13b um has a
+[36:16] particular shape. So oops um this is a
+[36:18] sequence length the model dimension fe
+[36:21] forward dimension number of query number
+[36:24] of key value heads there's no GQA here
+[36:26] so the nn equals k head dimension number
+[36:30] of layers vocap size um and the memory
+[36:34] bandwidth for h100
+[36:37] okay so um
+[36:41] so now using this uh this config let's
+[36:46] compute the to transformer performance
+[36:49] um you know statistics okay so these are
+[36:52] are inputs here um and just what the
+[36:57] statistics I'm going to compute are
+[36:59] going to be um number of parameters um
+[37:04] the memory usage latency and throughput
+[37:07] okay so first of all um you know what's
+[37:13] what uh does takes memory Okay, so the
+[37:16] parameters take memory. So we compute
+[37:19] the number of of parameters. Um and so
+[37:23] you have look at the the embeddings the
+[37:27] um the you know the MLP layers that um
+[37:30] the the projections of the KQV um at the
+[37:34] end of the day you get um some number of
+[37:37] parameters.
+[37:39] um assuming that uh you know we're doing
+[37:42] a BF-16 which always case for inference
+[37:45] then parameters take up this many bytes
+[37:49] also in memory is the KV cache um and
+[37:53] the KV cache is uh the number of tokens
+[37:57] in your sequence times um the number of
+[38:02] um your heads and the KV heads um times
+[38:06] the head dimension times the number of
+[38:08] layers ers you have one for the key and
+[38:11] one for the value and then you have two
+[38:13] multiple two for BF-16
+[38:16] okay so that's the size of the KV cache
+[38:18] and the total memory usage is uh this is
+[38:22] for each sequence you have B sequences
+[38:24] so that's B times that plus the
+[38:26] parameter size and that's the amount of
+[38:29] memory you you need
+[38:31] um and now what's the latency the
+[38:34] latency is determined by uh the memory a
+[38:38] IO. Okay. Um because inference is memory
+[38:43] bound um most assuming you overlap
+[38:46] communication and compute um all the
+[38:50] memory is it's it's going to be on um
+[38:53] you know shuffling parameters um you
+[38:56] know back and forth between HPM and um
+[38:59] SRAMM.
+[39:01] So um that's how long it takes to you
+[39:05] know move memory around. Throughput is
+[39:08] the inverse of latency but we're
+[39:10] generating B tokens in parallel. So this
+[39:12] is um you know this is tokens per
+[39:15] second. This is seconds per token. This
+[39:17] is tokens per second um as well as
+[39:19] having an additional B because you're
+[39:23] processing a batch of B.
+[39:26] Okay. So now let's um compute for this
+[39:31] config what are these actual values.
+[39:33] Okay. So num parameters is um you know
+[39:38] 13 billion. So good sanity check that is
+[39:40] a advertised as a 13 billion parameter
+[39:42] model. Um memory is um this this term
+[39:48] which is about 838
+[39:50] I guess million times B. So it's
+[39:53] basically you know a linear function of
+[39:55] B plus uh some other term. So this is a
+[39:59] KV cache which grows as B. This is the
+[40:01] the parameters which is double the
+[40:03] number of params.
+[40:06] Now latency is uh just this scaled by
+[40:09] the memory bandwidth. So it has the same
+[40:11] form as as the memory.
+[40:14] Um and throughput is B over that.
+[40:18] Okay.
+[40:20] So notice that latency as you increase B
+[40:24] grows
+[40:26] um because the KV cache grows and in
+[40:29] order to process stuff you have to copy
+[40:30] the KV cache back and forth.
+[40:33] And now uh throughput is more
+[40:35] interesting because as you increase B
+[40:38] you know throughput does improve
+[40:41] um but up to a limit right because
+[40:45] throughput in um improves because now
+[40:47] you're advertising the cost over a
+[40:48] larger batch um but also you know the
+[40:52] speed at which you're processing this
+[40:53] obviously is also um increasing over
+[40:56] over time. So um this sort of asmmptotes
+[41:00] it's not going to you know through can't
+[41:02] possibly go to infinity.
+[41:06] Okay
+[41:08] any questions about uh this so far?
+[41:14] So basically you just have to remember
+[41:16] latency is a linear function in B. This
+[41:20] is the where the constant is the size of
+[41:21] KV cache and then this is the number of
+[41:23] parameters and then throughput is um you
+[41:26] know some B proportional to B over B
+[41:30] plus something.
+[41:35] Okay. So now let's instantiate this for
+[41:37] a bunch of situations. Okay. So if you
+[41:41] have batch size one um so this is what
+[41:44] you would get. uh you get a latency of
+[41:48] 0.08
+[41:51] um you know seconds per per token um and
+[41:55] the throughput is 124 tokens per second.
+[41:59] So if you what happens if you increase
+[42:00] the batch size you'll see that um the
+[42:04] latency goes up
+[42:07] um but the throughput also goes up. So
+[42:09] latency gets worse but the throughput
+[42:11] improves.
+[42:13] So this is kind of an interesting thing
+[42:15] because we think about oh we just want
+[42:17] to make it go fast but fast actually has
+[42:19] two meanings here which actually
+[42:21] depending on which one you care about is
+[42:23] you know complete opposite. If you want
+[42:24] to tune your batch size um that's going
+[42:28] to really determine um you if you want
+[42:31] latency or throughput
+[42:33] and what happens if you increase the
+[42:35] let's increase we're in a we really want
+[42:37] high throughput because we're processing
+[42:39] lots of documents. Let's increase the
+[42:41] batch size even more. Okay. So the
+[42:43] latency gets even worse. Not not I mean
+[42:46] yeah it gets worse. Throughput gets even
+[42:48] better. But the main problem here is
+[42:50] that your uh memory you run out of
+[42:54] memory. Okay. Because the memory uh for
+[42:57] storing this KV cache is ex going to
+[43:00] exceed your H100 memory.
+[43:03] And if you have B200s you can increase
+[43:05] the batch size more but eventually you
+[43:07] hit some sort of limit. So there's kind
+[43:09] of limitations to how much you can in
+[43:12] through your throughput. You'll never
+[43:13] get to sort of the asmtote um because
+[43:16] you'll hit uh the memory.
+[43:20] Okay. And also your your throughput you
+[43:23] know is getting your gains are kind of
+[43:26] diminishing as well.
+[43:30] So increasing batch size worsens the
+[43:33] latency because now you have a larger KV
+[43:37] cache to read and write. Um and remember
+[43:41] it's batched. So if you're an individual
+[43:43] query you have to wait for everyone to
+[43:44] finish. So you have to basically you get
+[43:47] you're like waiting for a bus and the
+[43:49] latency is you know pretty high. You
+[43:51] wait and then but uh and then you go
+[43:54] whereas the throughput of a bus is
+[43:55] pretty good because you can move
+[43:57] everyone at at once. Um so uh the the
+[44:01] throughput improves as batch size
+[44:03] increases because remember the
+[44:05] parameters uh are are shared and you
+[44:08] load that you know once um into into
+[44:11] memory and you can process a lot of um
+[44:13] sequences.
+[44:17] Okay so trade-off between latency and
+[44:19] throughput just to make sure everyone's
+[44:21] aligned. Smaller batch sizes use better
+[44:23] latency but worse throughput. Large
+[44:25] batch sizes yield better throughput but
+[44:27] worse latency.
+[44:29] Okay. Um I'm not going to really talk
+[44:32] about parallelism too much. There's also
+[44:34] another dimension of inference which is
+[44:36] um you can you know shard your your
+[44:39] model across multiple um you know
+[44:41] devices. Um you can look at the scaling
+[44:44] uh book chapter on inference if you want
+[44:45] to know more. Um just as a kind of a
+[44:48] very trivial example, if you launch five
+[44:51] m copies of the model, the latency is
+[44:53] the same and the throughput increases by
+[44:55] by m. Um
+[44:58] and then the other metric we didn't talk
+[45:00] about is time to first token. And this
+[45:03] is essentially the time it takes to do
+[45:05] prefill because after you finish prefill
+[45:08] then you can basically start generating.
+[45:11] Okay.
+[45:13] So um if you want uh you know to fast to
+[45:20] um if you want
+[45:22] you know faster TTFT you should use
+[45:24] smaller batch sizes um and you want
+[45:27] larger batch sizes to uh improve
+[45:29] throughput. Okay so hopefully that is uh
+[45:34] clear. Any questions about throughput
+[45:36] and latency and how they're in tension
+[45:38] with each other?
+[45:47] Okay. So now now we have a conceptual
+[45:50] framework for thinking about how
+[45:52] efficient inference is in terms of
+[45:55] arithmetic intensity um and you know
+[45:59] throughput and and latency. Now let's
+[46:02] try to make it faster. How do we make
+[46:04] inference faster? There's a bunch of
+[46:06] different techniques which are quite
+[46:08] varied ranging from changing the model
+[46:10] architecture to doing systems
+[46:12] optimization everything in between. So
+[46:14] inference in some sense is a fairly rich
+[46:17] crosscutting topic.
+[46:20] Okay. So the the most kind of d
+[46:25] maybe now in hindsight obvious thing you
+[46:27] can think about is hopefully beat it
+[46:30] into your head that um you know memory
+[46:33] is the bottleneck for inference and the
+[46:36] KV cache takes up a lot of memory and it
+[46:39] could even be larger than the number of
+[46:41] you know parameters if for a large
+[46:42] enough batch size. So let's just try to
+[46:45] reduce the size of a KV cache. Now you
+[46:49] have to be careful about how you do this
+[46:50] because you want to make sure you don't
+[46:52] lose too much accuracy in the process.
+[46:56] So here is one thing you can do um which
+[46:59] we already talked about which is grouped
+[47:01] query attention
+[47:03] um and just as a kind of a reminder
+[47:05] here. So multi-headed attention um
+[47:09] basically for every token you have a key
+[47:11] and a value and a query. And if you do
+[47:15] grouped query attention, you basically
+[47:17] compute um the same number of queries,
+[47:20] but you have only a smaller number of
+[47:24] groups and you compute key and value for
+[47:26] each group.
+[47:28] Um okay. So
+[47:31] so K is a number of of groups here. Um
+[47:36] and so in the multi-headed attention K
+[47:39] is N. No reduction. Um there's something
+[47:42] called multi-query attention which no
+[47:44] one uses because it's really bad. K
+[47:46] equals 1 and somewhere in between is
+[47:49] hopefully where we'll find a balance
+[47:52] between accuracy and speed. So there's
+[47:55] this this is the paper that introduces
+[47:57] GQA from 2023
+[47:59] and uh they show that if you look at you
+[48:02] know time uh per sample um which is
+[48:05] related to both latency and throughput
+[48:08] um you know you see that um the the MHA
+[48:14] so multi-head attention full attention
+[48:16] is has this high uh time whereas um if
+[48:21] you start k equals 1 it's it's much
+[48:23] faster
+[48:24] And then you can actually keep on
+[48:27] increasing the K to like you know K
+[48:29] equals 8 and it's still pretty good and
+[48:30] eventually um your your uh time goes up
+[48:34] quite a bit.
+[48:36] Okay. So
+[48:39] um you know why does GQA improve latency
+[48:42] and throughput? Well, it reduces the KV
+[48:45] cache by a factor of N over uh K. Um and
+[48:52] you know and re just as a friendly
+[48:54] reminder re reducing memory usage leads
+[48:57] to speed up because we're memory bound.
+[49:00] Okay.
+[49:02] So let's revisit our friendly llama
+[49:05] model here. Um remember in the initial
+[49:07] configuration we're just using k equals
+[49:10] uh n. So there's no multi-headed there's
+[49:12] multi-headed attention. No um no
+[49:15] reduction in number of uh key values. Um
+[49:19] and so for this one um remember the
+[49:22] using a batch size of uh 64 we get this
+[49:25] throughput and latency. Now if you do
+[49:28] GQA we're going to put in let's say um
+[49:32] um a kind of a sparity of one to five.
+[49:36] um that reduces
+[49:38] the
+[49:40] um you know the memory quite a bit which
+[49:44] in turn improves the latency and also
+[49:47] improves the throughput.
+[49:49] So it's not that latency and throughput
+[49:51] are always at odds. If you reduce the
+[49:53] amount of memory then it improves both.
+[49:56] It's mainly the batch dimension that
+[49:58] allows uh that is the point of tension.
+[50:02] Okay. So this is this is great. Um and
+[50:07] let's actually just imp increase the
+[50:10] batch uh size even more and see what
+[50:14] happens.
+[50:16] So um before if we had a batch size of
+[50:19] 256
+[50:20] we ran out of memory but now it fits in
+[50:23] memory and uh we we see that um you know
+[50:29] the latency you know suffers a bit
+[50:32] because we're increasing the batch size
+[50:33] but the throughput um you know goes up
+[50:37] proportionally.
+[50:40] Okay. So sometimes you kind of play with
+[50:43] these uh parameters jointly like you can
+[50:45] reduce the KV cache but that allows you
+[50:47] to increase the batch size and allow
+[50:50] make making other trade-offs.
+[50:52] So the final thing you have to do
+[50:54] whenever you do some you know lossy
+[50:57] change is that you make sure the
+[50:58] accuracy doesn't drop and this paper
+[51:00] shows that for GQ GQA um the you know
+[51:06] the time is is better but the the um the
+[51:11] across a bunch of evalu basically it
+[51:13] works well. So now with these accuracy
+[51:16] evalu I think you always have to take it
+[51:18] with a grain of salt because this is
+[51:19] like for particular model later the
+[51:21] deepseek paper was to show that it
+[51:23] actually does hurt. So you know I guess
+[51:26] take everything that's not just kind of
+[51:29] math with a grain of salt here.
+[51:32] Okay so speaking of deepsek um here's
+[51:35] another idea to reduce the KV uh cache.
+[51:39] Okay, so the theme is reduce the KV
+[51:41] cache and latency and throughput
+[51:43] improved.
+[51:45] Um so this is um multi-headed attention
+[51:49] same number of queries and keys and
+[51:51] values for every um token and um GQA
+[51:56] remember we have reduced the number of
+[51:58] keys and values for every token um sorry
+[52:01] not for every token we basically have
+[52:03] reduced the number of values and uh keys
+[52:07] and now the multi- latent attention for
+[52:10] deepseek says we're actually going to
+[52:12] leave the
+[52:15] uh number of keys and values um this the
+[52:18] same one for every you know token
+[52:20] essentially but I'm going to parameter
+[52:22] I'm going to compress these so normally
+[52:26] um you have some um how do you compute
+[52:28] your keys and values you have your um
+[52:30] your activations and you multiply them
+[52:33] by some matrix to get k and some other
+[52:34] matrix to get v and these are generally
+[52:38] n* h you know dimensions like your model
+[52:40] dim which is which is big. So MLA says
+[52:45] I'm going to actually project this um
+[52:47] these activations down into C
+[52:49] dimensions. So deepse V2 reduced it from
+[52:53] you know 16,000 to 512. So this is quite
+[52:55] aggressive compression here. And then
+[52:58] I'm going to compute the K and the V
+[53:01] from this compressed representation.
+[53:04] So now I can just store C. This is much
+[53:07] smaller. And then when I need my keys
+[53:09] and values, I can just materialize them.
+[53:14] So there is one wrinkle here which is
+[53:16] that MLA is not compatible with rope
+[53:19] which operates directly on the keys and
+[53:20] values. Um so what they do is add
+[53:23] additional dimensions um for you know
+[53:26] for for handling the rope. Um but more
+[53:31] or less it's it's still a pretty big you
+[53:34] know reduction. So the latency and
+[53:37] throughput improvements um follow by
+[53:40] just you know simple math. The smaller
+[53:43] the KV cache the you know the faster you
+[53:46] go okay it's almost kind of uh linear
+[53:50] scaling up until some point and then
+[53:53] remember you need to check whether your
+[53:54] model is um you know accurate. So um
+[53:58] first of all this is sort of the result
+[54:00] that you know kind of contradicts the or
+[54:03] or is intention with uh the GQA paper.
+[54:06] um they show that GQA actually isn't
+[54:08] that um you know great um it you know
+[54:13] it's um
+[54:16] you know it's much so this is MHA this
+[54:19] is GKA these numbers are smaller than
+[54:20] these numbers
+[54:23] um but uh they show that their method
+[54:26] MLA multi- latent attention um works um
+[54:30] even a little bit better than MHA but
+[54:32] let's just say it's about the about the
+[54:35] the same so This column and this column
+[54:37] are much better than I guess there's no
+[54:40] GQA on this table. It's uh yeah compare
+[54:43] over here.
+[54:47] Okay. So I'll show you an yeah
+[54:50] >> how does this compare uh to reducing the
+[54:53] number of dimensions the model?
+[54:56] >> So question is how does this compare
+[54:58] with reducing the dimension of the
+[55:00] model? Um so that's a good question. And
+[55:03] I don't these oblations don't show that.
+[55:05] U my guess is that reducing the model
+[55:07] dimension just makes things you know
+[55:09] worse if you because you're sort of like
+[55:12] indiscriminately just like reducing
+[55:14] everything. Um I think the the trick in
+[55:18] all of this kind of is to find places of
+[55:21] the model where you can squeeze. Um and
+[55:23] this aperary I don't think you can
+[55:26] necessarily know for sure. You just have
+[55:27] to do a bunch of experimentation and see
+[55:29] what works. So here's another idea to
+[55:32] reduce your uh KV cache. This is called
+[55:35] cross layer attention. Um so the idea is
+[55:38] that normally every layer has KV uh K's
+[55:42] and V's. But you know, let's say instead
+[55:46] of doing that, we're just going to
+[55:48] compute um KVS for a subset of the
+[55:52] layers and then just for the this this
+[55:56] layer, I'm just going to use the
+[55:57] previous layers um KV cache.
+[56:01] Okay, so um
+[56:05] so this is kind of another way of
+[56:06] sharing. Just like GQA shares KVs across
+[56:10] heads, now I'm sharing KVS across
+[56:12] layers.
+[56:14] Um and empirically this paper shows that
+[56:18] um you know doing this improves a paro
+[56:21] you know frontier. So um each of these
+[56:24] these models is better than um you know
+[56:27] in given a method you can always uh kind
+[56:31] of sweep this the size of the KV uh
+[56:34] cache by changing the the K and um the
+[56:38] head dimension. um which I guess kind of
+[56:41] relates to your point about changing
+[56:43] model dimension um and then but if you
+[56:45] do this uh uh CLA cross layer attention
+[56:50] it's uh it's better
+[56:53] okay so let me give you uh moving on um
+[56:57] whirlwind tour of different techniques
+[56:59] for reducing KV cache there's uh local
+[57:02] or sliding window attention this is a
+[57:05] fairly kind of old idea and a very um
+[57:08] kind of natural idea Okay, so um if you
+[57:10] look at the full attention matrix is n
+[57:13] squ and instead of doing that if you're
+[57:16] going to generate a token you just look
+[57:18] at the last k tokens. Okay, so you
+[57:22] essentially have a sliding window for
+[57:24] every token you generate. You just
+[57:25] depend on the last um k. Um and now if
+[57:30] you do that the the effective uh so the
+[57:35] kvcast is now independent of the
+[57:37] sequence length. It's just you know um
+[57:40] the number of uh um the batch times the
+[57:43] the other variables um which is great
+[57:47] and this is especially great for long
+[57:48] context. Um
+[57:51] now you because of number of layers the
+[57:54] effective context length as actually
+[57:56] larger than the number of the stated
+[57:58] context length because information can
+[58:00] propagate um you know farther in if you
+[58:03] go down the layers. Um now you can do
+[58:06] fancier things like you can maybe not do
+[58:09] a dense uh selection of layers but you
+[58:12] can space it out. You can also do this
+[58:14] global plus sliding window where you
+[58:17] [snorts] have attention to a fixed um
+[58:20] you know grid of different you know
+[58:22] token points plus a local uh sliding
+[58:25] window. So you can do various things.
+[58:27] Now the problem with this is that it
+[58:29] actually still hurts accuracy.
+[58:32] So this reduces expressivity. there's no
+[58:35] you know free lunch here. Um or at least
+[58:38] this was an expensive lunch. Um
+[58:41] so the solution that people come up with
+[58:43] is that they interle local attention
+[58:46] with uh global attention. So these
+[58:48] hybrid models have uh you know full
+[58:51] attention for some of the layers and
+[58:53] some local layers for you know some of
+[58:55] the other layers
+[58:57] and you're basically always trying to
+[58:59] and then so that allows you to
+[59:02] essentially um you know reduce the the
+[59:04] KV cache a little bit and you're always
+[59:06] trying to balance uh you know accuracy
+[59:09] with speed.
+[59:12] >> Yeah.
+[59:15] the trade-off between like a linear
+[59:17] attention variant versus like a sliding
+[59:18] window.
+[59:19] >> Yeah. So question is what about um
+[59:22] linear attention versus sliding window
+[59:24] attention? So um I'm not going to talk
+[59:27] about linear attention but very quickly
+[59:30] um there's a bunch of uh methods that
+[59:33] where instead of you know storing a KV
+[59:37] cache is you basically um compute some
+[59:41] sort of like compressed representation
+[59:43] of all the history. So linear the most
+[59:46] naive linear attention is uh you just
+[59:49] sum the KV uh values up into a single
+[59:52] vector. So that's definitely independent
+[59:54] of the sequence length. You can do
+[59:55] fancier things. There's like gayet,
+[59:57] delta nets and mamba which allows you to
+[01:00:00] um try to compress but not forget you
+[01:00:02] know as much. Um now the question is you
+[01:00:05] know how do those compare? Those have
+[01:00:07] also been used in in place of sliding
+[01:00:10] window um attention um and people have
+[01:00:13] gotten good results with them. You can
+[01:00:15] also use a combination of full
+[01:00:16] attention, sliding window intention, and
+[01:00:19] the linear attention because they sort
+[01:00:21] of capture different, you know, aspects.
+[01:00:24] If you care about kind of local kind of
+[01:00:26] high resolution stuff, then sliding
+[01:00:29] intentions better. If you just kind of
+[01:00:31] want like broad summaries of the past,
+[01:00:34] then um the other, you know, linear
+[01:00:37] attention might be better. So then for
+[01:00:38] like a long context sentence would you
+[01:00:40] say linear attention would be a better
+[01:00:43] setting for that?
+[01:00:45] >> Um so the question is for long context
+[01:00:47] would linear attention be um better. Um
+[01:00:51] let me talk. Um so there's no free
+[01:00:55] lunch, right? Like I think let's say you
+[01:00:58] have a very long context and you're sort
+[01:01:00] of solving a needle in a hay stack
+[01:01:01] problem, right? If you have have to
+[01:01:05] compress your entire history into like a
+[01:01:08] small context, you're just going to lose
+[01:01:10] information and um you might just,
+[01:01:15] >> you know, not be able to retrieve it.
+[01:01:18] because I guess I feel like what it
+[01:01:19] seems like people are going with hybrid
+[01:01:20] art tickers that you'll always need some
+[01:01:22] sort of longer attention. But I'm I'm
+[01:01:24] just trying to understand like in my
+[01:01:25] head like what the trade-off between
+[01:01:27] using a sliding window versus like some
+[01:01:29] sort of mamba delta net layer would be
+[01:01:31] that like is using a delta layer like
+[01:01:34] better than using sliding window
+[01:01:35] consistently or like what is the actual
+[01:01:37] like maybe representative tradeoffs?
+[01:01:40] Yeah, I I guess maybe I'll say that the
+[01:01:42] mamba and delta net are more powerful um
+[01:01:45] than the sliding window attention. Maybe
+[01:01:47] you can think about the mamba as um
+[01:01:49] it'll probably can like it certainly can
+[01:01:52] represent some of the aspects of sliding
+[01:01:54] window attention because like you can
+[01:01:56] just as you're doing the recurrence it
+[01:01:57] can just look at the last you know
+[01:01:59] state. So um yeah maybe yeah maybe you
+[01:02:04] can say think about the the linear
+[01:02:05] attention or it's like extensions as
+[01:02:08] being you know you know better at least
+[01:02:10] there they have more room like once you
+[01:02:12] do sliding into attention like you're
+[01:02:14] done there's nothing else you can
+[01:02:16] >> yeah okay so let me just quickly go
+[01:02:19] through this uh just highlight this you
+[01:02:22] know deepseek deepseek continues to um
+[01:02:25] you know innovate different types of
+[01:02:28] attention mechanism S um so remember
+[01:02:31] they came up with the multilaten
+[01:02:33] attention which compresses the key
+[01:02:34] values. Um there is this thing called um
+[01:02:38] now they have compressed sparse
+[01:02:40] attention deepseek sparse attention and
+[01:02:42] heavily compressed attention. I never
+[01:02:43] kind of remember all these acronyms and
+[01:02:46] what they um they mean but let's look at
+[01:02:49] this diagram. So normally you have your
+[01:02:51] uh KV tokens um and your your query
+[01:02:55] token. So um compressed attention is
+[01:02:59] going to basically compress every M
+[01:03:01] tokens into you know one token um and
+[01:03:05] then there is this thing called deepse
+[01:03:07] sparse attention which um basically
+[01:03:10] selects a subset of those um to kind of
+[01:03:14] keep and the way you select a subset is
+[01:03:17] that you actually compute some light
+[01:03:20] lighter weight queries and keys and then
+[01:03:22] you do like a you know a smaller
+[01:03:24] attention to get these index scores. so
+[01:03:25] you know what to keep. So like a kind of
+[01:03:28] a lightning fast way to figure out what
+[01:03:30] tokens you need to keep and then you use
+[01:03:33] those. Um and then there's a more
+[01:03:36] compression that you know happens.
+[01:03:39] Um so in the interest of time I'll move
+[01:03:42] on. Um the goal of this section is to
+[01:03:45] reduce the KV cache. Um because KV cache
+[01:03:49] is related to memory and we saw that
+[01:03:51] inference is memory bound. So um that
+[01:03:55] directly translates to improvements in
+[01:03:57] throughput and uh latency and the key is
+[01:04:00] to do this without hurting accuracy. So
+[01:04:02] you can do lower dimensional KV uh
+[01:04:05] caches across layers um by across uh
+[01:04:09] heads um and across like you know head
+[01:04:11] dimension. You can do local attention,
+[01:04:14] you can do linear attention which was
+[01:04:16] discussed earlier. Um and there's much
+[01:04:19] more and also there's also diffusion
+[01:04:21] models which um is a non auto
+[01:04:24] reggressive way to generate which can be
+[01:04:25] much um faster. Okay. So let's talk
+[01:04:30] about a few other ideas which are
+[01:04:32] important. So quantization is more of a
+[01:04:35] I would say less of an architectural and
+[01:04:38] much more of a systems u uh perspective
+[01:04:41] on how to make things you know smaller.
+[01:04:44] So um the key idea here is just reduce
+[01:04:46] the precision of numbers. Less memory
+[01:04:48] means higher latency and throughput um
+[01:04:51] and the obviously you have to worry
+[01:04:53] about accuracy. So quantization um
+[01:04:59] um is
+[01:05:01] um you know there's many options here
+[01:05:04] all the way from PF16 all the way down
+[01:05:06] to in um in four. Um and so one thing
+[01:05:13] you can do um if you're kind of scared
+[01:05:16] that quantization is going to mess you
+[01:05:18] up is that you train a model with
+[01:05:20] quantization in mind. So this is called
+[01:05:22] quantization aware training. Um and
+[01:05:25] during the fe forward pass during
+[01:05:27] training you quantize and dequantize and
+[01:05:30] you're basically simulating these
+[01:05:31] quantization errors as you train. Um so
+[01:05:35] then you generally now the weights are
+[01:05:37] adapted towards the quantization things
+[01:05:39] will work better but the con is that
+[01:05:41] requires
+[01:05:43] expensive large scale training and
+[01:05:46] typically what so what typically people
+[01:05:47] do is they they train models and then
+[01:05:49] they um quantize after the fact. So this
+[01:05:53] is post-training quantization. It's much
+[01:05:56] uh you know cheaper often. Um you know
+[01:06:00] there's a naive way to do it is that you
+[01:06:02] basically uh for every layer or tensor
+[01:06:05] you basically determine the scale and
+[01:06:07] the zero point for each let's say tensor
+[01:06:11] and then you you quantize um that you
+[01:06:14] know separately. Um this is generally
+[01:06:16] you know doesn't work as well. Um you
+[01:06:19] can use um this idea called GPT Q which
+[01:06:23] uses some hashing information to you
+[01:06:25] know quantize layer by layer and then
+[01:06:28] the you keep track of the errors which
+[01:06:30] get um propagated into the non-quantized
+[01:06:33] weights and so it kind of allows you to
+[01:06:36] correct for the errors. And now
+[01:06:38] activation aware quantizing is um um you
+[01:06:42] know more s kind of a sophisticated um
+[01:06:45] way where the observation is that some
+[01:06:49] activation channels are large and those
+[01:06:51] the weights that interact with those
+[01:06:53] matter more. So let's allocate more
+[01:06:55] precision to these weights. So let's
+[01:06:57] look at this picture. Um so normally if
+[01:07:01] you take FP16
+[01:07:04] um weight matrix and you quantize it you
+[01:07:06] get let's say you quantizing down to N3
+[01:07:09] but um what you're going to do is you
+[01:07:12] figure out which of these um you know
+[01:07:16] activ so these are maybe activation
+[01:07:18] channels and some of these activation
+[01:07:20] channels are large so as if they're
+[01:07:23] large in general then you basically
+[01:07:25] allocate like let's say FP16 for this
+[01:07:28] channel you keep everything else as in
+[01:07:31] three and for a few important channels
+[01:07:33] you um you um use higher precision.
+[01:07:39] Okay. So another idea here is to do
+[01:07:43] model pruning. So here you just take a
+[01:07:46] large model and you rip out pieces of it
+[01:07:50] and you fix it up. It's kind of um a
+[01:07:52] very crude way but it it turns out to
+[01:07:54] work. So there's this paper from um
+[01:07:56] Nvidia where um essentially let me
+[01:08:01] actually um
+[01:08:04] uh let's see so you kind of have first
+[01:08:06] have to estimate the importance of the
+[01:08:09] different parts of the model um and you
+[01:08:12] know choose the most important parts and
+[01:08:14] then you basically remove um different
+[01:08:17] you know um hidden units and different
+[01:08:21] um even uh you know layers um And now
+[01:08:25] now we have a model. It's not going to
+[01:08:27] be very good. Um and so what you do is
+[01:08:30] you post train it. You train it some
+[01:08:32] more on the data or the tasks that you
+[01:08:35] care about to kind of heal it. Okay. So
+[01:08:39] this is in some sense a training uh p
+[01:08:43] way to um to you know reduce the KV
+[01:08:46] cache but where you sort of initialize
+[01:08:48] it with parts of a of a good model.
+[01:08:52] Okay. So this seems to work pretty well.
+[01:08:55] So they were able to take a 15B model
+[01:08:58] and reduce it to a 8B model um and and
+[01:09:02] it doesn't really hurt accuracy um by
+[01:09:05] too much and the amount that you use to
+[01:09:09] kind of train the model or through this
+[01:09:11] process is um much less.
+[01:09:16] Okay. So just to summarize here um you
+[01:09:20] know the game is to reduce the
+[01:09:23] uh inference complexity without hurting
+[01:09:26] accuracy. You can think about this is
+[01:09:28] mostly reducing either number of
+[01:09:29] parameters or KV cache. Um you can
+[01:09:32] define a faster model architecture and
+[01:09:34] train it or you can um define a faster
+[01:09:37] model architecture, initialize the
+[01:09:40] weights from original model which might
+[01:09:43] have a different architecture but you
+[01:09:44] kind of just make this Frankenstein
+[01:09:46] thing and then you repair the faster
+[01:09:49] model with um distillation.
+[01:09:53] Okay. Yeah.
+[01:09:55] >> Can you say more about how you
+[01:09:56] distinguish the important layers from
+[01:09:57] the unimportant layers?
+[01:09:59] Um so how do you distinguish the
+[01:10:02] important layers from the unimportant
+[01:10:04] layers? So um you know in general you
+[01:10:08] have you know a calibration you know set
+[01:10:10] and you pass the the the inputs through
+[01:10:14] the model and you're basically looking
+[01:10:16] at you know the magnitude of the
+[01:10:18] activations and the ones that are you
+[01:10:21] know some of them especially if they're
+[01:10:23] dead units will be kind of close to zero
+[01:10:25] and the ones that are large you want to
+[01:10:27] keep. So that's a high level idea
+[01:10:30] >> I guess like why does it matter if the
+[01:10:32] activation is like high it could just be
+[01:10:34] like like what if it's just always high
+[01:10:36] for instance
+[01:10:37] >> like is that
+[01:10:39] >> so in g this okay so the question is why
+[01:10:42] what if all the activations are high so
+[01:10:44] in general this is a kind of an
+[01:10:46] empirical observation that um some of
+[01:10:48] the channels will be much higher than
+[01:10:51] others if this weren't true then these
+[01:10:53] techniques wouldn't necessarily work um
+[01:10:55] but it happens to be true because um you
+[01:10:59] know that's how these models ended up
+[01:11:01] being you know trained um and then you
+[01:11:04] can exploit that
+[01:11:05] >> or I just made up like say a neuron
+[01:11:08] which is always like value 100 for like
+[01:11:10] across all the samples
+[01:11:11] >> would that mean that it's necessarily
+[01:11:14] meaningful or like maybe it's just an
+[01:11:15] artifact of training just like
+[01:11:20] >> I see so the the question what if a
+[01:11:22] neuron is always 100 um I mean if that's
+[01:11:25] the case you can look you can also look
+[01:11:27] at kind of variance um related
+[01:11:29] questions. Like if it's 100, you can't
+[01:11:31] just like remove it because then
+[01:11:33] everything is going to be broken. But
+[01:11:34] you can if it's high mean and low
+[01:11:36] variance, maybe there's another, you
+[01:11:38] know, a way to just incorporate the bias
+[01:11:41] essentially.
+[01:11:43] Okay, let me quickly go through this
+[01:11:45] other idea. So, so far we've looked at
+[01:11:48] lossy methods which basically kind of
+[01:11:51] really crunch down the KV cache, but it
+[01:11:53] could hurt accuracy. There's a very
+[01:11:55] elegant way of doing this in a lossless
+[01:11:58] way. This is called speculative sampling
+[01:12:00] or speculative decoding. So um remember
+[01:12:03] that if you're doing prefill you can
+[01:12:05] code all the tokens in parallel and this
+[01:12:08] also gives you probabilities. This is
+[01:12:09] fast. This is computebound and all nice
+[01:12:12] things. And in generation it's one at a
+[01:12:15] time. Okay. So checking is faster than
+[01:12:18] generation. If I give you a sequence
+[01:12:20] it's fast to tell me how good it is.
+[01:12:23] much faster than it is to generate one
+[01:12:25] at a time. Okay. So, you can exploit
+[01:12:27] this asymmetry using the following idea.
+[01:12:30] So, what we're going to do is use a a
+[01:12:32] cheap draft model to basically generate
+[01:12:36] from the guest a few tokens. Let's say
+[01:12:39] four tokens and then we're going to use
+[01:12:41] the model we actually care about the
+[01:12:42] target model Q which to basically review
+[01:12:46] these tokens and accept or not accept
+[01:12:49] them. Okay. So, so things are kind of
+[01:12:53] chosen to be balanced, the draft model
+[01:12:54] is smaller and cheaper. And so even
+[01:12:57] though it's memory bound and it has to
+[01:12:58] generate one at a time, it's not too
+[01:13:00] bad. Whereas the target model is big and
+[01:13:03] expensive, but what we're doing is
+[01:13:05] asking it to process a batch of tokens
+[01:13:07] in parallel. So it won't also be uh too
+[01:13:10] bad. Okay. So here's the the video that
+[01:13:14] shows kind of how things work. So if you
+[01:13:17] use a big model token by token that's
+[01:13:20] it's going to be pretty slow. But if you
+[01:13:23] are um doing speculative decoding
+[01:13:27] then um then you can see the small model
+[01:13:31] kind of uh generating a bunch of tokens
+[01:13:34] um and then the large model uh basically
+[01:13:39] you know critiquing them and then so you
+[01:13:43] basically can get this sort of burst of
+[01:13:45] tokens and then maybe another burst of
+[01:13:47] tokens and so on and so forth.
+[01:13:51] Okay. So, um here is the the algorithm
+[01:13:55] for there's a few papers that came out
+[01:13:57] with uh specular decoding around the the
+[01:14:00] same time. This is, you know, one of
+[01:14:02] them. Um and so the idea here is that um
+[01:14:08] in order to generate we're going to
+[01:14:09] generate K tokens um and we're just
+[01:14:12] going to sample from this draft model.
+[01:14:14] So Q is a draft sorry P is a draft
+[01:14:16] model. We're going to sample K tokens
+[01:14:18] and then in parallel we're going to um
+[01:14:21] compute the logits of these draft tokens
+[01:14:25] using Q.
+[01:14:27] And then now we have to determine
+[01:14:29] whether we accept or not. And this is
+[01:14:31] where you do a bit of math and you know
+[01:14:34] probability and statistics. You
+[01:14:36] basically are going to accept with
+[01:14:39] probability min over this ratio of Q
+[01:14:43] over P. So if Q is um you know much
+[01:14:49] larger than P the larger the Q is the
+[01:14:52] more likely we want to accept it um
+[01:14:57] uh and and otherwise um you kind of
+[01:15:00] sample from this you know residual
+[01:15:02] distribution and exit. Okay. So this is
+[01:15:06] basically rejection you know sampling um
+[01:15:09] except for in rejection sampling
+[01:15:11] sometimes you you you just when you
+[01:15:13] reject you get nothing but here we
+[01:15:15] always uh are guaranteed to get an exact
+[01:15:18] sample from the target model. Um I'm
+[01:15:21] going to skip this um you know
+[01:15:25] kind of simple proof. Um you can it's
+[01:15:28] basically the same arguments as kind of
+[01:15:30] rejection sampling to show that it's the
+[01:15:34] exact uh
+[01:15:36] um you know probabilities from the
+[01:15:38] target model. Um and the initial paper
+[01:15:42] shows that this is um this fast and
+[01:15:45] generally if you look at there's a you
+[01:15:48] know if you have too few draft tokens
+[01:15:50] you're not really leveraging um the
+[01:15:52] batching on the the target model side
+[01:15:55] and if you have too many then you're
+[01:15:57] going to reject more often. So there's a
+[01:15:59] sweet spot around you know in this case
+[01:16:01] three or four.
+[01:16:04] Okay. And in general the draft model is
+[01:16:07] much smaller than the target model. And
+[01:16:09] ideally you want the model draft model
+[01:16:11] to be as close to a target which means
+[01:16:13] that um you want to kind of distill it.
+[01:16:17] So which means that actually a lot of
+[01:16:19] the same ideas that we just talked about
+[01:16:21] are applicable to speculative decoding
+[01:16:23] as well. So basically the the idea is
+[01:16:27] that let's try to reduce your KV cache
+[01:16:30] um via all the different shenanigans and
+[01:16:32] if you end up with a model you're happy
+[01:16:34] with just serve that. If you're not
+[01:16:36] happy with it, then it at least can be a
+[01:16:38] draft model and you can use your main
+[01:16:40] model to fix things up. Um there's a
+[01:16:43] bunch of um whole literature on
+[01:16:45] speculative uh decoding um right now
+[01:16:48] that improve over the um original u
+[01:16:51] which I'll kind of skip for now.
+[01:16:55] Okay. So very quickly now um dynamic
+[01:17:00] workloads. Okay. So this is the use case
+[01:17:03] is your you know survey live website and
+[01:17:06] come users come and chat with your
+[01:17:08] model. Um the requests arrive at
+[01:17:10] different times. Um they have different
+[01:17:13] shared prefixes and they have different
+[01:17:15] lengths. Um so it's kind of pretty
+[01:17:18] messy. It's far from this kind of very
+[01:17:21] simple training where you have these
+[01:17:23] blocks of um you know uh the same number
+[01:17:27] of tokens all at once. So what do you do
+[01:17:29] in this case? So there's this um um idea
+[01:17:34] there's a system called Orca that was
+[01:17:35] built. This is actually very early on
+[01:17:38] which uh introduces this idea of
+[01:17:39] continuous uh batching. So the idea is
+[01:17:42] that um you get a bunch of requests that
+[01:17:46] look like this. So here's a prefix of
+[01:17:48] the first request and you're generating
+[01:17:50] this token. Here's a second one. Um
+[01:17:52] here's a third one, a fourth one. It's
+[01:17:54] jagged because every prefix has a
+[01:17:56] different length. And what we're going
+[01:17:57] to do is we're going to decode step by
+[01:18:00] step. So every step you decode one token
+[01:18:04] for all the sequences. Next step you
+[01:18:06] decode another token for all the
+[01:18:07] sequences. And then if you end you just,
+[01:18:10] you know, eject that um se sequence and
+[01:18:14] then as new requests arrive to the batch
+[01:18:16] then you basically put it in the batch
+[01:18:19] and um then you just kind of continue.
+[01:18:22] Um so that's why it's called continuous
+[01:18:24] batching because it's sort of this your
+[01:18:26] batch is dynamically u being updated um
+[01:18:29] with either old finished uh sequences
+[01:18:32] being evicted and new ones coming in. So
+[01:18:34] now one problem here is that um you know
+[01:18:38] everything we've seen batching works
+[01:18:40] when all the sequences have the same
+[01:18:42] dimensionality right you have tensors
+[01:18:44] everything every every slice has the
+[01:18:45] same dimensionality but in each request
+[01:18:48] here has a different length so what do
+[01:18:50] you do about that so there's this idea
+[01:18:52] called selective batching where
+[01:18:55] um you let's say you have you know a
+[01:18:58] three length three length nine and
+[01:19:00] length five so here um in the tension
+[01:19:04] computation you can't really do anything
+[01:19:06] about this because attention sort of
+[01:19:08] depends on the the length of your your
+[01:19:11] sequence. So if you have a 3x3 you know
+[01:19:14] computation a 9 by9 computation you
+[01:19:16] can't really um you know share the the
+[01:19:19] tensor effectively but for the
+[01:19:21] nonattension the MLP layers which is you
+[01:19:24] know takes up a lot of you know flops
+[01:19:27] you can actually just concatenate all
+[01:19:29] the sequences together to form a mega
+[01:19:31] sequence and you process that
+[01:19:34] okay so final idea is page attention
+[01:19:38] this was introduced in the VLM paper Um,
+[01:19:41] of course, VLM has many other bells and
+[01:19:43] whistles now, but this is kind of the
+[01:19:46] the core idea at that time. So, um, so
+[01:19:50] the question is how is the KV cache
+[01:19:53] stored, right? So, if you think about um
+[01:19:57] requests coming in the you have to put
+[01:20:00] them in uh memory somewhere and in
+[01:20:03] general there's this problem that you
+[01:20:05] get fragmentation. This is what happens
+[01:20:06] to or used to happen to your your your
+[01:20:10] hard drive. Um and you have to defrag
+[01:20:12] your hard drive u you know back in the
+[01:20:14] day. Um so
+[01:20:17] so there's two types of fragmentation.
+[01:20:19] One is that you have to allocate enough
+[01:20:22] buffer um so that because you don't know
+[01:20:25] a period when you're going to stop. So
+[01:20:27] you might have a max token limit of like
+[01:20:29] you know 1024. So you have to allocate
+[01:20:31] all this memory and you can't put
+[01:20:33] anything in there because you don't
+[01:20:35] you're going to just generate until um
+[01:20:37] you hit the max tokens and that's very
+[01:20:39] wasteful. That's internal fragmentation.
+[01:20:41] And then there's also you have there
+[01:20:43] could be space between different
+[01:20:45] requests and that space is maybe too
+[01:20:48] small to get used effectively. So that's
+[01:20:50] just wasted space. So the solution here
+[01:20:53] is just you know these are systems
+[01:20:56] people so they know their operating
+[01:20:57] systems. They said, "Okay, well, we've
+[01:20:59] solved this problem once before, so
+[01:21:01] let's just use the same idea here." So,
+[01:21:04] we're going to divide the KV cache of a
+[01:21:06] sequence into uh non-ontiguous
+[01:21:09] um you know, blocks. Okay, so if you
+[01:21:12] have this sequence four score and seven
+[01:21:14] years ago, our fathers brought forth,
+[01:21:16] we're just going to chunk it up into
+[01:21:17] these blocks of size four. Um doesn't
+[01:21:19] matter where the blocks go, um but
+[01:21:21] they're going to be kind of aligned
+[01:21:23] according to the blocks. So, there's
+[01:21:25] some uniformity there. Um so when two
+[01:21:29] requests share the same can actually
+[01:21:33] share the same KV cache. Um so um
+[01:21:40] so you might have this block and and
+[01:21:44] this block. So this block might go here
+[01:21:47] and here and this block might be over
+[01:21:49] there. So they're they're in kind of
+[01:21:51] interspersed, but as long as you have
+[01:21:53] the indices and keep track of where
+[01:21:55] everything is, it's fine.
+[01:21:56] Um
+[01:21:58] so in particular if you have um you know
+[01:22:02] system prompts
+[01:22:04] then you can actually just you know
+[01:22:07] cache these system prompts um the KV
+[01:22:10] cache and the system prompts once right
+[01:22:12] and that can be useful for all the
+[01:22:14] queries okay so this is very useful
+[01:22:16] because if a lot of people are using the
+[01:22:18] same system prompt then you don't have
+[01:22:20] to compute the KV cache for every you
+[01:22:23] know request also there are many
+[01:22:26] applications where you have the same um
+[01:22:28] prompt and you actually want to generate
+[01:22:30] multiple responses. So in that case um
+[01:22:33] you can also just share the KV cache for
+[01:22:36] all the the pro for the prompt and just
+[01:22:39] have unique responses coming out.
+[01:22:42] Okay. So
+[01:22:44] um so for example if you were to
+[01:22:46] generate let's say multiple um
+[01:22:48] generations from four score and seven
+[01:22:50] years ago R blank and so u what would
+[01:22:55] happen here is that you would have four
+[01:22:57] score and seven and you would start by
+[01:22:59] having years ago or hour and then um
+[01:23:04] this is called uh copy on write
+[01:23:06] semantics. you keep this and then we
+[01:23:08] have these two samples and if they had
+[01:23:11] happen to sample the let's say the same
+[01:23:13] token you just you know just continue
+[01:23:16] with that but if they sample different
+[01:23:17] tokens you split the block and then you
+[01:23:20] can kind of continue there. So you're
+[01:23:22] basically sharing as much c of the
+[01:23:24] prefix cache as you as you can.
+[01:23:28] Um there's a bunch of other
+[01:23:29] optimizations like you know uh kernels
+[01:23:32] um that I'm not going to have time to go
+[01:23:35] over. Um but the general idea is that
+[01:23:38] you're using kind of these operating you
+[01:23:41] know systems metaphors to manage um kind
+[01:23:44] of your inference.
+[01:23:46] Okay so summary here inference is really
+[01:23:49] really important. um it's very different
+[01:23:53] from training even though it's the same
+[01:23:55] model but you're asking the model to do
+[01:23:57] something very different ends up being
+[01:23:59] very memory bound and um it's also you
+[01:24:02] know dynamic if you're are kind of in a
+[01:24:04] live chatbot use case we saw a variety
+[01:24:08] of different techniques
+[01:24:10] um to improve inference you can quantize
+[01:24:12] you can come up with new architectures
+[01:24:14] you can prune and distill you can also
+[01:24:16] use speculative um you know sampling but
+[01:24:19] all of these are driven apply the same
+[01:24:21] you know principle here which is reduce
+[01:24:23] your KV cache but don't hurt accuracy
+[01:24:26] too much um and then there's ideas from
+[01:24:30] you know you know uh systems um like
+[01:24:33] paging and speculative execution that
+[01:24:35] can be brought to bear for actually live
+[01:24:38] kind of inference servers um one thing
+[01:24:41] we didn't really get a chance to talk
+[01:24:42] about which was discussed briefly is
+[01:24:44] that I think that new architectures have
+[01:24:46] actually a huge potential for you know
+[01:24:49] improvement things like you know state
+[01:24:50] space models or linear attention or
+[01:24:52] diffusion um these can you know at some
+[01:24:55] level the KV cache and the way that
+[01:24:58] attention is is built fundamentally
+[01:25:01] makes it an inference unfriendly arch uh
+[01:25:04] kind of architecture. So if you can come
+[01:25:06] up with a new architecture that is sort
+[01:25:09] of designed for inference in the way
+[01:25:10] that the transformer was not this can
+[01:25:12] maybe unlock a lot. Okay. So I will uh
+[01:25:17] stop there and next class uh Tatu will
+[01:25:20] return and talk about uh SC laws part
+[01:25:22] two.
