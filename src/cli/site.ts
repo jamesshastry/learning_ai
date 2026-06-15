@@ -576,6 +576,9 @@ function buildNav(
   html += `<a class="nav-item ${activeId === 'resources' ? 'active' : ''}" href="resources.html">
     <span class="nav-icon">📋</span> Resource Library</a>`;
 
+  html += `<a class="nav-item ${activeId === 'visualizations' ? 'active' : ''}" href="visualizations.html">
+    <span class="nav-icon">🎛️</span> Visualizations</a>`;
+
   if (graphExists) {
     html += `<a class="nav-item ${activeId === 'graph' ? 'active' : ''}" href="graph.html">
       <span class="nav-icon">🔗</span> Knowledge Graph</a>`;
@@ -665,6 +668,16 @@ function generateHomePage(
           <div style="font-size:28px;margin-bottom:8px">📋</div>
           <h3 style="margin:0;font-size:16px">Resource Library</h3>
           <p style="font-size:13px;color:var(--muted);margin:6px 0 0">All papers, readings, and resources in one place — organized by type.</p>
+        </div></a>
+      <a href="visualizations.html" style="text-decoration:none;color:inherit">
+        <div class="card" style="border-color:rgba(34,211,238,.3);background:linear-gradient(135deg,var(--surface) 0%,rgba(34,211,238,.06) 100%)">
+          <div style="font-size:28px;margin-bottom:8px">🎛️</div>
+          <h3 style="margin:0;font-size:16px">Interactive Visualizations</h3>
+          <p style="font-size:13px;color:var(--muted);margin:6px 0 0">Attention calculator, scaling laws explorer, transformer architecture diagram, and embedding space.</p>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <span class="badge badge-accent">4 interactive</span>
+            <span class="badge badge-dim">D3.js</span>
+          </div>
         </div></a>
       <a href="progress.html" style="text-decoration:none;color:inherit">
         <div class="card">
@@ -1065,6 +1078,454 @@ function generateProgressPage(courses: CourseWithReadings[], nav: string): strin
   return page('Progress', content, nav, '<a href="index.html">Home</a> › Progress', 'progress');
 }
 
+function generateVisualizationsPage(nav: string): string {
+  const content = `
+    <div class="hero">
+      <h1>🎛️ Interactive Visualizations</h1>
+      <p>Explore core AI concepts through interactive D3.js visualizations. Click, drag, and adjust parameters to build intuition.</p>
+    </div>
+
+    <!-- VIZ 1: Attention Mechanism -->
+    <div class="card" style="padding:24px;margin-bottom:24px">
+      <h2 style="margin-top:0;border:none;padding:0">🔢 Scaled Dot-Product Attention</h2>
+      <p style="color:var(--muted);font-size:14px">See how Query and Key vectors produce attention weights via softmax. Adjust d_k to see why the √d_k scaling matters.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent2);margin:12px 0;padding:12px;background:var(--code-bg);border-radius:8px;text-align:center">
+        Attention(Q, K, V) = softmax( Q·Kᵀ / √d_k ) · V
+      </div>
+      <div style="display:flex;gap:16px;align-items:center;margin:16px 0;flex-wrap:wrap">
+        <label style="font-size:13px;color:var(--muted)">d_k (head dim):</label>
+        <input type="range" id="dk-slider" min="1" max="128" value="8" step="1" style="flex:1;min-width:120px;accent-color:var(--accent)">
+        <span id="dk-val" style="font-size:14px;font-weight:700;color:var(--accent);min-width:30px">8</span>
+        <button id="attn-randomize" style="padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:13px">🎲 Randomize</button>
+      </div>
+      <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap" id="attn-tokens"></div>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:16px">
+        <div style="flex:1;min-width:280px">
+          <div style="font-size:12px;color:var(--faint);margin-bottom:8px">Attention heatmap (query × key)</div>
+          <div id="attn-heatmap"></div>
+        </div>
+        <div style="flex:1;min-width:280px">
+          <div style="font-size:12px;color:var(--faint);margin-bottom:8px">Softmax distribution for selected query</div>
+          <div id="attn-bars"></div>
+        </div>
+      </div>
+      <div id="attn-insight" style="margin-top:16px;padding:12px 16px;background:rgba(99,102,241,.06);border-radius:8px;font-size:13px;color:var(--muted);display:none"></div>
+    </div>
+
+    <!-- VIZ 2: Scaling Laws -->
+    <div class="card" style="padding:24px;margin-bottom:24px">
+      <h2 style="margin-top:0;border:none;padding:0">📈 Neural Scaling Laws</h2>
+      <p style="color:var(--muted);font-size:14px">Loss follows power-law relationships with model parameters, dataset size, and compute. Drag the slider to see how loss decreases as you scale each factor.</p>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;margin:16px 0">
+        <div style="flex:1;min-width:200px">
+          <label style="font-size:12px;color:var(--faint);display:block;margin-bottom:4px">Model Parameters (N)</label>
+          <input type="range" id="scale-n" min="6" max="12" value="8" step="0.1" style="width:100%;accent-color:var(--accent)">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint)"><span>1M</span><span id="scale-n-val">100M</span><span>1T</span></div>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <label style="font-size:12px;color:var(--faint);display:block;margin-bottom:4px">Dataset Tokens (D)</label>
+          <input type="range" id="scale-d" min="8" max="14" value="10" step="0.1" style="width:100%;accent-color:var(--accent2)">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--faint)"><span>100M</span><span id="scale-d-val">10B</span><span>100T</span></div>
+        </div>
+      </div>
+      <div id="scaling-chart" style="width:100%;height:300px"></div>
+      <div id="scaling-insight" style="margin-top:12px;padding:12px 16px;background:rgba(34,211,238,.06);border-radius:8px;font-size:13px;color:var(--muted)"></div>
+    </div>
+
+    <!-- VIZ 3: Transformer Architecture -->
+    <div class="card" style="padding:24px;margin-bottom:24px">
+      <h2 style="margin-top:0;border:none;padding:0">🏗️ Transformer Block</h2>
+      <p style="color:var(--muted);font-size:14px">How data flows through a single Transformer layer. Hover over each component to see what it does and its parameter count for a given model size.</p>
+      <div style="display:flex;gap:16px;align-items:center;margin:12px 0">
+        <label style="font-size:13px;color:var(--muted)">d_model:</label>
+        <select id="dmodel-select" style="padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">
+          <option value="768">768 (GPT-2 Small)</option>
+          <option value="1024">1024 (GPT-2 Medium)</option>
+          <option value="4096" selected>4096 (LLaMA 7B)</option>
+          <option value="8192">8192 (LLaMA 70B)</option>
+          <option value="12288">12288 (GPT-4 class)</option>
+        </select>
+      </div>
+      <div id="transformer-diagram" style="width:100%;min-height:420px"></div>
+      <div id="transformer-info" style="margin-top:12px;padding:12px 16px;background:rgba(16,185,129,.06);border-radius:8px;font-size:13px;color:var(--muted);display:none"></div>
+    </div>
+
+    <!-- VIZ 4: Embedding Space -->
+    <div class="card" style="padding:24px;margin-bottom:24px">
+      <h2 style="margin-top:0;border:none;padding:0">🌐 Word Embedding Space</h2>
+      <p style="color:var(--muted);font-size:14px">2D projection of word embeddings showing semantic clusters. Drag words to see how distances map to meaning. The famous king - man + woman ≈ queen relationship.</p>
+      <div id="embedding-space" style="width:100%;height:400px;background:var(--code-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden"></div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="emb-btn" data-group="royalty" style="padding:4px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:12px">👑 Royalty</button>
+        <button class="emb-btn" data-group="animals" style="padding:4px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:12px">🐾 Animals</button>
+        <button class="emb-btn" data-group="cities" style="padding:4px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:12px">🌆 Cities</button>
+        <button class="emb-btn" data-group="ml" style="padding:4px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:12px">🤖 ML Concepts</button>
+      </div>
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+    (function() {
+      // ═══════════════════════════════════════════
+      // VIZ 1: Attention Mechanism
+      // ═══════════════════════════════════════════
+      const tokens = ['The','cat','sat','on','the','mat'];
+      const N = tokens.length;
+      let dk = 8;
+      let selectedQ = 0;
+      let Q, K;
+
+      function randomMatrix(rows, cols) {
+        return Array.from({length:rows}, () =>
+          Array.from({length:cols}, () => (Math.random()-0.5)*2));
+      }
+      function dot(a,b) { return a.reduce((s,v,i) => s+v*b[i], 0); }
+      function softmax(arr) {
+        const max = Math.max(...arr);
+        const exps = arr.map(x => Math.exp(x - max));
+        const sum = exps.reduce((a,b) => a+b, 0);
+        return exps.map(e => e/sum);
+      }
+
+      function initAttention() {
+        Q = randomMatrix(N, dk);
+        K = randomMatrix(N, dk);
+        renderAttention();
+      }
+
+      function computeScores() {
+        return Array.from({length:N}, (_, i) =>
+          Array.from({length:N}, (_, j) => dot(Q[i], K[j]) / Math.sqrt(dk)));
+      }
+
+      function renderAttention() {
+        const scores = computeScores();
+        const weights = scores.map(row => softmax(row));
+        const cellSize = Math.min(48, (280/N)|0);
+
+        // Tokens
+        const tokenDiv = document.getElementById('attn-tokens');
+        tokenDiv.innerHTML = tokens.map((t,i) =>
+          '<div style="padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid '
+          + (i===selectedQ ? 'var(--accent)' : 'var(--border)') + ';background:'
+          + (i===selectedQ ? 'rgba(99,102,241,.15)' : 'var(--surface2)') + ';color:'
+          + (i===selectedQ ? 'var(--accent)' : 'var(--text)') + '" data-idx="'+i+'">' + t + '</div>'
+        ).join('');
+        tokenDiv.querySelectorAll('[data-idx]').forEach(el =>
+          el.addEventListener('click', () => { selectedQ = +el.dataset.idx; renderAttention(); }));
+
+        // Heatmap
+        const hmDiv = document.getElementById('attn-heatmap');
+        hmDiv.innerHTML = '';
+        const svg = d3.select('#attn-heatmap').append('svg')
+          .attr('width', (N+1)*cellSize+20).attr('height', (N+1)*cellSize+20);
+        const color = d3.scaleSequential(d3.interpolateYlOrRd).domain([0,1]);
+
+        // Column labels
+        tokens.forEach((t,j) => svg.append('text').attr('x',(j+1.5)*cellSize+10).attr('y',cellSize-4)
+          .attr('text-anchor','middle').attr('fill','#8892b0').attr('font-size',10).text(t));
+        // Row labels
+        tokens.forEach((t,i) => svg.append('text').attr('x',cellSize).attr('y',(i+1.5)*cellSize+14)
+          .attr('text-anchor','end').attr('fill','#8892b0').attr('font-size',10).text(t));
+
+        for(let i=0;i<N;i++) for(let j=0;j<N;j++) {
+          svg.append('rect')
+            .attr('x',(j+1)*cellSize+10).attr('y',(i+1)*cellSize)
+            .attr('width',cellSize-2).attr('height',cellSize-2)
+            .attr('rx',3).attr('fill',color(weights[i][j]))
+            .attr('stroke',i===selectedQ?'var(--accent)':'none').attr('stroke-width',i===selectedQ?2:0)
+            .attr('opacity',i===selectedQ?1:0.5)
+            .style('cursor','pointer')
+            .on('click',() => { selectedQ = i; renderAttention(); });
+          if(weights[i][j]>0.15) svg.append('text')
+            .attr('x',(j+1.5)*cellSize+9).attr('y',(i+1.5)*cellSize+4)
+            .attr('text-anchor','middle').attr('fill','#000').attr('font-size',9).attr('font-weight',600)
+            .text(weights[i][j].toFixed(2));
+        }
+
+        // Bar chart
+        const barDiv = document.getElementById('attn-bars');
+        barDiv.innerHTML = '';
+        const barW = 280, barH = 180;
+        const barSvg = d3.select('#attn-bars').append('svg').attr('width',barW).attr('height',barH);
+        const bw = (barW-40)/N;
+        const yScale = d3.scaleLinear().domain([0,1]).range([barH-30,10]);
+        tokens.forEach((t,j) => {
+          barSvg.append('rect').attr('x',20+j*bw+2).attr('y',yScale(weights[selectedQ][j]))
+            .attr('width',bw-4).attr('height',barH-30-yScale(weights[selectedQ][j]))
+            .attr('rx',3).attr('fill', j===selectedQ?'var(--accent)':'var(--accent2)').attr('opacity',0.8);
+          barSvg.append('text').attr('x',20+j*bw+bw/2).attr('y',barH-8)
+            .attr('text-anchor','middle').attr('fill','#8892b0').attr('font-size',10).text(t);
+          barSvg.append('text').attr('x',20+j*bw+bw/2).attr('y',yScale(weights[selectedQ][j])-4)
+            .attr('text-anchor','middle').attr('fill','var(--text)').attr('font-size',10).attr('font-weight',600)
+            .text(weights[selectedQ][j].toFixed(2));
+        });
+
+        // Insight
+        const insightDiv = document.getElementById('attn-insight');
+        const maxAttn = Math.max(...weights[selectedQ]);
+        const maxIdx = weights[selectedQ].indexOf(maxAttn);
+        const entropy = -weights[selectedQ].reduce((s,p) => p>0?s+p*Math.log2(p):s, 0);
+        insightDiv.style.display = 'block';
+        insightDiv.innerHTML = '<strong>"'+tokens[selectedQ]+'"</strong> attends most to <strong>"'+tokens[maxIdx]+'"</strong> ('+maxAttn.toFixed(3)+'). '
+          + 'Entropy: '+entropy.toFixed(2)+' bits. '
+          + (dk<4?'⚠️ Very small d_k → attention is nearly uniform (softmax saturated by high variance).'
+            :dk>64?'Large d_k → √d_k scaling keeps softmax in a healthy range despite high-dimensional dot products.'
+            :'d_k='+dk+' → √d_k='+Math.sqrt(dk).toFixed(1)+', a typical head dimension.');
+      }
+
+      document.getElementById('dk-slider').addEventListener('input', e => {
+        dk = +e.target.value;
+        document.getElementById('dk-val').textContent = dk;
+        Q = randomMatrix(N, dk);
+        K = randomMatrix(N, dk);
+        renderAttention();
+      });
+      document.getElementById('attn-randomize').addEventListener('click', initAttention);
+      initAttention();
+
+      // ═══════════════════════════════════════════
+      // VIZ 2: Scaling Laws
+      // ═══════════════════════════════════════════
+      const fmtNum = n => {
+        if(n>=1e12) return (n/1e12).toFixed(1)+'T';
+        if(n>=1e9) return (n/1e9).toFixed(1)+'B';
+        if(n>=1e6) return (n/1e6).toFixed(1)+'M';
+        if(n>=1e3) return (n/1e3).toFixed(1)+'K';
+        return n.toFixed(0);
+      };
+
+      function renderScaling() {
+        const logN = +document.getElementById('scale-n').value;
+        const logD = +document.getElementById('scale-d').value;
+        const N = Math.pow(10, logN);
+        const D = Math.pow(10, logD);
+        document.getElementById('scale-n-val').textContent = fmtNum(N);
+        document.getElementById('scale-d-val').textContent = fmtNum(D);
+
+        // Kaplan-style power law: L(N,D) ≈ a/N^α + b/D^β + c
+        const loss = 6.0 * Math.pow(N, -0.076) + 5.0 * Math.pow(D, -0.095) + 1.69;
+
+        // Generate curve data (sweep N for fixed D, and D for fixed N)
+        const nPoints = Array.from({length:50}, (_,i) => {
+          const n = Math.pow(10, 6 + i * 0.14);
+          return { x: n, y: 6.0*Math.pow(n,-0.076) + 5.0*Math.pow(D,-0.095) + 1.69 };
+        });
+        const dPoints = Array.from({length:50}, (_,i) => {
+          const d = Math.pow(10, 8 + i * 0.14);
+          return { x: d, y: 6.0*Math.pow(N,-0.076) + 5.0*Math.pow(d,-0.095) + 1.69 };
+        });
+
+        const div = document.getElementById('scaling-chart');
+        div.innerHTML = '';
+        const w = div.clientWidth || 600, h = 300;
+        const svg = d3.select('#scaling-chart').append('svg').attr('width',w).attr('height',h);
+        const margin = {top:20,right:w/2+20,bottom:40,left:50};
+        const chartW = w/2-60, chartH = h-60;
+
+        // Left chart: Loss vs N
+        const xN = d3.scaleLog().domain([1e6,1e13]).range([margin.left,margin.left+chartW]);
+        const yN = d3.scaleLinear().domain([1.5,4.5]).range([margin.top+chartH,margin.top]);
+        svg.append('g').attr('transform','translate(0,'+(margin.top+chartH)+')').call(d3.axisBottom(xN).ticks(4).tickFormat(d=>fmtNum(d)))
+          .selectAll('text').attr('fill','#5a6785').attr('font-size',10);
+        svg.append('g').attr('transform','translate('+margin.left+',0)').call(d3.axisLeft(yN).ticks(5))
+          .selectAll('text').attr('fill','#5a6785').attr('font-size',10);
+        svg.selectAll('.domain,.tick line').attr('stroke','#2d3150');
+        svg.append('text').attr('x',margin.left+chartW/2).attr('y',h-4).attr('text-anchor','middle').attr('fill','#8892b0').attr('font-size',11).text('Parameters (N)');
+        svg.append('text').attr('x',margin.left-35).attr('y',margin.top+chartH/2).attr('text-anchor','middle').attr('fill','#8892b0').attr('font-size',11).attr('transform','rotate(-90,'+(margin.left-35)+','+(margin.top+chartH/2)+')').text('Loss');
+        const lineN = d3.line().x(d=>xN(d.x)).y(d=>yN(Math.max(1.5,Math.min(4.5,d.y)))).curve(d3.curveMonotoneX);
+        svg.append('path').datum(nPoints).attr('d',lineN).attr('fill','none').attr('stroke','var(--accent)').attr('stroke-width',2.5);
+        svg.append('circle').attr('cx',xN(N)).attr('cy',yN(Math.max(1.5,Math.min(4.5,loss)))).attr('r',6).attr('fill','var(--accent)').attr('stroke','#fff').attr('stroke-width',2);
+
+        // Right chart: Loss vs D
+        const offsetX = w/2+10;
+        const xD = d3.scaleLog().domain([1e8,1e15]).range([offsetX,offsetX+chartW]);
+        const yD = d3.scaleLinear().domain([1.5,4.5]).range([margin.top+chartH,margin.top]);
+        svg.append('g').attr('transform','translate(0,'+(margin.top+chartH)+')').call(d3.axisBottom(xD).ticks(4).tickFormat(d=>fmtNum(d)))
+          .selectAll('text').attr('fill','#5a6785').attr('font-size',10);
+        svg.append('g').attr('transform','translate('+offsetX+',0)').call(d3.axisLeft(yD).ticks(5))
+          .selectAll('text').attr('fill','#5a6785').attr('font-size',10);
+        svg.selectAll('.domain,.tick line').attr('stroke','#2d3150');
+        svg.append('text').attr('x',offsetX+chartW/2).attr('y',h-4).attr('text-anchor','middle').attr('fill','#8892b0').attr('font-size',11).text('Dataset Tokens (D)');
+        const lineD = d3.line().x(d=>xD(d.x)).y(d=>yD(Math.max(1.5,Math.min(4.5,d.y)))).curve(d3.curveMonotoneX);
+        svg.append('path').datum(dPoints).attr('d',lineD).attr('fill','none').attr('stroke','var(--accent2)').attr('stroke-width',2.5);
+        svg.append('circle').attr('cx',xD(D)).attr('cy',yD(Math.max(1.5,Math.min(4.5,loss)))).attr('r',6).attr('fill','var(--accent2)').attr('stroke','#fff').attr('stroke-width',2);
+
+        // Insight
+        const chinchillaOptD = 20 * N;
+        const ratio = D / chinchillaOptD;
+        let advice = '';
+        if(ratio < 0.3) advice = '⚠️ Very undertrained — Chinchilla says you need ~' + fmtNum(chinchillaOptD) + ' tokens for this model size.';
+        else if(ratio < 0.8) advice = '📊 Undertrained — consider ~' + fmtNum(chinchillaOptD) + ' tokens (Chinchilla optimal).';
+        else if(ratio < 1.5) advice = '✅ Near Chinchilla-optimal! ~20 tokens per parameter.';
+        else advice = '📈 Overtrained relative to Chinchilla — LLaMA/Llama-style (more tokens, smaller model).';
+
+        document.getElementById('scaling-insight').innerHTML =
+          '<strong>N='+fmtNum(N)+', D='+fmtNum(D)+'</strong> → Loss ≈ '+loss.toFixed(3)+'. '
+          + 'Tokens/param ratio: '+ratio.toFixed(1)+'× Chinchilla optimal. ' + advice;
+      }
+
+      document.getElementById('scale-n').addEventListener('input', renderScaling);
+      document.getElementById('scale-d').addEventListener('input', renderScaling);
+      renderScaling();
+
+      // ═══════════════════════════════════════════
+      // VIZ 3: Transformer Block Diagram
+      // ═══════════════════════════════════════════
+      function renderTransformer() {
+        const dModel = +document.getElementById('dmodel-select').value;
+        const nHeads = {768:12,1024:16,4096:32,8192:64,12288:96}[dModel] || 32;
+        const dFF = dModel * 4;
+        const headDim = dModel / nHeads;
+
+        const components = [
+          { id:'input', label:'Input Embedding', y:0, color:'#6366f1', params: 0, desc:'Token IDs → dense vectors of dimension d_model='+dModel },
+          { id:'ln1', label:'LayerNorm', y:60, color:'#8b5cf6', params: 2*dModel, desc:'RMSNorm: normalizes activations. '+fmtNum(2*dModel)+' params (γ scale vector)' },
+          { id:'mha', label:'Multi-Head Attention', y:120, color:'#22d3ee', params: 4*dModel*dModel, desc: nHeads+' heads × d_k='+headDim+'. Q,K,V,O projections: '+fmtNum(4*dModel*dModel)+' params' },
+          { id:'add1', label:'+ Residual', y:180, color:'#10b981', params: 0, desc:'Skip connection: output = attention(x) + x. Zero extra params.' },
+          { id:'ln2', label:'LayerNorm', y:240, color:'#8b5cf6', params: 2*dModel, desc:'Second RMSNorm before the FFN. '+fmtNum(2*dModel)+' params' },
+          { id:'ffn', label:'FFN (SwiGLU)', y:300, color:'#f59e0b', params: 3*dModel*dFF, desc:'SwiGLU: 3 weight matrices of '+dModel+'×'+dFF+'. '+fmtNum(3*dModel*dFF)+' params — the majority of each layer!' },
+          { id:'add2', label:'+ Residual', y:360, color:'#10b981', params: 0, desc:'Skip connection: output = FFN(x) + x' },
+        ];
+
+        const totalParams = components.reduce((s,c) => s+c.params, 0);
+        const div = document.getElementById('transformer-diagram');
+        div.innerHTML = '';
+        const w = div.clientWidth || 600, h = 420;
+        const svg = d3.select('#transformer-diagram').append('svg').attr('width',w).attr('height',h);
+        const cx = w/2, boxW = 260, boxH = 44;
+
+        // Draw connections
+        components.forEach((c,i) => {
+          if(i>0) svg.append('line').attr('x1',cx).attr('y1',components[i-1].y+boxH+8).attr('x2',cx).attr('y2',c.y+8)
+            .attr('stroke','#2d3150').attr('stroke-width',2).attr('marker-end','');
+        });
+        // Skip connections
+        svg.append('path').attr('d','M'+(cx+boxW/2+10)+','+128+' Q'+(cx+boxW/2+40)+','+155+' '+(cx+boxW/2+10)+','+188)
+          .attr('fill','none').attr('stroke','#10b981').attr('stroke-width',2).attr('stroke-dasharray','6,4');
+        svg.append('path').attr('d','M'+(cx+boxW/2+10)+','+248+' Q'+(cx+boxW/2+40)+','+285+' '+(cx+boxW/2+10)+','+308)
+          .attr('fill','none').attr('stroke','#10b981').attr('stroke-width',2).attr('stroke-dasharray','6,4');
+
+        // Draw boxes
+        components.forEach(c => {
+          const g = svg.append('g').style('cursor','pointer');
+          g.append('rect').attr('x',cx-boxW/2).attr('y',c.y+8).attr('width',boxW).attr('height',boxH)
+            .attr('rx',8).attr('fill',c.color+'18').attr('stroke',c.color).attr('stroke-width',1.5);
+          g.append('text').attr('x',cx).attr('y',c.y+28).attr('text-anchor','middle')
+            .attr('fill','var(--text)').attr('font-size',13).attr('font-weight',600).text(c.label);
+          if(c.params > 0) g.append('text').attr('x',cx).attr('y',c.y+43).attr('text-anchor','middle')
+            .attr('fill','#8892b0').attr('font-size',10).text(fmtNum(c.params)+' params');
+
+          // Param bar
+          if(c.params > 0 && totalParams > 0) {
+            const barW = (c.params/totalParams) * (boxW-20);
+            g.append('rect').attr('x',cx-boxW/2+10).attr('y',c.y+boxH+6).attr('width',barW).attr('height',3)
+              .attr('rx',1.5).attr('fill',c.color).attr('opacity',0.5);
+          }
+
+          g.on('mouseover', () => {
+            const info = document.getElementById('transformer-info');
+            info.style.display = 'block';
+            info.innerHTML = '<strong>'+c.label+'</strong>: '+c.desc;
+          });
+        });
+
+        svg.append('text').attr('x',cx).attr('y',h-4).attr('text-anchor','middle')
+          .attr('fill','#5a6785').attr('font-size',11).text('Total per layer: '+fmtNum(totalParams)+' params. FFN is '+(100*3*dModel*dFF/totalParams).toFixed(0)+'% of layer params.');
+      }
+
+      document.getElementById('dmodel-select').addEventListener('change', renderTransformer);
+      renderTransformer();
+
+      // ═══════════════════════════════════════════
+      // VIZ 4: Embedding Space
+      // ═══════════════════════════════════════════
+      const groups = {
+        royalty: [
+          {word:'king',x:200,y:100,c:'#f59e0b'},{word:'queen',x:260,y:110,c:'#f59e0b'},
+          {word:'prince',x:190,y:160,c:'#f59e0b'},{word:'princess',x:250,y:170,c:'#f59e0b'},
+          {word:'man',x:120,y:200,c:'#8892b0'},{word:'woman',x:180,y:210,c:'#8892b0'},
+        ],
+        animals: [
+          {word:'dog',x:350,y:250,c:'#10b981'},{word:'puppy',x:370,y:300,c:'#10b981'},
+          {word:'cat',x:420,y:240,c:'#10b981'},{word:'kitten',x:440,y:290,c:'#10b981'},
+          {word:'fish',x:480,y:200,c:'#22d3ee'},{word:'bird',x:310,y:200,c:'#22d3ee'},
+        ],
+        cities: [
+          {word:'Paris',x:100,y:320,c:'#ef4444'},{word:'France',x:140,y:350,c:'#ef4444'},
+          {word:'Tokyo',x:200,y:310,c:'#ef4444'},{word:'Japan',x:240,y:340,c:'#ef4444'},
+          {word:'Berlin',x:150,y:290,c:'#ef4444'},{word:'Germany',x:190,y:320,c:'#ef4444'},
+        ],
+        ml: [
+          {word:'gradient',x:400,y:100,c:'#6366f1'},{word:'loss',x:440,y:130,c:'#6366f1'},
+          {word:'attention',x:380,y:150,c:'#6366f1'},{word:'transformer',x:460,y:160,c:'#6366f1'},
+          {word:'embedding',x:420,y:80,c:'#8b5cf6'},{word:'token',x:360,y:120,c:'#8b5cf6'},
+        ],
+      };
+
+      let activeWords = [...groups.royalty, ...groups.animals];
+
+      function renderEmbedding() {
+        const div = document.getElementById('embedding-space');
+        div.innerHTML = '';
+        const w = div.clientWidth || 600, h = 400;
+        const svg = d3.select('#embedding-space').append('svg').attr('width',w).attr('height',h);
+
+        // Scale positions to container
+        const xs = activeWords.map(w=>w.x), ys = activeWords.map(w=>w.y);
+        const scaleX = d3.scaleLinear().domain([Math.min(...xs)-40,Math.max(...xs)+40]).range([40,w-40]);
+        const scaleY = d3.scaleLinear().domain([Math.min(...ys)-40,Math.max(...ys)+40]).range([30,h-30]);
+
+        // Draw lines between close words
+        for(let i=0;i<activeWords.length;i++) for(let j=i+1;j<activeWords.length;j++) {
+          const dx = activeWords[i].x-activeWords[j].x, dy = activeWords[i].y-activeWords[j].y;
+          const dist = Math.sqrt(dx*dx+dy*dy);
+          if(dist < 100) {
+            svg.append('line').attr('x1',scaleX(activeWords[i].x)).attr('y1',scaleY(activeWords[i].y))
+              .attr('x2',scaleX(activeWords[j].x)).attr('y2',scaleY(activeWords[j].y))
+              .attr('stroke','#2d3150').attr('stroke-width',1).attr('stroke-opacity',1-dist/100);
+          }
+        }
+
+        // Draw words
+        const nodes = svg.selectAll('.word').data(activeWords).join('g').attr('class','word')
+          .attr('transform',d=>'translate('+scaleX(d.x)+','+scaleY(d.y)+')')
+          .style('cursor','grab');
+
+        nodes.append('circle').attr('r',6).attr('fill',d=>d.c).attr('stroke',d=>d.c).attr('stroke-opacity',0.3).attr('stroke-width',8);
+        nodes.append('text').attr('dx',10).attr('dy',4).text(d=>d.word)
+          .attr('fill','var(--text)').attr('font-size',13).attr('font-weight',500);
+
+        // Drag behavior
+        nodes.call(d3.drag()
+          .on('start', function() { d3.select(this).style('cursor','grabbing'); })
+          .on('drag', function(e,d) {
+            d.x = scaleX.invert(e.x); d.y = scaleY.invert(e.y);
+            renderEmbedding();
+          })
+          .on('end', function() { d3.select(this).style('cursor','grab'); })
+        );
+      }
+
+      document.querySelectorAll('.emb-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const g = btn.dataset.group;
+          // Toggle: if already showing this group exclusively, show all
+          const allGroups = Object.values(groups).flat();
+          activeWords = groups[g] ? [...groups[g]] : allGroups;
+          // Add one more group for context
+          const otherKeys = Object.keys(groups).filter(k => k !== g);
+          if(otherKeys.length > 0) activeWords.push(...groups[otherKeys[0]]);
+          renderEmbedding();
+        });
+      });
+      renderEmbedding();
+    })();
+    </script>`;
+
+  return page('Visualizations', content, nav, '<a href="index.html">Home</a> › Visualizations', 'visualizations');
+}
+
 function generateGraphPage(graphJson: string, nav: string): string {
   // Embed the knowledge graph visualization inline
   const content = `
@@ -1325,6 +1786,13 @@ export function siteCommand(program: Command): void {
           path: resolve(outputDir, 'progress.html'),
           content: generateProgressPage(courses,
             buildNav(courses, papers, graphExists, 'progress')),
+        });
+
+        // ── Generate visualizations page ──
+        pages.push({
+          path: resolve(outputDir, 'visualizations.html'),
+          content: generateVisualizationsPage(
+            buildNav(courses, papers, graphExists, 'visualizations')),
         });
 
         // ── Generate knowledge graph page ──
