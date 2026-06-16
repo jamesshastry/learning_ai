@@ -25,6 +25,7 @@ import { bookmarkCommand } from './bookmark.js';
 import { correctCommand } from './correct.js';
 import { reprocessCommand } from './reprocess.js';
 import { siteCommand } from './site.js';
+import { serveCommand } from './serve.js';
 import { planCommand } from './plan.js';
 import { scheduleCommand } from './schedule.js';
 import { translateCommand } from './translate.js';
@@ -82,6 +83,7 @@ scheduleCommand(program);
 exportCommand(program);
 quizCommand(program);
 siteCommand(program);
+serveCommand(program);
 obsidianCommand(program);
 
 program.parse();

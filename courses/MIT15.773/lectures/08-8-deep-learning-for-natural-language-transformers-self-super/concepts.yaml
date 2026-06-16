@@ -1,0 +1,143 @@
+concepts:
+  - name: Self-Supervised Learning
+    aliases:
+      - SSL
+      - Pretraining
+    definition: >-
+      A learning paradigm that creates training signals from unlabeled data itself (e.g.,
+      predicting masked words or next tokens), enabling models to learn from virtually
+      unlimited text without human annotation.
+    tags:
+      - training
+      - theory
+    timestamps:
+      - "00:00"
+    relations:
+      - target: Masked Language Modeling
+        type: related_to
+        note: MLM is BERT's self-supervised pretraining objective
+      - target: Fine-Tuning
+        type: prerequisite_for
+        note: Self-supervised pretraining produces models that are then fine-tuned on labeled data
+
+  - name: BERT
+    aliases:
+      - Bidirectional Encoder Representations from Transformers
+    definition: >-
+      An encoder-only transformer pretrained via masked language modeling that reads
+      bidirectionally, producing contextual embeddings where each token's representation
+      depends on its full surrounding context.
+    tags:
+      - architecture
+      - application
+    timestamps:
+      - "15:00"
+    relations:
+      - target: Masked Language Modeling
+        type: related_to
+        note: MLM is BERT's primary pretraining task
+      - target: GPT
+        type: contrasts_with
+        note: BERT uses bidirectional attention for understanding tasks; GPT uses causal attention for generation
+
+  - name: Masked Language Modeling
+    aliases:
+      - MLM
+      - Cloze Task
+    definition: >-
+      BERT's pretraining objective that randomly masks 15% of input tokens and trains
+      the model to predict them from surrounding context, forcing the model to learn
+      deep bidirectional representations.
+    tags:
+      - training
+    timestamps:
+      - "15:00"
+    relations:
+      - target: BERT
+        type: part_of
+        note: MLM is the core pretraining task for BERT
+      - target: Self-Supervised Learning
+        type: part_of
+        note: MLM is an instance of self-supervised learning
+
+  - name: GPT
+    aliases:
+      - Generative Pre-trained Transformer
+    definition: >-
+      A decoder-only transformer pretrained via next-token prediction with causal
+      (left-to-right) attention, suited for autoregressive text generation by producing
+      one token at a time and feeding output back as input.
+    tags:
+      - architecture
+      - application
+    timestamps:
+      - "35:00"
+    relations:
+      - target: BERT
+        type: contrasts_with
+        note: GPT reads left-to-right for generation; BERT reads bidirectionally for understanding
+      - target: Large Language Model
+        type: prerequisite_for
+        note: The GPT architecture scales up to become modern large language models
+
+  - name: Fine-Tuning
+    aliases:
+      - Transfer Learning
+      - Model Adaptation
+    definition: >-
+      The process of taking a pretrained model, adding a task-specific output head,
+      and training on a small labeled dataset with a low learning rate to adapt
+      it for a downstream task while preserving pretrained knowledge.
+    tags:
+      - training
+      - optimization
+    timestamps:
+      - "50:00"
+    relations:
+      - target: Self-Supervised Learning
+        type: related_to
+        note: Fine-tuning adapts self-supervised pretrained models to specific tasks
+      - target: BERT
+        type: related_to
+        note: BERT is commonly fine-tuned for classification, NER, and question answering
+
+  - name: Contextual Embeddings
+    aliases:
+      - Dynamic Embeddings
+    definition: >-
+      Word representations produced by transformers that vary based on surrounding
+      context, unlike static embeddings (Word2Vec) where each word always has the same
+      vector regardless of usage (e.g., "bank" differs in "river bank" vs. "bank account").
+    tags:
+      - theory
+      - architecture
+    timestamps:
+      - "15:00"
+    relations:
+      - target: Word Embeddings
+        type: contrasts_with
+        note: Contextual embeddings are dynamic per-context, unlike static word embeddings
+      - target: BERT
+        type: related_to
+        note: BERT produces contextual embeddings as its output representations
+
+  - name: HuggingFace
+    aliases:
+      - HuggingFace Hub
+      - Transformers Library
+    definition: >-
+      An open-source platform providing thousands of pretrained models, datasets, and
+      a unified Transformers library API that democratizes access to state-of-the-art
+      NLP with simple interfaces like the pipeline API.
+    tags:
+      - infrastructure
+      - application
+    timestamps:
+      - "01:10:00"
+    relations:
+      - target: BERT
+        type: related_to
+        note: Pretrained BERT models are available through HuggingFace Hub
+      - target: Fine-Tuning
+        type: enables
+        note: HuggingFace provides tools and pretrained models that simplify fine-tuning workflows

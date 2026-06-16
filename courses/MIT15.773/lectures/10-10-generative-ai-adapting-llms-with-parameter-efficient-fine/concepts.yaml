@@ -1,0 +1,141 @@
+concepts:
+  - name: LoRA
+    aliases:
+      - Low-Rank Adaptation
+    definition: >-
+      A parameter-efficient fine-tuning method that inserts small trainable low-rank
+      matrices (rank 4-64) alongside frozen attention weight matrices, training only
+      0.1-1% of parameters while matching full fine-tuning performance.
+    tags:
+      - training
+      - optimization
+    timestamps:
+      - "15:00"
+    relations:
+      - target: Parameter-Efficient Fine-Tuning
+        type: part_of
+        note: LoRA is the most popular PEFT method due to simplicity and zero inference overhead
+      - target: QLoRA
+        type: prerequisite_for
+        note: QLoRA combines LoRA with quantization for even greater memory efficiency
+
+  - name: QLoRA
+    aliases:
+      - Quantized LoRA
+    definition: >-
+      A technique combining LoRA with 4-bit quantization (NF4) of the base model,
+      enabling fine-tuning of 65B+ parameter models on a single GPU by keeping adapters
+      in full precision while the frozen base uses minimal memory.
+    tags:
+      - training
+      - optimization
+      - hardware
+    timestamps:
+      - "40:00"
+    relations:
+      - target: LoRA
+        type: related_to
+        note: QLoRA extends LoRA by adding base model quantization
+      - target: Quantization
+        type: related_to
+        note: QLoRA uses 4-bit NF4 quantization to compress base model weights
+
+  - name: Parameter-Efficient Fine-Tuning
+    aliases:
+      - PEFT
+    definition: >-
+      A family of methods that adapt large language models by training less than 1%
+      of total parameters, including LoRA, prefix tuning, prompt tuning, and adapter
+      layers, making LLM customization feasible on consumer hardware.
+    tags:
+      - training
+      - optimization
+    timestamps:
+      - "00:00"
+    relations:
+      - target: LoRA
+        type: related_to
+        note: LoRA is the most widely adopted PEFT method
+      - target: Catastrophic Forgetting
+        type: contrasts_with
+        note: PEFT avoids catastrophic forgetting by keeping the base model frozen
+
+  - name: Quantization
+    aliases:
+      - Model Quantization
+      - Weight Quantization
+    definition: >-
+      The technique of reducing the numerical precision of model weights (e.g., from
+      32-bit to 4-bit) to dramatically decrease memory footprint and enable large
+      models to run on hardware with limited GPU memory.
+    tags:
+      - optimization
+      - hardware
+    timestamps:
+      - "40:00"
+    relations:
+      - target: QLoRA
+        type: enables
+        note: Quantization of the base model is what makes QLoRA memory-efficient
+      - target: Parameter-Efficient Fine-Tuning
+        type: related_to
+        note: Quantization complements PEFT methods to further reduce resource requirements
+
+  - name: Catastrophic Forgetting
+    aliases:
+      - Knowledge Forgetting
+    definition: >-
+      The phenomenon where full fine-tuning on new task data degrades a model's
+      previously learned general capabilities, as updating all parameters overwrites
+      the pretrained knowledge encoded in the weights.
+    tags:
+      - training
+      - theory
+    timestamps:
+      - "00:00"
+    relations:
+      - target: Parameter-Efficient Fine-Tuning
+        type: contrasts_with
+        note: PEFT methods avoid catastrophic forgetting by freezing the base model
+      - target: LoRA
+        type: contrasts_with
+        note: LoRA preserves pretrained knowledge by only training small low-rank adapters
+
+  - name: Adapter Modules
+    aliases:
+      - Adapter Layers
+      - Task-Specific Adapters
+    definition: >-
+      Small trainable feed-forward networks inserted between frozen transformer layers,
+      or small LoRA matrices applied to attention projections, that can be swapped at
+      inference time to serve multiple tasks from a single base model.
+    tags:
+      - architecture
+      - optimization
+    timestamps:
+      - "55:00"
+    relations:
+      - target: LoRA
+        type: related_to
+        note: LoRA adapters are the most popular form of adapter for LLMs
+      - target: Parameter-Efficient Fine-Tuning
+        type: part_of
+        note: Adapter modules are one of several PEFT approaches
+
+  - name: Low-Rank Decomposition
+    aliases:
+      - Low-Rank Factorization
+      - Matrix Factorization
+    definition: >-
+      The mathematical insight behind LoRA: weight updates during fine-tuning have low
+      intrinsic dimensionality, so a full weight update matrix W (d x d) can be
+      approximated as a product of two small matrices B (d x r) and A (r x d) where r is much smaller than d.
+    tags:
+      - theory
+      - optimization
+    timestamps:
+      - "15:00"
+    relations:
+      - target: LoRA
+        type: enables
+        note: Low-rank decomposition is the mathematical foundation of the LoRA method

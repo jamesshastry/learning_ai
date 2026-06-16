@@ -1,0 +1,162 @@
+concepts:
+  - name: Large Language Model
+    aliases:
+      - LLM
+    definition: >-
+      A transformer decoder with billions of parameters trained on internet-scale text
+      via next-token prediction, exhibiting emergent abilities like in-context learning
+      and chain-of-thought reasoning that appear only at sufficient scale.
+    tags:
+      - architecture
+      - theory
+    timestamps:
+      - "00:00"
+    relations:
+      - target: In-Context Learning
+        type: enables
+        note: LLMs exhibit in-context learning as an emergent ability at scale
+      - target: RAG
+        type: related_to
+        note: RAG extends LLMs by grounding responses in retrieved external documents
+
+  - name: In-Context Learning
+    aliases:
+      - ICL
+      - Few-Shot Learning
+    definition: >-
+      The ability of large language models to perform new tasks from examples provided
+      in the prompt alone, without any weight updates or gradient-based training,
+      emerging as a capability at sufficient model scale.
+    tags:
+      - theory
+      - application
+    timestamps:
+      - "20:00"
+    relations:
+      - target: Large Language Model
+        type: related_to
+        note: In-context learning is an emergent ability of sufficiently large LLMs
+      - target: Prompt Engineering
+        type: related_to
+        note: Effective prompt design is key to leveraging in-context learning
+
+  - name: Chain-of-Thought Prompting
+    aliases:
+      - CoT
+      - Step-by-Step Reasoning
+    definition: >-
+      A prompting technique that instructs the model to "think step by step," eliciting
+      intermediate reasoning steps that significantly improve performance on complex
+      reasoning tasks compared to direct answer prompting.
+    tags:
+      - application
+      - theory
+    timestamps:
+      - "20:00"
+    relations:
+      - target: Prompt Engineering
+        type: part_of
+        note: Chain-of-thought is an advanced prompt engineering technique
+      - target: In-Context Learning
+        type: related_to
+        note: CoT leverages in-context learning to produce explicit reasoning chains
+
+  - name: RAG
+    aliases:
+      - Retrieval Augmented Generation
+      - Retrieval-Augmented Generation
+    definition: >-
+      A technique that extends LLMs by retrieving relevant documents from external
+      knowledge sources (via vector database similarity search) and injecting them into
+      the prompt context, reducing hallucination and providing up-to-date knowledge.
+    tags:
+      - architecture
+      - application
+    timestamps:
+      - "01:05:00"
+    relations:
+      - target: Vector Database
+        type: related_to
+        note: RAG uses vector databases to store and retrieve document embeddings
+      - target: Large Language Model
+        type: related_to
+        note: RAG augments LLM generation with retrieved factual context
+
+  - name: Vector Database
+    aliases:
+      - Vector Store
+      - Embedding Database
+    definition: >-
+      A storage system that indexes document chunks as embedding vectors and supports
+      efficient similarity search, enabling the retrieval step in RAG pipelines by
+      finding passages semantically relevant to a query.
+    tags:
+      - infrastructure
+      - data
+    timestamps:
+      - "01:05:00"
+    relations:
+      - target: RAG
+        type: part_of
+        note: Vector databases provide the retrieval backbone for RAG systems
+      - target: Word Embeddings
+        type: related_to
+        note: Vector databases store and search over embedding vectors
+
+  - name: RLHF
+    aliases:
+      - Reinforcement Learning from Human Feedback
+    definition: >-
+      A fine-tuning technique that aligns LLM outputs with human preferences by training
+      a reward model on human rankings of model outputs, then optimizing the LLM via
+      PPO to maximize the learned reward signal.
+    tags:
+      - training
+      - safety
+    timestamps:
+      - "50:00"
+    relations:
+      - target: Large Language Model
+        type: related_to
+        note: RLHF aligns pretrained LLMs to be more helpful, harmless, and honest
+      - target: Fine-Tuning
+        type: related_to
+        note: RLHF is a specialized form of fine-tuning using reinforcement learning
+
+  - name: Subword Tokenization
+    aliases:
+      - BPE
+      - Byte Pair Encoding
+    definition: >-
+      A tokenization method that iteratively merges the most frequent character pairs
+      into subword tokens, producing a vocabulary of 30K-50K units that can represent
+      any input text including novel words, typos, and code.
+    tags:
+      - data
+      - architecture
+    timestamps:
+      - "40:00"
+    relations:
+      - target: Large Language Model
+        type: part_of
+        note: BPE tokenization is the standard input processing step for LLMs
+
+  - name: Prompt Engineering
+    aliases:
+      - Prompt Design
+      - Prompt Crafting
+    definition: >-
+      The systematic design of text prompts to reliably elicit desired outputs from
+      LLMs, encompassing zero-shot, few-shot, and chain-of-thought strategies as a
+      new paradigm replacing explicit programming for many tasks.
+    tags:
+      - application
+    timestamps:
+      - "20:00"
+    relations:
+      - target: In-Context Learning
+        type: related_to
+        note: Prompt engineering leverages in-context learning capabilities
+      - target: Chain-of-Thought Prompting
+        type: related_to
+        note: Chain-of-thought is an advanced prompt engineering technique

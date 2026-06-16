@@ -1,0 +1,139 @@
+concepts:
+  - name: Word Embeddings
+    aliases:
+      - Dense Word Vectors
+      - Word Representations
+    definition: >-
+      Dense, low-dimensional vector representations of words (typically 50-300 dimensions)
+      where semantically similar words are mapped to nearby points in the vector space,
+      replacing sparse bag-of-words representations.
+    tags:
+      - architecture
+      - theory
+    timestamps:
+      - "00:35"
+    relations:
+      - target: Word2Vec
+        type: related_to
+        note: Word2Vec is the primary algorithm for learning word embeddings
+      - target: Cosine Similarity
+        type: related_to
+        note: Cosine similarity measures semantic relatedness between embedding vectors
+      - target: Contextual Embeddings
+        type: prerequisite_for
+        note: Static word embeddings laid the groundwork for contextual embeddings in transformers
+
+  - name: Word2Vec
+    aliases:
+      - Skip-gram
+      - CBOW
+    definition: >-
+      An algorithm that learns word embeddings by training a neural network to predict
+      context words from a center word (Skip-gram) or a center word from context words
+      (CBOW), using negative sampling for efficient training.
+    tags:
+      - architecture
+      - training
+    timestamps:
+      - "15:00"
+    relations:
+      - target: Word Embeddings
+        type: enables
+        note: Word2Vec produces word embeddings via context prediction
+      - target: GloVe
+        type: contrasts_with
+        note: Word2Vec uses local context windows while GloVe uses global co-occurrence statistics
+
+  - name: GloVe
+    aliases:
+      - Global Vectors
+      - Pretrained Embeddings
+    definition: >-
+      A word embedding method trained on global word co-occurrence statistics from large
+      corpora, available in pretrained form (50-300 dimensions) for direct use or
+      initialization of embedding layers.
+    tags:
+      - training
+      - data
+    timestamps:
+      - "35:00"
+    relations:
+      - target: Word2Vec
+        type: contrasts_with
+        note: GloVe uses global co-occurrence counts rather than local context prediction
+      - target: Embedding Layer
+        type: related_to
+        note: Pretrained GloVe vectors can initialize Keras embedding layers
+
+  - name: Embedding Layer
+    aliases:
+      - Keras Embedding
+    definition: >-
+      A Keras layer (Embedding(vocab_size, embed_dim)) that maps integer token IDs to
+      dense vectors, trainable end-to-end or initialized with pretrained weights like
+      GloVe, serving as the input layer for NLP models.
+    tags:
+      - architecture
+    timestamps:
+      - "50:00"
+    relations:
+      - target: Word Embeddings
+        type: enables
+        note: The embedding layer is the implementation mechanism for word embeddings in neural networks
+      - target: GloVe
+        type: related_to
+        note: Embedding layers can be initialized with pretrained GloVe weights
+
+  - name: Cosine Similarity
+    aliases:
+      - Cosine Distance
+    definition: >-
+      A measure of the angle between two vectors used to quantify semantic relatedness
+      between word embeddings, ranging from -1 (opposite) to 1 (identical direction),
+      independent of vector magnitude.
+    tags:
+      - theory
+    timestamps:
+      - "00:00"
+    relations:
+      - target: Word Embeddings
+        type: related_to
+        note: Cosine similarity is the standard metric for comparing embedding vectors
+
+  - name: Analogy Arithmetic
+    aliases:
+      - Vector Arithmetic
+      - Embedding Algebra
+    definition: >-
+      The property of embedding spaces that supports meaningful vector arithmetic, such
+      as king - man + woman ≈ queen, demonstrating that embeddings capture relational
+      structure between concepts.
+    tags:
+      - theory
+      - application
+    timestamps:
+      - "35:00"
+    relations:
+      - target: Word Embeddings
+        type: related_to
+        note: Analogy arithmetic is an emergent property of well-trained embedding spaces
+      - target: GloVe
+        type: related_to
+        note: GloVe embeddings famously demonstrate analogy arithmetic
+
+  - name: Negative Sampling
+    aliases:
+      - NEG
+    definition: >-
+      An efficient training technique for Word2Vec that contrasts real context word pairs
+      against randomly sampled "negative" words, avoiding the need to compute a full
+      softmax over the entire vocabulary.
+    tags:
+      - training
+      - optimization
+    timestamps:
+      - "15:00"
+    relations:
+      - target: Word2Vec
+        type: part_of
+        note: Negative sampling is the key training efficiency technique used in Word2Vec

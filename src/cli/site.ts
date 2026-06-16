@@ -429,6 +429,326 @@ function mdToHtml(md: string): string {
     .replace(/<\/ul>\s*<ul>/g, '');
 }
 
+// ─── Interactive toolbar (search, quiz, ask, export) ─────────────
+
+const TOOLBAR_CSS = `
+/* ── Interactive Toolbar ── */
+#toolbar-toggle {
+  position: fixed; bottom: 20px; right: 20px; z-index: 200;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); color: #fff; border: none;
+  font-size: 22px; cursor: pointer; box-shadow: 0 4px 20px rgba(99,102,241,.4);
+  transition: transform .2s, box-shadow .2s;
+  display: flex; align-items: center; justify-content: center;
+}
+#toolbar-toggle:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(99,102,241,.5); }
+#toolbar-panel {
+  position: fixed; bottom: 84px; right: 20px; z-index: 200;
+  width: 420px; max-height: 70vh; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.4); display: none;
+  flex-direction: column; overflow: hidden;
+}
+#toolbar-panel.open { display: flex; }
+.tb-tabs { display: flex; border-bottom: 1px solid var(--border); }
+.tb-tab {
+  flex: 1; padding: 10px 8px; text-align: center; font-size: 12px; font-weight: 600;
+  color: var(--muted); background: none; border: none; cursor: pointer;
+  border-bottom: 2px solid transparent; transition: all .15s;
+}
+.tb-tab:hover { color: var(--text); }
+.tb-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tb-content { padding: 16px; overflow-y: auto; max-height: calc(70vh - 50px); }
+.tb-pane { display: none; }
+.tb-pane.active { display: block; }
+.tb-input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.tb-input {
+  flex: 1; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 13px; font-family: inherit;
+}
+.tb-input:focus { outline: none; border-color: var(--accent); }
+.tb-btn {
+  padding: 10px 16px; background: var(--accent); color: #fff; border: none;
+  border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background .15s;
+}
+.tb-btn:hover { background: #5558e6; }
+.tb-btn:disabled { opacity: .5; cursor: not-allowed; }
+.tb-select {
+  padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 12px;
+}
+.tb-results { font-size: 13px; color: var(--text); line-height: 1.6; }
+.tb-result-item {
+  padding: 10px 12px; margin: 6px 0; background: var(--surface2);
+  border-radius: 8px; border-left: 3px solid var(--accent);
+}
+.tb-result-item .source { font-size: 11px; color: var(--faint); margin-bottom: 4px; }
+.tb-result-item .match { font-size: 13px; }
+.tb-quiz-card {
+  padding: 16px; background: var(--surface2); border-radius: 12px;
+  margin-bottom: 12px; border: 1px solid var(--border);
+}
+.tb-quiz-q { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--accent); }
+.tb-quiz-a {
+  font-size: 13px; color: var(--muted); display: none;
+  padding: 10px; background: rgba(99,102,241,.06); border-radius: 8px; margin-top: 8px;
+}
+.tb-quiz-a.show { display: block; }
+.tb-reveal-btn {
+  padding: 6px 12px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); font-size: 12px; cursor: pointer;
+}
+.tb-status { font-size: 12px; color: var(--faint); margin: 8px 0; }
+.tb-server-badge {
+  display: inline-flex; align-items: center; gap: 4px; font-size: 11px;
+  padding: 3px 8px; border-radius: 4px; margin-bottom: 12px;
+}
+.tb-server-badge.online { background: rgba(16,185,129,.15); color: var(--green); }
+.tb-server-badge.offline { background: var(--surface2); color: var(--faint); }
+@media (max-width: 600px) {
+  #toolbar-panel { width: calc(100vw - 32px); right: 16px; bottom: 76px; }
+}
+`;
+
+const TOOLBAR_JS = `
+// ── Interactive Toolbar ──
+(function() {
+  let serverOnline = false;
+  let activeTab = 'search';
+
+  // Check if local server is running
+  async function checkServer() {
+    try {
+      const r = await fetch('/api/courses', { signal: AbortSignal.timeout(1000) });
+      if (r.ok) { serverOnline = true; updateServerBadge(); }
+    } catch { serverOnline = false; updateServerBadge(); }
+  }
+  checkServer();
+
+  function updateServerBadge() {
+    const el = document.getElementById('tb-server');
+    if (!el) return;
+    if (serverOnline) {
+      el.className = 'tb-server-badge online';
+      el.innerHTML = '● Server connected';
+    } else {
+      el.className = 'tb-server-badge offline';
+      el.innerHTML = '○ Static mode — run <code>learn serve</code> for Ask &amp; Synthesize';
+    }
+  }
+
+  // Toggle panel
+  document.getElementById('toolbar-toggle').addEventListener('click', () => {
+    document.getElementById('toolbar-panel').classList.toggle('open');
+  });
+
+  // Tab switching
+  document.querySelectorAll('.tb-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tb-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tb-pane').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tb-' + tab.dataset.tab).classList.add('active');
+      activeTab = tab.dataset.tab;
+    });
+  });
+
+  // ── Search ──
+  document.getElementById('tb-search-btn')?.addEventListener('click', doSearch);
+  document.getElementById('tb-search-input')?.addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+
+  async function doSearch() {
+    const q = document.getElementById('tb-search-input').value.trim();
+    if (!q) return;
+    const results = document.getElementById('tb-search-results');
+    results.innerHTML = '<div class="tb-status">Searching...</div>';
+
+    if (serverOnline) {
+      // Use server API
+      try {
+        const r = await fetch('/api/search', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ query: q, notesOnly: true })
+        });
+        const data = await r.json();
+        renderSearchResults(data.results, q);
+      } catch(e) { results.innerHTML = '<div class="tb-status">Search failed</div>'; }
+    } else {
+      // Client-side search using embedded index
+      clientSearch(q);
+    }
+  }
+
+  function renderSearchResults(items, q) {
+    const el = document.getElementById('tb-search-results');
+    if (!items || items.length === 0) { el.innerHTML = '<div class="tb-status">No results found</div>'; return; }
+    el.innerHTML = items.slice(0, 15).map(r =>
+      '<div class="tb-result-item">' +
+      '<div class="source">' + r.course + ' / ' + r.lecture.split('-').slice(1).join(' ').substring(0,50) + ' (' + r.file + ')</div>' +
+      r.matches.slice(0,2).map(m =>
+        '<div class="match">' + highlightMatch(m.text, q) + '</div>'
+      ).join('') + '</div>'
+    ).join('');
+  }
+
+  function highlightMatch(text, q) {
+    const re = new RegExp('(' + q.replace(/[.*+?^\${}()|[\\]\\\\]/g,'\\\\$&') + ')', 'gi');
+    return text.replace(re, '<strong style="color:var(--accent)">$1</strong>');
+  }
+
+  // Client-side fallback search using search-index.json
+  async function clientSearch(q) {
+    const el = document.getElementById('tb-search-results');
+    try {
+      const r = await fetch('search-index.json');
+      if (!r.ok) { el.innerHTML = '<div class="tb-status">Search index not available. Run <code>learn site</code> to rebuild.</div>'; return; }
+      const index = await r.json();
+      const ql = q.toLowerCase();
+      const results = index.filter(e => e.text.toLowerCase().includes(ql)).slice(0, 20);
+      if (results.length === 0) { el.innerHTML = '<div class="tb-status">No results</div>'; return; }
+      el.innerHTML = results.map(r =>
+        '<div class="tb-result-item"><div class="source">' + r.course + ' / L' + r.lecture + '</div>' +
+        '<div class="match">' + highlightMatch(r.text.substring(0, 200), q) + '</div></div>'
+      ).join('');
+    } catch { el.innerHTML = '<div class="tb-status">Search index not found</div>'; }
+  }
+
+  // ── Quiz ──
+  document.getElementById('tb-quiz-btn')?.addEventListener('click', loadQuiz);
+
+  async function loadQuiz() {
+    const el = document.getElementById('tb-quiz-results');
+    el.innerHTML = '<div class="tb-status">Loading questions...</div>';
+
+    if (serverOnline) {
+      try {
+        const course = document.getElementById('tb-quiz-course')?.value || '';
+        const r = await fetch('/api/quiz', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ course: course || undefined })
+        });
+        const data = await r.json();
+        renderQuiz(data.questions);
+      } catch { el.innerHTML = '<div class="tb-status">Failed to load quiz</div>'; }
+    } else {
+      // Use pre-built quiz data
+      try {
+        const r = await fetch('quiz-data.json');
+        if (!r.ok) throw new Error();
+        const all = await r.json();
+        const shuffled = all.sort(() => Math.random() - 0.5).slice(0, 10);
+        renderQuiz(shuffled);
+      } catch { el.innerHTML = '<div class="tb-status">Quiz data not available</div>'; }
+    }
+  }
+
+  function renderQuiz(questions) {
+    const el = document.getElementById('tb-quiz-results');
+    if (!questions || questions.length === 0) { el.innerHTML = '<div class="tb-status">No questions available</div>'; return; }
+    el.innerHTML = questions.map((q, i) =>
+      '<div class="tb-quiz-card">' +
+      '<div class="tb-quiz-q">' + (i+1) + '. What is ' + esc(q.name) + '?</div>' +
+      '<button class="tb-reveal-btn" onclick="this.nextElementSibling.classList.toggle(\\'show\\');this.textContent=this.textContent===\\'Show Answer\\'?\\'Hide\\':\\'Show Answer\\'">Show Answer</button>' +
+      '<div class="tb-quiz-a"><strong>' + esc(q.name) + ':</strong> ' + esc(q.definition) +
+      '<div style=\\"margin-top:6px;font-size:11px;color:var(--faint)\\">Source: ' + esc(q.course) + ' L' + esc(q.lecture) + '</div></div>' +
+      '</div>'
+    ).join('');
+  }
+
+  function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+  // ── Ask ──
+  document.getElementById('tb-ask-btn')?.addEventListener('click', doAsk);
+  document.getElementById('tb-ask-input')?.addEventListener('keydown', e => { if(e.key==='Enter') doAsk(); });
+
+  async function doAsk() {
+    const q = document.getElementById('tb-ask-input').value.trim();
+    if (!q) return;
+    const el = document.getElementById('tb-ask-results');
+
+    if (!serverOnline) {
+      el.innerHTML = '<div class="tb-status">⚠️ Ask requires the local server. Run: <code>learn serve</code></div>';
+      return;
+    }
+
+    el.innerHTML = '<div class="tb-status">Thinking...</div>';
+    try {
+      const course = document.getElementById('tb-ask-course')?.value || '';
+      const r = await fetch('/api/ask', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ question: q, course: course || undefined })
+      });
+      const data = await r.json();
+      if (data.error) { el.innerHTML = '<div class="tb-status">⚠️ ' + esc(data.error) + '</div>'; return; }
+      el.innerHTML = '<div class="tb-result-item" style="border-left-color:var(--green)">' + data.answer.replace(/\\n/g,'<br>') + '</div>';
+    } catch(e) { el.innerHTML = '<div class="tb-status">Request failed</div>'; }
+  }
+
+  // ── Export ──
+  document.getElementById('tb-export-btn')?.addEventListener('click', doExport);
+
+  async function doExport() {
+    if (serverOnline) {
+      const course = document.getElementById('tb-export-course')?.value || '';
+      window.open('/api/export-anki' + (course ? '?course='+course : ''), '_blank');
+    } else {
+      // Use pre-built file
+      window.open('exports/anki.txt', '_blank');
+    }
+  }
+})();
+`;
+
+const TOOLBAR_HTML = `
+<button id="toolbar-toggle" title="Tools">⚡</button>
+<div id="toolbar-panel">
+  <div class="tb-tabs">
+    <button class="tb-tab active" data-tab="search">🔍 Search</button>
+    <button class="tb-tab" data-tab="quiz">📝 Quiz</button>
+    <button class="tb-tab" data-tab="ask">❓ Ask</button>
+    <button class="tb-tab" data-tab="export">📇 Export</button>
+  </div>
+  <div class="tb-content">
+    <div id="tb-server"></div>
+
+    <div id="tb-search" class="tb-pane active">
+      <div class="tb-input-row">
+        <input type="text" class="tb-input" id="tb-search-input" placeholder="Search notes, concepts...">
+        <button class="tb-btn" id="tb-search-btn">Search</button>
+      </div>
+      <div id="tb-search-results" class="tb-results"></div>
+    </div>
+
+    <div id="tb-quiz" class="tb-pane">
+      <div class="tb-input-row">
+        <select class="tb-select" id="tb-quiz-course"><option value="">All courses</option></select>
+        <button class="tb-btn" id="tb-quiz-btn">Generate Quiz</button>
+      </div>
+      <div id="tb-quiz-results" class="tb-results"></div>
+    </div>
+
+    <div id="tb-ask" class="tb-pane">
+      <div class="tb-input-row">
+        <select class="tb-select" id="tb-ask-course"><option value="">All courses</option></select>
+      </div>
+      <div class="tb-input-row">
+        <input type="text" class="tb-input" id="tb-ask-input" placeholder="Ask a question about your lectures...">
+        <button class="tb-btn" id="tb-ask-btn">Ask</button>
+      </div>
+      <div id="tb-ask-results" class="tb-results"></div>
+    </div>
+
+    <div id="tb-export" class="tb-pane">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Export concepts as Anki flashcards for active recall.</p>
+      <div class="tb-input-row">
+        <select class="tb-select" id="tb-export-course"><option value="">All courses</option></select>
+        <button class="tb-btn" id="tb-export-btn">📇 Download Anki Cards</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+
 // ─── Page template ───────────────────────────────────────────────
 
 function page(title: string, content: string, nav: string, breadcrumb: string, activeId: string): string {
@@ -437,7 +757,7 @@ function page(title: string, content: string, nav: string, breadcrumb: string, a
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escapeHtml(title)} — Learning AI</title>
-<style>${CSS}</style>
+<style>${CSS}${TOOLBAR_CSS}</style>
 </head>
 <body>
 <div id="sidebar">
@@ -455,7 +775,9 @@ function page(title: string, content: string, nav: string, breadcrumb: string, a
     ${content}
   </div>
 </div>
+${TOOLBAR_HTML}
 <script>${JS}</script>
+<script>${TOOLBAR_JS}</script>
 </body>
 </html>`;
 }
@@ -1810,14 +2132,72 @@ export function siteCommand(program: Command): void {
           writeText(p.path, p.content);
         }
 
+        // ── Generate static data files for client-side features ──
+
+        // Search index: key snippets from all notes
+        const searchIndex: Array<{ course: string; lecture: string; text: string }> = [];
+        for (const courseConfig of courses) {
+          const lectDir = resolve(coursesDir, courseConfig.name, 'lectures');
+          if (!existsSync(lectDir)) continue;
+          for (const ld of readdirSync(lectDir).filter(d => !d.startsWith('.')).sort()) {
+            const notes = readText(resolve(lectDir, ld, 'notes.md'));
+            if (!notes) continue;
+            const lecId = ld.split('-')[0];
+            // Extract key lines (headings, takeaways, quotes, concept mentions)
+            const lines = notes.split('\n').filter(l =>
+              l.startsWith('#') || l.startsWith('- ') || l.startsWith('> ') ||
+              l.includes('**') || l.includes('[[') || l.length > 40
+            );
+            for (const line of lines.slice(0, 30)) {
+              const clean = line.replace(/^[#*>\-\s]+/, '').replace(/\[\[|\]\]/g, '').trim();
+              if (clean.length > 15) {
+                searchIndex.push({ course: courseConfig.name, lecture: lecId, text: clean });
+              }
+            }
+          }
+        }
+        writeText(resolve(outputDir, 'search-index.json'), JSON.stringify(searchIndex));
+
+        // Quiz data: all concepts as flashcard-style questions
+        const quizData: Array<{ name: string; definition: string; course: string; lecture: string }> = [];
+        for (const courseConfig of courses) {
+          const lectDir = resolve(coursesDir, courseConfig.name, 'lectures');
+          if (!existsSync(lectDir)) continue;
+          for (const ld of readdirSync(lectDir).filter(d => !d.startsWith('.')).sort()) {
+            const conceptsData = readYaml<ConceptsYaml>(resolve(lectDir, ld, 'concepts.yaml'));
+            if (!conceptsData?.concepts) continue;
+            for (const c of conceptsData.concepts) {
+              if (c.name && c.definition) {
+                quizData.push({
+                  name: c.name,
+                  definition: c.definition,
+                  course: courseConfig.name,
+                  lecture: ld.split('-')[0],
+                });
+              }
+            }
+          }
+        }
+        writeText(resolve(outputDir, 'quiz-data.json'), JSON.stringify(quizData));
+
+        // Anki export: TSV of all concepts
+        const ankiLines = quizData.map(q =>
+          `${q.name}\t${q.definition} (Source: ${q.course} L${q.lecture})`
+        );
+        ensureDir(resolve(outputDir, 'exports'));
+        writeText(resolve(outputDir, 'exports', 'anki.txt'), ankiLines.join('\n'));
+
         success(`Static site generated: ${pages.length} pages`);
         info(`  📚 ${courses.length} courses`);
         info(`  📄 ${papers.length} papers`);
         if (graphExists) info(`  🔗 Knowledge graph embedded`);
         info(`  📋 Resource library`);
         info(`  📊 Progress dashboard`);
+        info(`  🔍 Search index: ${searchIndex.length} entries`);
+        info(`  📝 Quiz data: ${quizData.length} concepts`);
+        info(`  📇 Anki export: ${ankiLines.length} cards`);
         info(`Open: ${resolve(outputDir, 'index.html')}`);
-        info('Tip: serve with `npx serve site` for local preview');
+        info('Interactive: `learn serve` for full experience');
       } catch (e) {
         error(`Site generation failed: ${(e as Error).message}`);
         process.exit(1);

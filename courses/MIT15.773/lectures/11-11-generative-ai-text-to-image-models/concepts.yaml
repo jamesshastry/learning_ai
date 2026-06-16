@@ -1,0 +1,147 @@
+concepts:
+  - name: Diffusion Models
+    aliases:
+      - Denoising Diffusion
+      - DDPM
+    definition: >-
+      Generative models that learn to reverse a gradual noise-adding process: a forward
+      process adds Gaussian noise over many steps until the image becomes pure noise,
+      and a trained neural network (U-Net) learns to denoise step-by-step to generate images.
+    tags:
+      - architecture
+      - theory
+    timestamps:
+      - "10:00"
+    relations:
+      - target: Latent Diffusion
+        type: prerequisite_for
+        note: Latent diffusion extends pixel-space diffusion by operating in compressed latent space
+      - target: U-Net
+        type: related_to
+        note: U-Net is the neural network architecture trained to perform the denoising
+
+  - name: CLIP
+    aliases:
+      - Contrastive Language-Image Pre-training
+    definition: >-
+      A model trained on 400M image-text pairs using contrastive learning to produce
+      aligned embeddings where text descriptions and corresponding images map to nearby
+      vectors in a shared space, enabling text-guided image generation.
+    tags:
+      - architecture
+      - training
+    timestamps:
+      - "40:00"
+    relations:
+      - target: Stable Diffusion
+        type: enables
+        note: CLIP text embeddings condition the U-Net denoising process via cross-attention
+      - target: Diffusion Models
+        type: related_to
+        note: CLIP provides the text conditioning that guides diffusion image generation
+
+  - name: Latent Diffusion
+    aliases:
+      - LDM
+    definition: >-
+      A variant of diffusion models that performs the denoising process in a compressed
+      latent space (e.g., 64x64x4) rather than full pixel space (512x512x3), using a
+      pretrained VAE encoder/decoder to compress and reconstruct images.
+    tags:
+      - architecture
+      - optimization
+    timestamps:
+      - "50:00"
+    relations:
+      - target: Diffusion Models
+        type: related_to
+        note: Latent diffusion applies the diffusion process in compressed latent space
+      - target: VAE
+        type: related_to
+        note: A pretrained VAE compresses images to and from the latent space
+      - target: Stable Diffusion
+        type: prerequisite_for
+        note: Stable Diffusion is an implementation of latent diffusion
+
+  - name: Stable Diffusion
+    aliases:
+      - SD
+    definition: >-
+      An open-source latent diffusion model by Stability AI for text-to-image generation,
+      combining a VAE, U-Net denoiser conditioned on CLIP text embeddings, and
+      classifier-free guidance to produce high-quality images on consumer GPUs.
+    tags:
+      - application
+      - architecture
+    timestamps:
+      - "50:00"
+    relations:
+      - target: Latent Diffusion
+        type: part_of
+        note: Stable Diffusion is the leading open-source implementation of latent diffusion
+      - target: CLIP
+        type: related_to
+        note: Stable Diffusion uses CLIP text embeddings for text conditioning
+      - target: Classifier-Free Guidance
+        type: related_to
+        note: Classifier-free guidance controls the text adherence of generated images
+
+  - name: U-Net
+    aliases:
+      - Denoising U-Net
+    definition: >-
+      An encoder-decoder neural network architecture with skip connections originally
+      from biomedical image segmentation, used in diffusion models to predict and
+      remove noise at each denoising step, conditioned on timestep and text embeddings.
+    tags:
+      - architecture
+    timestamps:
+      - "30:00"
+    relations:
+      - target: Diffusion Models
+        type: part_of
+        note: U-Net is the neural network that performs the learned denoising process
+      - target: CLIP
+        type: related_to
+        note: CLIP text embeddings condition the U-Net via cross-attention layers
+
+  - name: Classifier-Free Guidance
+    aliases:
+      - CFG
+      - Guidance Scale
+    definition: >-
+      An inference technique that interpolates between conditional (with text) and
+      unconditional (without text) denoising predictions using a guidance scale parameter,
+      trading off image diversity for stricter text adherence.
+    tags:
+      - training
+      - optimization
+    timestamps:
+      - "01:05:00"
+    relations:
+      - target: Stable Diffusion
+        type: part_of
+        note: Classifier-free guidance is a key inference parameter in Stable Diffusion
+      - target: Diffusion Models
+        type: related_to
+        note: CFG controls the balance between diversity and text fidelity in generation
+
+  - name: VAE
+    aliases:
+      - Variational Autoencoder
+    definition: >-
+      A generative model with an encoder that compresses images into a low-dimensional
+      latent representation and a decoder that reconstructs images from it, used in
+      latent diffusion to make the diffusion process computationally feasible.
+    tags:
+      - architecture
+    timestamps:
+      - "00:00"
+      - "50:00"
+    relations:
+      - target: Latent Diffusion
+        type: enables
+        note: The VAE provides the compressed latent space where diffusion operates
+      - target: Diffusion Models
+        type: contrasts_with
+        note: VAEs were an earlier generative approach producing blurrier results than diffusion

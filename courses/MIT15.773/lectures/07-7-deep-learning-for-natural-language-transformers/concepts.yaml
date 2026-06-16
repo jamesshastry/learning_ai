@@ -1,0 +1,156 @@
+concepts:
+  - name: Self-Attention
+    aliases:
+      - Scaled Dot-Product Attention
+    definition: >-
+      A mechanism where each token in a sequence computes attention scores over all other
+      tokens using Query, Key, and Value projections, enabling the model to capture
+      dependencies regardless of distance in the sequence.
+    tags:
+      - architecture
+      - theory
+    timestamps:
+      - "10:00"
+    relations:
+      - target: Multi-Head Attention
+        type: prerequisite_for
+        note: Self-attention is run in parallel across multiple heads in multi-head attention
+      - target: Query-Key-Value
+        type: related_to
+        note: Q, K, V projections are the core components of the self-attention computation
+
+  - name: Multi-Head Attention
+    aliases:
+      - MHA
+    definition: >-
+      Running multiple self-attention heads in parallel with different learned Q, K, V
+      projections, allowing the model to simultaneously capture different types of
+      relationships (syntactic, semantic, positional) and concatenating their outputs.
+    tags:
+      - architecture
+    timestamps:
+      - "30:00"
+    relations:
+      - target: Self-Attention
+        type: related_to
+        note: Each head performs independent self-attention with its own projections
+      - target: Transformer Architecture
+        type: part_of
+        note: Multi-head attention is the core building block of transformer layers
+
+  - name: Positional Encoding
+    aliases:
+      - Positional Embedding
+      - Sinusoidal Encoding
+    definition: >-
+      Sinusoidal or learned signals added to token embeddings to inject sequence order
+      information, since the attention mechanism is inherently position-agnostic and
+      treats input as an unordered set.
+    tags:
+      - architecture
+      - theory
+    timestamps:
+      - "42:00"
+    relations:
+      - target: Transformer Architecture
+        type: part_of
+        note: Positional encoding is a required component to preserve word order in transformers
+      - target: Self-Attention
+        type: related_to
+        note: Positional encoding compensates for attention's lack of inherent position awareness
+
+  - name: Query-Key-Value
+    aliases:
+      - QKV
+      - Q-K-V Projections
+    definition: >-
+      Three learned linear projections applied to each token embedding in self-attention:
+      Query represents what the token is looking for, Key represents what it contains,
+      and Value represents what it provides to other tokens.
+    tags:
+      - architecture
+    timestamps:
+      - "10:00"
+    relations:
+      - target: Self-Attention
+        type: part_of
+        note: QKV projections are the fundamental components of the attention computation
+
+  - name: Transformer Architecture
+    aliases:
+      - Transformer
+      - Encoder-Decoder Transformer
+    definition: >-
+      A neural network architecture based entirely on attention mechanisms (no recurrence),
+      consisting of stacked encoder and decoder blocks each containing multi-head
+      self-attention, feed-forward networks, residual connections, and layer normalization.
+    tags:
+      - architecture
+    timestamps:
+      - "50:00"
+    relations:
+      - target: Multi-Head Attention
+        type: related_to
+        note: Multi-head attention is the core mechanism in each transformer block
+      - target: Residual Connections
+        type: related_to
+        note: Residual connections enable gradient flow through deep transformer stacks
+
+  - name: Residual Connections
+    aliases:
+      - Skip Connections
+    definition: >-
+      Connections that add a sub-layer's input directly to its output, enabling gradient
+      flow through deep networks and preventing the vanishing gradient problem in stacked
+      transformer blocks.
+    tags:
+      - architecture
+      - optimization
+    timestamps:
+      - "50:00"
+    relations:
+      - target: Transformer Architecture
+        type: part_of
+        note: Residual connections wrap every sub-layer in the transformer
+      - target: Layer Normalization
+        type: related_to
+        note: Layer normalization is applied after each residual connection
+
+  - name: Layer Normalization
+    aliases:
+      - LayerNorm
+    definition: >-
+      A normalization technique that normalizes activations across features within each
+      layer for a single training example, improving training stability and convergence
+      in transformer architectures.
+    tags:
+      - architecture
+      - training
+    timestamps:
+      - "50:00"
+    relations:
+      - target: Transformer Architecture
+        type: part_of
+        note: Layer normalization is applied after each sub-layer in the transformer
+      - target: Residual Connections
+        type: related_to
+        note: Layer normalization is paired with residual connections in transformer blocks
+
+  - name: Attention Is All You Need
+    aliases:
+      - Vaswani et al. 2017
+    definition: >-
+      The landmark 2017 paper by Vaswani et al. that introduced the transformer
+      architecture, demonstrating that attention mechanisms alone (without recurrence
+      or convolution) could achieve state-of-the-art results in sequence modeling.
+    tags:
+      - theory
+    timestamps:
+      - "00:00"
+    relations:
+      - target: Transformer Architecture
+        type: enables
+        note: This paper introduced the transformer architecture
+      - target: Self-Attention
+        type: enables
+        note: The paper demonstrated self-attention as a replacement for recurrence
