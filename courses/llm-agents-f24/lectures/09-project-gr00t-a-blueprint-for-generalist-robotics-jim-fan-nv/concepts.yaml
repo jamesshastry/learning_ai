@@ -1,0 +1,82 @@
+concepts:
+  - name: Voyager
+    aliases: [Voyager Agent]
+    definition: >-
+      The first LLM-powered open-ended embodied agent in Minecraft that continuously explores,
+      acquires diverse skills by writing executable code, stores them in a retrievable skill
+      library, and composes learned skills for increasingly complex tasks.
+    tags: [agents, robotics, exploration, code-generation]
+    timestamps: ['15:00', '17:00']
+    relations:
+      - target: Eureka
+        type: complementary
+        note: Voyager explores and builds skills; Eureka trains low-level motor control.
+      - target: Long-Term Memory
+        type: instantiation_of
+        note: Voyager's skill library is a form of procedural long-term memory.
+  - name: Eureka
+    aliases: []
+    definition: >-
+      A system that uses LLMs to generate reward functions for reinforcement learning,
+      combined with evolutionary search to iteratively improve them, achieving superhuman
+      dexterity (pen-spinning) that surpasses expert human-designed rewards.
+    tags: [reinforcement-learning, robotics, optimization]
+    timestamps: ['25:00', '28:00']
+    relations:
+      - target: DrEureka
+        type: extended_by
+        note: DrEureka extends Eureka's approach to also handle sim-to-real transfer.
+      - target: Voyager
+        type: complementary
+        note: Eureka handles low-level motor skills; Voyager handles high-level exploration.
+  - name: DrEureka
+    aliases: []
+    definition: >-
+      An extension of Eureka that uses LLMs to automatically generate domain randomization
+      configurations for sim-to-real transfer, eliminating the need for human engineering
+      of simulation-to-reality parameter bridges.
+    tags: [reinforcement-learning, robotics, sim-to-real]
+    timestamps: ['32:00', '35:00']
+    relations:
+      - target: Eureka
+        type: extends
+        note: Adds sim-to-real transfer automation to Eureka's reward function generation.
+      - target: Sim-to-Real Transfer
+        type: enables
+        note: DrEureka automates the critical sim-to-real gap.
+  - name: Foundation Agent
+    aliases: [Generalist Agent]
+    definition: >-
+      A vision for AI agents that are generalist (many tasks), multi-embodiment (many robot
+      bodies), and emergent (improve with scale) — a single foundation model that can be
+      deployed across diverse robotic platforms and tasks.
+    tags: [robotics, architecture, theory]
+    timestamps: ['10:00', '55:01']
+    relations:
+      - target: Project GR00T
+        type: instantiated_by
+        note: GR00T is NVIDIA's implementation of the foundation agent vision.
+  - name: Project GR00T
+    aliases: [GR00T]
+    definition: >-
+      NVIDIA's blueprint for building generalist robot foundation models, based on three
+      principles (foundation agent, parallel simulation, skill transfer) and three computers
+      (DGX for training, OVX for simulation, Jetson for deployment).
+    tags: [robotics, architecture, platform]
+    timestamps: ['50:00', '55:05']
+    relations:
+      - target: Foundation Agent
+        type: implements
+        note: GR00T is the concrete implementation of the foundation agent concept.
+  - name: Sim-to-Real Transfer
+    aliases: [Reality Gap, Domain Randomization]
+    definition: >-
+      The challenge and techniques for transferring skills learned in simulation to real-world
+      physical robots, typically addressed through domain randomization of simulation parameters
+      to make learned policies robust to real-world variations.
+    tags: [robotics, training, transfer-learning]
+    timestamps: ['32:00', '35:00']
+    relations:
+      - target: DrEureka
+        type: automated_by
+        note: DrEureka uses LLMs to automate sim-to-real domain randomization.

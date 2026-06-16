@@ -1,0 +1,85 @@
+concepts:
+  - name: Q-Function
+    aliases: [Q-Value, Action-Value Function, Q(s,a)]
+    definition: >-
+      A function mapping state-action pairs to expected total discounted return. Q(s,a) tells the
+      agent how good it is to take action a in state s, considering all future rewards. The optimal
+      policy selects the action maximizing Q at each state.
+    tags: [reinforcement-learning, value-learning]
+    timestamps: ['13:16', '13:53']
+    relations:
+      - target: Deep Q-Network
+        type: approximated_by
+        note: DQNs use neural networks to approximate the Q-function.
+  - name: Deep Q-Network
+    aliases: [DQN]
+    definition: >-
+      A neural network that approximates the Q-function, taking a state as input and outputting
+      Q-values for all possible actions. Trained by minimizing the difference between predicted
+      Q-values and target values computed from observed rewards and future Q estimates.
+    tags: [architecture, reinforcement-learning]
+    timestamps: ['25:02', '31:04']
+    relations:
+      - target: Q-Function
+        type: approximates
+        note: DQN learns to approximate the Q-function from experience.
+  - name: Policy Gradient
+    aliases: [Policy Learning, Policy Network, REINFORCE]
+    definition: >-
+      An RL method that directly learns a policy pi(a|s) as a probability distribution over actions,
+      rather than learning value functions. Enables stochastic policies and continuous action spaces.
+      Trained by maximizing expected reward via gradient of log-probability weighted by returns.
+    tags: [reinforcement-learning, optimization]
+    timestamps: ['34:57', '47:13']
+    relations:
+      - target: Q-Function
+        type: alternative_to
+        note: Policy gradients learn policies directly, bypassing Q-function estimation.
+  - name: Reward Signal
+    aliases: [Reward, Reward Function]
+    definition: >-
+      A scalar value received by an RL agent after taking an action, indicating the quality of that
+      action. Can be positive, negative, or zero; may be sparse (only at episode end) or dense
+      (every step). The agent's objective is to maximize cumulative discounted reward.
+    tags: [reinforcement-learning, fundamentals]
+    timestamps: ['08:22', '08:28']
+    relations:
+      - target: Q-Function
+        type: component_of
+        note: Q-values are expectations over cumulative reward signals.
+  - name: Discount Factor
+    aliases: [Gamma, Temporal Discounting]
+    definition: >-
+      A parameter gamma (0 < gamma < 1) that reduces the weight of future rewards in the total
+      return calculation. Reflects preference for immediate rewards over delayed ones, with
+      R(t) = sum of gamma^k * r(t+k) for k = 0,1,2,...
+    tags: [reinforcement-learning, hyperparameter]
+    timestamps: ['09:31', '10:07']
+    relations:
+      - target: Reward Signal
+        type: modifies
+        note: The discount factor weights future rewards relative to immediate ones.
+  - name: Exploration vs Exploitation
+    aliases: [Explore-Exploit Trade-off]
+    definition: >-
+      The fundamental RL dilemma between exploiting known high-reward actions (exploitation) and
+      trying potentially better but uncertain actions (exploration). Without exploration, the agent
+      may miss globally optimal strategies; without exploitation, it fails to leverage learned knowledge.
+    tags: [reinforcement-learning, fundamentals]
+    timestamps: ['48:10', '48:19']
+    relations:
+      - target: Policy Gradient
+        type: addressed_by
+        note: Stochastic policies naturally maintain some exploration through sampling.
+  - name: RLHF
+    aliases: [Reinforcement Learning from Human Feedback]
+    definition: >-
+      A technique for aligning language models with human preferences by training a reward model from
+      human feedback (thumbs up/down) and using it to fine-tune the LLM via reinforcement learning.
+      Enables optimization beyond simple next-token prediction toward human-preferred outputs.
+    tags: [reinforcement-learning, llm, alignment]
+    timestamps: ['54:25', '55:01']
+    relations:
+      - target: Policy Gradient
+        type: uses
+        note: RLHF applies policy gradient methods to optimize language model outputs.

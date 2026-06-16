@@ -1,0 +1,100 @@
+concepts:
+  - name: Linear Attention
+    aliases: [softmax-free attention, associative attention]
+    definition: >-
+      Attention mechanism that drops the softmax normalization, enabling matrix multiplication
+      reordering via associativity: Q(K^T V) instead of (QK^T)V. Changes complexity from
+      O(N^2 D) to O(N D^2). Has an equivalent RNN form for efficient inference with
+      constant-size state.
+    tags: [architecture, optimization]
+    timestamps: ["06:00", "09:07"]
+    relations:
+      - target: Mamba
+        type: prerequisite_for
+        note: Mamba 2 extends linear attention with input-dependent gating
+
+  - name: Gated DeltaNet
+    aliases: [GDN, gated delta network]
+    definition: >-
+      A state-space model extending linear attention with two input-dependent gates (forget
+      gate gamma and input gate beta) plus a key-direction projection for erasing old
+      information before writing new. Used in Qwen 3.5 in 3:1 hybrid with full attention.
+    tags: [architecture]
+    timestamps: ["14:58", "19:01"]
+    relations:
+      - target: Linear Attention
+        type: related_to
+        note: GDN elaborates linear attention with LSTM-inspired gating
+      - target: Mamba
+        type: contrasts_with
+        note: GDN adds input gate and key-projection vs Mamba's single forget gate
+
+  - name: Mixture of Experts
+    aliases: [MoE, sparse mixture of experts]
+    definition: >-
+      Architecture that replaces the FFN with multiple expert FFNs, using a learned router
+      to assign each token to top-K experts. Decouples parameter count from compute cost,
+      providing ~2x training speedup at matched FLOPs. All modern frontier models above
+      a certain size use MoE.
+    tags: [architecture, optimization]
+    timestamps: ["34:25", "35:31"]
+    relations:
+      - target: Expert Collapse
+        type: contrasts_with
+        note: MoE training must prevent expert collapse via load balancing
+      - target: Expert Parallelism
+        type: enables
+        note: MoE provides natural sharding axis for distributed training
+
+  - name: Expert Collapse
+    aliases: [expert starvation, token concentration]
+    definition: >-
+      A degenerate MoE training outcome where the rich-get-richer dynamic causes most
+      tokens to be routed to just 1-2 experts while remaining experts receive no training
+      signal. Without load-balancing interventions, most MoE parameters become wasted.
+    tags: [training]
+    timestamps: ["01:03:59", "01:08:04"]
+    relations:
+      - target: Load Balancing Loss
+        type: contrasts_with
+        note: Load balancing loss is the primary solution to expert collapse
+
+  - name: Load Balancing Loss
+    aliases: [auxiliary balancing loss, expert balancing]
+    definition: >-
+      An auxiliary loss term that penalizes uneven token distribution across experts.
+      Computed as the dot product of fraction-of-tokens-dispatched and probability-mass-
+      allocated per expert. Gradient pushes down routing probability for popular experts
+      proportional to their token fraction.
+    tags: [training, architecture]
+    timestamps: ["01:04:18", "01:06:00"]
+    relations:
+      - target: Expert Collapse
+        type: contrasts_with
+        note: Primary defense against expert collapse
+
+  - name: DeepSeek Sparse Attention
+    aliases: [DSA, sparse token selection attention]
+    definition: >-
+      An efficient attention method that uses a lightweight indexer to select top-K
+      relevant tokens from the full context, then performs full attention only on this
+      subset. Can be bolted on during long-context extension rather than pre-training.
+    tags: [architecture, optimization]
+    timestamps: ["23:17", "25:51"]
+    relations:
+      - target: Sliding Window Attention
+        type: contrasts_with
+        note: DSA selects relevant tokens globally vs fixed local windows
+
+  - name: Shared Experts
+    aliases: [always-on experts]
+    definition: >-
+      A subset of MoE experts that bypass the router and process every token, handling
+      common computation. Introduced by DeepSeek MoE, allows routed experts to specialize
+      more. Combined with fine-grained expert segmentation for best results.
+    tags: [architecture]
+    timestamps: ["54:34", "55:38"]
+    relations:
+      - target: Mixture of Experts
+        type: part_of
+        note: Shared experts are a key component of DeepSeek-style MoE design

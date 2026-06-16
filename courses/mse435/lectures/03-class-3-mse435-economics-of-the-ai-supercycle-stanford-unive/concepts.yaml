@@ -1,0 +1,185 @@
+concepts:
+  - name: Electrons to Tokens
+    aliases:
+      - Power-to-Intelligence Pipeline
+    definition: >-
+      The complete value chain from raw electricity generation through data center infrastructure, GPU compute,
+      and model serving to deliver AI tokens to end users. Represents the fundamental transformation of energy
+      into intelligence.
+    tags:
+      - infrastructure
+      - economics
+      - compute
+    timestamps:
+      - '04:57'
+      - '39:52'
+    relations:
+      - target: Energy-First Data Center Strategy
+        type: enables
+        note: Starting from electrons (energy) determines the entire downstream economics.
+      - target: Data Center Cost Stack
+        type: part_of
+        note: The cost stack represents the economic layers of the electrons-to-tokens pipeline.
+
+  - name: Energy-First Data Center Strategy
+    aliases:
+      - Locating at Power Source
+    definition: >-
+      Crusoe's approach of building data centers where abundant, low-cost energy already exists (e.g., West Texas
+      with negative renewable power prices) rather than in traditional data center markets. Moves data to energy
+      instead of energy to data.
+    tags:
+      - infrastructure
+      - economics
+      - energy
+    timestamps:
+      - '11:25'
+      - '12:11'
+      - '13:28'
+      - '28:30'
+    relations:
+      - target: Across-the-Meter Power
+        type: enables
+        note: Energy-first locations enable on-site generation strategies.
+      - target: Data Center Cost Stack
+        type: enables
+        note: Abundant low-cost energy reduces the power cost component of the stack.
+
+  - name: Across-the-Meter Power
+    aliases:
+      - Behind-the-Meter Generation
+      - On-site Power Generation
+    definition: >-
+      Crusoe's energy strategy of building on-site power generation (wind, solar, gas, batteries) that can
+      sell surplus to the grid when not needed and draw from the grid when on-site generation is insufficient,
+      creating a mutually beneficial relationship with the local power system.
+    tags:
+      - infrastructure
+      - energy
+      - economics
+    timestamps:
+      - '29:14'
+      - '29:25'
+      - '29:53'
+    relations:
+      - target: Energy-First Data Center Strategy
+        type: part_of
+        note: Across-the-meter is the specific implementation of the energy-first strategy.
+
+  - name: Data Center Cost Stack
+    aliases:
+      - Per-Megawatt Cost Breakdown
+      - Infrastructure Economics
+    definition: >-
+      The full cost structure of an AI data center: ~$20M/MW for building and power plant (labor $4.7M, gas plant
+      $2-3M, electrical/mechanical equipment, materials, soft costs) plus ~$40M/MW for IT infrastructure (GPUs $30M,
+      networking $4M, CPUs/storage $3M, fit-out $3M) = ~$60M/MW total, or $60B per gigawatt.
+    tags:
+      - economics
+      - infrastructure
+    timestamps:
+      - '21:54'
+      - '23:58'
+      - '30:30'
+      - '37:17'
+    relations:
+      - target: Electrons to Tokens
+        type: part_of
+        note: The cost stack quantifies each layer of the electrons-to-tokens pipeline.
+      - target: Labor as AI Bottleneck
+        type: related_to
+        note: Labor at $4.7M/MW is the single largest line item in the building cost.
+
+  - name: GPU Spot Price Dynamics
+    aliases:
+      - H100 Pricing Trends
+      - Compute Pricing
+    definition: >-
+      The counterintuitive trend where H100 GPU spot prices have risen above their original launch price
+      (3 years later) due to explosive agent-driven demand, with Blackwell following the same trajectory.
+      This challenges the assumption that older compute quickly loses value and supports longer depreciation
+      periods beyond the standard 6 years.
+    tags:
+      - economics
+      - compute
+      - infrastructure
+    timestamps:
+      - '34:51'
+      - '35:18'
+      - '35:29'
+      - '37:05'
+    relations:
+      - target: Agent Token Multiplier
+        type: enables
+        note: Agent demand is the primary driver of rising GPU spot prices.
+      - target: Data Center Cost Stack
+        type: related_to
+        note: GPU pricing directly impacts the IT CapEx portion of the cost stack.
+
+  - name: Modular Data Centers
+    aliases:
+      - Crusoe Spark
+      - Prefabricated Data Centers
+    definition: >-
+      Self-contained, factory-manufactured AI data center units (500 kW air-cooled or 2 MW liquid-cooled)
+      that can be deployed in fleets at diverse power sites. Reduces construction costs 30-50% through
+      centralized manufacturing, standardization, and lower labor requirements.
+    tags:
+      - infrastructure
+      - architecture
+      - economics
+    timestamps:
+      - '41:07'
+      - '41:12'
+      - '41:23'
+    relations:
+      - target: Labor as AI Bottleneck
+        type: contrasts_with
+        note: Modular manufacturing reduces on-site labor requirements, addressing the bottleneck.
+      - target: Energy-First Data Center Strategy
+        type: enables
+        note: Modular units open up net new power locations that couldn't support traditional construction.
+
+  - name: Labor as AI Bottleneck
+    aliases:
+      - Construction Labor Shortage
+      - Trades Worker Scarcity
+    definition: >-
+      The acute shortage of electricians, welders, plumbers, and construction workers needed to build AI data
+      centers at scale. Labor is the largest single cost item at $4.7M/MW, costs are rising due to competition
+      between projects, and there are not enough tradespeople to staff multiple gigawatt-scale builds simultaneously.
+    tags:
+      - economics
+      - infrastructure
+    timestamps:
+      - '24:35'
+      - '24:39'
+      - '24:42'
+      - '24:50'
+    relations:
+      - target: Data Center Cost Stack
+        type: part_of
+        note: Labor is the single largest line item in data center construction costs.
+      - target: Modular Data Centers
+        type: contrasts_with
+        note: Modular construction is one approach to mitigating the labor bottleneck.
+
+  - name: Coherent Cluster Architecture
+    aliases:
+      - Single-Cluster Data Center
+    definition: >-
+      Data center design where all GPUs across multiple buildings are interconnected on the same high-performance
+      backend network, enabling one training job to run on all chips across the entire campus. This is the
+      architecture used for Project Stargate in Abilene.
+    tags:
+      - infrastructure
+      - architecture
+      - compute
+    timestamps:
+      - '16:16'
+      - '16:20'
+      - '16:32'
+    relations:
+      - target: Data Center Cost Stack
+        type: related_to
+        note: Networking costs ($4M/MW) are driven by the requirement for coherent cluster interconnection.

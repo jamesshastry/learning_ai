@@ -20,3 +20,14 @@ Direct Preference Optimization: Your Language Model is Secretly a Reward Model (
 
 - [[InstructGPT]] (related to) — referenced in paper
 - [[Constitutional AI]] (related to) — referenced in paper
+- [[Preference Feedback Flywheel]] (related to) — name overlap
+- [[Supervised Fine-Tuning]] (related to) — shared tags: alignment
+- [[Reinforcement Learning from Human Feedback]] (related to) — shared tags: alignment
+- [[Reward Model]] (related to) — shared tags: alignment
+- [[Vision-Language Model]] (related to) — name overlap
+- [[Process Reward Model]] (related to) — name overlap
+- [[Self-Rewarding Language Models]] (related to) — name overlap
+- [[Iterative Reasoning Preference Optimization]] (related to) — name overlap
+- [[Thought Preference Optimization]] (related to) — name overlap
+- [[On-Policy Preference Data]] (related to) — name overlap
+- [[Reward Signal]] (related to) — name overlap

@@ -1,0 +1,78 @@
+concepts:
+  - name: Neocloud
+    aliases: [AI cloud, GPU cloud]
+    definition: >-
+      Cloud providers specialized for AI workloads (CoreWeave, Lambda, Nebius) that
+      focus on GPU aggregation and AI-centric compute rather than traditional web
+      services like databases. Term coined by SemiAnalysis.
+    tags: [infrastructure, cloud, industry]
+    timestamps: ["41:46"]
+    relations:
+      - target: AI Infrastructure Third Pillar
+        type: instance_of
+        note: Neoclouds are the commercial embodiment of AI as a distinct cloud pillar
+
+  - name: AI Infrastructure Third Pillar
+    aliases: [AI cloud pillar, third pillar of IT]
+    definition: >-
+      The concept that AI compute has become a distinct infrastructure category alongside
+      web cloud (microservices) and data cloud (analytics/SQL), with fundamentally different
+      compute-to-IO ratios and workload patterns requiring specialized orchestration.
+    tags: [infrastructure, architecture, industry]
+    timestamps: ["33:16"]
+    relations:
+      - target: Neocloud
+        type: realized_by
+        note: Neoclouds specialize in providing this third pillar
+
+  - name: NVL72
+    aliases: [NVIDIA NVL72, rack-scale GPU]
+    definition: >-
+      NVIDIA's rack-level GPU integration system where multiple GPU servers share memory
+      through high-bandwidth NVLink switches, enabling mainframe-like unified memory access
+      across an entire rack. Eliminates need to manually partition models across machines.
+    tags: [hardware, infrastructure, gpu]
+    timestamps: ["52:21"]
+    relations:
+      - target: AI Infrastructure Third Pillar
+        type: enables
+        note: Rack-scale integration is key hardware innovation for AI cloud
+
+  - name: Mixture of Experts
+    aliases: [MoE, sparse models]
+    definition: >-
+      Neural network architecture using massively sparse, sparsely-activated sub-networks
+      to improve efficiency while maintaining quality. Only a subset of parameters are
+      active for any given input, reducing compute requirements.
+    tags: [architecture, efficiency]
+    timestamps: ["16:04"]
+    relations:
+      - target: Test-Time Scaling
+        type: complementary_to
+        note: MoE improves training efficiency; test-time scaling improves inference quality
+
+  - name: RAG
+    aliases: [Retrieval-Augmented Generation]
+    definition: >-
+      Technique combining information retrieval with LLM generation, where relevant
+      documents are retrieved and provided as context for the model. Despite being
+      considered "past peak" in hype cycles, remains fundamental for accurate information.
+    tags: [architecture, retrieval, applications]
+    timestamps: ["01:04:36"]
+    relations:
+      - target: Agentic AI
+        type: evolved_into
+        note: RAG has become implicit infrastructure within agentic systems
+
+  - name: Prosumer AI Applications
+    aliases: [productivity AI, professional consumer AI]
+    definition: >-
+      AI applications targeting users who embed AI into their daily professional work
+      (coding, content creation, consulting), showing high willingness to pay ($20-50/month)
+      compared to pure consumer entertainment use cases.
+    tags: [applications, business, industry]
+    timestamps: ["26:15"]
+    relations:
+      - target: Enterprise AI Applications
+        type: bridges_to
+        note: Prosumer apps bridge the gap between consumer and enterprise AI adoption

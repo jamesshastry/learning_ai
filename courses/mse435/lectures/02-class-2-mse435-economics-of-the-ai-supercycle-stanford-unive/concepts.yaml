@@ -1,0 +1,211 @@
+concepts:
+  - name: NVLink Fusion
+    aliases:
+      - Groq-Nvidia Integration
+    definition: >-
+      A protocol enabling Groq's SRAM-based chips to communicate directly with Nvidia GPUs via NVLink, allowing
+      disaggregated inference where memory-bandwidth-intensive decode operations run on Groq while compute-intensive
+      operations run on GPUs, producing 2.5x more tokens for the same power footprint.
+    tags:
+      - infrastructure
+      - compute
+      - architecture
+    timestamps:
+      - '17:05'
+      - '17:30'
+      - '19:02'
+    relations:
+      - target: Prefill-Decode Disaggregation
+        type: enables
+        note: NVLink Fusion enables practical hardware-level disaggregation of inference phases.
+      - target: Deterministic Chip Architecture
+        type: part_of
+        note: Groq's deterministic architecture is what makes NVLink Fusion uniquely performant.
+
+  - name: Deterministic Chip Architecture
+    aliases:
+      - Data Flow Architecture
+      - Compiler-Driven Compute
+    definition: >-
+      Groq's chip design philosophy where a compiler predetermines where all calculations happen, unlike GPUs
+      which dynamically schedule work. Uses SRAM (>10x faster bandwidth than HBM) instead of external memory,
+      enabling predictable and efficient inference execution.
+    tags:
+      - infrastructure
+      - architecture
+      - compute
+    timestamps:
+      - '10:17'
+      - '10:21'
+      - '10:26'
+    relations:
+      - target: NVLink Fusion
+        type: enables
+        note: The deterministic nature makes Groq chips complementary rather than competitive to GPUs.
+      - target: Inference Cost Deflation
+        type: enables
+        note: Purpose-built inference architecture drives down per-token cost.
+
+  - name: Prefill-Decode Disaggregation
+    aliases:
+      - Inference Phase Separation
+    definition: >-
+      The technique of separating AI inference into distinct phases — prefill (processing the input context,
+      compute-intensive) and decode (generating output tokens, memory-bandwidth-intensive) — and running each
+      on optimized hardware, yielding significant efficiency gains.
+    tags:
+      - architecture
+      - optimization
+      - compute
+    timestamps:
+      - '16:02'
+      - '16:07'
+      - '16:24'
+    relations:
+      - target: NVLink Fusion
+        type: enables
+        note: Disaggregation is the key insight that led to the Groq-Nvidia NVLink Fusion architecture.
+      - target: Heterogeneous Compute
+        type: part_of
+        note: Prefill-decode separation is one form of heterogeneous compute optimization.
+
+  - name: Inference Cost Deflation
+    aliases:
+      - Token Cost Decline
+      - Moore's Law for Inference
+    definition: >-
+      The ~99% decline in inference cost over 2.5 years driven by three factors: supply chain improvements
+      (TSMC lithography, packaging), engineering innovation (quantization, chip design), and power efficiency.
+      Described as the most deflationary technology ever observed, though model size growth partially offsets gains.
+    tags:
+      - economics
+      - compute
+      - infrastructure
+    timestamps:
+      - '22:24'
+      - '22:29'
+      - '23:01'
+      - '34:05'
+    relations:
+      - target: Agent Token Multiplier
+        type: contrasts_with
+        note: Cost deflation enables agents despite their massive token consumption.
+      - target: Willingness to Pay Curve
+        type: enables
+        note: Cheaper tokens plus better intelligence creates expanding economic surplus.
+
+  - name: Agent Token Multiplier
+    aliases:
+      - Agentic Token Consumption
+    definition: >-
+      The phenomenon where agentic AI workloads (doing tasks vs answering questions) consume 10x+ more tokens
+      than chat-based interactions, but deliver 100x+ more value. This drives demand for inference compute
+      exponentially and is the primary reason token consumption curves have gone parabolic.
+    tags:
+      - economics
+      - application
+      - compute
+    timestamps:
+      - '26:52'
+      - '27:10'
+      - '32:28'
+      - '33:38'
+    relations:
+      - target: Inference Cost Deflation
+        type: contrasts_with
+        note: Agents consume far more tokens but cost deflation keeps economics viable.
+      - target: Willingness to Pay Curve
+        type: enables
+        note: Higher value delivered by agents increases willingness to pay per unit of intelligence.
+
+  - name: Willingness to Pay Curve
+    aliases:
+      - Value-Cost Crossover
+    definition: >-
+      The economic dynamic where AI providers initially sold tokens at a loss (negative gross margins), betting
+      that inference costs would drop while intelligence and willingness to pay would increase. This crossover
+      has now occurred — labs like Anthropic and OpenAI have gone from negative to positive gross margins as
+      capabilities crossed a threshold of usefulness.
+    tags:
+      - economics
+      - business
+    timestamps:
+      - '25:46'
+      - '26:19'
+      - '26:27'
+      - '34:41'
+    relations:
+      - target: Inference Cost Deflation
+        type: enables
+        note: Falling costs are one half of the willingness-to-pay equation.
+      - target: Agent Token Multiplier
+        type: enables
+        note: Agents deliver enough value to justify dramatically higher per-task spending.
+
+  - name: Revenue Exponential
+    aliases:
+      - Anthropic Revenue Explosion
+      - Product-Market Fit at Scale
+    definition: >-
+      Anthropic's revenue trajectory of $3.5B (Jan) → $8B (Feb) → $10.5B (Mar) annualized in 2026, driven
+      entirely by product quality crossing a capability threshold rather than salesforce expansion. Described
+      as an "Oppenheimer moment" proving that revenue can scale on the same exponential as intelligence.
+    tags:
+      - economics
+      - business
+    timestamps:
+      - '27:58'
+      - '28:33'
+      - '28:42'
+      - '30:44'
+    relations:
+      - target: Willingness to Pay Curve
+        type: enables
+        note: Revenue explosion demonstrates the willingness-to-pay thesis at massive scale.
+      - target: Agent Token Multiplier
+        type: enables
+        note: Claude Code and agent harnesses are primary drivers of Anthropic's revenue surge.
+
+  - name: IQ Commoditization
+    aliases:
+      - Intelligence Commoditization
+    definition: >-
+      Brad Gerstner's thesis that raw cognitive intelligence (IQ) becomes commoditized as AI systems surpass
+      human-level reasoning, while emotional intelligence (EQ) — networking, persuasion, leadership, team
+      formation — becomes the differentiating and increasingly valuable human capability.
+    tags:
+      - theory
+      - economics
+      - society
+    timestamps:
+      - '43:53'
+      - '44:01'
+      - '44:13'
+    relations:
+      - target: Digital Labor
+        type: enables
+        note: As digital labor handles IQ-intensive work, human EQ becomes the scarce resource.
+
+  - name: Digital Labor
+    aliases:
+      - AI Workers
+      - Token-Based Work
+    definition: >-
+      The concept that AI agents represent a new form of labor that can be scaled digitally through investment
+      in compute infrastructure, fundamentally changing the Cobb-Douglas production function by allowing
+      delta-L (change in labor) to be achieved through capital investment rather than birth rates.
+    tags:
+      - economics
+      - theory
+      - application
+    timestamps:
+      - '06:03'
+      - '06:17'
+      - '33:28'
+    relations:
+      - target: Agent Token Multiplier
+        type: enables
+        note: Each agent task represents digital labor being deployed via token consumption.
+      - target: IQ Commoditization
+        type: enables
+        note: Digital labor performing IQ-intensive work commoditizes human cognitive labor.

@@ -1,0 +1,69 @@
+concepts:
+  - name: Rubric-Based Evaluation
+    aliases: [rubric grading, structured criteria evaluation]
+    definition: >-
+      Evaluation method where expert annotators create 50+ detailed, structured,
+      scorable criteria per question. Each criterion is binary (0/1) and covers a
+      specific aspect of answer quality. Enables reliable grading of non-verifiable tasks.
+    tags: [evaluation, methodology, training]
+    timestamps: ["08:27"]
+    relations:
+      - target: LLM-as-Judge
+        type: provides_input_for
+        note: Rubrics structure the grading process for LLM or human judges
+      - target: Data Synthesis
+        type: enables
+        note: High-quality rubrics on seed examples enable scalable synthetic data generation
+
+  - name: Data Synthesis
+    aliases: [synthetic data generation, data augmentation at scale]
+    definition: >-
+      The process of using LLMs to generate large-scale training data from small
+      expert-annotated seed examples. Considered the most scalable and critical
+      capability for improving production models.
+    tags: [training, data, scalability]
+    timestamps: ["09:50"]
+    relations:
+      - target: Rubric-Based Evaluation
+        type: bootstrapped_from
+        note: Expert rubrics on seed data guide quality of synthesized data
+
+  - name: Environment Simulator
+    aliases: [sandbox, code execution environment]
+    definition: >-
+      CPU-based infrastructure for executing agent actions during training (running code,
+      tests, tool calls). Typically requires 10x the CPU count relative to the GPU
+      training cluster, representing a major infrastructure cost.
+    tags: [infrastructure, training, agents]
+    timestamps: ["02:50"]
+    relations:
+      - target: Multi-Turn Agentic Training
+        type: enables
+        note: Simulators provide the feedback loop for multi-turn training
+
+  - name: Multi-Turn Agentic Training
+    aliases: [iterative agent training, agent-environment training loop]
+    definition: >-
+      Training paradigm where the model engages in multiple rounds of communication
+      with an environment simulator — executing actions, receiving feedback, reasoning
+      about next steps — rather than single-shot generation.
+    tags: [training, agents, methodology]
+    timestamps: ["03:27"]
+    relations:
+      - target: Environment Simulator
+        type: requires
+        note: Multi-turn training needs simulators to provide environmental feedback
+
+  - name: Agentic Model Requirements
+    aliases: [agent capability stack]
+    definition: >-
+      The five core capabilities needed for agentic models: goal-orientation (clear
+      objectives), tool usage (multi-turn simulator interaction), planning (sequencing
+      actions), reasoning (deciding next steps based on current state), and user
+      interaction (responding to human feedback).
+    tags: [agents, capabilities, architecture]
+    timestamps: ["04:24"]
+    relations:
+      - target: Multi-Turn Agentic Training
+        type: developed_through
+        note: These capabilities emerge through multi-turn training with environments

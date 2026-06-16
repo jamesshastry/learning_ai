@@ -1,0 +1,221 @@
+concepts:
+  - name: Revenue as Compute Proxy
+    aliases:
+      - Compute-Revenue Correlation
+      - Revenue Lagging Indicator
+    definition: >-
+      For frontier AI labs, revenue is a direct function of available compute capacity and its utilization.
+      OpenAI has tripled compute year-over-year for 3 years with revenue tracking proportionally. This makes
+      compute acquisition the primary strategic lever for revenue growth.
+    tags:
+      - economics
+      - business
+      - compute
+    timestamps:
+      - '03:40'
+      - '04:00'
+      - '04:10'
+      - '04:16'
+    relations:
+      - target: Agentic Compute DAG
+        type: related_to
+        note: More complex agentic workloads increase compute consumption per user, accelerating the correlation.
+      - target: AI Value Chain Triangle
+        type: related_to
+        note: The compute-revenue correlation explains why the bottom of the triangle grows faster than the top.
+
+  - name: Agentic Compute DAG
+    aliases:
+      - Agent Compute Graph
+      - Complex Inference Pipeline
+    definition: >-
+      The directed acyclic graph describing modern agentic AI workloads: an inference call leads to tool calls,
+      database queries, VM spin-ups for testing, observation of results, reasoning about output, and iteration —
+      far more complex than simple chatbot (one node) or reasoning (multi-node inference) architectures.
+    tags:
+      - architecture
+      - compute
+      - application
+    timestamps:
+      - '19:02'
+      - '19:05'
+      - '20:28'
+      - '20:46'
+    relations:
+      - target: Heterogeneous Compute
+        type: enables
+        note: Complex DAGs require different hardware for different nodes (GPUs for inference, CPUs for tools, etc.).
+      - target: Human as Bottleneck
+        type: enables
+        note: Fully executing the DAG at speed is what makes the human the bottleneck rather than the AI.
+
+  - name: Heterogeneous Compute
+    aliases:
+      - Multi-Chip Architecture
+      - Diverse Accelerator Fleet
+    definition: >-
+      The architectural principle that agentic AI workloads cannot be served economically on GPUs alone and
+      require a mix of hardware: GPUs for training and complex inference, Cerebras for fast inference, memory-
+      optimized chips for long-context workloads, and CPUs for orchestrating agentic workflows and tool calls.
+    tags:
+      - architecture
+      - infrastructure
+      - compute
+    timestamps:
+      - '23:38'
+      - '23:46'
+      - '23:51'
+      - '24:17'
+    relations:
+      - target: Agentic Compute DAG
+        type: enables
+        note: Different DAG nodes are best served by different types of compute hardware.
+      - target: Compute Supply Chain Resilience
+        type: related_to
+        note: Heterogeneous compute inherently creates supply chain diversification.
+
+  - name: Human as Bottleneck
+    aliases:
+      - Human-in-Flow Design Goal
+    definition: >-
+      OpenAI's design target where AI infrastructure is fast enough that the human becomes the rate-limiting
+      factor — agents complete tasks so quickly that users are constantly being asked for next steps, creating
+      a flow state of human-AI collaboration rather than waiting for AI to finish.
+    tags:
+      - application
+      - architecture
+      - theory
+    timestamps:
+      - '22:48'
+      - '22:52'
+      - '23:06'
+      - '23:13'
+    relations:
+      - target: Agentic Compute DAG
+        type: enables
+        note: Fast execution of the full agentic DAG is what makes the human the bottleneck.
+      - target: Prefill Latency Dominance
+        type: related_to
+        note: Reducing prefill latency is critical to achieving the human-as-bottleneck target.
+
+  - name: Compute Supply Chain Resilience
+    aliases:
+      - Supply Chain Diversification
+    definition: >-
+      The strategic imperative for the AI compute supply chain to avoid single-threading on any one vendor
+      or component. TSMC's wafer allocation policy structurally ensures multiple chip vendors exist. The
+      deepest choke point is ASML, the sole manufacturer of extreme ultraviolet lithography machines.
+    tags:
+      - infrastructure
+      - economics
+    timestamps:
+      - '25:48'
+      - '26:28'
+      - '26:57'
+      - '42:08'
+    relations:
+      - target: Heterogeneous Compute
+        type: related_to
+        note: Heterogeneous compute is partly a forced response to supply chain constraints.
+      - target: ASIC Competition
+        type: related_to
+        note: TSMC's allocation ensures multiple ASICs get manufacturing capacity.
+
+  - name: Recursive Chip Design
+    aliases:
+      - AI-Designed Chips
+      - Self-Improving Infrastructure
+    definition: >-
+      The emerging practice of using current AI models to design the next generation of chips, systems, and
+      low-level software needed to run the next models — creating a recursive improvement loop. Current chip
+      design takes 3 years from ideation to production; AI-assisted design is the only feasible way to
+      compress this cycle and keep pace with model advancement.
+    tags:
+      - architecture
+      - compute
+      - infrastructure
+    timestamps:
+      - '34:38'
+      - '34:41'
+      - '34:57'
+      - '35:42'
+    relations:
+      - target: Heterogeneous Compute
+        type: enables
+        note: AI can co-optimize model architecture and chip design for the most efficient hardware.
+      - target: Compute Supply Chain Resilience
+        type: related_to
+        note: Faster chip design cycles could help diversify the supply chain.
+
+  - name: Prefill Latency Dominance
+    aliases:
+      - First-Token Latency
+      - Context Paging Bottleneck
+    definition: >-
+      The 400-500ms delay before the first output token is generated, caused by computing the full input
+      context (potentially 400K tokens) through the attention mechanism. This "prefill" phase dominates total
+      latency, making network proximity (edge compute) irrelevant for now. When Cerebras accelerated
+      token generation, it exposed all other system latencies, forcing end-to-end API optimization.
+    tags:
+      - architecture
+      - compute
+      - optimization
+    timestamps:
+      - '29:13'
+      - '29:20'
+      - '30:39'
+      - '31:49'
+    relations:
+      - target: Human as Bottleneck
+        type: contrasts_with
+        note: Prefill latency is the main barrier to achieving human-as-bottleneck flow state.
+      - target: Heterogeneous Compute
+        type: enables
+        note: Specialized chips (Cerebras) can dramatically reduce prefill latency but expose other bottlenecks.
+
+  - name: Inference Lifecycle Expansion
+    aliases:
+      - Inference Beyond Products
+    definition: >-
+      The insight that inference compute is not just for serving products to end users — it also powers
+      RL post-training, synthetic data generation, and model evaluation. This means 80%+ of total compute
+      will be inference, fundamentally changing the training-vs-inference framing.
+    tags:
+      - compute
+      - architecture
+      - economics
+    timestamps:
+      - '06:10'
+      - '06:15'
+      - '06:32'
+      - '07:01'
+    relations:
+      - target: Revenue as Compute Proxy
+        type: related_to
+        note: The broad definition of inference means more compute creates more intelligence and more revenue.
+      - target: Training vs Inference Split
+        type: related_to
+        note: Expands the definition of inference far beyond product serving.
+
+  - name: Memory Architecture Evolution
+    aliases:
+      - Multi-Layer Memory Hierarchy
+    definition: >-
+      The prediction that AI compute systems will evolve from simple compute-unit-plus-HBM configurations
+      to multi-layer memory hierarchies similar to CPU evolution (L1/L2/L3 cache, flash, storage), enabling
+      more efficient handling of variable context lengths and workload characteristics.
+    tags:
+      - architecture
+      - compute
+      - infrastructure
+    timestamps:
+      - '33:57'
+      - '34:00'
+      - '34:11'
+    relations:
+      - target: Heterogeneous Compute
+        type: part_of
+        note: Memory hierarchy is one dimension of the broader heterogeneous compute thesis.
+      - target: Prefill Latency Dominance
+        type: enables
+        note: Better memory architecture could reduce the context paging bottleneck that drives prefill latency.

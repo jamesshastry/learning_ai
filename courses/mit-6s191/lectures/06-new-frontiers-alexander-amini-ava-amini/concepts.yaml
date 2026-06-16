@@ -1,0 +1,85 @@
+concepts:
+  - name: Universal Approximation Theorem
+    aliases: [UAT]
+    definition: >-
+      A theorem stating that a feed-forward neural network with a single hidden layer containing
+      a finite number of neurons can approximate any continuous function on compact subsets of R^n
+      to arbitrary precision. Provides no guarantees on layer size or generalization capacity.
+    tags: [theory, fundamentals]
+    timestamps: ['09:09', '10:03']
+    relations:
+      - target: Overfitting
+        type: relates_to
+        note: The theorem shows networks can fit any function but says nothing about generalization.
+  - name: Diffusion Model
+    aliases: [Denoising Diffusion, Score-Based Model]
+    definition: >-
+      A generative model that creates samples by iteratively removing noise, decomposing generation into
+      many small denoising steps. Trained by adding progressive Gaussian noise to data (forward process)
+      then learning to reverse this process. Produces diverse, high-quality samples with stable training.
+    tags: [architecture, generative-models]
+    timestamps: ['29:01', '31:13']
+    relations:
+      - target: Generative Adversarial Network
+        type: alternative_to
+        note: Diffusion models address GAN training instability while achieving superior sample quality.
+  - name: Adversarial Attack
+    aliases: [Adversarial Example, Jailbreak]
+    definition: >-
+      A technique that creates inputs with imperceptible perturbations designed to fool neural network
+      models. Computed by taking the gradient of the loss function with respect to the input (rather
+      than weights) and adding noise that maximizes the loss. Extends to physical 3D objects.
+    tags: [security, limitation]
+    timestamps: ['23:44', '25:00']
+    relations:
+      - target: Gradient Descent
+        type: inverts
+        note: Adversarial attacks apply gradient ascent on the input rather than gradient descent on weights.
+  - name: Emergent Abilities
+    aliases: [Emergent Properties, Emergence]
+    definition: >-
+      Capabilities that appear in language models only after crossing certain thresholds of model scale
+      (parameters, data, compute). These abilities show step-change improvements rather than gradual
+      scaling, suggesting qualitative phase transitions in model capability.
+    tags: [scaling, llm, theory]
+    timestamps: ['53:00', '53:47']
+    relations:
+      - target: Scaling Laws
+        type: relates_to
+        note: Emergent abilities are a consequence of scaling beyond critical thresholds.
+  - name: Next-Token Prediction
+    aliases: [Autoregressive Language Modeling]
+    definition: >-
+      The core training objective of modern LLMs: given a sequence of tokens, predict the probability
+      distribution over the next token. Trained using cross-entropy loss comparing predicted
+      probabilities to the true next token. No external labels needed.
+    tags: [training, llm]
+    timestamps: ['46:26', '47:02']
+    relations:
+      - target: Cross-Entropy Loss
+        type: uses
+        note: Next-token prediction uses cross-entropy to compare predicted and true token distributions.
+  - name: Hallucination
+    aliases: [Confabulation]
+    definition: >-
+      The phenomenon where language models generate outputs that appear plausible and coherent but
+      are factually incorrect. Recent research suggests that well-calibrated language models will
+      necessarily produce hallucinations as a consequence of their probabilistic nature.
+    tags: [limitation, llm]
+    timestamps: ['51:02', '51:08']
+    relations:
+      - target: Next-Token Prediction
+        type: consequence_of
+        note: Hallucination arises from the probabilistic nature of next-token prediction.
+  - name: Algorithmic Bias
+    aliases: [Model Bias, Data Bias, Fairness]
+    definition: >-
+      Systematic and unfair discrimination in neural network predictions arising from biases present
+      in training data distributions. Manifests as underperformance on underrepresented groups and
+      reinforcement of existing societal inequities.
+    tags: [ethics, limitation, fairness]
+    timestamps: ['27:02', '27:15']
+    relations:
+      - target: Density Estimation
+        type: relates_to
+        note: Biased training data leads to biased learned distributions.

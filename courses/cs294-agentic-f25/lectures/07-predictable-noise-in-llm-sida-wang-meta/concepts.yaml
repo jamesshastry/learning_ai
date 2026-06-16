@@ -1,0 +1,65 @@
+concepts:
+  - name: Predictable Noise
+    aliases: [benchmark noise, evaluation uncertainty]
+    definition: >-
+      The quantifiable statistical uncertainty inherent in LLM benchmark scores due to
+      finite sample sizes. This noise follows known statistical distributions and can be
+      computed from the data, yet is often ignored in model comparisons.
+    tags: [evaluation, statistics, benchmarks]
+    timestamps: ["00:05"]
+    relations:
+      - target: Standard Error of the Mean
+        type: quantified_by
+        note: Standard error provides concrete bounds on predictable noise
+
+  - name: Super-Population Sampling
+    aliases: [population-based evaluation, sampling perspective]
+    definition: >-
+      The statistical perspective that benchmark questions are samples drawn from a larger
+      population of possible questions. The benchmark score estimates the model's true
+      capability on the full population, with uncertainty proportional to 1/sqrt(N).
+    tags: [statistics, evaluation, methodology]
+    timestamps: ["16:56"]
+    relations:
+      - target: Standard Error of the Mean
+        type: applies
+        note: Super-population framework motivates standard error analysis
+
+  - name: Paired Comparison Testing
+    aliases: [paired t-test, matched comparison]
+    definition: >-
+      Statistical method comparing two models on the same set of questions, computing
+      per-question differences before aggregating. Dramatically reduces variance because
+      question difficulty factors cancel out, enabling detection of smaller improvements.
+    tags: [statistics, evaluation, methodology]
+    timestamps: ["20:00"]
+    relations:
+      - target: Predictable Noise
+        type: reduces
+        note: Paired testing reduces noise compared to independent evaluation
+
+  - name: Standard Error of the Mean
+    aliases: [SEM, uncertainty of mean]
+    definition: >-
+      Statistical measure of how precisely the sample mean estimates the true population
+      mean. Equals sigma/sqrt(N) where sigma is standard deviation and N is sample size.
+      For binary outcomes, maximum SEM is 1/(2*sqrt(N)).
+    tags: [statistics, evaluation]
+    timestamps: ["18:48"]
+    relations:
+      - target: Super-Population Sampling
+        type: derived_from
+        note: SEM arises from viewing benchmark as sample from super-population
+
+  - name: Benchmark Inconsistency
+    aliases: [evaluation inconsistency, model-question noise]
+    definition: >-
+      The phenomenon where strong models fail easy problems and weak models solve hard
+      ones, undermining the assumption that solving harder problems demonstrates greater
+      capability. Suggests models have probabilistic rather than deterministic competence.
+    tags: [evaluation, reliability, benchmarks]
+    timestamps: ["10:00"]
+    relations:
+      - target: Predictable Noise
+        type: contributes_to
+        note: Inconsistency is a major source of benchmark noise

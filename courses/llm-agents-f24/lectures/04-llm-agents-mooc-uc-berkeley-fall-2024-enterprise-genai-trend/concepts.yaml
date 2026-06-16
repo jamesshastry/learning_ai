@@ -1,0 +1,82 @@
+concepts:
+  - name: LoRA Fine-Tuning
+    aliases: [Low-Rank Adaptation, Parameter-Efficient Fine-Tuning, PEFT]
+    definition: >-
+      A parameter-efficient fine-tuning method that freezes base model weights and learns small
+      low-rank adapter matrices, achieving near full-fine-tuning performance with much less
+      compute, data, and storage — the dominant enterprise fine-tuning approach.
+    tags: [training, optimization, enterprise]
+    timestamps: ['41:06', '42:12', '42:45']
+    relations:
+      - target: Model Distillation
+        type: complementary
+        note: LoRA fine-tunes existing models; distillation creates smaller models from larger ones.
+      - target: Grounding with Search
+        type: alternative_to
+        note: Fine-tuning improves model knowledge; grounding provides external knowledge.
+  - name: Model Distillation
+    aliases: [Knowledge Distillation, Teacher-Student]
+    definition: >-
+      A technique where a large teacher model generates labels (soft or hard) on training data,
+      and a smaller student model learns to reproduce those outputs, enabling cost-effective
+      deployment of smaller, faster models without extensive human labeling.
+    tags: [training, optimization, enterprise]
+    timestamps: ['44:28', '45:29', '47:12']
+    relations:
+      - target: LoRA Fine-Tuning
+        type: complementary
+        note: Distillation creates smaller models; LoRA adapts existing models.
+  - name: Grounding with Search
+    aliases: [Search Grounding, RAG Grounding]
+    definition: >-
+      Combining LLM outputs with search engine results to address hallucination, provide
+      up-to-date information, and enable source citations — nearly universal in enterprise
+      applications where factuality and authority are required.
+    tags: [RAG, enterprise, safety]
+    timestamps: ['28:05', '48:07', '50:15']
+    relations:
+      - target: Function Calling
+        type: complementary
+        note: Grounding provides knowledge; function calling enables actions.
+      - target: Dynamic Retrieval
+        type: optimized_by
+        note: Dynamic retrieval selectively invokes search to optimize cost.
+  - name: Function Calling
+    aliases: [Tool Use, Extensions, API Calling]
+    definition: >-
+      The ability of LLMs to recognize when they cannot fulfill a request and select the
+      appropriate external function/API from a library to execute real-world actions like
+      booking flights, querying databases, or accessing live data.
+    tags: [agents, enterprise, application]
+    timestamps: ['36:15', '54:55', '56:24']
+    relations:
+      - target: Grounding with Search
+        type: complementary
+        note: Function calling takes actions; grounding provides information.
+      - target: ReAct
+        type: related_to
+        note: Function calling is the action component in ReAct-style agent loops.
+  - name: Dynamic Retrieval
+    aliases: [Intelligent Retrieval, Selective Grounding]
+    definition: >-
+      An optimization technique where the system intelligently determines when to invoke
+      external search based on the LLM's response, rather than always searching — balancing
+      cost and quality since search API costs remain relatively fixed.
+    tags: [RAG, optimization, enterprise]
+    timestamps: ['53:33', '53:48']
+    relations:
+      - target: Grounding with Search
+        type: optimizes
+        note: Dynamic retrieval reduces unnecessary search calls in grounding.
+  - name: Needle in a Haystack Test
+    aliases: [NIAH, Context Retrieval Test]
+    definition: >-
+      An evaluation methodology that inserts a specific piece of information (the needle) into
+      a large context of irrelevant text (the haystack) to test whether LLMs or retrieval
+      systems can accurately locate and return the target information.
+    tags: [evaluation, benchmark]
+    timestamps: ['13:57', '14:17', '14:48']
+    relations:
+      - target: Grounding with Search
+        type: evaluates
+        note: Tests whether large context windows can replace traditional search.

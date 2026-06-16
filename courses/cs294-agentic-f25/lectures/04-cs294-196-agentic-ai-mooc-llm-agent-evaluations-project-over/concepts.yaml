@@ -1,0 +1,77 @@
+concepts:
+  - name: Task Validity
+    aliases: [construct validity for tasks]
+    definition: >-
+      The property that successful completion of a benchmark task actually reflects the
+      target capability being measured. Ensures that what you test is what you intend to evaluate.
+    tags: [evaluation, benchmarks, methodology]
+    timestamps: ["29:14"]
+    relations:
+      - target: Outcome Validity
+        type: complementary_to
+        note: Both task and outcome validity are needed for a trustworthy benchmark
+
+  - name: Outcome Validity
+    aliases: [metric validity, evaluation faithfulness]
+    definition: >-
+      The property that evaluation metrics faithfully capture whether the agent actually
+      succeeded at the task. Includes considerations like semantic equivalence, negation
+      handling, and robustness to adversarial outputs.
+    tags: [evaluation, benchmarks, methodology]
+    timestamps: ["29:55"]
+    relations:
+      - target: Task Validity
+        type: complementary_to
+        note: Outcome validity ensures the scoring system matches task success
+
+  - name: Green Agent
+    aliases: [evaluation agent, grading agent, benchmark orchestrator]
+    definition: >-
+      An agent that orchestrates the entire evaluation pipeline for testing other agents:
+      preparing environments, distributing test tasks, collecting results, verifying
+      execution correctness, computing metrics, and reporting outcomes.
+    tags: [evaluation, agents, infrastructure]
+    timestamps: ["01:05:07"]
+    relations:
+      - target: White Agent
+        type: evaluates
+        note: Green agents test participant/white agents on benchmark tasks
+
+  - name: Dynamic Benchmark
+    aliases: [evolving benchmark, live benchmark]
+    definition: >-
+      A benchmark with test cases that are continuously updated or periodically regenerated,
+      preventing data contamination and maintaining relevance with real-world data shifts.
+      Examples include LiveCodeBench and DynaBench.
+    tags: [evaluation, benchmarks]
+    timestamps: ["21:18"]
+    relations:
+      - target: Data Contamination
+        type: resists
+        note: Dynamic benchmarks prevent memorization of test cases
+
+  - name: LLM-as-Judge
+    aliases: [model-based evaluation, AI judge]
+    definition: >-
+      Using a strong LLM to evaluate the quality of another model's outputs, as a cheaper
+      alternative to human evaluation. Requires validation for consistency, bias, and
+      resistance to adversarial manipulation (e.g., hidden prompt injection in outputs).
+    tags: [evaluation, methodology]
+    timestamps: ["17:00"]
+    relations:
+      - target: Human Evaluation
+        type: approximates
+        note: LLM judges are cheaper but less reliable than human evaluators
+
+  - name: SWE-bench Verified
+    aliases: [SWE-bench-v]
+    definition: >-
+      A curated subset of 500 problems from the original SWE-bench, created by having
+      93 professional developers verify task quality. Filtered out 68.3% of original
+      samples with under-specified descriptions or unfair unit tests.
+    tags: [benchmarks, software-engineering, evaluation]
+    timestamps: ["01:18:37"]
+    relations:
+      - target: SWE-bench
+        type: improved_version_of
+        note: Addresses quality issues in the original benchmark

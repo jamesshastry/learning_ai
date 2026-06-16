@@ -1,0 +1,79 @@
+concepts:
+  - name: RLVR (RL with Verifiable Rewards)
+    definition: >-
+      Reinforcement learning approach that replaces neural reward models with simple rule-based verification functions
+      (answer correctness, constraint satisfaction)
+    importance: >-
+      Eliminates reward model noise and over-optimization; proven effective in DeepSeek R1 and Tulu 3 for math and
+      instruction following
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: Persona-Driven Synthetic Data
+    definition: >-
+      Generating diverse training problems by specifying different personas (chemist, musician, child) to control the
+      domain and difficulty of synthetic examples
+    importance: Ensures high diversity in synthetic data generation, consistently improving math reasoning performance
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: Budget Forcing
+    definition: >-
+      Test-time scaling technique that injects "wait" tokens when a model tries to stop before reaching a token budget,
+      forcing it to think longer
+    importance: Simplest effective test-time scaling method — achieves strong reasoning gains with no additional model training
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: Tulu 3 Post-Training Recipe
+    definition: >-
+      Three-stage fully open post-training pipeline (SFT → Preference Tuning → RLVR) with detailed data curation,
+      applicable to any open-weight base model
+    importance: Demonstrates that open post-training recipes can match proprietary model performance (GPT-4o level)
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: Mid-Training
+    definition: >-
+      Final ~1% of pre-training where high-quality domain-specific data (math, code, reasoning) is upsampled with
+      decaying learning rate
+    importance: Bridges pre-training and post-training by injecting reasoning capability into the base model before fine-tuning
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: Self-RAG
+    definition: >-
+      RAG model where the language model generates special critic tokens to evaluate whether retrieval is needed and
+      whether generated content is supported by evidence
+    importance: Enables self-guided generation with automatic quality control, improving factuality without external verification
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: Data Mixing for Post-Training
+    definition: >-
+      The process of balancing training data across capabilities (chat, math, coding, safety) to maintain performance
+      across all dimensions simultaneously
+    importance: >-
+      Critical engineering challenge — adding too much data for one capability (e.g., math) degrades others (e.g.,
+      creative writing)
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: On-Policy Preference Data
+    definition: >-
+      Preference data generated using the current model's own outputs as candidates, rather than outputs from other
+      models
+    importance: >-
+      Provides more relevant training signal than off-policy data, showing consistent improvements when combined with
+      off-policy examples
+    tags:
+      - theory
+    timestamps: []
+    aliases: []

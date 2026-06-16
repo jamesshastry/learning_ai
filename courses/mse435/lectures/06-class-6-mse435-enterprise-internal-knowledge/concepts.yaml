@@ -1,0 +1,249 @@
+concepts:
+  - name: RLVR (RL with Verifiable Rewards)
+    aliases:
+      - Reinforcement Learning with Verifiable Rewards
+      - Verifiable RL
+    definition: >-
+      A training technique where models are placed in constrained environments with deterministic reward
+      signals — the model attempts a task hundreds or thousands of times, and a verifier (compiler, unit
+      tests, mathematical proof checker) provides a binary or scalar reward. Uses only ~5% of pre-training
+      compute but delivers massive capability gains. Key innovation behind reasoning models like o1 and R1.
+    tags:
+      - training
+      - architecture
+      - optimization
+    timestamps:
+      - '14:44'
+      - '14:50'
+      - '23:19'
+      - '31:32'
+    relations:
+      - target: Emergent Chain-of-Thought
+        type: enables
+        note: RLVR training in constrained environments is what causes chain-of-thought to emerge.
+      - target: Code as AGI-Complete Domain
+        type: enables
+        note: Code is ideal for RLVR because compilation and unit tests provide deterministic verification.
+
+  - name: Post-Training Scaling
+    aliases:
+      - RL Compute Scaling
+      - Post-Training Investment
+    definition: >-
+      The emerging paradigm of investing significantly more compute in post-training (RL, preference tuning)
+      relative to pre-training. DeepSeek R1 used ~5% of V3 pre-training compute for RL, but this ratio is
+      rapidly increasing as labs run data-center-wide RL runs. One of Jensen's "three scaling laws" alongside
+      pre-training and test-time scaling.
+    tags:
+      - training
+      - compute
+      - economics
+    timestamps:
+      - '31:37'
+      - '31:43'
+      - '32:13'
+      - '32:29'
+    relations:
+      - target: RLVR (RL with Verifiable Rewards)
+        type: enables
+        note: RLVR is the primary technique driving the shift toward post-training compute investment.
+      - target: Inference Lifecycle Expansion
+        type: related_to
+        note: RL training is primarily an inference workload, blurring the training-inference boundary.
+
+  - name: Emergent Chain-of-Thought
+    aliases:
+      - Emergent Reasoning
+      - Chain-of-Thought as Emergent Behavior
+    definition: >-
+      The discovery that model reasoning (thinking step-by-step, self-correcting, exploring multiple
+      approaches) emerges spontaneously from RL training in constrained environments without being explicitly
+      taught. Chain-of-thought was not designed or programmed; it appeared as models were optimized against
+      verifiable rewards.
+    tags:
+      - theory
+      - training
+      - architecture
+    timestamps:
+      - '11:16'
+      - '11:18'
+      - '11:27'
+    relations:
+      - target: RLVR (RL with Verifiable Rewards)
+        type: enables
+        note: Chain-of-thought emerges from RLVR training, not from explicit instruction.
+
+  - name: Code as AGI-Complete Domain
+    aliases:
+      - Coding as Universal Language
+    definition: >-
+      The thesis held by many AI researchers that coding models represent general intelligence because every
+      task can ultimately be reduced to writing and executing code. This explains why Claude and other models
+      increasingly write code to accomplish non-coding tasks (slide generation, data analysis) rather than
+      using specialized tool calls.
+    tags:
+      - theory
+      - application
+      - training
+    timestamps:
+      - '15:28'
+      - '15:34'
+      - '15:38'
+    relations:
+      - target: RLVR (RL with Verifiable Rewards)
+        type: enables
+        note: Code's deterministic verifiability makes it the ideal RLVR domain.
+      - target: Enterprise Model Specialization
+        type: related_to
+        note: Even enterprise specialization often involves training models to write better domain-specific code.
+
+  - name: Enterprise Model Specialization
+    aliases:
+      - Custom Enterprise Models
+      - Model Fine-Tuning for Business
+    definition: >-
+      The practice of taking frontier foundation models and training specialized versions optimized for
+      specific enterprise tasks using proprietary data and enterprise-specific evaluations. General models
+      set the floor; specialized models set the ceiling for competitive differentiation. Examples: DoorDash
+      menu extraction, Cognition/Windsurf bug detection, Ramp spreadsheet search.
+    tags:
+      - application
+      - enterprise
+      - training
+    timestamps:
+      - '26:55'
+      - '27:02'
+      - '27:11'
+      - '29:16'
+    relations:
+      - target: The Context Problem
+        type: contrasts_with
+        note: Specialization directly addresses Ali Ghodsi's context problem by baking domain knowledge into the model.
+      - target: Eval-Driven Development
+        type: enables
+        note: Enterprise specialization requires defining enterprise-specific evals to optimize against.
+
+  - name: Continual Learning
+    aliases:
+      - Online Learning
+      - Production Learning Loop
+    definition: >-
+      The emerging capability for AI models to learn from production interactions with sparse, implicit
+      reward signals — such as whether a user accepted or reverted a code suggestion. Represented by Cursor's
+      composer model (online training from user behavior) and Applied Compute's context basing (offline agents
+      extracting learnings from traces). The "holy grail" and next major bottleneck in AI development.
+    tags:
+      - training
+      - application
+      - theory
+    timestamps:
+      - '36:03'
+      - '36:07'
+      - '37:17'
+      - '37:45'
+    relations:
+      - target: RLVR (RL with Verifiable Rewards)
+        type: extends
+        note: Continual learning extends RL to production settings with sparse rather than dense rewards.
+      - target: Enterprise Model Specialization
+        type: enables
+        note: Continual learning allows specialized models to improve over time from actual enterprise usage.
+
+  - name: Pareto Frontier Optimization
+    aliases:
+      - Performance-Cost-Latency Tradeoff
+    definition: >-
+      The practice of training small, specialized models that match large frontier model performance on
+      specific tasks at a fraction of the cost and latency. By aggressively post-training a small model
+      on a narrow domain, enterprises can achieve the performance benefits of large models with the
+      economics of small ones.
+    tags:
+      - optimization
+      - economics
+      - application
+    timestamps:
+      - '33:41'
+      - '33:43'
+      - '33:52'
+    relations:
+      - target: Enterprise Model Specialization
+        type: part_of
+        note: Pareto optimization is the economic rationale for enterprise model specialization.
+      - target: Post-Training Scaling
+        type: enables
+        note: Efficient post-training makes it viable to create small, high-performance specialized models.
+
+  - name: Eval-Driven Development
+    aliases:
+      - Eval-First Training
+      - Eval Maxing
+    definition: >-
+      The practice at AI labs where evaluation benchmarks define the training roadmap — you first define
+      the hill to climb (the eval), then use RL as an "eval-maxing machine" to climb it. Evals are the
+      most guarded asset at labs. SWE-bench sparked the coding model race. Enterprise evals differ from
+      lab evals and define the specialization opportunity.
+    tags:
+      - training
+      - application
+    timestamps:
+      - '24:04'
+      - '24:45'
+      - '24:52'
+      - '25:16'
+    relations:
+      - target: RLVR (RL with Verifiable Rewards)
+        type: enables
+        note: Evals provide the reward signal that RL training optimizes against.
+      - target: Enterprise Model Specialization
+        type: enables
+        note: Enterprise-specific evals are what enable meaningful model specialization beyond frontier labs.
+
+  - name: Pre-Training Data Wall
+    aliases:
+      - Internet Data Exhaustion
+      - Data Scarcity Problem
+    definition: >-
+      The challenge that pre-training models have consumed nearly all available internet-scale data. Labs
+      are resorting to buying old libraries to scan books, investing in synthetic data generation, and
+      developing architectural advances to extract more learning from existing data. This data wall is
+      a primary driver of the shift toward post-training scaling.
+    tags:
+      - training
+      - data
+      - economics
+    timestamps:
+      - '19:56'
+      - '20:00'
+      - '21:36'
+    relations:
+      - target: Post-Training Scaling
+        type: enables
+        note: Running out of pre-training data makes post-training the primary lever for improving models.
+      - target: RLVR (RL with Verifiable Rewards)
+        type: related_to
+        note: RLVR is far more data-efficient than pre-training, partly solving the data wall problem.
+
+  - name: Synthetic Data Flywheel
+    aliases:
+      - AI-Generated Training Data
+    definition: >-
+      The use of AI models to generate training data for the next generation of models, exploiting the
+      generator-verifier gap (e.g., generating code problems and verifying solutions via unit tests).
+      As models improve, synthetic data quality improves, creating a flywheel. This is increasingly
+      replacing human data labeling for RL training.
+    tags:
+      - training
+      - data
+      - optimization
+    timestamps:
+      - '22:08'
+      - '22:10'
+      - '46:01'
+      - '46:21'
+    relations:
+      - target: Pre-Training Data Wall
+        type: contrasts_with
+        note: Synthetic data helps overcome natural data scarcity.
+      - target: RLVR (RL with Verifiable Rewards)
+        type: enables
+        note: Synthetic data can generate the tasks and environments needed for RLVR training.

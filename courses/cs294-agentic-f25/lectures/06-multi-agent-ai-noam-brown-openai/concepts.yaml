@@ -1,0 +1,81 @@
+concepts:
+  - name: Minimax Equilibrium
+    aliases: [Nash equilibrium, game-theoretic equilibrium]
+    definition: >-
+      A set of strategies where no player can improve by unilaterally deviating. In
+      two-player zero-sum games, playing minimax guarantees not losing in expectation.
+      Opponents' mistakes become profit.
+    tags: [game-theory, multi-agent, strategy]
+    timestamps: ["03:54", "04:46"]
+    relations:
+      - target: Exploitability
+        type: measured_by
+        note: Exploitability = 0 means the strategy is a minimax equilibrium
+      - target: Self-Play
+        type: converges_to
+        note: Sound self-play converges to minimax equilibrium in 2p0s games
+
+  - name: Exploitability
+    aliases: [exploitability measure, distance from equilibrium]
+    definition: >-
+      A measure of how much value an agent loses against its worst-case (best response)
+      opponent. Zero exploitability means the agent plays a perfect equilibrium strategy.
+      Used to evaluate robustness of game-playing agents.
+    tags: [game-theory, evaluation, robustness]
+    timestamps: ["05:01"]
+    relations:
+      - target: Minimax Equilibrium
+        type: measures_distance_to
+        note: Exploitability quantifies how far a strategy is from equilibrium
+
+  - name: Self-Play
+    aliases: [self-play training, recursive self-improvement]
+    definition: >-
+      Training paradigm where an agent improves by playing against copies of itself.
+      In two-player zero-sum games, provably converges to minimax equilibrium without
+      any human data. Behind breakthroughs in AlphaGo, poker AI, and StarCraft.
+    tags: [training, game-theory, multi-agent]
+    timestamps: ["09:51"]
+    relations:
+      - target: Minimax Equilibrium
+        type: converges_to
+        note: Sound self-play provably reaches equilibrium in 2p0s games
+
+  - name: Population Best Response
+    aliases: [population-based strategy, meta-strategy]
+    definition: >-
+      Strategy that maximizes performance against the actual distribution of opponents
+      rather than against a worst-case adversary. May differ from minimax equilibrium —
+      in poker, the most profitable player and the most robust player can be different.
+    tags: [game-theory, strategy, multi-agent]
+    timestamps: ["03:58"]
+    relations:
+      - target: Minimax Equilibrium
+        type: contrasts_with
+        note: In complex games these are not necessarily the same strategy
+
+  - name: AI Debate
+    aliases: [debate for AI safety, adversarial argumentation]
+    definition: >-
+      A framework where two AI agents argue opposing positions while a human judge
+      evaluates. Adversarial dynamics expose weaknesses in each side's arguments,
+      enabling even non-expert judges to make better decisions about AI outputs.
+    tags: [safety, multi-agent, verification]
+    timestamps: ["20:00"]
+    relations:
+      - target: Self-Play
+        type: application_of
+        note: Debate applies adversarial self-play dynamics to improve AI outputs
+
+  - name: Counterfactual Regret Minimization
+    aliases: [CFR]
+    definition: >-
+      Algorithm for finding Nash equilibria in imperfect-information games like poker.
+      Tracks regret for not having taken each action at each decision point, converging
+      to equilibrium over iterations. Standard RL methods fail in these settings.
+    tags: [algorithm, game-theory, imperfect-information]
+    timestamps: ["11:16"]
+    relations:
+      - target: Self-Play
+        type: enables_in
+        note: CFR enables sound self-play in imperfect-information games

@@ -1,0 +1,81 @@
+concepts:
+  - name: Virtual Lab
+    aliases: [multi-agent scientific lab]
+    definition: >-
+      Open-source platform where teams of specialized AI agents collaborate on scientific
+      research. Features a PI agent that creates sub-agents, group meetings, parallel
+      discussions, and consensus extraction. Published Nature paper designing SARS-CoV-2 nanobodies.
+    tags: [agents, science, multi-agent, platform]
+    timestamps: ["03:16"]
+    relations:
+      - target: AI Co-Scientist
+        type: instance_of
+        note: Virtual Lab is a concrete implementation of the co-scientist paradigm
+      - target: Scientific Critic Agent
+        type: contains
+        note: Includes a dedicated skeptical reviewer agent
+
+  - name: AI Co-Scientist
+    aliases: [AI scientist, scientific agent]
+    definition: >-
+      Paradigm shift from AI as a narrow tool for well-defined problems to AI as a
+      research collaborator that can generate hypotheses, design experiments, analyze
+      data, and write papers across diverse scientific domains.
+    tags: [science, paradigm, agents]
+    timestamps: ["00:00"]
+    relations:
+      - target: Virtual Lab
+        type: realized_by
+        note: Virtual Lab implements the co-scientist paradigm with multi-agent teams
+
+  - name: Paper2Agent
+    aliases: [paper agent, interactive paper]
+    definition: >-
+      System that converts research papers into interactive AI agents capable of
+      explaining methods, assisting replication, answering questions about limitations,
+      and facilitating knowledge dissemination beyond static text.
+    tags: [science, knowledge, agents]
+    timestamps: ["15:00"]
+    relations:
+      - target: AI Co-Scientist
+        type: supports
+        note: Paper2Agent makes existing research accessible for AI-driven discovery
+
+  - name: Agent School
+    aliases: [agent self-improvement, scientific agent training]
+    definition: >-
+      Training curriculum where AI agents teach themselves domain-specific skills by
+      fine-tuning on specialized tools (AlphaFold, molecular docking) and scientific
+      literature, enabling effective use of tools that base models cannot operate.
+    tags: [training, science, agents]
+    timestamps: ["11:01"]
+    relations:
+      - target: Virtual Lab
+        type: component_of
+        note: Agent school provides the training mechanism for Virtual Lab sub-agents
+
+  - name: Scientific Critic Agent
+    aliases: [critic agent, skeptical reviewer]
+    definition: >-
+      A dedicated agent role in multi-agent scientific teams that provides conservative,
+      skeptical feedback on other agents' proposals, analogous to a critical peer reviewer.
+      Helps identify potential issues and overly optimistic assumptions.
+    tags: [agents, science, evaluation]
+    timestamps: ["08:17"]
+    relations:
+      - target: Virtual Lab
+        type: role_in
+        note: Critic agent participates in all Virtual Lab discussions
+
+  - name: Parallel Meeting Consensus
+    aliases: [parallel discussion, consensus extraction]
+    definition: >-
+      Technique of running multiple parallel agent meetings per scientific question
+      (e.g., 5x), exploiting LLM randomness for idea diversity, then having the PI
+      agent read all transcripts to extract a consensus plan.
+    tags: [multi-agent, methodology, science]
+    timestamps: ["09:14"]
+    relations:
+      - target: Virtual Lab
+        type: mechanism_of
+        note: Parallel meetings explore broader idea space within Virtual Lab

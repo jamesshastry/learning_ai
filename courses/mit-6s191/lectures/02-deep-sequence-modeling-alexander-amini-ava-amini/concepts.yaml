@@ -1,0 +1,128 @@
+concepts:
+  - name: Recurrent Neural Network
+    aliases: [RNN]
+    definition: >-
+      A class of neural networks that maintain an internal hidden state h(t) updated at each time step
+      via a recurrence relation, enabling processing of sequential data by linking computations across time.
+      Uses shared weight matrices at every time step.
+    tags: [architecture, sequence-modeling]
+    timestamps: ['13:20', '14:00']
+    relations:
+      - target: Hidden State
+        type: contains
+        note: The hidden state is the core mechanism enabling temporal memory in RNNs.
+      - target: Backpropagation Through Time
+        type: trained_by
+        note: RNNs are trained using BPTT to propagate gradients across time steps.
+  - name: Hidden State
+    aliases: [Cell State, Internal State, h(t)]
+    definition: >-
+      An internal variable maintained by an RNN that captures information from past time steps.
+      Updated at each step as h(t) = f(W_hh * h(t-1) + W_xh * x(t)), it serves as the network's
+      memory of previous inputs in the sequence.
+    tags: [architecture, sequence-modeling]
+    timestamps: ['11:06', '13:00']
+    relations:
+      - target: Recurrent Neural Network
+        type: part_of
+        note: The hidden state is the defining component of RNNs.
+  - name: Backpropagation Through Time
+    aliases: [BPTT]
+    definition: >-
+      The training algorithm for RNNs that extends standard backpropagation across sequential time steps,
+      computing gradients from the current position back to the beginning of the sequence. Involves
+      repeated multiplication by weight matrices, leading to vanishing or exploding gradient problems.
+    tags: [training, optimization]
+    timestamps: ['32:30', '32:36']
+    relations:
+      - target: Vanishing Gradient Problem
+        type: causes
+        note: Repeated multiplication by small weight values causes gradient signal to decay.
+  - name: Vanishing Gradient Problem
+    aliases: [Vanishing Gradients]
+    definition: >-
+      A training difficulty where gradients shrink exponentially as they propagate through many time steps
+      or layers, resulting in negligible learning signal for early parts of the sequence. Biases the model
+      toward capturing only short-term dependencies.
+    tags: [training, limitation]
+    timestamps: ['34:00', '34:55']
+    relations:
+      - target: LSTM
+        type: addressed_by
+        note: LSTM architecture was designed to mitigate vanishing gradients.
+  - name: LSTM
+    aliases: [Long Short-Term Memory]
+    definition: >-
+      A specialized RNN architecture introduced by Schmidhuber et al. that uses gating mechanisms to
+      better control the flow of information in state updates, mitigating the vanishing gradient problem
+      and enabling learning of longer-term dependencies.
+    tags: [architecture, sequence-modeling]
+    timestamps: ['36:15', '36:28']
+    relations:
+      - target: Vanishing Gradient Problem
+        type: addresses
+        note: LSTM's gating mechanisms control information flow to prevent gradient vanishing.
+  - name: Attention Mechanism
+    aliases: [Attention]
+    definition: >-
+      A mechanism that enables neural networks to learn which parts of an input sequence are most important
+      by computing similarity scores between query and key representations, then extracting relevant
+      features via weighted combination with value representations. Eliminates the need for sequential
+      recurrence and enables parallel processing.
+    tags: [architecture, sequence-modeling, transformer]
+    timestamps: ['42:35', '43:15']
+    relations:
+      - target: Self-Attention
+        type: generalizes
+        note: Self-attention applies attention within a single sequence.
+      - target: Transformer
+        type: enables
+        note: The attention mechanism is the foundational building block of transformers.
+  - name: Self-Attention
+    aliases: [Intra-Attention]
+    definition: >-
+      A form of attention where the query, key, and value are all derived from the same input sequence,
+      allowing the model to identify relationships between different positions within that sequence.
+      Computed as softmax(Q·K^T / sqrt(d_k)) × V.
+    tags: [architecture, transformer]
+    timestamps: ['47:05', '50:02']
+    relations:
+      - target: Attention Mechanism
+        type: variant_of
+        note: Self-attention is attention applied within a single input.
+  - name: Transformer
+    aliases: [Transformer Architecture]
+    definition: >-
+      A neural network architecture built entirely on attention mechanisms (no recurrence), using stacked
+      self-attention heads with positional encodings. Powers modern language models (GPT, BERT) and extends
+      to vision and biology. Highly parallelizable compared to RNNs.
+    tags: [architecture, sequence-modeling]
+    timestamps: ['42:47', '54:50']
+    relations:
+      - target: Self-Attention
+        type: built_on
+        note: The transformer is built on stacked self-attention heads.
+  - name: Positional Encoding
+    aliases: [Positional Embedding]
+    definition: >-
+      A mathematical encoding added to input embeddings to preserve information about the position/order
+      of tokens in a sequence, necessary because attention mechanisms process all positions simultaneously
+      and would otherwise lose sequential order information.
+    tags: [architecture, transformer]
+    timestamps: ['47:40', '48:00']
+    relations:
+      - target: Transformer
+        type: part_of
+        note: Positional encodings are a required component of transformer architectures.
+  - name: Tokenization
+    aliases: [Token, Embedding, Encoding]
+    definition: >-
+      The process of converting raw data (text, audio, etc.) into numerical representations suitable for
+      neural network processing. Ideally captures semantic relationships so that similar concepts map to
+      nearby points in the embedding space.
+    tags: [data-processing, nlp]
+    timestamps: ['24:10', '25:36']
+    relations:
+      - target: Transformer
+        type: prerequisite_for
+        note: Tokenization is the first step before feeding data into transformer models.

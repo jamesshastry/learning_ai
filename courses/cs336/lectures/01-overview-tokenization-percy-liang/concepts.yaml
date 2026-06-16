@@ -1,0 +1,104 @@
+concepts:
+  - name: Byte Pair Encoding
+    aliases: [BPE, byte-pair encoding]
+    definition: >-
+      A data-driven tokenization algorithm that starts with byte-level tokens and iteratively
+      merges the most frequent adjacent pair into a new token, building a vocabulary tailored
+      to the training corpus. Common sequences become single tokens while rare sequences
+      fragment into multiple tokens, enabling adaptive computation.
+    tags: [data, architecture]
+    timestamps: ["01:05:07", "01:12:03"]
+    relations:
+      - target: Compression Ratio
+        type: enables
+        note: BPE optimizes compression ratio by creating tokens for frequent byte sequences
+      - target: Tokenization
+        type: part_of
+        note: BPE is the dominant tokenization algorithm for modern LLMs
+
+  - name: Compression Ratio
+    aliases: [bytes per token]
+    definition: >-
+      The ratio of bytes to tokens in a tokenized sequence, measuring how efficiently a
+      tokenizer compresses raw text. Higher compression means shorter sequences, which is
+      desirable since attention cost is quadratic in sequence length.
+    tags: [data, optimization]
+    timestamps: ["01:07:28"]
+    relations:
+      - target: Byte Pair Encoding
+        type: related_to
+        note: BPE aims to maximize compression ratio through learned merges
+      - target: Vocabulary Size
+        type: contrasts_with
+        note: Increasing vocab size improves compression but introduces sparsity
+
+  - name: Scaling Laws
+    aliases: [compute-optimal scaling, neural scaling laws]
+    definition: >-
+      Empirical relationships that predict model performance (loss) as a function of compute
+      budget, model size, and data size. Scaling recipes map flop budgets to hyperparameter
+      configurations, enabling prediction of large-scale performance from small experiments.
+    tags: [training, theory]
+    timestamps: ["45:28", "46:20"]
+    relations:
+      - target: Chinchilla Scaling
+        type: related_to
+        note: Chinchilla refined compute-optimal scaling to balance model size vs data
+      - target: Hyperparameter Transfer
+        type: enables
+        note: Scaling laws require predictable hyperparameter behavior across scales
+
+  - name: Adaptive Computation
+    aliases: [variable-length tokenization]
+    definition: >-
+      The principle that different parts of an input should receive different amounts of
+      computational resources. In tokenization, common sequences compress into single tokens
+      (less computation) while rare or complex parts remain as multiple tokens (more computation).
+    tags: [architecture, optimization]
+    timestamps: ["28:45", "01:18:41"]
+    relations:
+      - target: Byte Pair Encoding
+        type: related_to
+        note: BPE implements adaptive computation through variable token granularity
+      - target: Mixture of Experts
+        type: related_to
+        note: MoE also provides adaptive computation by routing to specialized experts
+
+  - name: Bitter Lesson
+    aliases: [Rich Sutton's bitter lesson]
+    definition: >-
+      The observation (often misinterpreted) that algorithms which scale with compute are what
+      matter most in AI progress. The correct interpretation is not that "only scale matters"
+      but that algorithmic efficiency multiplied by resources produces the best results.
+    tags: [theory, training]
+    timestamps: ["09:15"]
+    relations:
+      - target: Scaling Laws
+        type: related_to
+        note: Scaling laws operationalize the bitter lesson by predicting scale benefits
+
+  - name: From Scratch Philosophy
+    aliases: [build-to-learn]
+    definition: >-
+      The pedagogical approach of CS336 where students implement every component of the
+      language model pipeline from raw code rather than using existing frameworks, in order
+      to deeply understand how each piece works and interacts with others.
+    tags: [training, theory]
+    timestamps: ["02:35", "23:38"]
+    relations:
+      - target: Resource Accounting
+        type: enables
+        note: Building from scratch forces understanding of where compute and memory go
+
+  - name: Speculative Decoding
+    aliases: [spec decoding, speculative execution]
+    definition: >-
+      An inference optimization where a smaller, cheaper draft model generates candidate
+      tokens ahead, which are then verified in parallel by the full model. If the draft
+      tokens are accepted, generation is much faster than one-token-at-a-time decoding.
+    tags: [optimization, infrastructure]
+    timestamps: ["43:15"]
+    relations:
+      - target: KV Cache
+        type: related_to
+        note: Speculative decoding leverages KV cache for efficient parallel verification

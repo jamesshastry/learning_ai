@@ -1,0 +1,106 @@
+concepts:
+  - name: Data Parallelism
+    aliases: [DP, Distributed Data Parallel, DDP]
+    definition: >-
+      The simplest distributed training strategy: replicate the full model on each GPU, distribute
+      different data batches to each replica, compute gradients independently, then synchronize
+      via all-reduce mean. Scales linearly but limited by batch size degrading generalization.
+    tags: [distributed-training, parallelism]
+    timestamps: ['09:04', '10:41']
+    relations:
+      - target: FSDP
+        type: extended_by
+        note: FSDP adds sharding on top of the data parallel baseline.
+  - name: Activation Checkpointing
+    aliases: [Gradient Checkpointing, Rematerialization]
+    definition: >-
+      A memory optimization that stores activations only at periodic checkpoints (e.g., every 4th layer)
+      and recomputes intermediate activations during the backward pass. Achieves ~4x memory reduction
+      at ~33% extra compute cost. Widely used because GPU compute is cheaper than memory.
+    tags: [optimization, memory, distributed-training]
+    timestamps: ['13:29', '14:53']
+    relations:
+      - target: Pipeline Parallelism
+        type: complements
+        note: Often used together with pipeline parallelism for large model training.
+  - name: FSDP
+    aliases: [Fully Sharded Data Parallel, DeepSpeed Zero]
+    definition: >-
+      A distributed training strategy that shards model parameters, gradients, and optimizer states
+      across GPUs, gathering them on-demand during forward/backward passes. PyTorch-native implementation
+      wraps nn.Modules; DeepSpeed Zero provides equivalent functionality with config-file approach.
+      Stages: Zero-1 (optimizer), Zero-2 (+gradients), Zero-3/FSDP (+parameters).
+    tags: [distributed-training, memory, framework]
+    timestamps: ['19:03', '22:00']
+    relations:
+      - target: Data Parallelism
+        type: extends
+        note: FSDP adds memory sharding on top of data parallel training.
+  - name: Pipeline Parallelism
+    aliases: [PP, Model Parallelism by Depth]
+    definition: >-
+      Splitting a deep neural network by depth across multiple GPUs/nodes, with each device holding
+      a subset of layers. Micro-batching overlaps computation to reduce pipeline bubble idle time.
+      Advanced schedules (1F1B, interleaved) further minimize waste.
+    tags: [distributed-training, parallelism]
+    timestamps: ['22:00', '23:57']
+    relations:
+      - target: Tensor Parallelism
+        type: complements
+        note: Pipeline parallel splits by depth; tensor parallel splits within layers.
+  - name: Tensor Parallelism
+    aliases: [TP, Intra-Layer Parallelism]
+    definition: >-
+      Splitting weight matrices within a single layer across GPUs using column parallelism (partition
+      output) and row parallelism (partition input). For transformer MLPs, stacking column + row
+      parallelism requires only one all-reduce per two-layer block. Best on high-bandwidth interconnects.
+    tags: [distributed-training, parallelism]
+    timestamps: ['24:27', '26:20']
+    relations:
+      - target: Pipeline Parallelism
+        type: complements
+        note: TP splits within layers; PP splits across layers.
+  - name: Mixture of Experts
+    aliases: [MoE, Sparse Mixture of Experts]
+    definition: >-
+      A neural network architecture that scales model capacity without proportional compute increase
+      by splitting weight matrices into multiple "experts" with a learned router that activates only
+      a subset per input. Expert parallelism places different experts on different GPUs. Load
+      balancing is critical for both training stability and GPU utilization.
+    tags: [architecture, distributed-training, efficiency]
+    timestamps: ['27:52', '29:31']
+    relations:
+      - target: Tensor Parallelism
+        type: related_to
+        note: Expert parallelism is a form of tensor parallelism specialized for MoE layers.
+  - name: Scaling Laws
+    aliases: [Neural Scaling Laws, Power Law Scaling]
+    definition: >-
+      Empirically observed power-law relationships between model size, training data volume, and
+      model performance (loss). More parameters and more data independently improve performance,
+      but inference cost considerations often drive smaller models trained on more data in practice.
+    tags: [theory, scaling, training]
+    timestamps: ['05:51', '07:00']
+    relations:
+      - target: Data Parallelism
+        type: motivates
+        note: Scaling laws motivate the need for distributed training to handle more data.
+  - name: 5D Parallelism
+    aliases: [4D Parallelism, Multi-Dimensional Parallelism]
+    definition: >-
+      The practice of composing multiple parallelism strategies simultaneously for large-scale training:
+      data parallel (across groups), tensor parallel (within nodes), pipeline parallel (across nodes),
+      expert parallel (for MoE), and sequence/context parallel (for long sequences). Strategy selection
+      depends on model size, cluster topology, and communication bandwidth hierarchy.
+    tags: [distributed-training, parallelism, systems]
+    timestamps: ['37:07', '41:06']
+    relations:
+      - target: Data Parallelism
+        type: contains
+        note: Data parallelism is one of the 5 dimensions.
+      - target: Tensor Parallelism
+        type: contains
+        note: Tensor parallelism is one of the 5 dimensions.
+      - target: Pipeline Parallelism
+        type: contains
+        note: Pipeline parallelism is one of the 5 dimensions.

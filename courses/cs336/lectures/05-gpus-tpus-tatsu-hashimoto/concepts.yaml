@@ -1,0 +1,69 @@
+concepts:
+  - name: Streaming Multiprocessor
+    aliases: [SM, compute unit]
+    definition: >-
+      The fundamental compute unit of an Nvidia GPU, containing its own registers, shared
+      memory, L1 cache, warp schedulers, and tensor cores. Modern GPUs have 100-200 SMs.
+      Thread blocks are scheduled onto SMs for execution.
+    tags: [hardware]
+    timestamps: ["05:00", "10:00"]
+    relations:
+      - target: Warp
+        type: part_of
+        note: Each SM schedules and executes warps of 32 threads
+
+  - name: Flash Attention
+    aliases: [FlashAttention, flash attn]
+    definition: >-
+      An IO-aware attention algorithm that tiles the Q, K, V computation into blocks
+      that fit in GPU SRAM, using online softmax (log-sum-exp trick) to accumulate results
+      without materializing the full N×N attention matrix in HBM. Achieves O(N) memory
+      and significant wall-clock speedup.
+    tags: [optimization, architecture]
+    timestamps: ["01:05:00", "01:17:08"]
+    relations:
+      - target: Arithmetic Intensity
+        type: related_to
+        note: Flash Attention increases arithmetic intensity by reducing HBM traffic
+      - target: Activation Checkpointing
+        type: related_to
+        note: Flash Attention recomputes attention in backward pass like checkpointing
+
+  - name: Tensor Cores
+    aliases: [tensor core units, matrix multiply-accumulate units]
+    definition: >-
+      Specialized GPU hardware that performs small matrix multiply-accumulate operations
+      (e.g., 16x16x16 in BF16) at much higher throughput than general CUDA cores.
+      All modern LLM training uses tensor cores for matmul operations.
+    tags: [hardware]
+    timestamps: ["25:00", "35:00"]
+    relations:
+      - target: Streaming Multiprocessor
+        type: part_of
+        note: Tensor cores are housed within each SM
+
+  - name: Warp
+    aliases: [warp of threads, SIMT warp]
+    definition: >-
+      A group of 32 GPU threads that execute the same instruction in lockstep (SIMT model).
+      Warp divergence (different threads taking different branches) wastes compute. Matrix
+      dimensions should be multiples of 32 to avoid partial warps.
+    tags: [hardware]
+    timestamps: ["12:00", "15:00"]
+    relations:
+      - target: Streaming Multiprocessor
+        type: part_of
+        note: Warps are the basic scheduling unit within SMs
+
+  - name: Memory Hierarchy
+    aliases: [GPU memory levels]
+    definition: >-
+      The layered memory system in GPUs: registers (fastest, per-thread) > shared memory/L1
+      (programmable SRAM, per-SM) > L2 cache (chip-wide) > HBM (off-chip DRAM, highest
+      capacity). Data movement between levels dominates runtime for memory-bound operations.
+    tags: [hardware, optimization]
+    timestamps: ["45:00", "55:00"]
+    relations:
+      - target: Flash Attention
+        type: enables
+        note: Flash Attention exploits memory hierarchy by keeping computation in SRAM

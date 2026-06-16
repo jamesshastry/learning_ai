@@ -1,0 +1,180 @@
+concepts:
+  - name: Loss Function
+    aliases:
+      - Cost Function
+      - Objective Function
+    definition: >-
+      A function that quantifies the discrepancy between a model's predictions and the actual
+      ground truth values. The goal of training is to minimize this function by adjusting weights.
+    tags:
+      - training
+      - theory
+    timestamps:
+      - "22:48"
+      - "23:53"
+    relations:
+      - target: Gradient Descent
+        type: enables
+        note: Loss functions provide the objective that gradient descent minimizes
+      - target: Binary Cross-Entropy
+        type: related_to
+        note: Binary cross-entropy is a specific loss function for classification
+
+  - name: Binary Cross-Entropy
+    aliases:
+      - BCE
+      - Log Loss
+    definition: >-
+      A loss function for binary classification that uses -[y·log(p) + (1-y)·log(1-p)],
+      penalizing confident wrong predictions exponentially harder than uncertain ones.
+    tags:
+      - training
+      - theory
+    timestamps:
+      - "31:58"
+      - "29:07"
+    relations:
+      - target: Loss Function
+        type: part_of
+        note: BCE is the standard loss function for binary classification
+      - target: Categorical Cross-Entropy
+        type: related_to
+        note: Categorical cross-entropy generalizes BCE to multi-class problems
+
+  - name: Gradient Descent
+    aliases:
+      - GD
+    definition: >-
+      An iterative optimization algorithm that updates parameters by moving them in the
+      direction opposite to the gradient of the loss function, using the update rule
+      w_new = w_old - α·∇L. Invented by Cauchy in 1847.
+    tags:
+      - optimization
+      - training
+    timestamps:
+      - "40:17"
+      - "41:40"
+    relations:
+      - target: Stochastic Gradient Descent
+        type: related_to
+        note: SGD is a more practical variant that uses mini-batches
+      - target: Learning Rate
+        type: related_to
+        note: Learning rate controls the step size in gradient descent
+
+  - name: Stochastic Gradient Descent
+    aliases:
+      - SGD
+      - Mini-batch Gradient Descent
+    definition: >-
+      A variant of gradient descent that computes gradients on small random subsets
+      (mini-batches) of the training data rather than the full dataset, providing
+      computational efficiency and a regularization effect that helps escape local minima.
+    tags:
+      - optimization
+      - training
+    timestamps:
+      - "01:05:11"
+      - "01:06:33"
+    relations:
+      - target: Gradient Descent
+        type: related_to
+        note: SGD approximates full gradient descent using mini-batches
+      - target: Adam Optimizer
+        type: related_to
+        note: Adam is a popular variant of SGD with adaptive learning rates
+
+  - name: Backpropagation
+    aliases:
+      - Backprop
+    definition: >-
+      An efficient algorithm for computing the gradient of the loss function with respect to
+      all network weights by applying the chain rule backward through the network layers,
+      reducing computation to a sequence of matrix multiplications suitable for GPU acceleration.
+    tags:
+      - training
+      - optimization
+    timestamps:
+      - "56:52"
+      - "57:14"
+    relations:
+      - target: Gradient Descent
+        type: enables
+        note: Backprop provides the gradients that gradient descent needs
+      - target: GPU
+        type: related_to
+        note: Backprop's matrix operations are accelerated by GPU hardware
+
+  - name: Learning Rate
+    aliases:
+      - Alpha
+      - Step Size
+    definition: >-
+      A hyperparameter (α) that controls how large a step to take in the direction of the
+      negative gradient during each weight update. Too large causes overshooting; too small
+      causes slow convergence. Typically 0.001 to 0.1.
+    tags:
+      - optimization
+      - training
+    timestamps:
+      - "41:56"
+      - "42:20"
+    relations:
+      - target: Gradient Descent
+        type: part_of
+        note: Learning rate is a key parameter in the gradient descent update rule
+
+  - name: Adam Optimizer
+    aliases:
+      - Adaptive Moment Estimation
+    definition: >-
+      A popular variant of SGD that maintains adaptive per-parameter learning rates using
+      estimates of first and second moments of the gradients. The default optimizer choice
+      for most deep learning tasks.
+    tags:
+      - optimization
+      - training
+    timestamps:
+      - "01:08:42"
+    relations:
+      - target: Stochastic Gradient Descent
+        type: part_of
+        note: Adam is a specific flavor of SGD with momentum and adaptive learning rates
+
+  - name: GPU
+    aliases:
+      - Graphics Processing Unit
+    definition: >-
+      Parallel computing hardware originally designed for video game rendering that
+      accelerates neural network training by performing matrix multiplications efficiently.
+      The availability of GPUs was one of three forces enabling the deep learning revolution.
+    tags:
+      - hardware
+      - infrastructure
+    timestamps:
+      - "58:53"
+      - "59:22"
+    relations:
+      - target: Backpropagation
+        type: enables
+        note: GPUs accelerate the matrix multiplications that backprop requires
+
+  - name: Weight Initialization
+    aliases:
+      - He Initialization
+      - Xavier Initialization
+      - Glorot Initialization
+    definition: >-
+      Careful schemes for setting initial random values of network weights to prevent
+      exploding or vanishing gradients during training. Common schemes include He
+      initialization (for ReLU networks) and Xavier/Glorot initialization.
+    tags:
+      - training
+      - optimization
+    timestamps:
+      - "01:01:57"
+      - "01:02:22"
+    relations:
+      - target: Vanishing Gradient Problem
+        type: contrasts_with
+        note: Proper initialization helps prevent vanishing and exploding gradients

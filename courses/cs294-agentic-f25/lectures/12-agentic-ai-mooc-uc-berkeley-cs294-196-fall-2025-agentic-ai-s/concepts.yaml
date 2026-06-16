@@ -1,0 +1,93 @@
+concepts:
+  - name: Hybrid Agent System
+    aliases: [compound AI system, neural-symbolic hybrid]
+    definition: >-
+      An agentic AI system combining traditional software (symbolic components written
+      by programmers) with neural components (LLMs). The interaction between these two
+      layers creates unique security challenges not present in either alone.
+    tags: [architecture, security, agents]
+    timestamps: ["05:56"]
+    relations:
+      - target: Agent Attack Surface
+        type: creates
+        note: The hybrid nature introduces new attack vectors at the neural-symbolic boundary
+
+  - name: Agent Attack Surface
+    aliases: [attack surface, vulnerability surface]
+    definition: >-
+      The complete set of potential vulnerability points in an agentic AI system.
+      Increases along every flexibility dimension: workflow dynamism, action space
+      breadth, tool diversity, memory persistence, and autonomy level.
+    tags: [security, agents, risk]
+    timestamps: ["10:56"]
+    relations:
+      - target: CIA Triad for AI
+        type: threatens
+        note: The expanded attack surface creates risks across all CIA dimensions
+
+  - name: CIA Triad for AI
+    aliases: [AI security goals, confidentiality-integrity-availability]
+    definition: >-
+      Extension of the classic CIA security framework to agentic AI: Confidentiality
+      (system secrets, prompts, user data, model parameters), Integrity (model parameters,
+      data accuracy), Availability (model performance, service reliability). Also includes
+      AI safety (preventing harm to external world).
+    tags: [security, framework, goals]
+    timestamps: ["11:43"]
+    relations:
+      - target: Agent Attack Surface
+        type: protected_by
+        note: CIA goals define what the attack surface threatens
+
+  - name: Prompt Injection
+    aliases: [prompt attack, injection attack]
+    definition: >-
+      Attack technique where malicious instructions are embedded in inputs (user requests,
+      retrieved documents, tool outputs) to manipulate the LLM's behavior, potentially
+      causing it to leak secrets, take unauthorized actions, or bypass safety guardrails.
+    tags: [security, attacks, LLM]
+    timestamps: ["14:44"]
+    relations:
+      - target: Agent Attack Surface
+        type: exploits
+        note: Prompt injection exploits the boundary between user input and model instructions
+
+  - name: Model Output Attack Vectors
+    aliases: [output-as-attack, model output threats]
+    definition: >-
+      Six pathways through which LLM outputs can serve as attack vectors: (1) user-facing
+      content (info leakage), (2) parameters for further invocations (compounding errors),
+      (3) branch conditions (altered control flow), (4) function call parameters (SQL
+      injection), (5) direct code execution, (6) external-facing actions (harm to world).
+    tags: [security, attacks, taxonomy]
+    timestamps: ["14:00"]
+    relations:
+      - target: Hybrid Agent System
+        type: vulnerability_of
+        note: Each output pathway represents a distinct attack chain in hybrid systems
+
+  - name: Agent Flexibility-Security Tradeoff
+    aliases: [capability-risk tradeoff]
+    definition: >-
+      The fundamental tension that increasing agent flexibility along any dimension
+      (workflow, tools, actions, autonomy, memory) simultaneously increases the system's
+      attack surface and security risk.
+    tags: [security, design, tradeoff]
+    timestamps: ["10:56"]
+    relations:
+      - target: Agent Attack Surface
+        type: determines
+        note: More flexibility means more attack surface
+
+  - name: AI Cyber Offense
+    aliases: [AI-powered attacks, agentic cyber attacks]
+    definition: >-
+      The dual-use capability of AI agents to autonomously discover vulnerabilities,
+      generate exploits, and conduct cyber attacks. Defensive AI capabilities directly
+      translate to offensive capabilities, creating escalating risk.
+    tags: [security, misuse, cyber]
+    timestamps: ["25:00"]
+    relations:
+      - target: Agent Attack Surface
+        type: exploits
+        note: AI offense capabilities can be directed at other AI agent systems

@@ -1,0 +1,112 @@
+concepts:
+  - name: Natural vs Unnatural Representations
+    aliases: [Natural Data, Unnatural Data]
+    definition: >-
+      Natural representations (video, audio) originate from physical phenomena with high redundancy and dimensional richness.
+      Unnatural representations (text) are human-engineered for efficient communication with minimal redundancy. AI should
+      learn from natural representations first, as human babies do, to build foundational intelligence.
+    tags: [theory, multimodal, training]
+    timestamps: ["11:43", "12:46", "13:29"]
+    relations:
+      - target: Latent Diffusion
+        type: enables
+        note: Natural representations' high redundancy motivates compression into latent space before training.
+      - target: Self-Flow
+        type: prerequisite_for
+        note: Understanding multiple natural representations is the goal Self-Flow enables.
+
+  - name: Latent Diffusion
+    aliases: [Latent Generative Modeling, Learned JPEG]
+    definition: >-
+      Training generative models in a compressed latent space rather than raw pixel space. A compression model
+      (like a learned JPEG codec) finds perceptually equivalent but lower-dimensional representations, enabling
+      orders-of-magnitude compute savings while matching quality of pixel-space training.
+    tags: [architecture, training, efficiency]
+    timestamps: ["07:50", "07:55", "08:07"]
+    relations:
+      - target: Adversarial Diffusion Distillation
+        type: enables
+        note: Latent diffusion models are the base from which distillation produces faster variants.
+      - target: Natural vs Unnatural Representations
+        type: related_to
+        note: Latent diffusion compresses the redundancy inherent in natural visual representations.
+
+  - name: Adversarial Diffusion Distillation
+    aliases: [ADD, Step Distillation]
+    definition: >-
+      Technique for reducing diffusion model inference steps from 50 to 2-4 while preserving quality. Uses
+      adversarial training to teach a student model to produce high-quality outputs in fewer denoising steps.
+      Enables product tiering from a single base model (fast/cheap vs. slow/high-quality).
+    tags: [inference, efficiency, architecture]
+    timestamps: ["22:02", "52:17", "52:22"]
+    relations:
+      - target: Latent Diffusion
+        type: part_of
+        note: Distillation operates on latent diffusion models to create faster variants.
+      - target: Open Weight Business Model
+        type: enables
+        note: Step-count tiering (Schnell/Dev/Pro) creates natural commercial differentiation.
+
+  - name: Self-Flow
+    aliases: [Self-Flow Paper]
+    definition: >-
+      BFL's technique for aligning generative model internal representations with multimodal representation
+      learning models. Extends single-modality alignment (e.g., DINO for images) to cross-modal alignment,
+      enabling compounding effects where correlations between modalities improve understanding.
+    tags: [training, multimodal, research]
+    timestamps: ["32:50", "41:42", "43:37"]
+    relations:
+      - target: Natural vs Unnatural Representations
+        type: enables
+        note: Self-Flow enables learning from correlations between natural representations.
+      - target: Physical Verification
+        type: related_to
+        note: Cross-modal learning improves physical understanding through correlated sensory signals.
+
+  - name: Physical Verification
+    aliases: [Physical AI Verification]
+    definition: >-
+      The principle that AI progress is fastest in domains where task performance can be physically verified.
+      Physical world interaction naturally applies boundary conditions (robot joints, object physics) that
+      serve as inherent verification, unlike aesthetic/creative domains requiring subjective human judgment.
+    tags: [training, robotics, verification]
+    timestamps: ["34:44", "35:48", "37:03"]
+    relations:
+      - target: Self-Flow
+        type: related_to
+        note: Physical verification provides the ground-truth signal that cross-modal learning exploits.
+      - target: Open Weight Business Model
+        type: contrasts_with
+        note: Aesthetic verification (subjective) benefits from open customization; physical verification is objective.
+
+  - name: Open Weight Business Model
+    aliases: [Open Source AI Business, Flux Tiering]
+    definition: >-
+      BFL's commercial model of releasing open-weight models at multiple tiers: fully open Apache 2.0 (Schnell),
+      open weights with commercial license (Dev), and API-only (Pro). Works especially well when aesthetic
+      preferences vary widely by audience, enabling customer customization of the last mile.
+    tags: [business, open-source, strategy]
+    timestamps: ["54:43", "55:01", "55:28"]
+    relations:
+      - target: Adversarial Diffusion Distillation
+        type: enables
+        note: Step-based distillation creates natural quality tiers from a single model.
+      - target: Physical Verification
+        type: contrasts_with
+        note: Open models are most valuable when verification is subjective (aesthetic preference).
+
+  - name: Context-Driven Capability Discovery
+    aliases: [Flux Context Loop]
+    definition: >-
+      The process of discovering new model capabilities through deployment feedback. Flux 1's open-weight
+      release revealed that users were training LoRAs for character consistency, revealing latent demand
+      for image editing that wasn't in the original product plan. Led to Flux Context within 60 days.
+    tags: [product, training, feedback]
+    timestamps: ["21:41", "22:16", "23:14"]
+    relations:
+      - target: Open Weight Business Model
+        type: enables
+        note: Open weights allow community experimentation that reveals capability gaps faster.
+      - target: Physical Verification
+        type: related_to
+        note: User behavior provides implicit preference verification for aesthetic domains.

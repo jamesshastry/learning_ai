@@ -1,0 +1,114 @@
+concepts:
+  - name: Tokenization
+    aliases:
+      - Text Tokenization
+      - Word Tokenization
+    definition: >-
+      The process of splitting raw text into atomic units called tokens (words, subwords,
+      or characters) as the first step in converting text to numerical form for neural
+      network processing.
+    tags:
+      - data
+    timestamps:
+      - "02:00"
+      - "10:00"
+    relations:
+      - target: Vocabulary
+        type: enables
+        note: Tokenization produces tokens that form the vocabulary
+      - target: Text Vectorization
+        type: prerequisite_for
+        note: Tokenization must occur before text can be vectorized
+
+  - name: Bag-of-Words
+    aliases:
+      - BoW
+      - Count Vectorization
+    definition: >-
+      A text representation method that converts text into a fixed-length vector of word
+      counts or frequencies, ignoring word order. Simple but effective baseline for many
+      classification tasks.
+    tags:
+      - data
+      - theory
+    timestamps:
+      - "20:00"
+      - "39:21"
+    relations:
+      - target: Text Vectorization
+        type: part_of
+        note: BoW is one approach to text vectorization
+      - target: Word Embeddings
+        type: contrasts_with
+        note: Embeddings capture semantic relationships that BoW misses
+
+  - name: Text Vectorization
+    aliases:
+      - Text Encoding
+    definition: >-
+      The process of converting text strings into numerical tensors suitable for neural
+      network input, encompassing tokenization, vocabulary mapping, and encoding schemes
+      like multi-hot, count, or TF-IDF.
+    tags:
+      - data
+    timestamps:
+      - "00:26"
+    relations:
+      - target: Tokenization
+        type: related_to
+        note: Tokenization is a sub-step of text vectorization
+
+  - name: Vocabulary
+    aliases:
+      - Vocab
+      - Word Index
+    definition: >-
+      The fixed set of all unique tokens known to the model, built from the training data,
+      with each token mapped to a unique integer index. Words not in the vocabulary become
+      out-of-vocabulary (OOV/UNK) tokens.
+    tags:
+      - data
+    timestamps:
+      - "15:00"
+    relations:
+      - target: Out-of-Vocabulary
+        type: related_to
+        note: Words not in the vocabulary are mapped to a special UNK token
+
+  - name: Out-of-Vocabulary
+    aliases:
+      - OOV
+      - UNK Token
+      - Unknown Token
+    definition: >-
+      Tokens encountered at inference time that were not present in the training vocabulary,
+      collapsed into a single special token (UNK), causing loss of distinguishing information
+      between different unknown words.
+    tags:
+      - data
+    timestamps:
+      - "38:28"
+    relations:
+      - target: Vocabulary
+        type: related_to
+        note: OOV tokens arise from a fixed vocabulary built on training data
+      - target: Subword Tokenization
+        type: contrasts_with
+        note: Subword tokenization eliminates OOV by breaking unknown words into known subwords
+
+  - name: TF-IDF
+    aliases:
+      - Term Frequency-Inverse Document Frequency
+    definition: >-
+      A text weighting scheme that multiplies term frequency (how often a word appears in
+      a document) by inverse document frequency (how rare the word is across all documents),
+      giving higher weight to distinctive words.
+    tags:
+      - data
+      - theory
+    timestamps:
+      - "25:00"
+    relations:
+      - target: Bag-of-Words
+        type: related_to
+        note: TF-IDF is an enhanced weighting scheme for bag-of-words representations

@@ -1,0 +1,137 @@
+concepts:
+  - name: Perceptron
+    aliases: [Single Neuron, Neuron]
+    definition: >-
+      The fundamental building block of neural networks that takes m inputs, multiplies each by a weight,
+      sums them with a bias term, and passes through a non-linear activation function: Y = g(X·W + b).
+    tags: [architecture, fundamentals]
+    timestamps: ['15:27', '24:45']
+    relations:
+      - target: Activation Function
+        type: part_of
+        note: The activation function is a required component of the perceptron.
+      - target: Dense Layer
+        type: composes
+        note: Multiple perceptrons form a dense (fully connected) layer.
+
+  - name: Activation Function
+    aliases: [Non-linearity, Non-linear Activation]
+    definition: >-
+      A non-linear transformation applied to the weighted sum of inputs in a neuron, enabling neural networks
+      to learn non-linear decision boundaries. Common examples include sigmoid, ReLU, and tanh.
+    tags: [architecture, fundamentals]
+    timestamps: ['18:14', '19:00']
+    relations:
+      - target: Perceptron
+        type: part_of
+        note: Applied as the final step in each neuron's computation.
+
+  - name: Loss Function
+    aliases: [Objective Function, Cost Function, Error Function]
+    definition: >-
+      A function that quantifies the deviation between a model's predictions and ground truth labels.
+      Cross-entropy loss is used for classification; mean squared error for regression. Training minimizes
+      the empirical average loss across the dataset.
+    tags: [training, optimization]
+    timestamps: ['33:40', '34:52']
+    relations:
+      - target: Gradient Descent
+        type: prerequisite_for
+        note: The loss function defines the landscape that gradient descent navigates.
+
+  - name: Gradient Descent
+    aliases: [GD, Optimization]
+    definition: >-
+      An iterative optimization algorithm that updates neural network weights by computing the gradient of
+      the loss with respect to weights and stepping in the negative gradient direction. Converges to a
+      local minimum of the loss landscape.
+    tags: [training, optimization]
+    timestamps: ['37:37', '38:42']
+    relations:
+      - target: Backpropagation
+        type: depends_on
+        note: Gradient descent requires backpropagation to compute gradients.
+      - target: Learning Rate
+        type: depends_on
+        note: The learning rate controls the step size in gradient descent.
+
+  - name: Backpropagation
+    aliases: [Backprop, Back-propagation]
+    definition: >-
+      The algorithm for computing gradients of the loss function with respect to every weight in a neural
+      network by applying the chain rule of calculus, propagating error signals from the output layer
+      back through all layers to the input.
+    tags: [training, optimization, fundamentals]
+    timestamps: ['39:54', '41:45']
+    relations:
+      - target: Gradient Descent
+        type: enables
+        note: Backpropagation provides the gradients needed by gradient descent.
+
+  - name: Learning Rate
+    aliases: [Eta, Step Size]
+    definition: >-
+      A hyperparameter (eta) that controls the size of weight updates during gradient descent. Too small
+      leads to getting stuck in local minima; too large causes overshooting and divergence. Adaptive
+      methods like Adam adjust the learning rate automatically.
+    tags: [training, hyperparameter]
+    timestamps: ['43:17', '44:26']
+    relations:
+      - target: Gradient Descent
+        type: part_of
+        note: The learning rate is a key parameter of gradient descent.
+
+  - name: Mini-Batch SGD
+    aliases: [Stochastic Gradient Descent, SGD, Mini-Batch Gradient Descent]
+    definition: >-
+      A variant of gradient descent that computes gradients over a small random subset (mini-batch) of
+      the training data rather than the entire dataset, balancing computational efficiency with gradient
+      accuracy. Typical batch sizes range from 32 to hundreds of samples.
+    tags: [training, optimization]
+    timestamps: ['46:54', '47:31']
+    relations:
+      - target: Gradient Descent
+        type: variant_of
+        note: Mini-batch SGD is the practical variant of full-batch gradient descent.
+
+  - name: Overfitting
+    aliases: [Memorization]
+    definition: >-
+      The phenomenon where a model learns the specific details and noise of the training data too closely,
+      resulting in excellent training performance but poor generalization to unseen test data. The model
+      has effectively memorized rather than learned generalizable patterns.
+    tags: [training, generalization]
+    timestamps: ['48:42', '49:02']
+    relations:
+      - target: Regularization
+        type: addressed_by
+        note: Regularization techniques are used to combat overfitting.
+      - target: Early Stopping
+        type: addressed_by
+        note: Early stopping prevents overfitting by halting training at the right time.
+
+  - name: Dropout
+    aliases: []
+    definition: >-
+      A stochastic regularization technique that randomly sets a fraction of neuron activations to zero
+      during each training iteration, forcing the network to learn robust features that don't depend on
+      any single pathway. Activations reset each mini-batch.
+    tags: [regularization, architecture]
+    timestamps: ['51:05', '51:20']
+    relations:
+      - target: Overfitting
+        type: addresses
+        note: Dropout prevents overfitting by introducing redundancy in learned representations.
+
+  - name: Early Stopping
+    aliases: []
+    definition: >-
+      A regularization technique that monitors training and validation loss curves during training, saving
+      model checkpoints and selecting the checkpoint where validation loss begins to increase, indicating
+      the onset of overfitting. Architecture-agnostic and widely applicable.
+    tags: [regularization, training]
+    timestamps: ['53:03', '54:00']
+    relations:
+      - target: Overfitting
+        type: addresses
+        note: Early stopping halts training before overfitting becomes severe.

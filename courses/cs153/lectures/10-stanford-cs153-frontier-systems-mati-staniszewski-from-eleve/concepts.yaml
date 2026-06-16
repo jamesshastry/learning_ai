@@ -1,0 +1,103 @@
+concepts:
+  - name: Cascaded Audio Architecture
+    aliases: [Cascaded Pipeline, Three-Model Pipeline]
+    definition: >-
+      Audio agent architecture using three separate models in sequence: speech-to-text transcription, LLM
+      reasoning/response generation, and text-to-speech synthesis. Provides enterprise reliability, debuggability,
+      and tool-calling at each stage, but with higher latency than fused approaches.
+    tags: [architecture, audio, agents]
+    timestamps: ["21:16", "24:21", "28:48"]
+    relations:
+      - target: Fused Audio Architecture
+        type: contrasts_with
+        note: Cascaded prioritizes reliability; fused prioritizes latency.
+      - target: Emotional Expressivity Control
+        type: enables
+        note: Cascaded architecture can detect emotions in STT and pass as parameters to TTS.
+
+  - name: Fused Audio Architecture
+    aliases: [End-to-End Audio, Speech-to-Speech]
+    definition: >-
+      Single end-to-end model that processes input speech directly to output speech without text intermediary.
+      Achieves ~300ms response latency with emergent emotional understanding, but sacrifices the reliability,
+      debuggability, and tool-calling control of cascaded approaches.
+    tags: [architecture, audio, agents]
+    timestamps: ["24:38", "25:00", "29:13"]
+    relations:
+      - target: Cascaded Audio Architecture
+        type: contrasts_with
+        note: Fused wins on latency; cascaded wins on reliability and enterprise control.
+
+  - name: Voice Cloning
+    aliases: [Voice Replication, Voice Synthesis]
+    definition: >-
+      AI capability to replicate a person's voice characteristics (timbre, accent, cadence) from audio samples,
+      enabling dubbing, voiceover, and personalization. Requires safety measures including traceability,
+      watermarking, and content moderation to prevent identity fraud.
+    tags: [audio, safety, product]
+    timestamps: ["04:24", "11:55", "42:48"]
+    relations:
+      - target: Emotional Expressivity Control
+        type: enables
+        note: Cloned voices can be given controlled emotional delivery in generated speech.
+      - target: PLG Motion
+        type: related_to
+        note: Voice marketplace (users contribute cloned voices) drove community engagement.
+
+  - name: Emotional Expressivity Control
+    aliases: [Expressive Voice, Emotion Detection]
+    definition: >-
+      The ability to detect emotional context from input speech (stress, excitement, sadness) and control the
+      emotional delivery of generated speech accordingly. Requires specialized labeled training data mapping
+      text content and delivery style to emotional categories.
+    tags: [audio, training, product]
+    timestamps: ["26:18", "26:50", "27:02"]
+    relations:
+      - target: Cascaded Audio Architecture
+        type: part_of
+        note: Emotion detection happens at STT stage, parameters passed to LLM and TTS in cascade.
+      - target: Voice Cloning
+        type: related_to
+        note: Expressivity adds emotional range to cloned voices.
+
+  - name: PLG Motion
+    aliases: [Product-Led Growth, Community-First Distribution]
+    definition: >-
+      Growth strategy where community and developer adoption drives distribution and context feedback before
+      enterprise sales. ElevenLabs launched as a Discord bot, used community usage patterns to discover
+      use cases, and built voice marketplace for user-contributed voices.
+    tags: [business, product, strategy]
+    timestamps: ["03:32", "03:53", "04:07"]
+    relations:
+      - target: Voice Cloning
+        type: enables
+        note: PLG community contributed voices to the marketplace, creating network effects.
+
+  - name: AI Dubbing Pipeline
+    aliases: [AI Localization]
+    definition: >-
+      End-to-end system for translating audio/video content across languages while preserving the original
+      speaker's voice, emotion, and delivery. Requires orchestrating transcription, translation, and voice
+      synthesis models. First became viable in 2024 with improvements across all three components.
+    tags: [audio, product, localization]
+    timestamps: ["07:51", "08:01", "19:15"]
+    relations:
+      - target: Cascaded Audio Architecture
+        type: part_of
+        note: AI dubbing is the original use case that defined the cascaded pipeline architecture.
+      - target: Voice Cloning
+        type: prerequisite_for
+        note: Preserving original speaker voice requires high-quality voice cloning.
+
+  - name: Forward-Deployed Revenue Model
+    aliases: [Deployment-Driven Revenue]
+    definition: >-
+      Business model where revenue scales predictably with the size and capability of the deployment/forward-
+      deployed engineering team rather than with compute or model capability alone. Each team member brings
+      applied AI into specific enterprise workflows, creating predictable revenue per deployment.
+    tags: [business, strategy, scaling]
+    timestamps: ["40:06", "40:11", "41:38"]
+    relations:
+      - target: PLG Motion
+        type: contrasts_with
+        note: PLG revenue is less predictable; forward-deployed revenue scales with team size.

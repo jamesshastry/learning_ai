@@ -1,0 +1,108 @@
+concepts:
+  - name: Arithmetic Intensity
+    aliases: [operational intensity, compute-to-memory ratio]
+    definition: >-
+      The ratio of floating point operations to bytes of memory transferred for a given
+      computation. Determines whether an operation is memory-bound (low intensity) or
+      compute-bound (high intensity). H100 accelerator intensity is ~295 FLOPs/byte.
+    tags: [hardware, optimization]
+    timestamps: ["40:37", "46:01"]
+    relations:
+      - target: Roofline Analysis
+        type: enables
+        note: Arithmetic intensity is the x-axis of roofline plots
+      - target: Flash Attention
+        type: related_to
+        note: Flash Attention increases arithmetic intensity by reducing memory movement
+
+  - name: Model FLOPs Utilization
+    aliases: [MFU]
+    definition: >-
+      The ratio of actual achieved FLOPs per second to the peak theoretical FLOPs per second
+      of the hardware. An MFU of 0.5 is considered good for end-to-end training. Pure matmuls
+      can reach 0.8. Low MFU indicates memory bottlenecks or other inefficiencies.
+    tags: [hardware, optimization]
+    timestamps: ["36:54", "37:20"]
+    relations:
+      - target: Arithmetic Intensity
+        type: related_to
+        note: Low arithmetic intensity operations reduce overall MFU
+
+  - name: Roofline Analysis
+    aliases: [roofline model, roofline plot]
+    definition: >-
+      A visualization that plots achieved FLOPs/s against arithmetic intensity for a given
+      accelerator. Shows two regimes — a sloped memory-bound region (limited by bandwidth)
+      and a flat compute-bound region (limited by peak FLOPs). Used to diagnose bottlenecks.
+    tags: [hardware, optimization]
+    timestamps: ["54:51"]
+    relations:
+      - target: Arithmetic Intensity
+        type: part_of
+        note: Roofline analysis uses arithmetic intensity as the independent variable
+
+  - name: Mixed Precision Training
+    aliases: [AMP, automatic mixed precision]
+    definition: >-
+      Training technique using lower precision (BF16) for parameters, activations, and gradients
+      while keeping optimizer states in FP32 for numerical stability. Reduces memory usage and
+      increases throughput without significant quality loss.
+    tags: [training, optimization]
+    timestamps: ["11:54", "12:38"]
+    relations:
+      - target: BFloat16
+        type: part_of
+        note: BF16 is the standard low-precision format used in mixed precision training
+
+  - name: Activation Checkpointing
+    aliases: [gradient checkpointing, rematerialization]
+    definition: >-
+      Memory optimization that stores activations at only a subset of layers during forward
+      pass, recomputing missing activations from the nearest checkpoint during backward pass.
+      Optimal checkpoint interval of sqrt(L) layers balances memory savings with recomputation cost.
+    tags: [training, optimization]
+    timestamps: ["01:13:23", "01:15:56"]
+    relations:
+      - target: Gradient Accumulation
+        type: related_to
+        note: Both are memory-saving techniques that trade compute or latency for memory
+
+  - name: BFloat16
+    aliases: [BF16, brain floating point]
+    definition: >-
+      A 16-bit floating point format with 1 sign bit, 8 exponent bits, and 7 mantissa bits.
+      Has the same dynamic range as FP32 (8 exponent bits) but lower resolution. Developed
+      by Google Brain in 2018 specifically for deep learning workloads.
+    tags: [hardware, training]
+    timestamps: ["09:57", "10:25"]
+    relations:
+      - target: Mixed Precision Training
+        type: part_of
+        note: BF16 is the workhorse precision format for modern LLM training
+
+  - name: Einops
+    aliases: [Einstein operations, einsum]
+    definition: >-
+      A library for tensor manipulation using named dimensions inspired by Einstein summation
+      notation. Provides einsum (generalized matrix multiplication), reduce (aggregation),
+      and rearrange (reshape/transpose) operations that make tensor operations explicit and
+      less error-prone than index-based approaches.
+    tags: [infrastructure, training]
+    timestamps: ["18:16", "19:04"]
+    relations:
+      - target: Resource Accounting
+        type: enables
+        note: Named dimensions make FLOP counting straightforward — product of all dimension sizes
+
+  - name: Gradient Accumulation
+    aliases: [micro-batching]
+    definition: >-
+      Technique for simulating large batch sizes without proportional memory increase by
+      computing gradients on smaller micro-batches and accumulating them before updating
+      parameters. Enables use of effective batch sizes larger than what fits in GPU memory.
+    tags: [training, optimization]
+    timestamps: ["01:12:31"]
+    relations:
+      - target: Activation Checkpointing
+        type: related_to
+        note: Both reduce memory pressure during training

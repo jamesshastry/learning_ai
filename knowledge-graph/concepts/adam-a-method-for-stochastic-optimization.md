@@ -22,3 +22,8 @@ Adam: A Method for Stochastic Optimization (2015, ICLR 2015). Seminal paper in f
 - [[ResNet]] (related to) — referenced in paper
 - [[Attention Is All You Need]] (related to) — referenced in paper
 - [[Batch Normalization]] (related to) — referenced in paper
+- [[Stochastic Gradient Descent]] (related to) — name overlap
+- [[Prompt Optimization]] (related to) — name overlap
+- [[Iterative Reasoning Preference Optimization]] (related to) — name overlap
+- [[Thought Preference Optimization]] (related to) — name overlap
+- [[Pareto Frontier Optimization]] (related to) — name overlap

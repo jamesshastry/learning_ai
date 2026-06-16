@@ -1,0 +1,103 @@
+concepts:
+  - name: Unified Model Architecture
+    aliases: [Uni 1, Unified Intelligence]
+    definition: >-
+      A single transformer backbone that processes text, image, video, and audio in a shared representation
+      space with modality-specific encoders/decoders. Unlike fused architectures with separate towers and
+      thin bridges, unified models reason across all modalities in one backbone, analogous to the neocortex.
+    tags: [architecture, multimodal, models]
+    timestamps: ["18:58", "27:42", "29:10"]
+    relations:
+      - target: Data Scale Dictates Architecture
+        type: prerequisite_for
+        note: Unified models require multimodal data at massive scale across all modalities.
+      - target: Skills Layer
+        type: enables
+        note: Unified models can interpret skills that span visual, textual, and audio domains.
+
+  - name: Differentiable World Learning
+    aliases: [Differentiable 3D]
+    definition: >-
+      The principle that if physical world data (3D, video, audio) can be made differentiable — put through
+      a training loop with gradient descent — deep learning can learn its structure, understand it, and
+      generate it. Compute and gradient descent are the fundamental tools of this era.
+    tags: [theory, training, models]
+    timestamps: ["05:14", "05:30", "06:01"]
+    relations:
+      - target: Unified Model Architecture
+        type: prerequisite_for
+        note: Differentiable representations of all modalities are needed for unified model training.
+
+  - name: Skills Layer
+    aliases: [Domain Skills, Skill Stack]
+    definition: >-
+      Domain-specific context documents created by human experts that sit above the tool harness and model
+      in the agent architecture. Not baked into model weights or tools — provided as context that teaches
+      the system what "good" looks like. Enables artists and domain experts to have programmer-like leverage.
+    tags: [agents, architecture, creative-tools]
+    timestamps: ["32:32", "33:43", "49:47"]
+    relations:
+      - target: Unified Model Architecture
+        type: part_of
+        note: Skills layer sits atop the unified model in the agent architecture stack.
+      - target: PE Mindset
+        type: contrasts_with
+        note: Skills layer empowers individual creativity; PE mindset constrains it to franchise efficiency.
+
+  - name: PE Mindset
+    aliases: [Private Equity Mindset, Franchise Rent-Seeking]
+    definition: >-
+      The private equity approach of creating franchised assets and extracting maximum value through sequels,
+      crossovers, and efficiency optimization rather than investing in diverse new creative works. Applied to
+      Hollywood, it has led to sequel fatigue and production exodus.
+    tags: [business, creative-industry, strategy]
+    timestamps: ["51:44", "52:15", "53:15"]
+    relations:
+      - target: Skills Layer
+        type: contrasts_with
+        note: Skills layer enables diverse creative output; PE mindset constrains to proven franchises.
+
+  - name: Data Scale Dictates Architecture
+    aliases: [Data-First Design]
+    definition: >-
+      The principle that algorithm and system design must follow where data exists at internet scale. Creating
+      a pristine algorithm without matching data is moot. This drove Luma's pivot from 3D capture (limited
+      app-based data) to video (abundant internet data).
+    tags: [theory, data, architecture]
+    timestamps: ["07:05", "07:22", "07:28"]
+    relations:
+      - target: Unified Model Architecture
+        type: enables
+        note: Video/image/audio data at internet scale makes unified multimodal training viable.
+
+  - name: Preference Feedback Flywheel
+    aliases: [Context Feedback Loop, RLHF for Video]
+    definition: >-
+      The system where user interactions with generated content (downloads, likes, multi-turn edits) provide
+      preference signals that improve subsequent model versions. Requires filtering for quality (some users
+      download bad outputs to mock AI) and careful product design to capture meaningful signals.
+    tags: [training, product, data]
+    timestamps: ["11:24", "11:47", "12:56"]
+    relations:
+      - target: Unified Model Architecture
+        type: enables
+        note: Preference feedback improves the unified model's alignment with human aesthetics and intent.
+      - target: Skills Layer
+        type: related_to
+        note: Interaction traces from the skills layer feed back into model improvement.
+
+  - name: End-to-End Work
+    aliases: [REPL Loop for AI]
+    definition: >-
+      The goal of AI systems doing complete tasks rather than generating isolated artifacts. Analogous to the
+      REPL loop (read-eval-print) in computing. Requires unified models that can plan, execute, judge their
+      own output, and iterate — not just produce 5-second video clips.
+    tags: [agents, product, architecture]
+    timestamps: ["19:22", "24:43", "30:03"]
+    relations:
+      - target: Unified Model Architecture
+        type: prerequisite_for
+        note: End-to-end work requires models that understand context, causality, and can self-judge.
+      - target: Skills Layer
+        type: enables
+        note: Domain skills guide end-to-end work in specific verticals.

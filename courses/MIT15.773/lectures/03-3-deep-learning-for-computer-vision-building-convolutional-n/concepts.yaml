@@ -1,0 +1,145 @@
+concepts:
+  - name: Epoch
+    aliases:
+      - Training Epoch
+    definition: >-
+      One complete pass through the entire training dataset. In SGD, each epoch contains
+      multiple mini-batch iterations, each updating weights. Models are typically trained
+      for 10-300 epochs depending on convergence.
+    tags:
+      - training
+    timestamps:
+      - "03:14"
+      - "05:34"
+    relations:
+      - target: Mini-Batch
+        type: related_to
+        note: Each epoch consists of multiple mini-batch iterations in SGD
+      - target: Early Stopping
+        type: related_to
+        note: Early stopping monitors validation loss across epochs
+
+  - name: Tensor
+    aliases:
+      - Multidimensional Array
+    definition: >-
+      A generalization of scalars (rank-0), vectors (rank-1), matrices (rank-2) to arbitrary
+      dimensions. Color images are rank-3 tensors (height × width × channels), videos are
+      rank-4 tensors. Any rank-N tensor is a list of rank-(N-1) tensors.
+    tags:
+      - data
+      - theory
+    timestamps:
+      - "15:49"
+      - "17:30"
+    relations:
+      - target: TensorFlow
+        type: related_to
+        note: TensorFlow processes tensors flowing through neural network layers
+
+  - name: Softmax
+    aliases:
+      - Softmax Function
+      - Softmax Layer
+    definition: >-
+      An activation function that converts K arbitrary real numbers into K probabilities
+      summing to 1, via P(i) = exp(a_i) / Σ exp(a_j). Used as the output layer for
+      multi-class classification. GPT-4 uses a 52,000-way softmax.
+    tags:
+      - architecture
+      - theory
+    timestamps:
+      - "01:09:17"
+      - "01:09:59"
+    relations:
+      - target: Sigmoid
+        type: contrasts_with
+        note: Sigmoid outputs one probability; softmax outputs K probabilities summing to 1
+      - target: Categorical Cross-Entropy
+        type: related_to
+        note: Categorical cross-entropy is the loss function used with softmax outputs
+
+  - name: Early Stopping
+    aliases:
+      - Validation-based Stopping
+    definition: >-
+      A regularization technique that monitors validation set performance during training
+      and halts training when the validation loss stops improving or starts increasing,
+      preventing overfitting. Called a "beautiful free lunch" by Geoffrey Hinton.
+    tags:
+      - training
+      - optimization
+    timestamps:
+      - "13:19"
+      - "13:35"
+    relations:
+      - target: Overfitting
+        type: contrasts_with
+        note: Early stopping prevents overfitting by halting training at the right time
+      - target: Dropout
+        type: related_to
+        note: Dropout is an alternative regularization method
+
+  - name: Overfitting
+    aliases:
+      - Overtraining
+    definition: >-
+      When a model learns noise and idiosyncrasies of the training data instead of
+      generalizable patterns, resulting in high training accuracy but poor test/validation
+      performance. More parameters increase overfitting risk.
+    tags:
+      - training
+      - theory
+    timestamps:
+      - "12:03"
+      - "12:07"
+    relations:
+      - target: Regularization
+        type: contrasts_with
+        note: Regularization techniques like early stopping and dropout combat overfitting
+      - target: Early Stopping
+        type: related_to
+        note: Early stopping is a key method for detecting and preventing overfitting
+
+  - name: TensorFlow
+    aliases:
+      - TF
+    definition: >-
+      An open-source deep learning library that provides automatic gradient computation,
+      optimizer implementations (SGD, Adam), distributed computing, and GPU/TPU acceleration.
+      Named for tensors flowing through computational graphs.
+    tags:
+      - infrastructure
+      - training
+    timestamps:
+      - "23:05"
+      - "23:18"
+    relations:
+      - target: Keras
+        type: related_to
+        note: Keras is a high-level API built on top of TensorFlow
+      - target: GPU
+        type: enables
+        note: TensorFlow automatically leverages GPU hardware for computation
+
+  - name: Categorical Cross-Entropy
+    aliases:
+      - Sparse Categorical Cross-Entropy
+      - Multi-class Log Loss
+    definition: >-
+      A loss function for multi-class classification that generalizes binary cross-entropy.
+      Sparse variant accepts integer labels; categorical variant expects one-hot encoded
+      labels. Used with softmax output layers.
+    tags:
+      - training
+      - theory
+    timestamps:
+      - "01:12:16"
+      - "01:12:54"
+    relations:
+      - target: Binary Cross-Entropy
+        type: related_to
+        note: Categorical cross-entropy generalizes binary cross-entropy to multiple classes
+      - target: Softmax
+        type: related_to
+        note: Categorical cross-entropy is paired with softmax output layers

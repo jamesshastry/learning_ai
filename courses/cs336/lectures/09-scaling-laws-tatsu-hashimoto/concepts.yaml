@@ -1,0 +1,82 @@
+concepts:
+  - name: Chinchilla Scaling
+    aliases: [Chinchilla scaling laws, Hoffmann scaling laws, compute-optimal scaling]
+    definition: >-
+      Scaling laws from Hoffmann et al. (2022) showing that compute-optimal training
+      balances model size and data roughly equally, with a rule of thumb of ~20 tokens
+      per parameter. Corrected earlier Kaplan (OpenAI) scaling laws that recommended
+      allocating most compute to model size.
+    tags: [training, theory]
+    timestamps: ["30:00"]
+    relations:
+      - target: IsoFLOP Curves
+        type: related_to
+        note: Chinchilla used isoFLOP methodology to derive optimal model size
+      - target: Scaling Recipe
+        type: part_of
+        note: Chinchilla scaling is one component of a complete scaling recipe
+
+  - name: IsoFLOP Curves
+    aliases: [iso-FLOP analysis, compute-matched comparison]
+    definition: >-
+      Experimental methodology where, for each fixed FLOPs budget, model size is swept
+      to find the minimum loss. The optimal points across budgets are then fit with a
+      power law to predict the best model size for a target compute budget.
+    tags: [training, theory]
+    timestamps: ["35:00"]
+    relations:
+      - target: Chinchilla Scaling
+        type: enables
+        note: IsoFLOP is the experimental method behind Chinchilla scaling laws
+
+  - name: Scaling Recipe
+    aliases: [scaling configuration, training recipe]
+    definition: >-
+      A complete function mapping a FLOPs budget to all hyperparameters needed for training
+      (model size, learning rate, batch size, etc.). Must extrapolate predictably across
+      scales — predictability is as important as optimality for successful large-scale training.
+    tags: [training]
+    timestamps: ["45:00", "50:00"]
+    relations:
+      - target: Hyperparameter Transfer
+        type: requires
+        note: Scaling recipes require that hyperparameters transfer predictably across scales
+
+  - name: Hyperparameter Transfer
+    aliases: [HP transfer, cross-scale HP prediction]
+    definition: >-
+      The property that optimal hyperparameters at small scale are either identical to or
+      predictable functions of optimal hyperparameters at large scale. Essential for scaling
+      laws to work — without it, small experiments cannot inform large runs.
+    tags: [training]
+    timestamps: ["48:00"]
+    relations:
+      - target: muP
+        type: related_to
+        note: muP is a parametrization specifically designed to enable HP transfer
+
+  - name: Power Law
+    aliases: [power law scaling, L = aN^(-b) + c]
+    definition: >-
+      The mathematical form governing how loss decreases with scale — L(N) = aN^(-b) + c,
+      where N is model size, data, or compute. The exponent b determines how quickly
+      performance improves with scale, and c represents the irreducible error (data entropy).
+    tags: [theory]
+    timestamps: ["10:00", "15:00"]
+    relations:
+      - target: Chinchilla Scaling
+        type: part_of
+        note: Power laws are the functional form fit to isoFLOP optimal points
+
+  - name: Compute-Optimal Training
+    aliases: [Chinchilla-optimal, compute efficiency]
+    definition: >-
+      Training regime that allocates a compute budget optimally between model size and
+      number of training tokens. Chinchilla-optimal is ~20 tokens per parameter, but
+      inference-optimal training often uses smaller models trained on more data.
+    tags: [training, optimization]
+    timestamps: ["01:00:00"]
+    relations:
+      - target: Inference-Optimal Scaling
+        type: contrasts_with
+        note: Production models are often over-trained relative to compute-optimal

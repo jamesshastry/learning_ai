@@ -1,0 +1,78 @@
+concepts:
+  - name: Embodied Agent
+    aliases: [physical agent, robot agent]
+    definition: >-
+      An autonomous agent that operates in the physical world through sensors (cameras,
+      LIDAR) and effectors/actuators (motors, grippers). All robots are embodied agents.
+      Adds perception and physical action challenges beyond software agents.
+    tags: [robotics, agents, embodiment]
+    timestamps: ["00:00", "01:23"]
+    relations:
+      - target: Intelligent Complete Agent
+        type: instance_of
+        note: Embodied agents implement the full perception-cognition-action loop
+
+  - name: Sim-to-Real Transfer
+    aliases: [simulation to reality, sim2real]
+    definition: >-
+      The process of training agent policies in simulation and then deploying them on
+      physical hardware. Much cheaper than physical training but faces a "reality gap"
+      where simulation and real-world physics differ.
+    tags: [robotics, training, methodology]
+    timestamps: ["18:00"]
+    relations:
+      - target: SLAC
+        type: enabled_by
+        note: SLAC provides a framework for efficient sim-to-real transfer
+
+  - name: RoboCup
+    aliases: [Robot World Cup, robot soccer]
+    definition: >-
+      International robotics competition with the goal of creating a team of humanoid
+      robots that can beat the FIFA World Cup champions on a real soccer field by 2050.
+      Tests multi-agent coordination, perception, and autonomous decision-making.
+    tags: [robotics, competition, multi-agent]
+    timestamps: ["09:09"]
+    relations:
+      - target: Embodied Agent
+        type: benchmark_for
+        note: RoboCup is a grand challenge benchmark for embodied multi-agent systems
+
+  - name: Intelligent Complete Agent
+    aliases: [complete agent architecture]
+    definition: >-
+      Agent architecture with three interconnected modules: perception (sensing and
+      modeling the world), cognition (planning, coordination, decision-making), and
+      action (translating decisions into physical/virtual actions).
+    tags: [architecture, agents, theory]
+    timestamps: ["03:56"]
+    relations:
+      - target: Embodied Agent
+        type: architecture_for
+        note: The complete agent model applies to both software and physical agents
+
+  - name: SLAC
+    aliases: [Simulation-pretrained Latent Action Space]
+    definition: >-
+      Approach that learns latent action representations in simulation, then fine-tunes
+      with limited real-world data for efficient sim-to-real transfer. Published by
+      Stone's group for whole-body real-world RL.
+    tags: [robotics, training, sim-to-real]
+    timestamps: ["18:00"]
+    relations:
+      - target: Sim-to-Real Transfer
+        type: method_for
+        note: SLAC addresses the reality gap through latent space learning
+
+  - name: Gran Turismo AI
+    aliases: [GT Sophy]
+    definition: >-
+      Sony AI's RL agent trained to race at superhuman level in Gran Turismo, published
+      in Nature. Demonstrates that RL can produce expert-level embodied behavior in
+      domains requiring precise continuous control and real-time decision making.
+    tags: [gaming, RL, embodiment, landmark]
+    timestamps: ["12:00"]
+    relations:
+      - target: AlphaStar
+        type: related_to
+        note: Both are game-playing agents achieving superhuman performance

@@ -1,0 +1,155 @@
+concepts:
+  - name: Convolutional Filter
+    aliases:
+      - Kernel
+      - Conv Filter
+    definition: >-
+      A small matrix of learnable weights (e.g., 3x3) that is slid across an image to
+      detect spatial features like edges, lines, and textures via element-wise multiplication
+      and summation followed by a ReLU activation.
+    tags:
+      - architecture
+    timestamps:
+      - "07:20"
+      - "09:00"
+    relations:
+      - target: Convolutional Neural Network
+        type: part_of
+        note: Convolutional filters are the building blocks of CNN layers
+      - target: Feature Engineering
+        type: contrasts_with
+        note: Filters learn features automatically instead of manual engineering
+
+  - name: Convolutional Neural Network
+    aliases:
+      - CNN
+      - ConvNet
+    definition: >-
+      A neural network architecture designed for image processing that uses convolutional
+      layers (learned filters), pooling layers (downsampling), and dense layers to
+      hierarchically learn spatial features while preserving translation invariance.
+    tags:
+      - architecture
+    timestamps:
+      - "06:33"
+      - "38:19"
+    relations:
+      - target: Convolutional Filter
+        type: related_to
+        note: CNNs are built from stacks of convolutional filters
+      - target: Max Pooling
+        type: related_to
+        note: Pooling layers downsample feature maps between convolutional blocks
+
+  - name: Max Pooling
+    aliases:
+      - MaxPool
+      - Downsampling
+    definition: >-
+      A parameter-free operation that reduces spatial dimensions by taking the maximum
+      value in each non-overlapping region (e.g., 2x2). Acts as an "or" feature detector
+      that checks if any feature fired in a region.
+    tags:
+      - architecture
+    timestamps:
+      - "31:48"
+      - "34:00"
+    relations:
+      - target: Convolutional Neural Network
+        type: part_of
+        note: Max pooling layers follow convolutional layers to reduce dimensions
+
+  - name: Transfer Learning
+    aliases:
+      - Pretrained Models
+    definition: >-
+      The practice of taking a neural network pretrained on a large dataset (e.g., ImageNet)
+      and adapting it for a new, specific task by freezing learned feature layers and
+      retraining only the classification head, dramatically reducing data requirements.
+    tags:
+      - training
+      - application
+    timestamps:
+      - "01:00:31"
+      - "01:01:26"
+    relations:
+      - target: Fine-Tuning
+        type: related_to
+        note: Fine-tuning unfreezes some pretrained layers for further task-specific training
+      - target: ResNet
+        type: related_to
+        note: ResNet pretrained on ImageNet is commonly used for transfer learning
+
+  - name: Data Augmentation
+    aliases:
+      - Image Augmentation
+    definition: >-
+      A technique that artificially expands training data by applying semantic-preserving
+      transformations (random flips, rotations, zooms, crops) to existing images, providing
+      a "free lunch" for improving model generalization with limited data.
+    tags:
+      - data
+      - training
+    timestamps:
+      - "01:03:42"
+      - "01:04:03"
+    relations:
+      - target: Overfitting
+        type: contrasts_with
+        note: Data augmentation helps prevent overfitting by increasing effective training set size
+
+  - name: Translation Invariance
+    aliases:
+      - Shift Invariance
+    definition: >-
+      The property of detecting a feature (e.g., a vertical line) regardless of its spatial
+      position in the image, achieved by CNNs through weight sharing across all positions
+      via the sliding filter operation.
+    tags:
+      - theory
+      - architecture
+    timestamps:
+      - "05:36"
+    relations:
+      - target: Convolutional Filter
+        type: enables
+        note: Shared filter weights across positions provide translation invariance
+
+  - name: ResNet
+    aliases:
+      - Residual Network
+    definition: >-
+      A deep convolutional neural network architecture that introduced residual (skip)
+      connections, enabling training of very deep networks (50-152+ layers). First
+      architecture to surpass human-level performance on ImageNet image classification.
+    tags:
+      - architecture
+    timestamps:
+      - "39:59"
+      - "41:03"
+    relations:
+      - target: Transfer Learning
+        type: enables
+        note: Pretrained ResNet is widely used as a feature extractor for transfer learning
+      - target: ImageNet
+        type: related_to
+        note: ResNet achieved breakthrough results on the ImageNet benchmark
+
+  - name: ImageNet
+    aliases:
+      - ILSVRC
+    definition: >-
+      A large-scale dataset containing millions of labeled images across 1,000 everyday
+      object categories, used as a standard benchmark for image classification and a
+      source of pretrained models for transfer learning.
+    tags:
+      - data
+    timestamps:
+      - "01:02:17"
+    relations:
+      - target: ResNet
+        type: related_to
+        note: ResNet was trained on and achieved breakthrough results on ImageNet
+      - target: AlexNet
+        type: related_to
+        note: AlexNet's 2012 ImageNet victory launched the deep learning revolution

@@ -1,0 +1,99 @@
+concepts:
+  - name: Self-Rewarding Language Models
+    definition: >-
+      Training paradigm where the LLM serves as its own reward model, generating tasks, responses, and preference
+      judgments in an iterative self-improvement loop
+    importance: Enables continued model improvement beyond human annotation quality, potentially opening a path to superhuman AI
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: LLM-as-a-Judge
+    definition: >-
+      Using a language model to evaluate and score responses to instructions, replacing human annotators for preference
+      data collection
+    importance: >-
+      Critical for scalable RLHF/DPO training as models surpass average human evaluator capabilities in specialized
+      domains
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: Iterative Reasoning Preference Optimization
+    definition: >-
+      Training chain-of-thought reasoning by generating CoT + answer, checking answer correctness with verifiable
+      rewards, creating DPO pairs, and iterating
+    importance: >-
+      Demonstrated that simple outcome-based rewards can train sophisticated reasoning, preceding and validating
+      DeepSeek R1's approach
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: Meta-Rewarding
+    definition: >-
+      Having the LLM judge its own judgments (meta-judge) to create preference pairs over evaluations, improving the
+      model's ability to assess quality
+    importance: >-
+      Creates a virtuous cycle where better evaluation leads to better training signals, sustaining improvement beyond
+      self-rewarding plateaus
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: Verifiable Rewards
+    definition: >-
+      Rule-based reward signals derived from checking final answer correctness (e.g., string match for math) rather than
+      learned neural reward models
+    importance: Eliminates reward model noise and enables more reliable RL training for tasks with checkable outputs
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: Chain-of-Verification
+    definition: >-
+      System 2 reasoning technique where the model drafts a response, generates verification questions about its claims,
+      answers them independently, then cross-checks for inconsistencies
+    importance: >-
+      Reduces hallucination by 3x on knowledge tasks by exploiting the model's better accuracy on single-question vs.
+      list-generation tasks
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: System 2 Attention
+    definition: >-
+      Prompting technique that rewrites biased or sycophancy-inducing instructions to remove irrelevant context before
+      answering
+    importance: Addresses fundamental attention-based biases in transformers including semantic leakage and sycophancy
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: Thought Preference Optimization
+    definition: >-
+      Extension of self-rewarding to non-verifiable tasks by training models to generate chain-of-thought before
+      responses, using LLM-as-a-Judge rewards
+    importance: Shows chain-of-thought training can improve general instruction following, not just math/code
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: COCONUT
+    definition: >-
+      Method replacing text-based chain-of-thought with continuous vector representations in the hidden states, enabling
+      non-verbal reasoning
+    importance: Opens possibility of more efficient reasoning that doesn't require generating interpretable text tokens
+    tags:
+      - theory
+    timestamps: []
+    aliases: []
+  - name: Branch-Solve-Merge
+    definition: >-
+      Evaluation framework that decomposes assessment into independent criteria branches, evaluates each separately,
+      then merges judgments
+    importance: Improves LLM evaluation quality through structured System 2 thinking about multiple quality dimensions
+    tags:
+      - theory
+    timestamps: []
+    aliases: []

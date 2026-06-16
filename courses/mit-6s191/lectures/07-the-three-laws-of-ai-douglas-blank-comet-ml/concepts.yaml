@@ -1,0 +1,61 @@
+concepts:
+  - name: LLM Evaluation
+    aliases: [Model Evaluation, LLM Testing]
+    definition: >-
+      The systematic process of testing language model behavior using curated datasets of test prompts,
+      automated metrics for scoring outputs, and structured experiments comparing performance across
+      models and prompt configurations.
+    tags: [evaluation, llm, deployment]
+    timestamps: ['21:22', '30:57']
+    relations:
+      - target: LLM-as-Judge
+        type: uses
+        note: LLM-as-judge is a metric strategy within LLM evaluation.
+  - name: Jailbreaking
+    aliases: [Jailbreak, Prompt Injection]
+    definition: >-
+      Techniques for bypassing LLM safety constraints through creative prompting strategies such as
+      reframing context, requesting translations, claiming information is no longer secret, or using
+      indirect queries. Different models show vastly different vulnerability levels.
+    tags: [security, llm, limitation]
+    timestamps: ['14:51', '20:37']
+    relations:
+      - target: Adversarial Attack
+        type: text_equivalent_of
+        note: Jailbreaking is the text-domain equivalent of adversarial attacks on vision models.
+  - name: Agentic AI
+    aliases: [AI Agent, Tool-Using LLM]
+    definition: >-
+      An AI system where an LLM is augmented with tools (functions, APIs) that enable it to take
+      real-world actions on behalf of users, such as sending emails, scheduling appointments, or
+      querying external data sources. Amplifies both capabilities and safety risks.
+    tags: [architecture, deployment, llm]
+    timestamps: ['36:22', '44:34']
+    relations:
+      - target: Safety Drift
+        type: amplified_by
+        note: Agentic systems amplify safety risks because actions have real-world consequences.
+  - name: Safety Drift
+    aliases: [Guardrail Erosion]
+    definition: >-
+      The gradual erosion of LLM safety constraints over extended multi-turn conversations, where the
+      model begins mimicking user language patterns and progressively deviates from its safety guidelines.
+      Identified as a contributing factor in real-world harm cases.
+    tags: [safety, llm, limitation]
+    timestamps: ['33:23', '35:47']
+    relations:
+      - target: LLM Evaluation
+        type: detected_by
+        note: Safety drift can be detected through evaluation with long multi-turn conversation datasets.
+  - name: LLM-as-Judge
+    aliases: [LLM Judge, AI Judge]
+    definition: >-
+      Using a language model to evaluate the outputs of another language model, checking if responses
+      contain prohibited information even in non-obvious forms (translations, encodings, paraphrases).
+      More flexible than rule-based metrics but introduces its own biases.
+    tags: [evaluation, llm]
+    timestamps: ['31:31', '32:34']
+    relations:
+      - target: LLM Evaluation
+        type: component_of
+        note: LLM-as-judge is a metric strategy used within systematic LLM evaluation.

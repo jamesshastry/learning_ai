@@ -1,0 +1,70 @@
+concepts:
+  - name: Searchformer
+    aliases: [Search-Augmented LLM, Beyond A*]
+    definition: >-
+      A model trained to output A* search traces before final solutions for planning tasks,
+      achieving 10x better sample efficiency and working with 10x smaller models compared to
+      solution-only approaches, demonstrating that learning search processes improves reasoning.
+    tags: [reasoning, planning, architecture]
+    timestamps: ['23:23', '24:40', '25:29']
+    relations:
+      - target: Dualformer
+        type: extended_by
+        note: Dualformer adds adaptive switching between search-trace and direct-solution modes.
+      - target: Chain-of-Thought Prompting
+        type: related_to
+        note: Both add intermediate reasoning steps; Searchformer learns algorithmic search traces.
+  - name: Dualformer
+    aliases: [Dual-Mode Reasoning]
+    definition: >-
+      A transformer architecture that learns to dynamically switch between fast thinking
+      (direct solution prediction) and slow thinking (full search trace generation) within
+      a single model, trained by randomly dropping search trace tokens during training.
+    tags: [architecture, reasoning, planning]
+    timestamps: ['30:00', '35:00']
+    relations:
+      - target: Searchformer
+        type: extends
+        note: Dualformer adds adaptive fast/slow switching to Searchformer's search-trace approach.
+  - name: SurCo
+    aliases: [Surrogate-based Combinatorial Optimization]
+    definition: >-
+      A technique that uses neural networks as differentiable continuous surrogates for discrete
+      combinatorial optimization problems, enabling gradient-based optimization of problems
+      that traditionally require specialized symbolic solvers.
+    tags: [optimization, neural-symbolic, theory]
+    timestamps: ['45:00', '50:00']
+    relations:
+      - target: Neural-Symbolic Reasoning
+        type: instantiation_of
+        note: SurCo bridges neural and symbolic approaches for combinatorial problems.
+  - name: Neural-Symbolic Reasoning
+    aliases: [Neural-Symbolic Integration]
+    definition: >-
+      The research direction of unifying neural network approaches with symbolic/algorithmic
+      methods, showing that trained neural networks can converge to solutions equivalent to
+      known symbolic algorithms, suggesting deep connections between the two paradigms.
+    tags: [theory, reasoning, planning]
+    timestamps: ['01:08:30', '01:08:43']
+    relations:
+      - target: Searchformer
+        type: example_of
+        note: Searchformer shows neural models learning algorithmic search behavior.
+      - target: SurCo
+        type: example_of
+        note: SurCo bridges neural optimization with combinatorial symbolic problems.
+  - name: Search-Augmented Training
+    aliases: [Trace-Augmented Training]
+    definition: >-
+      A training methodology where models learn to generate the search/reasoning trace
+      of an algorithm before outputting the final solution, resulting in dramatically better
+      scaling laws and sample efficiency for planning and reasoning tasks.
+    tags: [training, reasoning, optimization]
+    timestamps: ['23:23', '25:04']
+    relations:
+      - target: Searchformer
+        type: used_by
+        note: Searchformer uses search-augmented training with A* traces.
+      - target: Intermediate Step Generation
+        type: extends
+        note: Generalizes intermediate steps from informal reasoning to formal algorithmic traces.

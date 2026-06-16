@@ -1,0 +1,76 @@
+concepts:
+  - name: SWE-bench
+    aliases: [SWE-bench Verified]
+    definition: >-
+      A benchmark for evaluating coding agents on real-world software engineering tasks, consisting
+      of 2294 GitHub issues from 12 Python repositories where agents must generate patches that
+      pass existing test suites — the gold standard for practical coding agent evaluation.
+    tags: [benchmark, software-engineering, evaluation]
+    timestamps: ['05:00', '08:00', '12:00']
+    relations:
+      - target: Agent-Computer Interface
+        type: evaluated_by
+        note: SWE-agent showed that ACI design dramatically impacts SWE-bench scores.
+      - target: OpenHands
+        type: evaluated_on
+        note: OpenHands is regularly evaluated on SWE-bench.
+  - name: Agent-Computer Interface
+    aliases: [ACI]
+    definition: >-
+      The design of commands, feedback mechanisms, and information presentation that agents
+      use to interact with computing environments — research shows this can matter as much
+      as model capability, with agent-optimized interfaces differing from human-optimized ones.
+    tags: [architecture, software-engineering, agents]
+    timestamps: ['25:00', '28:00', '30:00']
+    relations:
+      - target: SWE-agent
+        type: instantiated_by
+        note: SWE-agent pioneered ACI design for coding agents.
+      - target: OpenHands
+        type: used_in
+        note: OpenHands implements ACI through its sandbox environment.
+  - name: OpenHands
+    aliases: [OpenDevin]
+    definition: >-
+      An open-source coding agent platform that integrates web browsing, code execution, and
+      file editing in a sandboxed Docker environment, supporting multiple LLM backends and
+      community-driven development of software engineering agents.
+    tags: [framework, software-engineering, open-source]
+    timestamps: ['45:00', '48:00', '01:00:31']
+    relations:
+      - target: CodeAct
+        type: uses
+        note: OpenHands uses CodeAct for action representation.
+      - target: SWE-bench
+        type: evaluated_on
+        note: OpenHands agents are benchmarked on SWE-bench.
+  - name: CodeAct
+    aliases: [Code as Action]
+    definition: >-
+      An action representation paradigm where agent actions are expressed as executable Python
+      code rather than JSON tool calls, enabling composability through loops, conditionals,
+      variable reuse, and access to the full Python ecosystem.
+    tags: [architecture, agents, software-engineering]
+    timestamps: ['37:00', '39:00']
+    relations:
+      - target: OpenHands
+        type: used_in
+        note: CodeAct is the action representation used in OpenHands.
+      - target: Function Calling
+        type: alternative_to
+        note: CodeAct replaces JSON-based tool calls with executable Python code.
+  - name: SWE-agent
+    aliases: []
+    definition: >-
+      A coding agent that demonstrated the importance of Agent-Computer Interface design by
+      creating custom commands for file search, editing with linting feedback, and context
+      navigation — showing that interface design can matter more than model improvements.
+    tags: [agents, software-engineering, architecture]
+    timestamps: ['25:00', '27:00']
+    relations:
+      - target: Agent-Computer Interface
+        type: pioneered
+        note: SWE-agent was the first to systematically study ACI for coding agents.
+      - target: SWE-bench
+        type: evaluated_on
+        note: SWE-agent achieved strong results on SWE-bench through ACI design.

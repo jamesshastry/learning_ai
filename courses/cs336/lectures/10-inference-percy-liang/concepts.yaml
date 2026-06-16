@@ -1,0 +1,85 @@
+concepts:
+  - name: KV Cache
+    aliases: [key-value cache, attention cache]
+    definition: >-
+      A memory structure that stores the key and value projections for all previously
+      processed tokens, enabling efficient autoregressive generation without recomputing
+      attention for past positions. Size grows linearly with context length and number
+      of attention heads, making it a major memory bottleneck.
+    tags: [optimization, architecture]
+    timestamps: ["20:00"]
+    relations:
+      - target: Grouped Query Attention
+        type: related_to
+        note: GQA reduces KV cache size by sharing KV heads across query heads
+      - target: PagedAttention
+        type: related_to
+        note: PagedAttention manages KV cache memory efficiently via virtual paging
+
+  - name: Prefill vs Decode
+    aliases: [prefill phase, decode phase, inference phases]
+    definition: >-
+      The two distinct phases of LLM inference. Prefill processes all prompt tokens in
+      parallel (compute-bound, like training). Decode generates tokens one at a time,
+      reading the full KV cache and model weights each step (memory-bound). This
+      dichotomy fundamentally shapes inference optimization strategies.
+    tags: [optimization]
+    timestamps: ["08:15"]
+    relations:
+      - target: KV Cache
+        type: related_to
+        note: KV cache is built during prefill and read during each decode step
+
+  - name: Speculative Decoding
+    aliases: [spec decode, draft-verify decoding]
+    definition: >-
+      An inference optimization using a small draft model to generate K candidate tokens,
+      then verifying them in parallel with the full model. Accepted tokens provide multi-
+      token speedup while maintaining the exact same output distribution as standard
+      autoregressive generation.
+    tags: [optimization]
+    timestamps: ["45:00"]
+    relations:
+      - target: Multi-Token Prediction
+        type: related_to
+        note: MTP builds a draft model into the architecture for speculative decoding
+
+  - name: Quantization
+    aliases: [model quantization, weight quantization]
+    definition: >-
+      Reducing the numerical precision of model weights and/or activations (e.g., FP16 to
+      INT8 or INT4) to decrease memory footprint and increase inference speed. Can be done
+      post-training (PTQ) or during training (QAT). Trades precision for efficiency.
+    tags: [optimization]
+    timestamps: ["25:00"]
+    relations:
+      - target: BFloat16
+        type: related_to
+        note: Quantization goes beyond BF16 training precision to INT8/INT4 for serving
+
+  - name: Continuous Batching
+    aliases: [dynamic batching, iteration-level batching]
+    definition: >-
+      An inference serving technique that dynamically adds and removes requests from
+      the batch as they arrive and complete, rather than waiting for all requests in a
+      static batch to finish. Dramatically improves GPU utilization for serving.
+    tags: [infrastructure]
+    timestamps: ["55:00"]
+    relations:
+      - target: PagedAttention
+        type: related_to
+        note: Often implemented together in inference servers like vLLM
+
+  - name: PagedAttention
+    aliases: [vLLM paging, virtual memory KV cache]
+    definition: >-
+      A KV cache management technique inspired by operating system virtual memory that
+      stores cache in non-contiguous pages. Eliminates memory fragmentation from variable-
+      length sequences, enables sharing common prefixes across requests, and dramatically
+      improves memory utilization in inference serving.
+    tags: [infrastructure, optimization]
+    timestamps: ["01:00:00"]
+    relations:
+      - target: KV Cache
+        type: related_to
+        note: PagedAttention is a memory management strategy for KV caches

@@ -1,0 +1,65 @@
+concepts:
+  - name: Outcomes-Based Pricing
+    aliases: [pay-per-resolution, success-based pricing]
+    definition: >-
+      Business model where a company only pays for AI agent services when the agent
+      successfully resolves a customer's problem. Deeply aligns vendor incentives with
+      customer success, pioneered by Sierra.
+    tags: [business-model, deployment, enterprise]
+    timestamps: ["06:55"]
+    relations:
+      - target: Customer-Facing Agent
+        type: monetization_of
+        note: Outcomes-based pricing is the business model for customer-facing agents
+
+  - name: Customer-Facing Agent
+    aliases: [customer agent, business agent, support agent]
+    definition: >-
+      AI agent deployed to interact directly with a company's customers across channels
+      (chat, voice, email). Handles everything from returns and troubleshooting to
+      upselling and subscription management. Expected to become universal.
+    tags: [agents, enterprise, deployment]
+    timestamps: ["03:25"]
+    relations:
+      - target: Channel Collapse
+        type: enables
+        note: A single agent replaces multiple channel-specific support teams
+
+  - name: Channel Collapse
+    aliases: [omnichannel agent, unified agent experience]
+    definition: >-
+      The convergence of separate customer support channels (phone, chat, email) into
+      a single AI agent that appears wherever customers are. Eliminates separate teams
+      and inconsistent experiences across channels.
+    tags: [enterprise, deployment, architecture]
+    timestamps: ["05:00"]
+    relations:
+      - target: Customer-Facing Agent
+        type: enabled_by
+        note: AI agents make channel collapse possible by handling all modalities
+
+  - name: Agent Iceberg Problem
+    aliases: [hidden agent complexity]
+    definition: >-
+      The observation that building a reliable production agent has 90% hidden complexity
+      beneath the visible "choose model + add tools" surface. Includes version control,
+      observability, compliance, hallucination prevention, prompt injection defense, and more.
+    tags: [deployment, engineering, production]
+    timestamps: ["08:03"]
+    relations:
+      - target: Customer-Facing Agent
+        type: challenge_for
+        note: The iceberg problem is the core engineering challenge in customer-facing agents
+
+  - name: AI Architect
+    aliases: [agent architect, agent designer]
+    definition: >-
+      Emerging role within companies responsible for defining and shaping AI agent
+      behavior, replacing traditional channel-specific support management teams.
+      Combines domain knowledge with AI system configuration.
+    tags: [roles, enterprise, deployment]
+    timestamps: ["06:05"]
+    relations:
+      - target: Customer-Facing Agent
+        type: manages
+        note: AI architects shape how customer-facing agents represent the business

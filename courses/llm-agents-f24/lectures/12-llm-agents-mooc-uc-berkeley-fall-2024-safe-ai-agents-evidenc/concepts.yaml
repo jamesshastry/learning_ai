@@ -1,0 +1,88 @@
+concepts:
+  - name: Agent Safety
+    aliases: [LLM Agent Safety]
+    definition: >-
+      The study of safety challenges specific to LLM agents, which face an expanded attack
+      surface compared to standalone models due to tool access, credential handling, real-world
+      action capabilities, and complex multi-component architectures.
+    tags: [safety, agents, theory]
+    timestamps: ['34:22', '35:02', '36:01']
+    relations:
+      - target: Prompt Injection
+        type: vulnerable_to
+        note: Agents are especially vulnerable to prompt injection through retrieved content and tool outputs.
+      - target: Jailbreak Attacks
+        type: vulnerable_to
+        note: Jailbreaks become more dangerous when agents can take real-world actions.
+  - name: Jailbreak Attacks
+    aliases: [Jailbreaking, Safety Bypass]
+    definition: >-
+      Techniques for bypassing LLM safety alignment, including transfer attacks from open-source
+      models, cipher-based encoding, many-shot prompting, multi-modal inputs, and adversarial
+      suffixes — continuously evolving to circumvent new defenses.
+    tags: [safety, adversarial, attacks]
+    timestamps: ['20:00', '25:00', '30:00']
+    relations:
+      - target: Agent Safety
+        type: threatens
+        note: Jailbreaks are more dangerous for agents that can take real-world actions.
+      - target: Representation Engineering
+        type: defended_by
+        note: Representation engineering offers a defense mechanism against jailbreaks.
+  - name: Prompt Injection
+    aliases: [Indirect Prompt Injection]
+    definition: >-
+      An attack vector where malicious instructions are embedded in content that agents process
+      (retrieved documents, tool outputs, user messages), causing the agent to execute unintended
+      actions — the agent-safety analog of SQL injection in traditional software.
+    tags: [safety, adversarial, agents]
+    timestamps: ['35:00', '38:00']
+    relations:
+      - target: Agent Safety
+        type: critical_threat_to
+        note: Prompt injection is one of the most critical agent-specific safety vulnerabilities.
+      - target: Agentic RAG
+        type: threatens
+        note: RAG systems are vulnerable to prompt injection through retrieved content.
+  - name: Representation Engineering
+    aliases: [RepE]
+    definition: >-
+      A technique for controlling model behavior by directly reading and manipulating internal
+      neural representations associated with concepts like honesty, harmlessness, and safety,
+      offering a mechanistic alternative to RLHF-based alignment.
+    tags: [safety, architecture, theory]
+    timestamps: ['40:00', '42:00']
+    relations:
+      - target: Jailbreak Attacks
+        type: defends_against
+        note: Representation engineering can detect and prevent jailbreak attempts.
+      - target: Agent Safety
+        type: contributes_to
+        note: Provides a new mechanism for ensuring safe agent behavior.
+  - name: DecodingTrust
+    aliases: []
+    definition: >-
+      A comprehensive benchmark for evaluating LLM trustworthiness across multiple dimensions
+      including toxicity, stereotypes, adversarial robustness, out-of-distribution performance,
+      privacy, machine ethics, and fairness.
+    tags: [benchmark, safety, evaluation]
+    timestamps: ['25:00']
+    relations:
+      - target: Agent Safety
+        type: evaluates
+        note: DecodingTrust provides trustworthiness metrics relevant to agent safety.
+  - name: Evidence-Based AI Policy
+    aliases: [Science-Based AI Policy]
+    definition: >-
+      An approach to AI governance that relies on empirical measurement and multi-stakeholder
+      consensus building rather than precautionary bans or unrestricted deployment, with the
+      goal of creating adaptive policy blueprints tied to measurable AI conditions.
+    tags: [policy, governance, safety]
+    timestamps: ['01:42:20', '01:42:42', '01:43:06']
+    relations:
+      - target: Responsible Scaling Policy
+        type: complementary
+        note: RSP provides company-level measurement; evidence-based policy provides societal-level governance.
+      - target: Agent Safety
+        type: governs
+        note: Evidence-based policy addresses the societal implications of agent safety risks.

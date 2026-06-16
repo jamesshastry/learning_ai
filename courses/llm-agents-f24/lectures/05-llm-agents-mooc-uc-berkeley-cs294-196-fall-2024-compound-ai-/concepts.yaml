@@ -1,0 +1,91 @@
+concepts:
+  - name: DSPy
+    aliases: [Declaratively Self-Improving Python]
+    definition: >-
+      A programming framework for building compound AI systems where developers declare module
+      behavior through natural language signatures and automated optimizers learn the prompts,
+      demonstrations, and weights needed to maximize a given metric.
+    tags: [framework, optimization, programming]
+    timestamps: ['15:46', '15:56', '16:04']
+    relations:
+      - target: Compound AI Systems
+        type: enables
+        note: DSPy provides the programming abstraction for building compound AI systems.
+      - target: MePro Optimizer
+        type: contains
+        note: MePro is one of several optimizers available in DSPy.
+  - name: Compound AI Systems
+    aliases: [Modular AI Systems, Language Model Programs]
+    definition: >-
+      Modular programs where LLMs serve specialized roles inside a larger architecture rather
+      than acting as monolithic end-to-end systems, enabling better quality, control,
+      transparency, and inference-time scaling.
+    tags: [architecture, theory, framework]
+    timestamps: ['02:44', '03:01', '04:46']
+    relations:
+      - target: DSPy
+        type: implemented_by
+        note: DSPy provides the programming framework for compound AI systems.
+      - target: RAG
+        type: example_of
+        note: RAG is a familiar example of a compound AI system.
+  - name: Signatures
+    aliases: [DSPy Signatures, Module Declarations]
+    definition: >-
+      One-liner natural language declarations in DSPy that specify what a module should do
+      (its inputs and outputs) without specifying how — separating the developer's intent
+      from model-specific prompt engineering.
+    tags: [framework, programming, abstraction]
+    timestamps: ['17:10', '18:00', '23:47']
+    relations:
+      - target: DSPy
+        type: part_of
+        note: Signatures are the core abstraction unit in DSPy programs.
+      - target: Prompt Optimization
+        type: target_of
+        note: Optimizers learn prompts that implement signature behavior.
+  - name: Prompt Optimization
+    aliases: [Automatic Prompt Engineering, Prompt Tuning]
+    definition: >-
+      Automated techniques for finding effective prompts (instructions and demonstrations)
+      for LLM modules by exploring the space of possible prompt configurations and evaluating
+      them against a metric, replacing manual prompt engineering.
+    tags: [optimization, prompting, theory]
+    timestamps: ['26:01', '27:00', '34:00']
+    relations:
+      - target: MePro Optimizer
+        type: instantiation_of
+        note: MePro is a specific prompt optimization algorithm.
+      - target: DSPy
+        type: part_of
+        note: Prompt optimization is the core learning mechanism in DSPy.
+  - name: MePro Optimizer
+    aliases: [MePro V2]
+    definition: >-
+      A DSPy optimizer that jointly optimizes instructions and few-shot demonstrations across
+      multi-module programs using Bayesian surrogate models for credit assignment, grounded
+      instruction proposals from program-aware language models, and bootstrapped demonstrations.
+    tags: [optimization, algorithm]
+    timestamps: ['27:46', '52:39', '53:42']
+    relations:
+      - target: Bootstrap Few-Shot
+        type: uses
+        note: MePro uses bootstrapped demonstrations as part of its optimization.
+      - target: DSPy
+        type: part_of
+        note: MePro is the most advanced prompt optimizer in DSPy.
+  - name: Bootstrap Few-Shot
+    aliases: [Self-Generated Demonstrations]
+    definition: >-
+      A technique that runs a basic version of a program on training inputs, traces module
+      inputs and outputs from successful trajectories, and uses those as few-shot demonstrations
+      in module prompts — a form of automated example generation.
+    tags: [optimization, prompting]
+    timestamps: ['32:11', '33:06', '43:01']
+    relations:
+      - target: MePro Optimizer
+        type: component_of
+        note: Bootstrapped demonstrations are a key input to MePro's optimization.
+      - target: Self-Consistency
+        type: related_to
+        note: Both use multiple samples to find high-quality outputs.

@@ -1,0 +1,106 @@
+concepts:
+  - name: AutoGen
+    aliases: [AutoGen Framework]
+    definition: >-
+      An open-source programming framework for agentic AI based on multi-agent conversation
+      programming, where conversable agents with different backends (LLMs, tools, humans)
+      collaborate through flexible conversation patterns to solve complex tasks.
+    tags: [framework, multi-agent, application]
+    timestamps: ['20:02', '20:57', '22:15']
+    relations:
+      - target: Conversable Agent
+        type: foundation_of
+        note: AutoGen's core abstraction is the conversable agent.
+      - target: Nested Chat
+        type: enables
+        note: AutoGen supports nested conversations for recursive agent complexity.
+  - name: Conversable Agent
+    aliases: [Agent Abstraction]
+    definition: >-
+      AutoGen's unified abstraction that can represent LLMs, tools, or humans behind a common
+      conversational interface, enabling modular agent systems where any entity can participate
+      in multi-agent conversations interchangeably.
+    tags: [framework, architecture, multi-agent]
+    timestamps: ['22:48', '23:00']
+    relations:
+      - target: AutoGen
+        type: part_of
+        note: Core building block of the AutoGen framework.
+      - target: Group Chat Manager
+        type: related_to
+        note: Conversable agents participate in group chats managed by a group chat manager.
+  - name: Nested Chat
+    aliases: [Nested Conversation]
+    definition: >-
+      A conversation pattern in AutoGen where an agent can pause its current conversation and
+      initiate inner conversations with other agents, then return results to the outer conversation,
+      enabling recursive agent complexity and modular task decomposition.
+    tags: [framework, architecture, multi-agent]
+    timestamps: ['08:43', '23:36', '25:13']
+    relations:
+      - target: AutoGen
+        type: part_of
+        note: Key conversation pattern in AutoGen's programming model.
+      - target: AutoBuild
+        type: enables
+        note: Nested chats allow AutoBuild to compose adaptive agent teams.
+  - name: Multimodal RAG
+    aliases: [Visual RAG]
+    definition: >-
+      An extension of retrieval-augmented generation that handles visual data (charts, diagrams,
+      images in documents) by extracting text summaries linked to image chunks, enabling text
+      embedding models to index visual content that is then fed to multimodal LLMs during synthesis.
+    tags: [RAG, multimodal, application]
+    timestamps: ['44:19', '49:53', '51:04']
+    relations:
+      - target: Agentic RAG
+        type: foundation_of
+        note: Multimodal RAG provides the retrieval layer for agentic reasoning over visual data.
+      - target: Hierarchical Indexing
+        type: uses
+        note: Multimodal RAG relies on hierarchical indexing to link summaries to source elements.
+  - name: Agentic RAG
+    aliases: [Agent-Augmented RAG]
+    definition: >-
+      A retrieval-augmented generation approach that adds an agent reasoning layer on top of
+      standard RAG, enabling query decomposition, multi-step planning, tool selection, and
+      reflection to handle complex questions that basic RAG pipelines cannot answer.
+    tags: [RAG, agents, application]
+    timestamps: ['52:54', '55:35', '56:00']
+    relations:
+      - target: Multimodal RAG
+        type: extends
+        note: Agentic RAG adds reasoning capabilities to multimodal retrieval.
+      - target: ReAct
+        type: uses
+        note: Many agentic RAG implementations use ReAct-style reasoning loops.
+  - name: AutoBuild
+    aliases: [Adaptive Build]
+    definition: >-
+      An AutoGen capability that automatically suggests and creates teams of agents with
+      appropriate roles for a given task, with Adaptive Build extending this to dynamically
+      select and create agents per subtask from a growing library.
+    tags: [framework, optimization, multi-agent]
+    timestamps: ['34:18', '35:09', '35:48']
+    relations:
+      - target: AutoGen
+        type: part_of
+        note: AutoBuild is a meta-capability within AutoGen for automatic agent team design.
+      - target: Group Chat Manager
+        type: uses
+        note: AutoBuild creates agents that collaborate through group chat patterns.
+  - name: Hierarchical Indexing
+    aliases: [Multi-Representation Indexing]
+    definition: >-
+      A RAG indexing strategy where multiple derived representations (summaries, sub-chunks,
+      extracted metadata) point to source document elements, enabling more effective retrieval
+      by matching queries against diverse representations while returning original content.
+    tags: [RAG, architecture, data]
+    timestamps: ['48:24', '49:06']
+    relations:
+      - target: Multimodal RAG
+        type: enables
+        note: Hierarchical indexing is essential for indexing visual elements in multimodal RAG.
+      - target: Agentic RAG
+        type: supports
+        note: Better retrieval through hierarchical indexing improves agentic RAG quality.

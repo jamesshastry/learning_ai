@@ -1,0 +1,103 @@
+concepts:
+  - name: RMS Norm
+    aliases: [root mean square normalization]
+    definition: >-
+      A simplified layer normalization that omits mean subtraction and bias addition,
+      only dividing by the root mean square of activations then scaling. Achieves same
+      model quality as layer norm but with less memory movement overhead.
+    tags: [architecture, optimization]
+    timestamps: ["14:17", "14:40"]
+    relations:
+      - target: Layer Norm
+        type: contrasts_with
+        note: RMS norm drops mean subtraction for efficiency without quality loss
+
+  - name: SwiGLU
+    aliases: [Swish-Gated Linear Unit]
+    definition: >-
+      A gated activation function that multiplies the Swish activation (x * sigmoid(x))
+      of one linear projection element-wise with a second linear projection. Requires
+      three weight matrices instead of two, so FF dimension is typically reduced by 2/3
+      to maintain parameter count parity.
+    tags: [architecture]
+    timestamps: ["23:34", "25:00"]
+    relations:
+      - target: GeGLU
+        type: contrasts_with
+        note: GeGLU uses GELU activation instead of Swish in the gating mechanism
+      - target: ReLU
+        type: contrasts_with
+        note: SwiGLU consistently outperforms ungated ReLU in controlled experiments
+
+  - name: RoPE
+    aliases: [Rotary Position Embedding, rotary positional encoding]
+    definition: >-
+      A relative position encoding method that rotates pairs of embedding dimensions
+      by angles proportional to absolute position. Inner products between rotated
+      vectors depend only on relative position difference, providing pure relative
+      position information without absolute cross-terms.
+    tags: [architecture]
+    timestamps: ["32:58", "36:00"]
+    relations:
+      - target: Sinusoidal Position Encoding
+        type: contrasts_with
+        note: RoPE multiplies with sines/cosines (no cross-terms) vs adding embeddings
+
+  - name: Grouped Query Attention
+    aliases: [GQA, group query attention]
+    definition: >-
+      An attention variant that uses fewer key-value heads than query heads, with groups
+      of query heads sharing the same KV head. Provides a tunable tradeoff between
+      full multi-head attention (best quality) and multi-query attention (best inference
+      speed), achieving near-MHA quality with significant KV cache reduction.
+    tags: [architecture, optimization]
+    timestamps: ["01:21:09", "01:22:36"]
+    relations:
+      - target: Multi-Query Attention
+        type: related_to
+        note: GQA generalizes MQA by allowing more than one KV head
+      - target: KV Cache
+        type: enables
+        note: GQA dramatically reduces KV cache memory requirements
+
+  - name: QK Norm
+    aliases: [query-key normalization]
+    definition: >-
+      A stability technique that applies RMS normalization to queries and keys before
+      computing attention scores. Ensures inputs to the attention softmax have controlled
+      scale, preventing attention degeneracies and gradient spikes. Originally from
+      multimodal models, now standard in large language models.
+    tags: [architecture, training]
+    timestamps: ["01:10:04", "01:11:27"]
+    relations:
+      - target: Z-Loss
+        type: related_to
+        note: Both are stability interventions targeting softmax operations
+
+  - name: Z-Loss
+    aliases: [log-normalizer loss, auxiliary normalizer loss]
+    definition: >-
+      A regularization term that penalizes the squared log-normalizer of the output
+      softmax, encouraging it to stay near zero for numerical stability. Exploits the
+      overparameterization of softmax (adding a constant to logits doesn't change output)
+      to keep the normalizer well-behaved.
+    tags: [training, architecture]
+    timestamps: ["01:08:41", "01:09:23"]
+    relations:
+      - target: QK Norm
+        type: related_to
+        note: Both target softmax stability from different angles
+
+  - name: Sliding Window Attention
+    aliases: [local attention, banded attention]
+    definition: >-
+      An attention pattern where tokens can only attend to a fixed-size local window
+      of neighboring positions, reducing quadratic cost to linear. Modern architectures
+      alternate sliding window layers with full attention layers to balance long-range
+      and local information processing.
+    tags: [architecture, optimization]
+    timestamps: ["01:25:08", "01:26:46"]
+    relations:
+      - target: Flash Attention
+        type: related_to
+        note: Flash Attention provides constant-factor speedups for both full and windowed attention

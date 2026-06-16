@@ -1,0 +1,145 @@
+concepts:
+  - name: Pre-training
+    aliases: [next-word prediction, language modeling]
+    definition: >-
+      The first stage of LLM training where the model learns to predict the next token
+      on internet-scale data (10-40 trillion tokens), acquiring broad world knowledge
+      through self-supervised learning.
+    tags: [training, foundation]
+    timestamps: ["00:27", "12:00"]
+    relations:
+      - target: Scaling Laws
+        type: enables
+        note: Pre-training performance follows predictable scaling laws with compute
+      - target: Mid-training
+        type: followed_by
+        note: Mid-training continues pre-training on higher-quality curated data
+
+  - name: Scaling Laws
+    aliases: [neural scaling laws, compute-performance relationship]
+    definition: >-
+      Empirical observation that LLM performance (test loss) follows a log-linear
+      relationship with compute, enabling prediction of large-scale performance from
+      small-scale experiments. First formalized by Kaplan et al.
+    tags: [training, theory, compute]
+    timestamps: ["43:00", "45:00"]
+    relations:
+      - target: Chinchilla Optimal
+        type: related_to
+        note: Chinchilla uses scaling laws to derive optimal data-to-parameter ratios
+      - target: Bitter Lesson
+        type: supports
+        note: Scaling laws empirically validate that more compute yields better performance
+
+  - name: Chinchilla Optimal
+    aliases: [chinchilla scaling, compute-optimal training]
+    definition: >-
+      A finding from DeepMind showing that for compute-optimal pre-training, approximately
+      20 tokens should be used per model parameter. Only optimizes training cost, not
+      inference cost.
+    tags: [training, compute, optimization]
+    timestamps: ["46:47"]
+    relations:
+      - target: Scaling Laws
+        type: instance_of
+        note: Chinchilla is a specific application of scaling law analysis
+
+  - name: Bitter Lesson
+    aliases: [Sutton's bitter lesson]
+    definition: >-
+      Richard Sutton's 2019 observation that the most important lesson from 70 years of
+      AI research is that methods leveraging computation scale better than methods encoding
+      human knowledge. Simple methods that scale beat complex methods that don't.
+    tags: [philosophy, compute, strategy]
+    timestamps: ["48:38"]
+    relations:
+      - target: Scaling Laws
+        type: motivated_by
+        note: Scaling laws provide empirical evidence for the bitter lesson
+
+  - name: Supervised Fine-Tuning
+    aliases: [SFT, instruction tuning]
+    definition: >-
+      Post-training method that fine-tunes a pre-trained model using next-word prediction
+      on curated desired answers. Functions as behavior cloning — bounded by the quality
+      of demonstration data. Requires relatively few examples (2K-800K).
+    tags: [training, post-training, alignment]
+    timestamps: ["59:41", "01:04:56"]
+    relations:
+      - target: Rejection Sampling
+        type: uses
+        note: SFT data can be generated via rejection sampling with verifiers
+      - target: Reinforcement Learning
+        type: precedes
+        note: SFT often serves as initialization before RL training
+
+  - name: Reinforcement Learning from Human Feedback
+    aliases: [RLHF, classic post-training]
+    definition: >-
+      Post-training method that optimizes an LLM to maximize human preferences using
+      reinforcement learning. Uses a reward model trained on human preference data to
+      guide policy optimization via algorithms like PPO.
+    tags: [training, alignment, post-training]
+    timestamps: ["03:04", "01:08:16"]
+    relations:
+      - target: Supervised Fine-Tuning
+        type: builds_on
+        note: RLHF typically follows an initial SFT stage
+      - target: Reward Model
+        type: requires
+        note: RLHF needs a reward model to score model outputs
+
+  - name: Rejection Sampling
+    aliases: [best-of-n sampling, verifier-based sampling]
+    definition: >-
+      Technique for generating SFT training data by sampling many candidate answers from
+      an LLM and keeping only those that pass verification (test cases, math checkers, etc.).
+      Used by DeepSeek R1 to bootstrap training data without a stronger teacher model.
+    tags: [training, data-generation, technique]
+    timestamps: ["01:03:04"]
+    relations:
+      - target: Supervised Fine-Tuning
+        type: generates_data_for
+        note: Rejection sampling produces verified correct answers for SFT
+
+  - name: Test-Time Compute
+    aliases: [inference-time scaling, reasoning scaling]
+    definition: >-
+      The paradigm of spending additional compute at inference time (via chain-of-thought,
+      extended reasoning, etc.) to improve answer quality. Analogous to how humans produce
+      better answers when given more time to think.
+    tags: [inference, reasoning, scaling]
+    timestamps: ["57:04"]
+    relations:
+      - target: Scaling Laws
+        type: extends
+        note: Test-time compute provides a second axis of scaling beyond training compute
+
+  - name: Mid-training
+    aliases: [continued pre-training, annealing]
+    definition: >-
+      An intermediate training phase between pre-training and post-training, using less
+      than 10% of pre-training data volume. Used to change data mix, extend context
+      length, add instruction formatting, and incorporate high-quality domain data.
+    tags: [training, data-curation]
+    timestamps: ["36:49"]
+    relations:
+      - target: Pre-training
+        type: follows
+        note: Mid-training continues pre-training with curated data
+      - target: Supervised Fine-Tuning
+        type: precedes
+        note: Mid-training prepares the model for post-training
+
+  - name: Reward Model
+    aliases: [RM, preference model]
+    definition: >-
+      A classifier trained to predict human preferences between model outputs. Used as
+      the optimization target in RLHF. Can be rule-based (string match, test cases),
+      learned from human preferences, or an LLM-as-judge.
+    tags: [training, evaluation, alignment]
+    timestamps: ["01:10:53"]
+    relations:
+      - target: Reinforcement Learning from Human Feedback
+        type: component_of
+        note: Reward models provide the signal for RLHF optimization

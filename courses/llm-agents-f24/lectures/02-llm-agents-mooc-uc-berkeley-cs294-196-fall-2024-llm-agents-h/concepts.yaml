@@ -1,0 +1,123 @@
+concepts:
+  - name: ReAct
+    aliases:
+      - Reasoning and Acting
+      - ReAct Framework
+    definition: >-
+      A paradigm for LLM agents that interleaves reasoning (thinking) and acting (tool use) in
+      a single trajectory, where reasoning guides action planning and error recovery while acting
+      provides external knowledge and feedback to improve reasoning.
+    tags: [agents, reasoning, framework, application]
+    timestamps: ['15:18', '16:00', '18:46', '23:38']
+    relations:
+      - target: Chain-of-Thought Prompting
+        type: extends
+        note: ReAct adds external actions to CoT's internal reasoning.
+      - target: Reasoning Agent
+        type: instantiation_of
+        note: ReAct is the prototypical reasoning agent paradigm.
+  - name: Reasoning Agent
+    aliases: [Language Agent]
+    definition: >-
+      An agent that uses LLMs not just to generate actions but to reason before acting, using
+      natural language as an infinite internal action space that changes only the agent's own
+      context, fundamentally different from symbolic AI or deep RL agents.
+    tags: [agents, theory, reasoning]
+    timestamps: ['03:54', '24:04', '25:26', '43:21']
+    relations:
+      - target: ReAct
+        type: foundation_of
+        note: ReAct is the primary implementation paradigm for reasoning agents.
+      - target: Long-Term Memory
+        type: enables
+        note: Reasoning agents can reflect and build persistent memory.
+  - name: Long-Term Memory
+    aliases: [Persistent Memory, Agent Memory]
+    definition: >-
+      External memory that persists across tasks and sessions, enabling agents to learn from
+      experience without gradient updates — includes episodic memory (event logs), semantic memory
+      (reflections), and procedural memory (learned skills as code).
+    tags: [agents, memory, learning]
+    timestamps: ['26:14', '28:16', '32:36', '34:38']
+    relations:
+      - target: Reflexion
+        type: enables
+        note: Reflexion generates textual insights stored in long-term memory.
+      - target: Reasoning Agent
+        type: part_of
+        note: Long-term memory is a core component of reasoning agent architecture.
+  - name: Reflexion
+    aliases: [Self-Reflection Learning]
+    definition: >-
+      A learning method where agents reflect on failed task attempts, generate textual insights
+      about what went wrong, and persist these reflections as long-term memory to improve future
+      performance — a new form of learning through language rather than gradient descent.
+    tags: [agents, learning, memory]
+    timestamps: ['29:43', '30:55', '31:15']
+    relations:
+      - target: Long-Term Memory
+        type: requires
+        note: Reflexion insights are stored in and retrieved from long-term memory.
+      - target: Reinforcement Learning
+        type: alternative_to
+        note: Replaces scalar rewards and gradient updates with textual feedback and memory.
+  - name: WebShop
+    aliases: []
+    definition: >-
+      The first large-scale practical web agent benchmark, built from 1M+ scraped Amazon products,
+      where agents navigate a simulated e-commerce site to find products matching natural language
+      instructions — pioneering realistic digital automation evaluation.
+    tags: [benchmark, agents, application]
+    timestamps: ['46:32', '47:40', '48:15']
+    relations:
+      - target: Digital Automation
+        type: instantiation_of
+        note: WebShop is a benchmark for the broader digital automation vision.
+      - target: ReAct
+        type: evaluated_by
+        note: WebShop was used to evaluate ReAct-style agents.
+  - name: Digital Automation
+    aliases: [Web Automation, Task Automation]
+    definition: >-
+      The application domain of using LLM agents to automate digital tasks that previously
+      required human interaction — including web browsing, code writing, customer service,
+      and enterprise workflows — uniquely enabled by reasoning agents' language understanding.
+    tags: [application, agents]
+    timestamps: ['44:13', '44:53', '52:19']
+    relations:
+      - target: WebShop
+        type: example_of
+        note: WebShop demonstrates digital automation for e-commerce.
+      - target: Reasoning Agent
+        type: requires
+        note: Digital automation requires reasoning over real-world language and long-horizon planning.
+  - name: KOALA Framework
+    aliases: [Cognitive Architecture for Language Agents]
+    definition: >-
+      A theoretical framework showing that any agent can be expressed through three components:
+      memory (where information is stored), action space (what the agent can do), and
+      decision-making procedure (how to choose actions given the action space).
+    tags: [theory, agents, architecture]
+    timestamps: ['35:43', '36:00']
+    relations:
+      - target: Reasoning Agent
+        type: formalizes
+        note: KOALA provides the formal abstraction for reasoning agent design.
+      - target: Long-Term Memory
+        type: part_of
+        note: Memory is one of the three core components in the KOALA framework.
+  - name: Robustness vs Capability
+    aliases: [Pass@k vs Fail@k, Agent Reliability]
+    definition: >-
+      The distinction between capability (can an agent solve a task at least once in k attempts,
+      pass@k) and robustness (can an agent solve a task every time in k attempts, fail@k) —
+      real-world deployment requires robustness, but current benchmarks mostly measure capability.
+    tags: [evaluation, agents, safety]
+    timestamps: ['01:03:14', '01:04:11', '01:06:03', '01:07:02']
+    relations:
+      - target: Digital Automation
+        type: constrains
+        note: Real-world digital automation requires high robustness, not just high capability.
+      - target: Agent-Computer Interface
+        type: related_to
+        note: Better interfaces may improve both capability and robustness.

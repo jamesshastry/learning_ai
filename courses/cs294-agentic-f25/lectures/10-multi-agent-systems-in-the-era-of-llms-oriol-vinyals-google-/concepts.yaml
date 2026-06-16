@@ -1,0 +1,71 @@
+concepts:
+  - name: Population-Based Training
+    aliases: [PBT, league training, population diversity]
+    definition: >-
+      Training technique that maintains a diverse population of agent strategies/policies
+      to prevent rock-paper-scissors-style cycling. Critical for AlphaStar's robustness —
+      agents trained against diverse opponents develop more general strategies.
+    tags: [training, multi-agent, robustness]
+    timestamps: ["15:00"]
+    relations:
+      - target: Self-Play
+        type: extends
+        note: PBT adds population diversity to basic self-play
+
+  - name: AlphaStar
+    aliases: [StarCraft AI, DeepMind StarCraft]
+    definition: >-
+      DeepMind's AI system that achieved grandmaster level in StarCraft II using a single
+      neural network. Combined imitation learning from human replays with self-play RL
+      and population-based training. First DeepMind AI deployed in the wild (BlizzCon 2019).
+    tags: [agents, gaming, multi-agent, landmark]
+    timestamps: ["05:25", "09:29"]
+    relations:
+      - target: Population-Based Training
+        type: pioneered_use_of
+        note: AlphaStar demonstrated PBT's importance for robust game agents
+      - target: Imitation Learning to RL Pipeline
+        type: exemplifies
+        note: AlphaStar pre-trained on human replays then improved via self-play
+
+  - name: Agent Harness
+    aliases: [agent orchestrator, agent framework]
+    definition: >-
+      The orchestration layer that controls how LLMs are called, manages tool invocations,
+      handles environment interactions, and coordinates multi-step agent behavior. In modern
+      agents, the harness + environment form a more complex system than classical RL settings.
+    tags: [architecture, agents, infrastructure]
+    timestamps: ["04:15"]
+    relations:
+      - target: Customer-Facing Agent
+        type: component_of
+        note: Agent harnesses power deployed customer-facing agents
+
+  - name: Partial Observability in Agents
+    aliases: [POMDP, fog of war, incomplete information]
+    definition: >-
+      The challenge of making decisions with incomplete state information. In StarCraft,
+      agents cannot see the full map. In LLM agents, context windows are limited and
+      environment state may be partially hidden. Requires inference and memory strategies.
+    tags: [agents, challenges, decision-making]
+    timestamps: ["07:47"]
+    relations:
+      - target: AlphaStar
+        type: challenge_for
+        note: StarCraft's fog of war was a key partial observability challenge
+
+  - name: Imitation Learning to RL Pipeline
+    aliases: [demonstration to self-play, behavioral cloning to RL]
+    definition: >-
+      Two-stage training approach: first imitate expert demonstrations (human replays
+      in games, SFT in LLMs), then improve beyond demonstration quality via RL/self-play.
+      Used by AlphaStar, DeepSeek R1, and most modern agentic model training.
+    tags: [training, methodology]
+    timestamps: ["20:00"]
+    relations:
+      - target: AlphaStar
+        type: used_by
+        note: AlphaStar pre-trained on human replays then improved via self-play
+      - target: Supervised Fine-Tuning
+        type: analogous_to
+        note: SFT in LLMs parallels imitation learning in game AI

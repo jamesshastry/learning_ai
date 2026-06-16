@@ -21,3 +21,5 @@ LoRA: Low-Rank Adaptation of Large Language Models (2021, ICLR 2022). Seminal pa
 - [[GPT-3]] (related to) — referenced in paper
 - [[BERT]] (related to) — referenced in paper
 - [[InstructGPT]] (related to) — referenced in paper
+- [[Vision-Language Model]] (related to) — name overlap
+- [[Self-Rewarding Language Models]] (related to) — name overlap

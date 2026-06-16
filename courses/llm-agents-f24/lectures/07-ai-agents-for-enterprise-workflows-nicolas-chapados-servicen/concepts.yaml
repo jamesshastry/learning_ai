@@ -1,0 +1,70 @@
+concepts:
+  - name: TapeAgents
+    aliases: [Tape-Based Agent Framework]
+    definition: >-
+      An agent framework that records all agent interactions (thoughts, actions, observations)
+      in structured execution tapes, enabling systematic debugging, optimization, and distillation
+      of agents from expensive frontier models to cost-effective deployment models.
+    tags: [framework, enterprise, optimization]
+    timestamps: ['24:00', '25:27', '27:03']
+    relations:
+      - target: WorkArena
+        type: evaluated_on
+        note: TapeAgents are evaluated using WorkArena enterprise benchmarks.
+      - target: GREADTH
+        type: measured_by
+        note: Agent quality is assessed using GREADTH attributes.
+  - name: WorkArena
+    aliases: [WorkArena++]
+    definition: >-
+      An enterprise agent benchmark built on the actual ServiceNow platform, featuring 33 task
+      types across three complexity levels (L1-L3), from simple navigation to complex multi-step
+      knowledge work requiring database interactions and business logic.
+    tags: [benchmark, enterprise, evaluation]
+    timestamps: ['30:00', '35:00']
+    relations:
+      - target: BrowserGym
+        type: uses
+        note: WorkArena is implemented within the BrowserGym environment.
+      - target: TapeAgents
+        type: evaluates
+        note: WorkArena provides the benchmark for evaluating TapeAgent performance.
+  - name: BrowserGym
+    aliases: []
+    definition: >-
+      A standardized Gymnasium-compatible environment for web agent evaluation that provides
+      a unified interface across different web benchmarks, enabling fair comparison of
+      web agents and reproducible research.
+    tags: [benchmark, framework, web-agents]
+    timestamps: ['40:00', '01:10:18']
+    relations:
+      - target: WorkArena
+        type: hosts
+        note: BrowserGym provides the execution environment for WorkArena tasks.
+  - name: GREADTH
+    aliases: [Agent Quality Attributes]
+    definition: >-
+      A set of quality attributes for evaluating conversational enterprise agents: Groundedness,
+      Recall, Efficiency, Appropriateness, Depth, Timeliness, and Honesty — providing
+      comprehensive coverage of production agent quality requirements.
+    tags: [evaluation, enterprise, quality]
+    timestamps: ['27:43', '28:01']
+    relations:
+      - target: TapeAgents
+        type: evaluates
+        note: GREADTH attributes are used to assess TapeAgent quality.
+  - name: Enterprise Agent Workflows
+    aliases: [Enterprise AI Agents]
+    definition: >-
+      AI agents deployed in enterprise environments to automate complex business processes
+      on real platforms like ServiceNow, requiring multi-step reasoning, database interactions,
+      form filling, and integration with existing enterprise software systems.
+    tags: [enterprise, application, agents]
+    timestamps: ['00:40', '01:03']
+    relations:
+      - target: WorkArena
+        type: evaluated_by
+        note: WorkArena benchmarks enterprise agent workflow capabilities.
+      - target: TapeAgents
+        type: implemented_by
+        note: TapeAgents provides the framework for building enterprise agents.

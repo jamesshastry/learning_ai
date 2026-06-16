@@ -1,0 +1,109 @@
+concepts:
+  - name: Autoencoder
+    aliases: [AE, Self-Encoder]
+    definition: >-
+      A neural network that learns compressed representations by encoding input data into a
+      low-dimensional latent space Z and decoding back to reconstruct the original input.
+      Trained with reconstruction loss (no labels), enabling unsupervised feature learning.
+    tags: [architecture, generative-models, unsupervised]
+    timestamps: ['11:58', '16:00']
+    relations:
+      - target: Variational Autoencoder
+        type: extended_by
+        note: VAEs add probabilistic sampling to the autoencoder framework.
+      - target: Latent Space
+        type: contains
+        note: The bottleneck layer defines the latent space.
+  - name: Variational Autoencoder
+    aliases: [VAE]
+    definition: >-
+      A probabilistic extension of autoencoders that learns mean and variance parameters for each
+      latent variable, enabling sampling from the latent space. Trained with reconstruction loss
+      plus KL divergence regularization against a normal prior. Uses the reparameterization trick
+      for end-to-end differentiability.
+    tags: [architecture, generative-models]
+    timestamps: ['18:11', '28:22']
+    relations:
+      - target: Reparameterization Trick
+        type: depends_on
+        note: The reparameterization trick enables backpropagation through sampling.
+      - target: KL Divergence
+        type: uses
+        note: KL divergence regularizes the learned latent distributions.
+  - name: Latent Space
+    aliases: [Latent Variables, Z, Bottleneck]
+    definition: >-
+      A low-dimensional representation space learned by autoencoders/VAEs that captures the
+      core axes of variability in the data. A well-trained latent space is continuous (nearby
+      points decode similarly) and complete (all regions produce meaningful outputs).
+    tags: [representation, generative-models]
+    timestamps: ['12:14', '24:28']
+    relations:
+      - target: Variational Autoencoder
+        type: part_of
+        note: The latent space is the core learned representation in VAEs.
+  - name: Reparameterization Trick
+    aliases: [Reparameterization]
+    definition: >-
+      A technique that makes VAE training differentiable by expressing latent variables as
+      Z = mu + sigma * epsilon, where epsilon is drawn from a fixed distribution. This offsets
+      the stochasticity to a non-learned random variable, enabling gradient flow through the
+      sampling operation.
+    tags: [training, generative-models]
+    timestamps: ['28:50', '30:42']
+    relations:
+      - target: Variational Autoencoder
+        type: enables
+        note: Without reparameterization, VAEs cannot be trained via backpropagation.
+  - name: KL Divergence
+    aliases: [Kullback-Leibler Divergence, Distributional Distance]
+    definition: >-
+      A measure of how one probability distribution differs from a reference distribution.
+      In VAEs, used to regularize learned latent distributions toward a normal prior,
+      encouraging continuous and complete latent spaces.
+    tags: [loss, generative-models, probability]
+    timestamps: ['22:20', '23:03']
+    relations:
+      - target: Variational Autoencoder
+        type: part_of
+        note: KL divergence is the regularization term in the VAE loss function.
+  - name: Generative Adversarial Network
+    aliases: [GAN]
+    definition: >-
+      A generative modeling framework consisting of two competing neural networks: a generator
+      that maps random noise to synthetic data instances, and a discriminator that classifies
+      inputs as real or fake. Trained via an adversarial minimax objective where the generator
+      tries to fool the discriminator.
+    tags: [architecture, generative-models]
+    timestamps: ['34:52', '40:02']
+    relations:
+      - target: CycleGAN
+        type: extended_by
+        note: CycleGANs extend GANs for unpaired domain-to-domain translation.
+  - name: CycleGAN
+    aliases: [Cycle-Consistent GAN]
+    definition: >-
+      A GAN variant for unpaired image-to-image translation using two generators and two
+      discriminators connected by a cyclic consistency loss. Enables transformation between
+      domains (e.g., voice conversion, style transfer) without requiring paired training examples.
+    tags: [architecture, generative-models]
+    timestamps: ['44:50', '46:08']
+    relations:
+      - target: Generative Adversarial Network
+        type: variant_of
+        note: CycleGAN extends the GAN framework with cyclic loss for unpaired translation.
+  - name: Density Estimation
+    aliases: [Distribution Learning]
+    definition: >-
+      The task of learning the underlying probability distribution from which observed data
+      samples were generated. The foundational goal of all generative models, enabling both
+      understanding of data structure and generation of new samples.
+    tags: [task, generative-models, probability]
+    timestamps: ['05:01', '05:22']
+    relations:
+      - target: Generative Adversarial Network
+        type: achieved_by
+        note: GANs implicitly learn data distributions through adversarial training.
+      - target: Variational Autoencoder
+        type: achieved_by
+        note: VAEs explicitly model data distributions via learned latent variables.

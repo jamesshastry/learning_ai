@@ -1,0 +1,141 @@
+concepts:
+  - name: AI Safety vs AI Security
+    aliases:
+      - Safety vs Security
+    definition: >-
+      AI safety prevents harm a system inflicts on its environment; AI security protects the system from
+      exploitation by external malicious actors — both are interrelated and essential for trustworthy agentic AI.
+    tags:
+      - safety
+      - theory
+    timestamps:
+      - "02:15"
+      - "08:30"
+    relations:
+      - target: Prompt Injection
+        type: related_to
+        note: Prompt injection is a core AI security threat
+      - target: Progent
+        type: enables
+        note: Safety requires security frameworks like privilege separation
+  - name: Prompt Injection
+    aliases:
+      - Direct Prompt Injection
+      - Indirect Prompt Injection
+    definition: >-
+      Attack where malicious instructions are embedded in input data (direct from user, or indirect via
+      third-party content) to hijack LLM/agent behavior — the most critical vulnerability in agentic AI.
+    tags:
+      - safety
+      - application
+    timestamps:
+      - "15:20"
+      - "22:45"
+    relations:
+      - target: DataSentinel
+        type: related_to
+        note: DataSentinel provides defense against prompt injection
+      - target: Agentic AI Attack Surface
+        type: part_of
+        note: Prompt injection is a key component of the agent attack surface
+  - name: AgentPoison
+    aliases: []
+    definition: >-
+      Attack that poisons an agent's RAG knowledge base with optimized adversarial strings that trigger
+      targeted malicious behavior on specific queries, demonstrating that agent memory systems are a
+      critical attack vector beyond direct prompt injection.
+    tags:
+      - safety
+      - data
+    timestamps:
+      - "35:10"
+    relations:
+      - target: Prompt Injection
+        type: related_to
+        note: Extends injection attacks to the RAG knowledge base
+  - name: Progent
+    aliases:
+      - Programmable Privilege Control
+    definition: >-
+      Programming-language-inspired privilege separation framework for agent systems that restricts each
+      component's access to tools and data based on least-privilege principles, adapting proven OS security
+      concepts to LLM-based agents.
+    tags:
+      - safety
+      - architecture
+    timestamps:
+      - "45:30"
+      - "52:15"
+    relations:
+      - target: AI Safety vs AI Security
+        type: enables
+        note: Implements security through architectural privilege separation
+      - target: Agentic AI Attack Surface
+        type: contrasts_with
+        note: Reduces attack surface through least-privilege design
+  - name: DataSentinel
+    aliases: []
+    definition: >-
+      Fine-tuned detector using game-theoretic approach for detecting prompt injection attacks in LLM inputs,
+      providing a practical defense layer at the model input level.
+    tags:
+      - safety
+      - application
+    timestamps:
+      - "58:00"
+    relations:
+      - target: Prompt Injection
+        type: contrasts_with
+        note: Defense mechanism against prompt injection attacks
+  - name: Supply Chain Attacks on AI
+    aliases:
+      - Model Supply Chain Security
+    definition: >-
+      Attacks that compromise AI models through malicious code, backdoors, or poisoned weights introduced
+      during model development, training, or distribution — a growing threat as models are shared via
+      open-source platforms without comprehensive security auditing.
+    tags:
+      - safety
+      - infrastructure
+    timestamps:
+      - "1:05:30"
+    relations:
+      - target: Agentic AI Attack Surface
+        type: part_of
+        note: Supply chain is one dimension of the overall agent attack surface
+  - name: Information Flow Tracking for Agents
+    aliases:
+      - Taint Propagation
+    definition: >-
+      Monitoring how data moves through agentic systems to detect unauthorized access, privacy leakage,
+      and injection attacks via taint propagation — enables runtime detection of data-based attacks in
+      complex multi-component agent systems.
+    tags:
+      - safety
+      - data
+    timestamps:
+      - "1:15:00"
+    relations:
+      - target: Progent
+        type: related_to
+        note: Complements privilege separation with runtime data flow monitoring
+  - name: Agentic AI Attack Surface
+    aliases:
+      - Agent Attack Surface
+    definition: >-
+      The complete set of vulnerability points in an agent system — model, input processing, prompt assembly,
+      tool access, output generation, and environment interaction — vastly larger than standalone LLM attack
+      surface as each component and interaction point introduces new security risks.
+    tags:
+      - safety
+      - architecture
+    timestamps:
+      - "10:45"
+      - "1:20:00"
+    relations:
+      - target: AI Safety vs AI Security
+        type: related_to
+        note: Understanding the attack surface is prerequisite for both safety and security
+      - target: Prompt Injection
+        type: related_to
+        note: Prompt injection exploits the input processing point of the attack surface

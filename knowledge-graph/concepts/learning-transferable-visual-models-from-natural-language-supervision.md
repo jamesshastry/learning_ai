@@ -23,3 +23,11 @@ Learning Transferable Visual Models From Natural Language Supervision (2021, ICM
 - [[Attention Is All You Need]] (related to) — referenced in paper
 - [[GPT-3]] (related to) — referenced in paper
 - [[DDPM]] (related to) — referenced in paper
+- [[Nemotron]] (related to) — shared tags: language
+- [[Unified Model Architecture]] (related to) — shared tags: multimodal
+- [[Natural vs Unnatural Representations]] (related to) — shared tags: multimodal
+- [[Self-Flow]] (related to) — shared tags: multimodal
+- [[Vision-Language Model]] (related to) — name overlap
+- [[Multimodal RAG]] (related to) — shared tags: multimodal
+- [[Self-Rewarding Language Models]] (related to) — name overlap
+- [[Visual Grounding]] (related to) — name overlap

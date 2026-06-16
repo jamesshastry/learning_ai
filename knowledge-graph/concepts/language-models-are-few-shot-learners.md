@@ -23,3 +23,12 @@ Language Models are Few-Shot Learners (2020, NeurIPS 2020). Seminal paper in lan
 - [[InstructGPT]] (related to) — referenced in paper
 - [[Attention Is All You Need]] (related to) — referenced in paper
 - [[Chain-of-Thought]] (related to) — referenced in paper
+- [[Preference Feedback Flywheel]] (related to) — shared tags: scaling
+- [[Forward-Deployed Revenue Model]] (related to) — shared tags: scaling
+- [[Compute-Revenue Correlation]] (related to) — shared tags: scaling
+- [[Recursive Self-Improvement]] (related to) — shared tags: scaling
+- [[Bitter Lesson]] (related to) — shared tags: scaling
+- [[Test-Time Compute]] (related to) — shared tags: scaling
+- [[Vision-Language Model]] (related to) — name overlap
+- [[Self-Rewarding Language Models]] (related to) — name overlap
+- [[Emergent Abilities]] (related to) — shared tags: scaling
