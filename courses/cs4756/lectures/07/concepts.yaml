@@ -1,0 +1,391 @@
+concepts:
+  - name: Q-Function
+    aliases:
+      - Action-Value Function
+      - Q-Value
+    definition: >-
+      A function Q(s, a) that gives the expected cumulative discounted reward of taking
+      action a in state s and then following the optimal policy thereafter. Defined by the
+      Bellman equation: Q(s, a) = R(s, a) + γ E_{s'~P(·|s,a)}[max_{a'} Q(s', a')].
+      The greedy policy is π(s) = argmax_a Q(s, a), which requires no knowledge of dynamics.
+    tags:
+      - reinforcement-learning
+      - value-function
+    relations:
+      - target: Value Function
+        type: contrasts_with
+        note: V(s) requires dynamics P(·|s,a) for policy extraction; Q(s,a) does not
+      - target: Q-Value Iteration
+        type: related_to
+        note: Q-value iteration computes Q by repeatedly applying the Bellman backup
+      - target: Q-Learning
+        type: related_to
+        note: Q-learning estimates Q from sampled transitions without a dynamics model
+
+  - name: Q-Value Iteration
+    aliases:
+      - Q-Iteration
+      - Tabular Q-Iteration
+    definition: >-
+      A dynamic programming algorithm that iteratively applies the Bellman backup over
+      Q-values: Q_{k+1}(s, a) = R(s, a) + γ E_{s'~P(·|s,a)}[max_{a'} Q_k(s', a')].
+      Converges to the optimal Q* when run to completion. Still requires the transition
+      dynamics P(·|s,a) to compute the expectation, which motivates approximation by samples.
+    tags:
+      - reinforcement-learning
+      - dynamic-programming
+    relations:
+      - target: Value Iteration
+        type: related_to
+        note: Q-value iteration is value iteration reformulated in terms of Q(s,a)
+      - target: Fitted Q-Value Iteration
+        type: extends
+        note: FQI approximates the expectation in Q-iteration using sampled roll-out data
+      - target: Bellman Equation
+        type: implements
+        note: Each backup applies the Bellman optimality equation to update Q
+
+  - name: Bellman Equation
+    aliases:
+      - Bellman Backup
+      - Bellman Optimality Equation
+    definition: >-
+      The recursive consistency condition for optimal Q-values:
+      Q*(s, a) = R(s, a) + γ E_{s'~P(·|s,a)}[max_{a'} Q*(s', a')].
+      Value iteration and Q-learning are algorithms that repeatedly apply this backup
+      operator until convergence. The target y_i = R(s_i, a_i) + γ max_{a'} Q(s_i', a')
+      in FQI is a one-step Bellman target.
+    tags:
+      - reinforcement-learning
+      - theory
+    relations:
+      - target: Q-Value Iteration
+        type: related_to
+        note: Q-value iteration iteratively applies the Bellman backup
+      - target: Temporal Difference Learning
+        type: related_to
+        note: TD learning minimizes the Bellman error using bootstrapped targets
+
+  - name: Fitted Q-Value Iteration
+    aliases:
+      - FQI
+      - Fitted Q-Iteration
+    definition: >-
+      A batch offline RL algorithm that approximates Q-value iteration using a fixed dataset
+      D = {(s_i, a_i, s_i', r_i)}. Each iteration: (1) compute regression targets
+      y_i = R(s_i, a_i) + γ max_{a'} Q_θ(s_i', a'), treating them as constants (target
+      network); (2) minimize MSE: θ = argmin (1/2) Σ (Q_θ(s_i, a_i) - y_i)². Because
+      y_i depends only on the transition tuple, FQI is an off-policy learner — data from
+      any behavior policy is valid.
+    tags:
+      - reinforcement-learning
+      - off-policy
+    relations:
+      - target: Q-Learning
+        type: related_to
+        note: Q-learning is online FQI with SGD updates
+      - target: Target Network
+        type: uses
+        note: The y_i computation uses a frozen target network to stabilize training
+      - target: Replay Buffer
+        type: uses
+        note: FQI stores transitions in a dataset (replay buffer) for regression
+      - target: Off-Policy Learning
+        type: is_a
+        note: FQI is off-policy because transitions are independent of the behavior policy
+
+  - name: Target Network
+    aliases:
+      - Frozen Target
+      - Target Q-Network
+    definition: >-
+      A copy of the Q-network whose weights are held fixed (not updated by backpropagation)
+      when computing Bellman regression targets y_i = R(s_i, a_i) + γ max_{a'} Q_θ(s_i', a').
+      Backpropagation only flows through the online Q_θ(s_i, a_i) term. Periodically syncing
+      the target network to the online network stabilizes training by preventing moving-target
+      instability.
+    tags:
+      - reinforcement-learning
+      - deep-learning
+      - training
+    relations:
+      - target: Fitted Q-Value Iteration
+        type: used_in
+        note: FQI treats y_i as constant, which is the target network concept
+      - target: DQN
+        type: used_in
+        note: DQN introduced the periodic-sync target network as a key stabilization trick
+
+  - name: Off-Policy Learning
+    aliases:
+      - Off-Policy RL
+      - Off-Policy Learner
+    definition: >-
+      A reinforcement learning paradigm where the agent learns the optimal policy
+      independently of the data-collection (behavior) policy. Contrast with on-policy
+      learning, which estimates the value of the policy currently being executed. Q-learning
+      and FQI are off-policy because the Bellman target max_{a'} Q(s', a') evaluates the
+      greedy optimal action regardless of how s' was reached.
+    tags:
+      - reinforcement-learning
+      - theory
+    relations:
+      - target: Q-Learning
+        type: related_to
+        note: Q-learning is the canonical off-policy RL algorithm
+      - target: Replay Buffer
+        type: enables
+        note: Off-policy learning allows storing and reusing transitions from any policy
+      - target: On-Policy Learning
+        type: contrasts_with
+        note: On-policy methods (e.g., SARSA) can only use data from the current policy
+
+  - name: On-Policy Learning
+    aliases:
+      - On-Policy RL
+    definition: >-
+      A reinforcement learning paradigm where the agent learns the value of the policy it
+      is currently executing. Data must come from the current behavior policy; old data
+      from previous policies cannot be reused. SARSA is on-policy; Q-learning is off-policy.
+    tags:
+      - reinforcement-learning
+      - theory
+    relations:
+      - target: Off-Policy Learning
+        type: contrasts_with
+        note: Off-policy methods can reuse data from any behavior policy
+      - target: Policy Gradient
+        type: related_to
+        note: Policy gradient methods are typically on-policy
+
+  - name: Replay Buffer
+    aliases:
+      - Experience Replay
+      - Replay Memory
+    definition: >-
+      A data structure (queue or ring buffer) that stores past transitions (s, a, s', r)
+      collected by the agent. During training, random minibatches are sampled from the
+      buffer for gradient updates. Experience replay (1) breaks temporal correlations
+      between consecutive transitions and (2) enables data reuse across many gradient steps
+      (high UTD ratio). Used in DQN and all practical Q-learning implementations.
+    tags:
+      - reinforcement-learning
+      - infrastructure
+    relations:
+      - target: DQN
+        type: used_in
+        note: DQN introduced experience replay as a key component of deep Q-learning
+      - target: Off-Policy Learning
+        type: related_to
+        note: Experience replay is enabled by the off-policy nature of Q-learning
+      - target: Update-to-Data Ratio
+        type: related_to
+        note: Replay buffers allow many gradient updates per collected sample (high UTD)
+
+  - name: Q-Learning
+    aliases:
+      - Deep Q-Learning
+      - Online Q-Learning
+    definition: >-
+      An off-policy RL algorithm that approximates Q-value iteration via online data
+      collection and SGD updates. Each iteration: collect transitions (s_i, a_i, s_i', r_i)
+      using exploration policy π_e, append to replay buffer D, then update θ on minibatches.
+      Equivalent to online FQI with SGD. The classic tabular update rule is:
+      Q(s,a) ← Q(s,a) + α[r + γ max_{a'} Q(s',a') - Q(s,a)].
+    tags:
+      - reinforcement-learning
+      - off-policy
+      - algorithm
+    relations:
+      - target: Fitted Q-Value Iteration
+        type: related_to
+        note: Q-learning is online FQI with SGD (Q-learning ≈ online FQI with SGD)
+      - target: DQN
+        type: related_to
+        note: DQN is Q-learning with a CNN, experience replay, and a target network
+      - target: Exploration Policy
+        type: uses
+        note: Q-learning uses a separate exploration policy (ε-greedy or softmax) to collect data
+
+  - name: Exploration Policy
+    aliases:
+      - Behavior Policy
+      - Exploration Strategy
+    definition: >-
+      A policy π_e used during data collection that differs from the greedy target policy,
+      designed to cover more of the state-action space. Common strategies: (1) ε-greedy:
+      takes the greedy action with probability 1-ε, a random action with probability ε;
+      (2) Softmax/Boltzmann: π_e(a|s) = exp(Q_θ(s,a)/λ) / Σ exp(Q_θ(s,a')/λ), where
+      λ is temperature. Higher λ → more exploration; lower λ → more exploitation.
+    tags:
+      - reinforcement-learning
+      - exploration
+    relations:
+      - target: Epsilon-Greedy
+        type: is_a
+        note: Epsilon-greedy is the simplest and most common exploration policy
+      - target: Softmax Exploration
+        type: is_a
+        note: Softmax exploration is a differentiable alternative to epsilon-greedy
+      - target: Q-Learning
+        type: used_in
+        note: Q-learning collects data using an exploration policy separate from the target policy
+
+  - name: Epsilon-Greedy
+    aliases:
+      - ε-Greedy
+      - Epsilon-Greedy Policy
+    definition: >-
+      An exploration strategy where with probability ε a random action is chosen uniformly,
+      and with probability 1-ε the greedy action argmax_a Q_θ(s,a) is chosen.
+      Formally: π_e(a|s) = (1-ε) if a = argmax Q_θ(s,a), else ε/(|A|-1).
+      ε is typically annealed from 1.0 to a small value (e.g., 0.1) over training.
+    tags:
+      - reinforcement-learning
+      - exploration
+    relations:
+      - target: Exploration Policy
+        type: is_a
+        note: Epsilon-greedy is the canonical exploration policy for discrete Q-learning
+      - target: Softmax Exploration
+        type: contrasts_with
+        note: Softmax provides a smooth probability distribution; ε-greedy is binary
+
+  - name: Softmax Exploration
+    aliases:
+      - Boltzmann Exploration
+      - Temperature-Based Exploration
+    definition: >-
+      An exploration strategy for discrete action spaces where action probabilities are
+      proportional to exponentiated Q-values scaled by temperature λ:
+      π_e(a|s) = exp(Q_θ(s,a)/λ) / Σ_{a'} exp(Q_θ(s,a')/λ).
+      As λ → ∞, the policy becomes uniform random (pure exploration).
+      As λ → 0, the policy collapses to greedy (pure exploitation).
+    tags:
+      - reinforcement-learning
+      - exploration
+    relations:
+      - target: Epsilon-Greedy
+        type: contrasts_with
+        note: Epsilon-greedy is a hard switch; softmax provides a smooth distribution over actions
+      - target: Exploration Policy
+        type: is_a
+        note: Softmax exploration is an alternative behavior policy for Q-learning
+
+  - name: Update-to-Data Ratio
+    aliases:
+      - UTD Ratio
+      - UTD
+    definition: >-
+      The ratio of gradient update steps to environment data collection steps:
+      UTD = N_update / N_data. A UTD of 1 means one gradient step per collected transition
+      (classic Q-learning). Higher UTD (e.g., 20) means more gradient updates per sample,
+      improving sample efficiency but risking instability due to overfit targets.
+      A key hyperparameter in modern off-policy RL algorithms.
+    tags:
+      - reinforcement-learning
+      - hyperparameter
+    relations:
+      - target: Replay Buffer
+        type: related_to
+        note: High UTD is only possible because replay buffers store past transitions for reuse
+      - target: Q-Learning
+        type: related_to
+        note: UTD ratio governs how aggressively the Q-network is trained relative to data collection
+
+  - name: Deep Q-Network
+    aliases:
+      - DQN
+      - Deep Q-Learning
+    definition: >-
+      The landmark deep RL algorithm (Mnih et al., DeepMind, 2015) that applies Q-learning
+      with a convolutional neural network (CNN) to learn directly from pixel inputs on Atari
+      games. Key innovations: (1) experience replay to break temporal correlations,
+      (2) target network with periodic syncing to stabilize Bellman targets,
+      (3) frame stacking and preprocessing (grayscale, downsampling). Described as
+      "a classic which substantially launched the field of deep RL."
+    tags:
+      - reinforcement-learning
+      - deep-learning
+      - landmark
+    relations:
+      - target: Q-Learning
+        type: is_a
+        note: DQN is Q-learning with a deep CNN and experience replay
+      - target: Target Network
+        type: uses
+        note: DQN introduced the periodic-sync target network for stable training
+      - target: Replay Buffer
+        type: uses
+        note: DQN introduced experience replay to decorrelate training data
+      - target: Epsilon-Greedy
+        type: uses
+        note: DQN uses ε-greedy exploration during training
+
+  - name: Cross-Entropy Method
+    aliases:
+      - CEM
+      - Cross-Entropy Optimization
+    definition: >-
+      A derivative-free optimization algorithm used for action maximization in Q-learning
+      with continuous action spaces. Iteratively: (1) sample a population of candidate
+      actions from a distribution (e.g., Gaussian), (2) evaluate Q(s, a) for each,
+      (3) keep the top-k elite candidates, (4) fit a new distribution to the elites,
+      (5) repeat. Used in QT-Opt as the policy: π(s) = argmax_{a} Q_θ̄(s, a) via CEM.
+    tags:
+      - reinforcement-learning
+      - continuous-control
+      - optimization
+    relations:
+      - target: QT-Opt
+        type: used_in
+        note: QT-Opt uses CEM to solve the continuous action maximization in π(s) = argmax Q
+      - target: Q-Learning
+        type: related_to
+        note: CEM replaces the discrete argmax in Q-learning when actions are continuous
+
+  - name: QT-Opt
+    aliases:
+      - QT-Opt Algorithm
+    definition: >-
+      A scalable deep Q-learning system for vision-based robotic manipulation (Kalashnikov
+      et al., Google, 2018). Uses: (1) image observations (472×472), (2) self-supervised
+      binary grasp reward, (3) cross-entropy method (CEM) for continuous action maximization,
+      (4) mixed off-policy (580K historical grasps) and on-policy (7 live robots) replay
+      buffers, (5) a separate Bellman Updater computing target Q-values Q_T. Demonstrated
+      robust failure recovery and long-horizon manipulation.
+    tags:
+      - reinforcement-learning
+      - robotics
+      - landmark
+    relations:
+      - target: Q-Learning
+        type: is_a
+        note: QT-Opt is Q-learning scaled to robot manipulation with continuous actions
+      - target: Cross-Entropy Method
+        type: uses
+        note: CEM is used for policy extraction in the continuous action space
+      - target: Off-Policy Learning
+        type: uses
+        note: QT-Opt mixes off-policy historical data with on-policy robot data
+
+  - name: Temporal Difference Learning
+    aliases:
+      - TD Learning
+      - TD Update
+    definition: >-
+      A class of RL methods that update value estimates by bootstrapping from future value
+      estimates rather than waiting for episode completion. The TD error for Q-learning is:
+      δ = r + γ max_{a'} Q(s', a') - Q(s, a). The classic Q-learning update applies:
+      Q(s,a) ← Q(s,a) + α · δ. TD methods combine the tractability of DP (bootstrapping)
+      with the model-free property of Monte Carlo (sampled transitions).
+    tags:
+      - reinforcement-learning
+      - theory
+    relations:
+      - target: Q-Learning
+        type: related_to
+        note: Q-learning uses the TD error as the training signal
+      - target: Bellman Equation
+        type: related_to
+        note: The TD target r + γ max Q(s', a') is a one-step Bellman estimate

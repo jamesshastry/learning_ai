@@ -1,0 +1,326 @@
+concepts:
+  - name: Point Cloud
+    aliases: [point set, 3D point set]
+    definition: >-
+      An unordered set of 3D points in Euclidean space, where each point is
+      represented by its (x, y, z) coordinates (and optionally additional
+      attributes such as color or normals). Unlike voxels or meshes, a point
+      cloud has no grid structure and no explicit connectivity between points.
+      It directly mirrors the output of LiDAR sensors and depth cameras after
+      back-projection, making it the most sensor-proximal true-3D
+      representation. Key advantages include memory efficiency (stores only
+      surface points), no discretization artifacts, and easy multi-view fusion
+      by concatenating point sets after transforming each into a common world
+      frame.
+    tags: [3d-representation, point-cloud, sensor-data, robot-perception]
+    relations:
+      - target: Depth Image
+        type: related_to
+        note: A depth image can be back-projected to produce a point cloud using
+              the camera intrinsic matrix K and extrinsic parameters R, T.
+      - target: Voxel
+        type: contrasts_with
+        note: Point clouds are memory-efficient and have no discretization
+              artifacts, whereas voxels scale as O(n^3) and impose a regular grid.
+      - target: PointNet
+        type: enables
+        note: PointNet is designed specifically to learn from unordered point sets,
+              directly consuming point clouds as input.
+
+  - name: Depth Image
+    aliases: [depth map, range image, 2.5D image]
+    definition: >-
+      A 2D array of shape [W, H] where each element stores the scalar distance d
+      from the camera center to the nearest object surface along the corresponding
+      camera ray. Captured by structured-light sensors, time-of-flight sensors,
+      or LiDAR. Classified as "2.5D" because it encodes a surface from a single
+      viewpoint rather than full 3D geometry. Each pixel (x', y') with depth d
+      back-projects to 3D via the equation [x, y, z]^T = d * K^{-1} * [x', y', 1]^T,
+      where K is the camera intrinsic matrix. View-dependent: only the surfaces
+      visible from the sensor pose are captured.
+    tags: [depth-sensing, 3d-representation, camera-model, sensor-data]
+    relations:
+      - target: Camera Intrinsic Matrix
+        type: related_to
+        note: K is required to back-project depth pixels into 3D coordinates.
+      - target: Point Cloud
+        type: enables
+        note: Depth images are a primary source for generating point clouds via
+              per-pixel back-projection and optional world-frame transformation.
+      - target: Dex-Net (4-DoF Grasp Detection)
+        type: enables
+        note: Dex-Net 2.0 uses depth images as input to a CNN for predicting
+              grasp success probability, avoiding the table-height assumption needed
+              for pure RGB-based grasping.
+
+  - name: Camera Intrinsic Matrix
+    aliases: [intrinsic matrix, K matrix, camera calibration matrix]
+    definition: >-
+      A 3x3 matrix K that encodes the internal geometric properties of a pinhole
+      camera: focal length (fx, fy) and principal point (cx, cy). It relates
+      3D camera-frame coordinates to 2D pixel coordinates via the projection
+      [u, v, 1]^T ~ K * [X, Y, Z]^T. The inverse K^{-1} is used to back-project
+      a pixel with known depth d to 3D: [x, y, z]^T = d * K^{-1} * [x', y', 1]^T.
+      Intrinsic parameters are determined through camera calibration (e.g., using
+      a checkerboard). For RGBD devices, the RGB camera and depth camera have
+      separate intrinsic matrices because they are distinct physical sensors.
+    tags: [camera-model, calibration, geometry, projection]
+    relations:
+      - target: Depth Image
+        type: prerequisite_for
+        note: K^{-1} is applied to each depth pixel to recover 3D coordinates.
+      - target: RGBD Representation
+        type: prerequisite_for
+        note: Separate intrinsic calibration of RGB and depth cameras is needed
+              before the two modalities can be spatially aligned.
+
+  - name: PointNet
+    aliases: []
+    definition: >-
+      A deep learning architecture for processing unordered 3D point sets,
+      proposed by Qi et al. (CVPR 2017). The core insight is that a permutation-
+      invariant function on a set can be constructed by (1) applying a shared MLP
+      independently to each point to produce per-point features, then (2) applying
+      a symmetric aggregation function (typically element-wise max-pool) across all
+      point features to produce a single global descriptor. The global descriptor
+      is passed through a final MLP for task output (classification, regression,
+      etc.). PointNet satisfies the permutation invariance requirement:
+      f(x_1,...,x_n) = f(x_{pi_1},...,x_{pi_n}) because max-pool is order-
+      agnostic. A T-Net (mini-network predicting an alignment transformation) can
+      be added to achieve approximate rotation invariance.
+    tags: [deep-learning, point-cloud, permutation-invariance, architecture]
+    relations:
+      - target: Point Cloud
+        type: part_of
+        note: PointNet is the canonical deep learning backbone for point cloud
+              understanding tasks.
+      - target: PointNet++
+        type: related_to
+        note: PointNet++ extends PointNet by applying it hierarchically within
+              local neighborhoods to capture spatial structure at multiple scales.
+      - target: Symmetric Function
+        type: prerequisite_for
+        note: The max-pool aggregation step is a symmetric function that enforces
+              permutation invariance over the point set.
+
+  - name: PointNet++
+    aliases: [PointNet plus plus]
+    definition: >-
+      A hierarchical extension of PointNet (Qi et al., NeurIPS 2017) that builds
+      spatially local features at multiple scales, analogous to how CNNs build
+      hierarchical spatial features via convolution and pooling. The core building
+      block is the Set Abstraction layer, which consists of: (1) Farthest Point
+      Sampling (FPS) to select N1 < N representative centroids that spread
+      maximally over the point cloud; (2) ball-radius grouping to collect the k
+      nearest neighbors in local coordinates (u, v) around each centroid; (3) a
+      local PointNet applied to each neighborhood to produce a single feature
+      vector per centroid. Stacking set abstraction layers produces a hierarchy
+      of increasingly abstract, spatially-aware features over progressively sparser
+      point sets, ending in a global descriptor for classification or dense per-
+      point features for segmentation.
+    tags: [deep-learning, point-cloud, hierarchical-features, architecture]
+    relations:
+      - target: PointNet
+        type: related_to
+        note: PointNet++ applies PointNet locally within spatial neighborhoods,
+              giving it spatial equivariance that flat PointNet lacks.
+      - target: Set Abstraction
+        type: part_of
+        note: Set abstraction (FPS + grouping + PointNet) is the defining building
+              block of PointNet++.
+      - target: Farthest Point Sampling
+        type: part_of
+        note: FPS is used within each set abstraction layer to select centroids
+              that provide good spatial coverage of the remaining points.
+
+  - name: Set Abstraction
+    aliases: [set abstraction layer]
+    definition: >-
+      The fundamental building block of PointNet++. Given N input points in
+      Euclidean space with optional feature vectors, a set abstraction layer
+      produces N1 output points (N1 < N) each carrying a rich feature vector
+      encoding local geometry. The three sub-steps are: (1) Farthest Point
+      Sampling selects N1 centroids that maximally cover the input; (2) Grouping
+      collects k nearest neighbors within radius r of each centroid, converting
+      their coordinates to a local frame relative to the centroid; (3) a local
+      PointNet (shared MLP + max-pool) processes the neighborhood and outputs a
+      single feature vector. The output is N1 points in position+feature space
+      (X, Y, F), where F is a high-dimensional learned descriptor of local shape.
+    tags: [point-cloud, deep-learning, local-features, architecture]
+    relations:
+      - target: PointNet++
+        type: part_of
+        note: Set abstraction layers are stacked to form the PointNet++ architecture.
+      - target: Farthest Point Sampling
+        type: part_of
+        note: FPS is the sampling sub-step within set abstraction.
+      - target: PointNet
+        type: part_of
+        note: A local PointNet is applied within each neighborhood in the
+              grouping+encoding sub-step.
+
+  - name: Farthest Point Sampling
+    aliases: [FPS, farthest-first traversal]
+    definition: >-
+      A greedy algorithm for selecting a representative subset of N1 points from
+      a larger point cloud of N points such that the selected points are as spread
+      out as possible. Starting from a random seed point, FPS iteratively selects
+      the point in the remaining set that is farthest (in Euclidean distance) from
+      all already-selected points. This ensures good spatial coverage and prevents
+      clustering of centroids in dense regions. FPS is the standard downsampling
+      method in PointNet++ and serves the analogous role to stride-based
+      downsampling in CNNs.
+    tags: [point-cloud, sampling, downsampling, algorithm]
+    relations:
+      - target: Set Abstraction
+        type: part_of
+        note: FPS is the first sub-step of each set abstraction layer in PointNet++.
+      - target: PointNet++
+        type: enables
+        note: FPS allows PointNet++ to progressively reduce point count while
+              maintaining spatial coverage, enabling hierarchical feature learning.
+
+  - name: Neural Radiance Field (NeRF)
+    aliases: [NeRF, neural implicit representation, implicit neural scene representation]
+    definition: >-
+      A method for representing a 3D scene as a continuous implicit function
+      F_theta: (x, y, z, theta, phi) -> (c, sigma), where (x, y, z) is a 3D
+      position, (theta, phi) is a viewing direction, c = (r, g, b) is the emitted
+      radiance, and sigma is the volume density. The function is parameterized by
+      an MLP with weights theta. Novel views are synthesized by casting camera rays
+      through the scene, sampling points along each ray, querying the MLP, and
+      integrating color via the volume rendering equation:
+      C(r) = integral T(t) * sigma(r(t)) * c(r(t), d) dt,
+      where T(t) = exp(-integral_{t_n}^{t} sigma(r(s)) ds) is the accumulated
+      transmittance. NeRF is trained purely from posed 2D images by minimizing
+      photometric reconstruction loss. It produces continuous, differentiable
+      3D representations without explicit mesh or voxel reconstruction.
+    tags: [implicit-representation, neural-rendering, novel-view-synthesis, 3d-vision]
+    relations:
+      - target: Point Cloud
+        type: contrasts_with
+        note: NeRF is a continuous implicit representation requiring no explicit 3D
+              geometry; point clouds are explicit discrete sets of 3D points.
+      - target: Voxel
+        type: contrasts_with
+        note: NeRF avoids the O(n^3) memory cost and discretization artifacts of
+              voxels by representing density and color as a continuous function.
+
+  - name: Voxel
+    aliases: [voxel grid, volumetric representation]
+    definition: >-
+      A 3D grid representation where space is discretized into small cubic cells
+      (voxels — the 3D analogue of pixels). Each voxel stores a binary occupancy
+      value (occupied/free), a signed distance function value, or other attributes.
+      Voxels are compatible with 3D convolutional neural networks (3D-CNNs), which
+      convolve a 3D kernel across the volume. The principal limitation is memory
+      cost: representing a volume at resolution n requires O(n^3) cells. For
+      example, a 256^3 grid contains ~16.7 million voxels. Sparse voxel
+      representations (e.g., Octrees, Sparse Convolution) mitigate this for mostly-
+      empty scenes.
+    tags: [3d-representation, volumetric, convolution, memory]
+    relations:
+      - target: Point Cloud
+        type: contrasts_with
+        note: Voxels impose a regular grid at O(n^3) memory cost; point clouds
+              are unstructured and store only surface points.
+      - target: Neural Radiance Field (NeRF)
+        type: contrasts_with
+        note: Voxels discretize space explicitly; NeRF represents density
+              continuously in network weights.
+
+  - name: Symmetric Function
+    aliases: [permutation-invariant function, order-invariant aggregation]
+    definition: >-
+      A function f(x_1, x_2, ..., x_n) that produces the same output regardless
+      of the order in which its arguments are presented:
+      f(x_1,...,x_n) = f(x_{pi_1},...,x_{pi_n}) for any permutation pi.
+      For point cloud learning, symmetric functions are essential because a point
+      set has no canonical ordering — any ordering is equally valid. Common
+      symmetric functions used in deep learning include element-wise max-pooling
+      (used in PointNet) and sum/average pooling. PointNet uses max-pool because
+      it is both permutation-invariant and differentiable, and theoretically any
+      continuous symmetric function can be approximated by the composition of a
+      per-element MLP with a symmetric aggregation.
+    tags: [math, permutation-invariance, point-cloud, deep-learning]
+    relations:
+      - target: PointNet
+        type: prerequisite_for
+        note: PointNet's global max-pool is a symmetric function that enables
+              permutation-invariant processing of point clouds.
+
+  - name: Dex-Net 4-DoF Grasp Detection
+    aliases: [Dex-Net 2.0, 4-DoF grasp detection]
+    definition: >-
+      A grasping system (Mahler et al., RSS 2017) that predicts the probability of
+      grasp success from depth images using a CNN. A 4-DoF grasp is parameterized
+      as g = (x, y, z, gamma), where (x, y, z) is the 3D grasp position and gamma
+      is the in-plane rotation angle of the gripper. The pipeline proposes grasp
+      candidates over a depth image, aligns and crops a depth patch around each
+      candidate, and scores each with a CNN trained on simulated data. The grasp
+      with highest score is deprojected to 3D for execution. Training on simulated
+      depth data incurs smaller covariate shift than RGB because depth images are
+      less sensitive to texture and lighting variations.
+    tags: [grasping, depth-image, robot-manipulation, visuomotor-control]
+    relations:
+      - target: Depth Image
+        type: part_of
+        note: Depth images are the primary input modality for Dex-Net 2.0,
+              enabling absolute 3D height estimation without table-distance priors.
+      - target: 6-DoF Grasp Detection
+        type: contrasts_with
+        note: 4-DoF grasps assume near-planar geometry; 6-DoF grasps parameterize
+              full orientation [x,y,z,alpha,beta,gamma] for arbitrary approach angles.
+
+  - name: 6-DoF Grasp Detection
+    aliases: [6-DOF GraspNet, full-pose grasp detection]
+    definition: >-
+      A grasping paradigm (Mousavian et al., CVPR 2019) where a grasp is
+      parameterized with full 6 degrees of freedom: g = [x, y, z, alpha, beta,
+      gamma], encoding full 3D position and full 3D orientation (roll, pitch, yaw).
+      This allows grasping from arbitrary approach angles — from the side, below,
+      or at any tilt — unlike 4-DoF grasping which is limited to near-planar
+      (top-down) grasps. 6-DoF grasp detection operates on point clouds: grasp
+      candidates are proposed over the full scene, and each candidate is evaluated
+      by cropping the point cloud within a 3D region (bounding box or sphere)
+      aligned with that grasp pose, then scoring the cropped point cloud with a
+      learned network.
+    tags: [grasping, point-cloud, robot-manipulation, 6dof]
+    relations:
+      - target: Point Cloud
+        type: part_of
+        note: Point clouds are the input representation for 6-DoF grasp detection,
+              providing the 3D geometry needed for arbitrary approach-angle scoring.
+      - target: Dex-Net 4-DoF Grasp Detection
+        type: contrasts_with
+        note: 6-DoF grasping generalizes 4-DoF by removing the planar assumption
+              and requiring full 3D orientation estimation.
+
+  - name: RGBD Representation
+    aliases: [RGB-D, RGBD image, depth-augmented image]
+    definition: >-
+      A sensor modality that combines an RGB color image with a registered depth
+      image. The RGB channel encodes texture, color, and semantic information;
+      the depth channel encodes 3D geometry relevant for collision detection and
+      contact modeling. RGBD cameras (e.g., Intel RealSense, ASUS Xtion) capture
+      both modalities on the same device but using physically separate sensors —
+      an RGB camera and an IR/depth sensor — which have different intrinsic and
+      extrinsic parameters. As a result, RGB and depth images are not pixel-
+      aligned by default and must be calibrated and registered before joint use.
+      RGBD representations are widely used in robot manipulation as they combine
+      complementary information: appearance for recognition and depth for physical
+      interaction.
+    tags: [sensor-fusion, rgb, depth, robot-perception, calibration]
+    relations:
+      - target: Depth Image
+        type: part_of
+        note: Depth is one component of RGBD; it provides geometric information
+              that RGB alone cannot supply.
+      - target: Camera Intrinsic Matrix
+        type: prerequisite_for
+        note: Both the RGB camera and depth camera must be independently calibrated
+              (intrinsic + extrinsic) before RGBD fusion is possible.
+      - target: Point Cloud
+        type: enables
+        note: The depth component of RGBD can be back-projected to a colored point
+              cloud, adding RGB attributes to each 3D point.

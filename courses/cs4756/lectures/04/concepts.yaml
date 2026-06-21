@@ -1,0 +1,450 @@
+concepts:
+  - name: Linear Classifier
+    aliases:
+      - Linear Model
+      - Affine Classifier
+    definition: >-
+      A parametric model f(x, W) = Wx + b that maps an input vector x to class scores
+      via a weight matrix W and bias b. Each row of W acts as a template for one class.
+      For a 32x32x3 image (3072-dim), W in R^{10x3072} produces 10 class scores.
+      Cannot separate non-linearly separable data without a feature transform.
+    tags:
+      - supervised-learning
+      - classification
+    slide: 5
+    relations:
+      - target: Cross-Entropy Loss
+        type: related_to
+        note: Cross-entropy loss is used to train linear classifiers for classification
+      - target: Neural Networks
+        type: contrasts_with
+        note: Neural networks extend linear classifiers by stacking non-linear transformations
+
+  - name: Cross-Entropy Loss
+    aliases:
+      - Softmax Loss
+      - Log Loss
+      - Negative Log-Likelihood
+    definition: >-
+      Per-example loss for multi-class classification: L_i = -log(exp(s_{y_i}) / sum_j exp(s_j)),
+      where s_j are raw class scores (logits) and y_i is the correct class index.
+      Equivalent to applying a softmax to the logits and taking the negative log of the
+      correct class probability. Averaged over N examples to give total data loss.
+    tags:
+      - training
+      - theory
+    slide: 8
+    relations:
+      - target: Softmax
+        type: related_to
+        note: Cross-entropy loss applies softmax to logits before computing the negative log-probability
+      - target: Regularization
+        type: related_to
+        note: Regularization loss is added to the data loss (cross-entropy) for the total training objective
+
+  - name: Regularization
+    aliases:
+      - L2 Regularization
+      - Weight Decay
+      - Ridge Regression
+    definition: >-
+      An additive penalty R(W) on model parameters that prevents overfitting by constraining
+      weight magnitudes. Total loss: L(W) = (1/N) sum_i L_i + lambda*R(W). Lambda controls
+      strength: small lambda allows complex boundaries; large lambda forces smoother, simpler
+      boundaries. L2 regularization uses R(W) = sum_{k,l} W_{k,l}^2. For neural networks,
+      use a large architecture with strong regularization rather than shrinking the network.
+    tags:
+      - training
+      - optimization
+    slide: 10
+    relations:
+      - target: Overfitting
+        type: contrasts_with
+        note: Regularization is the primary tool for preventing overfitting
+      - target: Cross-Entropy Loss
+        type: related_to
+        note: Regularization is added to the data loss to form the total training objective
+
+  - name: Overfitting
+    aliases:
+      - Overtraining
+      - High Variance
+    definition: >-
+      When a model learns noise and training-specific patterns rather than generalizable
+      structure, resulting in low training loss but high test/validation loss. Caused by
+      model capacity exceeding what the data can constrain. Exhibits high variance in
+      predictions. Remedies include regularization, data augmentation, dropout, and early stopping.
+    tags:
+      - training
+      - theory
+    slide: 9
+    relations:
+      - target: Regularization
+        type: contrasts_with
+        note: Regularization penalizes complexity to reduce overfitting
+      - target: Distribution Shift
+        type: related_to
+        note: Overfitting worsens the impact of distribution shift at test time
+
+  - name: Distribution Shift
+    aliases:
+      - Dataset Shift
+      - Domain Shift
+    definition: >-
+      The mismatch between the training data distribution and the test/deployment distribution.
+      Three subtypes: (1) Covariate Shift — P(y|x) same but P(x) differs (e.g., daytime vs.
+      nighttime driving); (2) Label Shift — P(x|y) same but P(y) differs (class frequencies change);
+      (3) Concept Shift — P(y|x) differs but P(x) same (the labeling rule itself changes).
+      Especially critical in robot learning where deployment environments rarely match training.
+    tags:
+      - theory
+      - generalization
+    slide: 11
+    relations:
+      - target: Overfitting
+        type: related_to
+        note: Both overfitting and distribution shift cause poor test performance; they have different causes
+      - target: Covariate Shift
+        type: is_a
+        note: Covariate shift is one of the three main types of distribution shift
+      - target: Concept Shift
+        type: is_a
+        note: Concept shift is the most severe form — the mapping from input to label changes
+
+  - name: Covariate Shift
+    aliases:
+      - Input Distribution Shift
+    definition: >-
+      A type of distribution shift where the conditional distribution of labels given inputs
+      remains the same (P_train(y|x) = P_test(y|x)) but the marginal input distribution changes
+      (P_train(x) != P_test(x)). Example: a model trained on daytime driving images tested on
+      nighttime images — the meaning of a car is the same but the pixel statistics differ.
+    tags:
+      - theory
+      - generalization
+    slide: 11
+    relations:
+      - target: Distribution Shift
+        type: part_of
+        note: Covariate shift is one of three canonical types of distribution shift
+
+  - name: Concept Shift
+    aliases:
+      - Concept Drift
+      - Label Shift (rule change)
+    definition: >-
+      A type of distribution shift where the mapping from inputs to labels changes
+      (P_train(y|x) != P_test(y|x)) while the input distribution remains the same
+      (P_train(x) = P_test(x)). Example: the same car model may mean "fast" in one context
+      and "family-safe" in another. The most challenging shift type because the learned
+      function itself is invalidated.
+    tags:
+      - theory
+      - generalization
+    slide: 13
+    relations:
+      - target: Distribution Shift
+        type: part_of
+        note: Concept shift is the most severe of the three distribution shift types
+
+  - name: Gradient Descent
+    aliases:
+      - Batch Gradient Descent
+      - Full-Batch Gradient Descent
+    definition: >-
+      An iterative optimization algorithm that updates parameters W in the direction
+      of the negative gradient of the loss: W := W - eta * grad_W L(W). The learning
+      rate eta controls step size. Full-batch GD computes the true gradient over all N
+      training examples per update, which is exact but expensive. In practice replaced
+      by SGD or minibatch SGD.
+    tags:
+      - optimization
+      - training
+    slide: 14
+    relations:
+      - target: Stochastic Gradient Descent
+        type: contrasts_with
+        note: SGD approximates the full gradient using a minibatch, trading accuracy for speed
+      - target: Learning Rate
+        type: related_to
+        note: The learning rate eta is the critical hyperparameter of gradient descent
+      - target: Saddle Point
+        type: related_to
+        note: Gradient descent can stall at saddle points where the gradient is near zero
+
+  - name: Stochastic Gradient Descent
+    aliases:
+      - SGD
+      - Minibatch Gradient Descent
+    definition: >-
+      A variant of gradient descent that approximates the true gradient using a single
+      sample or a small minibatch of samples per update. Reduces compute per update at
+      the cost of noisy gradient estimates. In practice, minibatch SGD (e.g., 32-256 samples)
+      balances noise and efficiency. The noise can help escape local minima and saddle points.
+    tags:
+      - optimization
+      - training
+    slide: 14
+    relations:
+      - target: Gradient Descent
+        type: related_to
+        note: SGD approximates full gradient descent using minibatches
+      - target: Learning Rate
+        type: related_to
+        note: Learning rate tuning is especially critical for SGD due to gradient noise
+
+  - name: Learning Rate
+    aliases:
+      - Step Size
+      - eta
+    definition: >-
+      A hyperparameter (eta) that controls the size of each gradient descent step:
+      W := W - eta * grad L. Too high: loss oscillates or diverges. Too low: convergence
+      is very slow. A good learning rate produces smooth, fast convergence. Common practice
+      is to use learning rate decay — reduce eta by a fixed factor (e.g., 10x) at scheduled
+      epochs to fine-tune after initial convergence.
+    tags:
+      - optimization
+      - hyperparameter
+    slide: 16
+    relations:
+      - target: Gradient Descent
+        type: related_to
+        note: Learning rate is the primary hyperparameter of gradient descent
+      - target: Stochastic Gradient Descent
+        type: related_to
+        note: Learning rate selection is especially sensitive in SGD due to gradient variance
+
+  - name: Saddle Point
+    aliases:
+      - Degenerate Critical Point
+    definition: >-
+      A point in the loss landscape where the gradient is zero but the point is neither
+      a local minimum nor a local maximum — it is a minimum in some directions and a maximum
+      in others. In high-dimensional spaces (many parameters), saddle points are far more
+      common than true local minima. Gradient descent with noise (SGD) often escapes them;
+      pure gradient descent can stall.
+    tags:
+      - optimization
+      - theory
+    slide: 15
+    relations:
+      - target: Gradient Descent
+        type: related_to
+        note: Gradient descent can stall at saddle points where the gradient vanishes
+      - target: Stochastic Gradient Descent
+        type: related_to
+        note: The noise in SGD helps escape saddle points that trap full-batch gradient descent
+
+  - name: Neural Networks
+    aliases:
+      - Multilayer Perceptron
+      - MLP
+      - Deep Neural Network
+      - DNN
+    definition: >-
+      A parametric function that composes multiple linear transformations with non-linear
+      activation functions. A two-layer net: f = W_2 max(0, W_1 x) where x in R^D,
+      W_1 in R^{H x D}, W_2 in R^{C x H}. Each additional hidden layer increases expressive
+      capacity. Universal approximation theorem: a network with one hidden layer of sufficient
+      width can approximate any continuous function. More layers typically generalize better
+      with less width.
+    tags:
+      - architecture
+      - deep-learning
+    slide: 19
+    relations:
+      - target: Backpropagation
+        type: related_to
+        note: Backpropagation is the algorithm used to train neural networks via gradient computation
+      - target: ReLU
+        type: related_to
+        note: ReLU is the standard non-linearity used in hidden layers of neural networks
+      - target: Linear Classifier
+        type: contrasts_with
+        note: Neural networks extend linear classifiers with non-linear feature transformations
+
+  - name: ReLU
+    aliases:
+      - Rectified Linear Unit
+      - Rectifier
+    definition: >-
+      An activation function defined as max(0, x). The default choice for hidden layers
+      in modern neural networks. Advantages: computationally cheap, no vanishing gradient
+      for x > 0, fast convergence. Disadvantage: "dying ReLU" — neurons with negative
+      pre-activations output zero gradient, potentially becoming permanently inactive.
+      Addressed by Leaky ReLU (max(0.1x, x)) or ELU.
+    tags:
+      - architecture
+      - activation-function
+    slide: 22
+    relations:
+      - target: Neural Networks
+        type: part_of
+        note: ReLU is the standard activation function applied in hidden layers
+      - target: Backpropagation
+        type: related_to
+        note: ReLU's non-saturation for positive inputs prevents vanishing gradients during backprop
+      - target: Sigmoid
+        type: contrasts_with
+        note: Unlike sigmoid, ReLU does not saturate for large positive inputs
+
+  - name: Sigmoid
+    aliases:
+      - Logistic Function
+      - sigma(x)
+    definition: >-
+      An activation function sigma(x) = 1 / (1 + e^{-x}) that squashes input to (0, 1).
+      Historically used in hidden layers but largely replaced by ReLU in deep networks.
+      Problems: (1) saturates at extremes, causing vanishing gradients; (2) outputs not
+      zero-centered, slowing convergence; (3) expensive exponential computation. Still used
+      in output layers for binary classification.
+    tags:
+      - architecture
+      - activation-function
+    slide: 22
+    relations:
+      - target: ReLU
+        type: contrasts_with
+        note: ReLU avoids sigmoid's saturation and vanishing gradient problems in hidden layers
+      - target: Backpropagation
+        type: related_to
+        note: Sigmoid's saturation causes vanishing gradients that impede deep network training
+
+  - name: Backpropagation
+    aliases:
+      - Backprop
+      - Reverse-Mode Automatic Differentiation
+    definition: >-
+      An algorithm for computing gradients of a scalar loss L with respect to all parameters
+      in a neural network by applying the chain rule through the computational graph in
+      reverse order. Each node computes local gradients (dz/dx, dz/dy) during the forward
+      pass and receives an upstream gradient (dL/dz) during the backward pass. The downstream
+      gradient is: dL/dx = (dL/dz) * (dz/dx). Enables O(N) gradient computation for N parameters.
+    tags:
+      - optimization
+      - theory
+    slide: 23
+    relations:
+      - target: Chain Rule
+        type: uses
+        note: Backpropagation is a systematic application of the chain rule through computational graphs
+      - target: Neural Networks
+        type: related_to
+        note: Backpropagation is the standard algorithm for training neural networks
+      - target: PyTorch
+        type: related_to
+        note: PyTorch autograd implements backpropagation automatically via dynamic computational graphs
+
+  - name: Chain Rule
+    aliases:
+      - Calculus Chain Rule
+      - Composite Function Differentiation
+    definition: >-
+      A calculus rule for differentiating composite functions: if z = f(y) and y = g(x),
+      then dz/dx = (dz/dy) * (dy/dx). In the context of neural networks with intermediate
+      variable q: df/dx = (df/dq) * (dq/dx), where df/dq is the upstream gradient and
+      dq/dx is the local gradient. The foundation of backpropagation.
+    tags:
+      - theory
+      - mathematics
+    slide: 23
+    relations:
+      - target: Backpropagation
+        type: enables
+        note: Backpropagation is a direct application of the chain rule through a computational graph
+
+  - name: Tensor
+    aliases:
+      - Multidimensional Array
+      - N-way Array
+      - torch.Tensor
+    definition: >-
+      A generalization of scalars (rank-0), vectors (rank-1), and matrices (rank-2) to
+      arbitrary N dimensions. In PyTorch, tensors are the fundamental data structure:
+      rank-3 tensors for images (H x W x C), rank-4 for image batches (N x H x W x C).
+      PyTorch tensors support automatic gradient computation and can reside on CPU or GPU.
+      Created from data via torch.tensor(), from NumPy via torch.from_numpy().
+    tags:
+      - pytorch
+      - data
+    slide: 32
+    relations:
+      - target: PyTorch
+        type: part_of
+        note: Tensors are PyTorch's fundamental data structure, analogous to NumPy arrays with GPU support
+      - target: Backpropagation
+        type: related_to
+        note: PyTorch tensors with requires_grad=True participate in automatic gradient computation
+
+  - name: PyTorch
+    aliases:
+      - torch
+      - PyTorch Framework
+    definition: >-
+      An open-source deep learning framework providing: (1) tensors that can live on CPU or
+      GPU; (2) automatic differentiation (autograd) for backpropagation; (3) nn.Module for
+      defining network architectures; (4) optimizers (SGD, Adam) for parameter updates;
+      (5) dataloaders for minibatch iteration. Defines neural networks as Python classes
+      subclassing nn.Module with __init__ (layer definitions) and forward (computation) methods.
+    tags:
+      - pytorch
+      - infrastructure
+    slide: 32
+    relations:
+      - target: Tensor
+        type: related_to
+        note: PyTorch's fundamental data structure is the tensor, which supports GPU execution and autograd
+      - target: Backpropagation
+        type: implements
+        note: PyTorch autograd implements backpropagation through dynamic computational graphs
+      - target: Neural Networks
+        type: related_to
+        note: PyTorch nn.Module provides the framework for defining and training neural networks
+
+  - name: nn.Module
+    aliases:
+      - PyTorch Module
+      - torch.nn.Module
+    definition: >-
+      The base class for all neural network modules in PyTorch. Subclasses define layers
+      in __init__ (e.g., nn.Linear) and the forward computation in forward(self, x). PyTorch
+      automatically tracks all nn.Module parameters for gradient computation and optimizer updates.
+      Modules are composable: a module can contain other modules as attributes. net.train()
+      and net.eval() toggle training vs. inference mode (affecting dropout, batch norm, etc.).
+    tags:
+      - pytorch
+      - architecture
+    slide: 35
+    relations:
+      - target: PyTorch
+        type: part_of
+        note: nn.Module is the foundational class for neural network definition in PyTorch
+      - target: Backpropagation
+        type: related_to
+        note: PyTorch tracks nn.Module parameters and computes their gradients via autograd
+
+  - name: Training Loop
+    aliases:
+      - PyTorch Training Loop
+      - Optimization Loop
+    definition: >-
+      The canonical PyTorch pattern for training a neural network: for each minibatch,
+      (1) zero_grad() — clear accumulated gradients, (2) compute forward pass and loss,
+      (3) loss.backward() — run backpropagation, (4) optimizer.step() — update parameters.
+      Gradients accumulate by default in PyTorch; zero_grad() must be called before each
+      backward pass to prevent incorrect gradient accumulation across batches.
+    tags:
+      - pytorch
+      - training
+    slide: 36
+    relations:
+      - target: Backpropagation
+        type: uses
+        note: loss.backward() in the training loop triggers backpropagation through autograd
+      - target: Stochastic Gradient Descent
+        type: implements
+        note: The training loop iterates over minibatches, implementing minibatch SGD
+      - target: PyTorch
+        type: part_of
+        note: The training loop is the core operational pattern of a PyTorch training script

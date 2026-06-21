@@ -1,0 +1,493 @@
+concepts:
+
+  - name: sequence_data
+    aliases:
+      - sequential data
+      - ordered data
+    definition: >
+      Data in which the order of elements is significant and the position of
+      each element provides crucial context and meaning. Examples include
+      natural language text, video frames, robot action trajectories, and
+      time-series sensor readings.
+    tags: [sequence-modeling, fundamentals]
+    relations:
+      - {type: prerequisite_for, target: tokenization}
+      - {type: prerequisite_for, target: sequence_modeling}
+
+  - name: tokenization
+    aliases:
+      - tokenization
+      - embedding lookup
+    definition: >
+      The process of breaking an input into discrete tokens and mapping each
+      token to a learned dense vector: x_i = Embed(token_i). The embedding
+      function psi is shared across all positions.
+    tags: [sequence-modeling, NLP, representation-learning]
+    relations:
+      - {type: used_in, target: RNN}
+      - {type: used_in, target: transformer}
+      - {type: used_in, target: vision_transformer}
+
+  - name: sequence_modeling
+    aliases:
+      - sequence encoding
+    definition: >
+      The task of encoding a sequence of token embeddings x_0, x_1, ..., x_n
+      into a representation useful for prediction or decision-making. The core
+      design challenge is choosing how tokens exchange information.
+    tags: [sequence-modeling, fundamentals]
+    relations:
+      - {type: solved_by, target: RNN}
+      - {type: solved_by, target: transformer}
+      - {type: applied_in, target: transformer_policy}
+
+  - name: RNN
+    aliases:
+      - recurrent neural network
+      - recurrent network
+    definition: >
+      A neural network that processes sequences one token at a time while
+      maintaining a hidden state h_t that summarizes the past.
+      Update rule: h_t = f_theta(h_{t-1}, x_t).
+      Output: y_t = g_theta(h_t).
+      Enables constant-size memory but forces sequential computation.
+    tags: [RNN, sequence-modeling, architecture]
+    relations:
+      - {type: suffers_from, target: vanishing_gradient}
+      - {type: suffers_from, target: exploding_gradient}
+      - {type: suffers_from, target: limited_parallelism}
+      - {type: alternative_to, target: transformer}
+      - {type: comparison, target: attention_complexity_table}
+
+  - name: vanishing_gradient
+    aliases:
+      - vanishing gradients
+      - gradient vanishing
+    definition: >
+      A training pathology in deep networks (especially RNNs) where the
+      gradient signal shrinks exponentially as it is backpropagated through
+      many layers or time steps, effectively preventing early layers from
+      learning. Occurs when repeated Jacobian factors have spectral norm < 1.
+    tags: [RNN, optimization, training-stability]
+    relations:
+      - {type: caused_by, target: RNN}
+      - {type: counterpart, target: exploding_gradient}
+      - {type: mitigated_by, target: transformer}
+
+  - name: exploding_gradient
+    aliases:
+      - exploding gradients
+      - gradient explosion
+    definition: >
+      A training pathology where the gradient grows exponentially during
+      backpropagation through time, destabilizing optimization. Occurs when
+      repeated Jacobian factors have spectral norm > 1. Commonly addressed
+      with gradient clipping.
+    tags: [RNN, optimization, training-stability]
+    relations:
+      - {type: caused_by, target: RNN}
+      - {type: counterpart, target: vanishing_gradient}
+
+  - name: limited_parallelism
+    aliases:
+      - sequential bottleneck
+    definition: >
+      A property of RNNs where each hidden state h_t depends on h_{t-1},
+      forcing the computation to proceed step-by-step. This prevents efficient
+      use of parallel hardware (GPUs/TPUs) and results in O(n) sequential
+      operations for a sequence of length n.
+    tags: [RNN, efficiency, hardware]
+    relations:
+      - {type: caused_by, target: RNN}
+      - {type: mitigated_by, target: transformer}
+
+  - name: dot_product_attention
+    aliases:
+      - scaled dot-product attention
+      - self-attention
+      - attention mechanism
+    definition: >
+      A mechanism that lets each token directly attend to all other tokens by
+      computing attention weights from Query-Key dot products and aggregating
+      Values. Formally:
+        Attention(Q, K, V) = Softmax(Q K^T / sqrt(d_k)) V
+      where Q in R^{n_q x d_k}, K in R^{n_k x d_k}, V in R^{n_k x d_v}.
+      Scaling by 1/sqrt(d_k) prevents softmax saturation.
+    tags: [transformer, attention, architecture]
+    relations:
+      - {type: component_of, target: transformer_block}
+      - {type: extended_by, target: multi_head_attention}
+      - {type: uses, target: query_key_value}
+      - {type: reference, target: vaswani2017}
+
+  - name: query_key_value
+    aliases:
+      - QKV projections
+      - Q K V
+    definition: >
+      The three linear projections used in dot-product attention:
+      - Query Q_i: encodes "what is token i looking for?"
+      - Key K_j: encodes "what information does token j contain?"
+      - Value V_j: encodes "what information does token j provide?"
+      Attention weight w_{i,j} is derived from Q_i . K_j.
+    tags: [transformer, attention]
+    relations:
+      - {type: used_in, target: dot_product_attention}
+      - {type: forms, target: attention_matrix}
+
+  - name: attention_matrix
+    aliases:
+      - attention weights
+      - attention map
+    definition: >
+      The n x n matrix W of attention weights, where W_{i,j} = w_{i,j}
+      represents how much token i attends to token j. Computed as
+      Softmax(Q K^T / sqrt(d_k)). Can be visualized to interpret which
+      token relationships the model has learned.
+    tags: [transformer, attention, interpretability]
+    relations:
+      - {type: computed_from, target: query_key_value}
+      - {type: modified_by, target: masking}
+
+  - name: multi_head_attention
+    aliases:
+      - multi-head attention
+      - MHA
+    definition: >
+      An extension of dot-product attention that runs h independent attention
+      heads in parallel, each with separate learned projections W_i^Q, W_i^K,
+      W_i^V. Results are concatenated and projected:
+        MultiHead(Q,K,V) = Concat(head_1, ..., head_h) W^O
+        head_i = Attention(Q W_i^Q, K W_i^K, V W_i^V)
+      Multiple heads allow the model to capture different relationship types
+      simultaneously.
+    tags: [transformer, attention, architecture]
+    relations:
+      - {type: extends, target: dot_product_attention}
+      - {type: component_of, target: transformer_block}
+      - {type: reference, target: vaswani2017}
+
+  - name: transformer_block
+    aliases:
+      - transformer layer
+      - encoder block
+    definition: >
+      The repeating unit of a transformer model, consisting of:
+        1. Multi-head self-attention
+        2. Add & Norm (residual connection + layer normalization)
+        3. Feed-forward network (position-wise MLP)
+        4. Add & Norm
+      Stacking multiple blocks yields the full transformer model.
+    tags: [transformer, architecture]
+    relations:
+      - {type: contains, target: multi_head_attention}
+      - {type: stacked_to_form, target: transformer}
+      - {type: uses, target: residual_connection}
+      - {type: uses, target: layer_normalization}
+
+  - name: transformer
+    aliases:
+      - transformer model
+    definition: >
+      A sequence model that maps an input sequence to an output sequence using
+      repeated self-attention and feed-forward layers. Each output token attends
+      directly to all input tokens, giving O(1) maximum path length. Total
+      complexity per layer: O(n^2 * d) for sequence length n and dimension d.
+    tags: [transformer, architecture, sequence-modeling]
+    relations:
+      - {type: composed_of, target: transformer_block}
+      - {type: requires, target: positional_encoding}
+      - {type: uses, target: masking}
+      - {type: specialization, target: vision_transformer}
+      - {type: applied_in, target: transformer_policy}
+      - {type: reference, target: vaswani2017}
+
+  - name: positional_encoding
+    aliases:
+      - position embedding
+      - positional embedding
+    definition: >
+      A vector added to each token embedding to inject information about token
+      order, because self-attention is permutation-invariant. Can be:
+        - Fixed: sinusoidal functions of position
+        - Learned: trainable per-position embeddings
+        - Absolute: based on absolute index
+        - Relative: based on distance between token pairs
+    tags: [transformer, architecture]
+    relations:
+      - {type: required_by, target: transformer}
+      - {type: used_in, target: vision_transformer}
+      - {type: used_in, target: decision_transformer}
+
+  - name: masking
+    aliases:
+      - attention mask
+      - causal mask
+    definition: >
+      A mechanism that restricts which tokens each query token is allowed to
+      attend to by zeroing out (masking) certain entries in the attention matrix
+      before the softmax. Three main variants:
+        - Fully-visible: all tokens attend to all tokens.
+        - Causal: token y_t can only attend to x_{t'} for t' <= t
+          (lower-triangular attention matrix).
+        - Causal with prefix: a prefix is fully visible; later tokens are causal.
+    tags: [transformer, attention, autoregressive]
+    relations:
+      - {type: applied_to, target: attention_matrix}
+      - {type: used_in, target: decision_transformer}
+      - {type: enables, target: autoregressive_generation}
+
+  - name: autoregressive_generation
+    aliases:
+      - autoregressive decoding
+      - causal generation
+    definition: >
+      A generation paradigm where output tokens are produced one at a time,
+      each conditioned on all previously generated tokens. Implemented in
+      transformers via a causal mask. Used in language models (GPT-style) and
+      the Decision Transformer.
+    tags: [transformer, generation, sequence-modeling]
+    relations:
+      - {type: enabled_by, target: masking}
+      - {type: used_in, target: decision_transformer}
+
+  - name: cls_token
+    aliases:
+      - CLS token
+      - class token
+      - [CLS]
+    definition: >
+      A special learnable token prepended to the input sequence. After
+      transformer processing, its output embedding attends to all other tokens
+      and serves as a global sequence representation, used for classification
+      or as a conditioning signal.
+    tags: [transformer, architecture, classification]
+    relations:
+      - {type: used_in, target: vision_transformer}
+      - {type: used_in, target: ACT}
+
+  - name: attention_complexity_table
+    aliases:
+      - complexity comparison
+    definition: >
+      Comparison of per-layer computational complexity, sequential operations,
+      and maximum path length across architecture types:
+        Self-Attention:          O(n^2 d),      O(1) sequential,  O(1) path
+        Recurrent:               O(n d^2),      O(n) sequential,  O(n) path
+        Convolutional:           O(k n d^2),    O(1) sequential,  O(log_k n) path
+        Self-Attention (restricted): O(r n d),  O(1) sequential,  O(n/r) path
+      Self-attention's O(1) path length is its key advantage over RNNs for
+      long-range dependencies, at the cost of O(n^2) memory and compute.
+    tags: [transformer, RNN, complexity, efficiency]
+    relations:
+      - {type: compares, target: RNN}
+      - {type: compares, target: transformer}
+
+  - name: vision_transformer
+    aliases:
+      - ViT
+      - image transformer
+    definition: >
+      A transformer applied to images by treating fixed-size image patches as
+      tokens. Pipeline: split image into patches → linear embed each patch →
+      add position embeddings → prepend [CLS] token → standard transformer
+      encoder → MLP head for classification. Learns edge-detector-like filters
+      and spatial position similarities without convolutional inductive bias.
+    tags: [transformer, vision, architecture]
+    relations:
+      - {type: specializes, target: transformer}
+      - {type: uses, target: cls_token}
+      - {type: uses, target: positional_encoding}
+      - {type: reference, target: dosovitskiy2020}
+
+  - name: transformer_policy
+    aliases:
+      - transformer-based policy
+    definition: >
+      A robot policy that uses a transformer to process a history of
+      observations (or states and actions) and output actions. Addresses the
+      POMDP challenge of hidden state by attending over observation history.
+      Key instances: Scene Memory Transformer (SMT), Decision Transformer, ACT.
+    tags: [robot-learning, transformer, policy, POMDP]
+    relations:
+      - {type: uses, target: transformer}
+      - {type: addresses, target: POMDP}
+      - {type: instantiated_by, target: scene_memory_transformer}
+      - {type: instantiated_by, target: decision_transformer}
+      - {type: instantiated_by, target: ACT}
+
+  - name: POMDP
+    aliases:
+      - partially observable Markov decision process
+      - partial observability
+    definition: >
+      A decision-making framework where the agent cannot directly observe the
+      full environment state and must infer it from a history of partial
+      observations. In robot learning, cameras and sensors provide incomplete
+      state information, motivating history-conditioned policies.
+    tags: [robot-learning, RL, POMDP]
+    relations:
+      - {type: addressed_by, target: transformer_policy}
+      - {type: addressed_by, target: RNN}
+
+  - name: scene_memory_transformer
+    aliases:
+      - SMT
+      - Scene Memory Transformer
+    definition: >
+      A transformer policy for embodied navigation in POMDP settings
+      (Fang et al., CVPR 2019). At each step, the current observation
+      (image, pose, previous action) is encoded and stored in a scene memory
+      buffer. A transformer encoder-decoder attends over all stored embeddings
+      to predict the next action. Supports long-horizon tasks: Roaming,
+      Coverage, and Search.
+    tags: [robot-learning, transformer, POMDP, navigation]
+    relations:
+      - {type: is_a, target: transformer_policy}
+      - {type: uses, target: transformer}
+      - {type: reference, target: fang2019}
+
+  - name: decision_transformer
+    aliases:
+      - Decision Transformer
+      - DT
+    definition: >
+      An offline RL method (Chen and Lu et al., NeurIPS 2021) that recasts
+      reinforcement learning as sequence modeling. Input sequence interleaves
+      return-to-go R_hat_t, state s_t, and action a_t tokens with modality-
+      specific linear embeddings and episodic positional encoding. A causal
+      GPT-style transformer predicts actions autoregressively. At inference,
+      the desired return-to-go conditions the quality of behavior.
+    tags: [robot-learning, RL, transformer, offline-RL, sequence-modeling]
+    relations:
+      - {type: is_a, target: transformer_policy}
+      - {type: uses, target: masking}
+      - {type: uses, target: autoregressive_generation}
+      - {type: uses, target: positional_encoding}
+      - {type: reference, target: chen2021}
+
+  - name: ACT
+    aliases:
+      - Action Chunking with Transformers
+      - action chunking
+    definition: >
+      An imitation learning policy (Zhao et al., RSS 2023) for dexterous
+      bimanual manipulation. Trained as a Conditional VAE (CVAE):
+        - CVAE encoder: takes [CLS] + joint states + action sequence,
+          outputs style latent z.
+        - CVAE decoder (policy): takes camera observations (CNN features),
+          joint states, and z; uses a transformer encoder and transformer
+          decoder to autoregressively predict a chunk of k future actions.
+      At inference z=0. Action chunking reduces effective decision frequency
+      and smooths execution.
+    tags: [robot-learning, imitation-learning, transformer, manipulation, CVAE]
+    relations:
+      - {type: is_a, target: transformer_policy}
+      - {type: uses, target: cls_token}
+      - {type: uses, target: CVAE}
+      - {type: reference, target: zhao2023}
+
+  - name: CVAE
+    aliases:
+      - conditional variational autoencoder
+      - conditional VAE
+    definition: >
+      A generative model that encodes data into a latent variable z conditioned
+      on some context, and decodes z back to the data. In ACT, the CVAE encoder
+      captures action style from demonstration trajectories; the decoder
+      generates action chunks conditioned on observations and z.
+    tags: [generative-model, variational-inference, imitation-learning]
+    relations:
+      - {type: used_in, target: ACT}
+
+  - name: layer_normalization
+    aliases:
+      - LayerNorm
+      - layer norm
+    definition: >
+      A normalization technique that normalizes activations across the feature
+      dimension (as opposed to batch normalization which normalizes across the
+      batch). Applied after each sub-layer in the transformer block to
+      stabilize training.
+    tags: [transformer, normalization, training-stability]
+    relations:
+      - {type: used_in, target: transformer_block}
+
+  - name: residual_connection
+    aliases:
+      - skip connection
+      - residual link
+    definition: >
+      An architectural pattern where the input to a sub-layer is added directly
+      to its output: output = x + Sublayer(x). Enables gradient flow through
+      deep networks and prevents degradation. Used after each sub-layer in the
+      transformer block alongside layer normalization (Add & Norm).
+    tags: [transformer, architecture, training-stability]
+    relations:
+      - {type: used_in, target: transformer_block}
+
+  - name: vaswani2017
+    aliases:
+      - Attention Is All You Need
+      - original transformer paper
+    definition: >
+      Vaswani et al. "Attention Is All You Need." NeurIPS 2017. Introduced the
+      transformer architecture with scaled dot-product attention and multi-head
+      attention, originally for machine translation. The foundation for most
+      modern large language models.
+    tags: [reference, transformer, NLP]
+    relations:
+      - {type: introduces, target: transformer}
+      - {type: introduces, target: dot_product_attention}
+      - {type: introduces, target: multi_head_attention}
+
+  - name: dosovitskiy2020
+    aliases:
+      - ViT paper
+      - An Image is Worth 16x16 Words
+    definition: >
+      Dosovitskiy et al. "An Image is Worth 16x16 Words: Transformers for
+      Image Recognition at Scale." ICLR 2021. Introduced the Vision
+      Transformer (ViT) and demonstrated that pure transformers can match or
+      exceed CNNs on image classification when pre-trained on large datasets.
+    tags: [reference, vision, transformer]
+    relations:
+      - {type: introduces, target: vision_transformer}
+
+  - name: fang2019
+    aliases:
+      - SMT paper
+      - Scene Memory Transformer CVPR 2019
+    definition: >
+      Fang et al. "Scene Memory Transformer for Embodied Agents in Long-Horizon
+      Tasks." CVPR 2019. Introduced the SMT architecture for POMDP navigation
+      tasks using an episodic scene memory and transformer attention.
+    tags: [reference, robot-learning, navigation]
+    relations:
+      - {type: introduces, target: scene_memory_transformer}
+
+  - name: chen2021
+    aliases:
+      - Decision Transformer paper
+      - DT NeurIPS 2021
+    definition: >
+      Chen* and Lu* et al. "Decision Transformer: Reinforcement Learning via
+      Sequence Modeling." NeurIPS 2021. Reframes offline RL as a sequence
+      prediction problem using a GPT-style causal transformer conditioned on
+      return-to-go.
+    tags: [reference, robot-learning, offline-RL]
+    relations:
+      - {type: introduces, target: decision_transformer}
+
+  - name: zhao2023
+    aliases:
+      - ACT paper
+      - Learning Fine-Grained Bimanual Manipulation
+    definition: >
+      Zhao et al. "Learning Fine-Grained Bimanual Manipulation with Low-Cost
+      Hardware." RSS 2023. Introduced ACT (Action Chunking with Transformers),
+      combining a CVAE with transformer encoder-decoder for dexterous
+      bimanual manipulation from demonstration.
+    tags: [reference, robot-learning, manipulation, imitation-learning]
+    relations:
+      - {type: introduces, target: ACT}

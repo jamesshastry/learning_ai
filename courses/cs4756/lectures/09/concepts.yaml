@@ -1,0 +1,400 @@
+concepts:
+  - name: Q-Function
+    aliases:
+      - Action-Value Function
+      - State-Action Value Function
+    definition: >-
+      The expected cumulative return from state s_t when taking action a_t and then
+      following policy pi thereafter. Formally:
+      Q^pi(s_t, a_t) = E_{pi}[sum_{t'=t}^{T-1} R(s_{t'}, a_{t'}) | s_t, a_t].
+      In actor-critic methods, Q^pi can be approximated via the Bellman relation as
+      R(s, a) + gamma * V^pi(s'), avoiding the need to learn it separately if V^pi is known.
+    tags:
+      - value-functions
+      - policy-gradient
+      - actor-critic
+    slides:
+      - "8"
+      - "9"
+      - "12"
+    relations:
+      - target: Value Function
+        type: related_to
+        note: V^pi(s) is the expectation of Q^pi(s, a) over actions under pi
+      - target: Advantage Function
+        type: related_to
+        note: A^pi(s, a) = Q^pi(s, a) - V^pi(s)
+      - target: Bellman Equation
+        type: related_to
+        note: Q^pi(s, a) = R(s, a) + gamma * E[V^pi(s')] by Bellman decomposition
+
+  - name: Value Function
+    aliases:
+      - State Value Function
+      - V-function
+    definition: >-
+      The expected return starting from state s and following policy pi:
+      V^pi(s) = E_{a ~ pi(.|s)}[Q^pi(s, a)].
+      It is the policy-weighted average of the Q-function over actions.
+      In actor-critic, V^pi is the quantity learned by the critic network phi.
+    tags:
+      - value-functions
+      - actor-critic
+    slides:
+      - "10"
+      - "12"
+      - "13"
+    relations:
+      - target: Q-Function
+        type: related_to
+        note: V^pi is the action-averaged Q^pi under the current policy
+      - target: Advantage Function
+        type: related_to
+        note: Advantage subtracts V^pi from Q^pi to center the policy gradient signal
+      - target: Critic Network
+        type: related_to
+        note: The critic approximates V^pi (or Q^pi in off-policy settings)
+
+  - name: Advantage Function
+    aliases:
+      - Advantage
+      - A-function
+    definition: >-
+      A measure of how much better taking action a is compared to the policy's average
+      at state s: A^pi(s, a) = Q^pi(s, a) - V^pi(s).
+      Used as the weight in the policy gradient instead of raw returns, it reduces
+      variance because V^pi(s) acts as a state-dependent baseline.
+      Positive advantage means the action is better than average; negative means worse.
+    tags:
+      - value-functions
+      - policy-gradient
+      - variance-reduction
+    slides:
+      - "10"
+      - "11"
+      - "12"
+    relations:
+      - target: Q-Function
+        type: related_to
+        note: Advantage is Q^pi minus V^pi
+      - target: Value Function
+        type: related_to
+        note: V^pi serves as the baseline subtracted from Q^pi to form the advantage
+      - target: Actor-Critic
+        type: related_to
+        note: Actor-critic policy gradient weights log-probs by the advantage estimate
+
+  - name: Actor-Critic
+    aliases:
+      - Actor-Critic Method
+      - A2C
+      - Advantage Actor-Critic
+    definition: >-
+      A family of policy gradient algorithms that maintain two components: an actor
+      (the policy pi_theta) and a critic (a value function approximator V^pi_phi or Q^pi_phi).
+      The critic provides lower-variance return estimates to the actor's policy gradient,
+      replacing the high-variance Monte Carlo returns used in REINFORCE. The key loop is:
+      (1) generate samples, (2) fit critic, (3) compute advantage, (4) update policy.
+    tags:
+      - actor-critic
+      - policy-gradient
+      - algorithms
+    slides:
+      - "13"
+      - "16"
+      - "17"
+    relations:
+      - target: REINFORCE
+        type: contrasts_with
+        note: REINFORCE uses MC returns (unbiased, high variance); actor-critic uses critic (biased, low variance)
+      - target: Advantage Function
+        type: related_to
+        note: The actor is updated using the advantage estimate from the critic
+      - target: Bootstrapped Estimation
+        type: related_to
+        note: Actor-critic commonly uses bootstrapped TD targets to fit the critic
+
+  - name: Bootstrapped Estimation
+    aliases:
+      - TD Target
+      - Temporal Difference Target
+      - One-step Bootstrap
+    definition: >-
+      A method of constructing value function training targets using the current value
+      estimate for the next state: y_i = R(s_i, a_i) + gamma * V^pi_phi(s_{i+1}).
+      Compared to Monte Carlo targets (full trajectory sums), bootstrapped targets have
+      lower variance because they depend on only one step of reward noise, but they
+      introduce bias because V^pi_phi is itself an approximation.
+    tags:
+      - value-functions
+      - training
+      - bias-variance
+    slides:
+      - "15"
+      - "17"
+    relations:
+      - target: Monte Carlo Policy Evaluation
+        type: contrasts_with
+        note: MC uses full trajectory sums (unbiased, high variance); bootstrap uses one-step + V estimate (biased, low variance)
+      - target: Value Function
+        type: related_to
+        note: The bootstrap target depends on the current V^pi_phi approximation
+      - target: Bias-Variance Tradeoff
+        type: related_to
+        note: Bootstrap reduces variance at the cost of introducing bias from the approximation error
+
+  - name: Monte Carlo Policy Evaluation
+    aliases:
+      - MC Return
+      - MC Value Estimation
+    definition: >-
+      Estimating the value function by using full trajectory returns as targets:
+      y_i = sum_{t'=t}^{T-1} R(s_{i,t'}, a_{i,t'}).
+      A function approximator V^pi_phi is then fitted by minimizing the MSE loss
+      L(phi) = (1/N) sum_i ||V^pi_phi(s_i) - y_i||^2.
+      MC targets are unbiased estimates of V^pi but have high variance due to
+      compounding randomness across the full trajectory.
+    tags:
+      - value-functions
+      - training
+      - bias-variance
+    slides:
+      - "14"
+    relations:
+      - target: Bootstrapped Estimation
+        type: contrasts_with
+        note: Bootstrapped targets trade unbiasedness for lower variance
+      - target: Value Function
+        type: related_to
+        note: MC evaluation provides unbiased training targets for the value function critic
+
+  - name: Critic Network
+    aliases:
+      - Critic
+      - Value Network
+    definition: >-
+      A neural network with parameters phi that approximates the value function
+      V^pi_phi(s) (or Q^pi_phi(s, a) in off-policy settings). The critic provides
+      the return estimates used to compute advantages for the actor's policy gradient
+      update. It is trained via supervised regression on either MC or bootstrapped targets.
+    tags:
+      - actor-critic
+      - neural-networks
+    slides:
+      - "13"
+      - "14"
+      - "15"
+    relations:
+      - target: Value Function
+        type: related_to
+        note: The critic is a function approximator for V^pi or Q^pi
+      - target: Actor Network
+        type: related_to
+        note: The critic provides low-variance advantage estimates to train the actor
+      - target: Bootstrapped Estimation
+        type: related_to
+        note: Bootstrapped targets use the critic itself to form next-step estimates
+
+  - name: Actor Network
+    aliases:
+      - Actor
+      - Policy Network
+    definition: >-
+      The policy network pi_theta that is updated via the policy gradient in
+      actor-critic methods. It maps states to actions (or action distributions).
+      The actor is updated using advantage-weighted log-probabilities:
+      grad_theta J = (1/N) sum_i grad_theta log pi_theta(a_i|s_i) * A^pi(s_i, a_i).
+    tags:
+      - actor-critic
+      - policy-gradient
+    slides:
+      - "16"
+      - "25"
+    relations:
+      - target: Critic Network
+        type: related_to
+        note: The critic provides advantage estimates to train the actor
+      - target: Advantage Function
+        type: related_to
+        note: The actor gradient is weighted by the advantage from the critic
+
+  - name: Replay Buffer
+    aliases:
+      - Experience Replay
+      - Replay Memory
+    definition: >-
+      A dataset D of past transitions (s, a, s', r) collected by the agent during
+      training. Allows off-policy learning by reusing past experience rather than
+      discarding it after each policy update. In actor-critic, using a naive replay
+      buffer requires two fixes: (1) bootstrap value targets using fresh on-policy
+      actions (not buffered actions), and (2) compute policy gradients with fresh
+      on-policy actions sampled from the current pi_theta.
+    tags:
+      - off-policy
+      - sample-efficiency
+      - algorithms
+    slides:
+      - "20"
+      - "21"
+      - "22"
+      - "23"
+      - "25"
+    relations:
+      - target: Off-Policy Actor-Critic
+        type: related_to
+        note: Replay buffer enables off-policy actor-critic by reusing past transitions
+      - target: State Distribution Mismatch
+        type: related_to
+        note: States in the buffer do not follow the current pi_theta distribution
+
+  - name: Off-Policy Actor-Critic
+    aliases:
+      - Off-Policy AC
+    definition: >-
+      An actor-critic variant that stores transitions in a replay buffer and reuses
+      them across multiple policy updates. Requires fitting Q^pi_phi rather than V^pi_phi
+      and making two corrections to avoid stale-data errors:
+      (1) Value update: bootstrap with a'_i ~ pi_theta(.|s'_i), not the buffered action.
+      (2) Policy update: compute gradients with a^pi_i ~ pi_theta(.|s_i), not the buffered action.
+      The state distribution mismatch (buffered s_i not from current pi_theta) is
+      accepted as training over a wider state distribution.
+    tags:
+      - off-policy
+      - actor-critic
+      - algorithms
+    slides:
+      - "21"
+      - "22"
+      - "23"
+      - "24"
+      - "25"
+    relations:
+      - target: Replay Buffer
+        type: related_to
+        note: Off-policy actor-critic uses a replay buffer to reuse past transitions
+      - target: Actor-Critic
+        type: contrasts_with
+        note: On-policy actor-critic discards data after each update; off-policy reuses it
+      - target: State Distribution Mismatch
+        type: related_to
+        note: Buffered states do not follow current pi_theta; accepted as wider state coverage
+
+  - name: State Distribution Mismatch
+    aliases:
+      - Distribution Shift
+      - Off-Policy State Distribution
+    definition: >-
+      When using a replay buffer, the states s_i in the buffer were collected under
+      previous policies pi_old, not the current pi_theta. This means the policy gradient
+      sum over buffered states is not an unbiased estimate of the true gradient under pi_theta.
+      In practice this cannot be directly corrected, and is treated as training the policy
+      over a wider state distribution than pi_theta alone would visit, which can improve
+      generalization.
+    tags:
+      - off-policy
+      - theory
+    slides:
+      - "24"
+    relations:
+      - target: Replay Buffer
+        type: related_to
+        note: Replay buffer is the source of the state distribution mismatch
+      - target: Off-Policy Actor-Critic
+        type: related_to
+        note: Off-policy actor-critic must accept this mismatch for the value and policy updates
+
+  - name: Bias-Variance Tradeoff
+    aliases:
+      - Variance-Bias Tradeoff
+    definition: >-
+      The fundamental tension in gradient estimation between bias (systematic error from
+      approximations) and variance (noise from randomness). REINFORCE with Monte Carlo
+      returns is unbiased but high variance; actor-critic with bootstrapped TD targets
+      is biased (due to critic approximation error) but low variance (only one step of
+      reward randomness). Both affect convergence: high variance causes unstable updates;
+      high bias causes convergence to a suboptimal solution.
+    tags:
+      - theory
+      - variance-reduction
+    slides:
+      - "26"
+    relations:
+      - target: REINFORCE
+        type: related_to
+        note: REINFORCE is unbiased (no critic) but high variance (MC returns)
+      - target: Actor-Critic
+        type: related_to
+        note: Actor-critic reduces variance via the critic but introduces bias
+      - target: Bootstrapped Estimation
+        type: related_to
+        note: Bootstrapping is the source of bias in the actor-critic gradient estimate
+
+  - name: REINFORCE
+    aliases:
+      - Policy Gradient
+      - Williams 1992
+    definition: >-
+      The vanilla policy gradient algorithm. Collects full trajectories under pi_theta,
+      computes the gradient as the average of log-probability gradients weighted by
+      discounted trajectory returns (optionally minus a baseline b):
+      grad J = (1/N) sum_{i,t} grad log pi_theta(a_{i,t}|s_{i,t}) * (sum_{t'>=t} gamma^{t'-t} R(...) - b).
+      Unbiased but suffers from high variance due to the single-sample Monte Carlo return.
+    tags:
+      - policy-gradient
+      - algorithms
+    slides:
+      - "2"
+      - "26"
+    relations:
+      - target: Actor-Critic
+        type: contrasts_with
+        note: Actor-critic replaces MC returns with a learned critic to reduce variance
+      - target: Bias-Variance Tradeoff
+        type: related_to
+        note: REINFORCE is the unbiased, high-variance end of the tradeoff spectrum
+
+  - name: Gaussian Policy
+    aliases:
+      - Continuous Action Policy
+      - Diagonal Gaussian Policy
+    definition: >-
+      A policy for continuous action spaces parameterized as a Gaussian distribution:
+      pi_theta(a|s) = N(a | mu_theta(s), sigma_theta(s)), where sigma is typically
+      a diagonal covariance matrix. A neural network encodes s, then outputs mu_theta(s)
+      and sigma_theta(s) via a fully connected head. Sampling uses the reparameterization
+      trick: a = mu_theta(s) + sigma_theta(s) * epsilon, epsilon ~ N(0, I).
+    tags:
+      - policy-gradient
+      - continuous-control
+    slides:
+      - "3"
+      - "4"
+      - "5"
+    relations:
+      - target: Reparameterization Trick
+        type: related_to
+        note: The reparameterization trick enables differentiable sampling from the Gaussian policy
+      - target: REINFORCE
+        type: related_to
+        note: Gaussian policy is a common parameterization for continuous-action REINFORCE
+
+  - name: Reparameterization Trick
+    aliases:
+      - Reparameterization
+      - Location-Scale Transform
+    definition: >-
+      A technique for differentiable sampling from a parameterized distribution.
+      For a Gaussian: instead of sampling a ~ N(mu_theta(s), sigma_theta(s)) directly,
+      sample epsilon ~ N(0, I) and compute a = mu_theta(s) + sigma_theta(s) * epsilon.
+      This separates randomness (epsilon) from the parameters, enabling gradients to
+      flow through the sampling operation.
+    tags:
+      - policy-gradient
+      - continuous-control
+      - training
+    slides:
+      - "5"
+    relations:
+      - target: Gaussian Policy
+        type: related_to
+        note: The Gaussian policy uses the reparameterization trick for differentiable action sampling

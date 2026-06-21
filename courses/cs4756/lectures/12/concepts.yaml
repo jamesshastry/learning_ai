@@ -1,0 +1,194 @@
+concepts:
+  - name: Dynamics Model
+    aliases: [transition model, forward model, learned dynamics]
+    definition: >-
+      A function approximator f_phi(s, a) -> s' that predicts the next state
+      given the current state and action. Can be deterministic or probabilistic.
+      Often learned in residual form: f_phi(s,a) = s + Delta_phi(s,a).
+    tags: [model-based-rl, dynamics, function-approximation]
+    relations:
+      - target: Model-Based RL
+        type: part_of
+        note: The learned dynamics model is the core component of model-based RL
+      - target: Residual Dynamics Model
+        type: related_to
+        note: Residual formulation improves conditioning of regression targets
+      - target: Compounding Error
+        type: enables
+        note: Imperfect dynamics models lead to compounding error in rollouts
+
+  - name: Residual Dynamics Model
+    aliases: [residual model, delta model]
+    definition: >-
+      A dynamics model that predicts the change in state rather than the next
+      state directly: f_phi(s, a) = s + Delta_phi(s, a). Because Delta is
+      small, the regression targets are near zero, improving training stability.
+    tags: [dynamics, model-based-rl]
+    relations:
+      - target: Dynamics Model
+        type: related_to
+        note: A specific parameterization of the dynamics model
+      - target: System Identification
+        type: related_to
+        note: Both aim to fit robot dynamics from data
+
+  - name: System Identification
+    aliases: [sysid]
+    definition: >-
+      The classical robotics approach to fitting a dynamics model (typically
+      linear: s' = As + Ba) from trajectory data. Closed-form solution via
+      least squares. Works well for quasi-static or slow motions but has low
+      expressivity for nonlinear dynamics.
+    tags: [dynamics, classical-robotics, linear-model]
+    relations:
+      - target: Dynamics Model
+        type: part_of
+        note: Linear system identification is the simplest dynamics model family
+      - target: Gaussian Process Dynamics
+        type: contrasts_with
+        note: GP provides uncertainty and handles nonlinearity; sysid is linear but faster
+
+  - name: Gaussian Process Dynamics
+    aliases: [GP dynamics, PILCO]
+    definition: >-
+      A nonparametric Bayesian approach to dynamics learning where the
+      transition function is modeled as a GP: f ~ GP(mu, k). Provides principled
+      uncertainty quantification. Scales as O(n^3) in training data. Used in
+      PILCO (Deisenroth & Rasmussen 2011) to propagate uncertainty through
+      multi-step rollouts for sample-efficient control.
+    tags: [dynamics, gaussian-process, uncertainty, model-based-rl]
+    relations:
+      - target: Dynamics Model
+        type: part_of
+        note: GP is one family of dynamics model
+      - target: Probabilistic Ensemble Dynamics
+        type: contrasts_with
+        note: Ensembles scale better; GPs have principled uncertainty but are O(n^3)
+      - target: Epistemic Uncertainty
+        type: enables
+        note: GPs naturally provide calibrated predictive uncertainty
+
+  - name: Probabilistic Ensemble Dynamics
+    aliases: [PETS, ensemble dynamics model]
+    definition: >-
+      A dynamics model consisting of K neural networks with probabilistic
+      outputs (each outputs a Gaussian N(mu_phi, Sigma_phi)). Epistemic
+      uncertainty is estimated from variance across ensemble members.
+      Used in PETS (Chua et al. 2018). Disagreement between members
+      can serve as an exploration bonus.
+    tags: [dynamics, uncertainty, ensemble, neural-network]
+    relations:
+      - target: Gaussian Process Dynamics
+        type: contrasts_with
+        note: Ensembles scale better to high dimensions; GPs have principled uncertainty
+      - target: Epistemic Uncertainty
+        type: enables
+        note: Ensemble disagreement is a proxy for epistemic uncertainty
+      - target: Dynamics Model
+        type: part_of
+        note: Ensemble is a specific family of probabilistic dynamics models
+
+  - name: Epistemic Uncertainty
+    aliases: [model uncertainty, uncertainty quantification]
+    definition: >-
+      Uncertainty arising from lack of data (as opposed to aleatoric/noise
+      uncertainty). In dynamics learning, estimated via GP posterior variance
+      or ensemble disagreement. Used for safe exploration and out-of-distribution
+      detection.
+    tags: [uncertainty, exploration, safety]
+    relations:
+      - target: Gaussian Process Dynamics
+        type: related_to
+        note: GPs provide principled epistemic uncertainty
+      - target: Probabilistic Ensemble Dynamics
+        type: related_to
+        note: Ensemble disagreement approximates epistemic uncertainty
+
+  - name: Backpropagation Through Dynamics
+    aliases: [analytic policy gradient, differentiable dynamics]
+    definition: >-
+      A model-based policy optimization approach that unrolls the policy
+      through the learned dynamics and backpropagates the return gradient
+      end-to-end: gradient flows from r(s_t, a_t) back through f_phi and
+      pi_theta at each step. Enables analytic policy gradients but suffers
+      from vanishing/exploding gradient problems over long horizons.
+    tags: [model-based-rl, policy-optimization, gradient]
+    relations:
+      - target: Dynamics Model
+        type: prerequisite_for
+        note: Requires a differentiable dynamics model
+      - target: Vanishing Exploding Gradient
+        type: related_to
+        note: Chaining Jacobians over T steps causes vanishing/exploding gradients
+      - target: Dyna
+        type: contrasts_with
+        note: Dyna avoids gradient-through-dynamics by using model-free RL on synthetic samples
+
+  - name: Vanishing Exploding Gradient
+    aliases: [vanishing gradient, exploding gradient]
+    definition: >-
+      When backpropagating through T timesteps, gradients are products of T
+      Jacobians. If ||dh_i/dh_{i-1}||_2 < 1 the gradient vanishes (signal
+      lost); if > 1 it explodes (numerical instability). Makes long-horizon
+      backpropagation through dynamics unreliable.
+    tags: [optimization, gradient, model-based-rl]
+    relations:
+      - target: Backpropagation Through Dynamics
+        type: related_to
+        note: Core failure mode of analytic policy gradients over long horizons
+
+  - name: Compounding Error
+    aliases: [error compounding, rollout error]
+    definition: >-
+      In model-based RL, per-step prediction error epsilon accumulates over a
+      T-step synthetic rollout, growing as O(epsilon * T^2). This causes
+      long rollouts to diverge dramatically from true dynamics, degrading
+      policy quality.
+    tags: [model-based-rl, dynamics, error]
+    relations:
+      - target: Dynamics Model
+        type: related_to
+        note: Arises from imperfect dynamics models used for long rollouts
+      - target: Short Rollout Model-Based RL
+        type: prerequisite_for
+        note: Compounding error motivates using short branched rollouts
+      - target: Dyna
+        type: related_to
+        note: Dyna uses short K-step rollouts to mitigate compounding error
+
+  - name: Short Rollout Model-Based RL
+    aliases: [MBPO, branched rollouts, model-based policy optimization]
+    definition: >-
+      A model-based RL strategy that generates short synthetic rollouts
+      branched from real states sampled from a replay buffer, rather than
+      rolling out full trajectories from the start. Reduces compounding
+      error while maintaining coverage of states encountered by the policy.
+      Used in MBPO (Janner et al. 2019).
+    tags: [model-based-rl, rollout, sample-efficiency]
+    relations:
+      - target: Compounding Error
+        type: related_to
+        note: Short rollouts limit compounding error growth
+      - target: Dyna
+        type: related_to
+        note: MBPO generalizes the Dyna idea with short branched rollouts
+
+  - name: Dyna
+    aliases: [Dyna-Q, Dyna architecture]
+    definition: >-
+      An online RL algorithm (Sutton 1990) that integrates model learning
+      with model-free RL. After each real step, the learned model generates
+      K synthetic transitions (s, a, s', r) which are used to update a
+      model-free value function. Improves sample efficiency by extracting
+      K virtual updates per real experience.
+    tags: [model-based-rl, q-learning, sample-efficiency, dyna]
+    relations:
+      - target: Short Rollout Model-Based RL
+        type: related_to
+        note: Dyna uses short (often 1-step) model rollouts from buffer states
+      - target: Compounding Error
+        type: related_to
+        note: Short rollouts in Dyna limit compounding error
+      - target: Backpropagation Through Dynamics
+        type: contrasts_with
+        note: Dyna uses model-free RL on synthetic data; no gradient through dynamics

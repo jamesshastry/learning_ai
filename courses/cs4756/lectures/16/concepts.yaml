@@ -1,0 +1,244 @@
+concepts:
+  - name: RGB Image Representation
+    aliases: [RGB array, pixel array, image tensor]
+    definition: >-
+      A digital color image represented as a [W, H, 3] array where W and H are the
+      width and height in pixels, and the third dimension holds three uint8 channel
+      values (0–255) for red, green, and blue at each pixel. Alternative colorspaces
+      such as CMYK (subtractive, printing) and HSL (hue-saturation-light, perceptually
+      motivated) encode the same information with different axes. Greyscale images
+      collapse to a [W, H] array with 0 = black and 255 = white.
+    tags: [image-representation, pixel, colorspace, rgb, greyscale]
+    relations:
+      - target: Convolutional Neural Networks
+        type: prerequisite_for
+        note: CNNs take raw image arrays as input and learn to extract features from them
+      - target: Hand-Designed Visual Features
+        type: prerequisite_for
+        note: Classical feature extractors (HOG, SIFT) operate on the raw pixel array
+
+  - name: Hand-Designed Visual Features
+    aliases: [handcrafted features, classical features, HOG, SIFT, color histogram]
+    definition: >-
+      Manually engineered image descriptors used before deep learning to extract
+      task-relevant information from raw pixels. Common examples include: Color
+      Histograms (distribution of pixel intensities, ignoring spatial layout),
+      HOG (Histogram of Oriented Gradients, capturing local edge orientation
+      statistics in spatial cell grids), and SIFT (Scale-Invariant Feature Transform,
+      detecting and describing keypoints that are invariant to scale and rotation).
+      The classical pipeline is: Image → hand-designed feature x → f(x, W) → softmax
+      → class. Their main limitation is that design requires significant domain
+      expertise and careful tuning, motivating learned representations.
+    tags: [feature-extraction, hog, sift, classical-vision, pre-deep-learning]
+    relations:
+      - target: Convolutional Neural Networks
+        type: contrasts_with
+        note: CNNs replace hand-designed features with learned features end-to-end from data
+      - target: RGB Image Representation
+        type: part_of
+        note: Feature extractors operate on the raw pixel representation
+
+  - name: Invariance
+    aliases: [translation invariance, scale invariance, spatial invariance]
+    definition: >-
+      A property of a function f where the output remains unchanged when the input
+      undergoes a specified transformation T: f(T(x)) = f(x). For image recognition,
+      desirable invariances include translation (object location in frame should not
+      change classification), scale (object size should not change classification),
+      and rotation. In CNNs, spatial invariance is achieved through pooling operations,
+      particularly max pooling and global average pooling, which discard precise
+      spatial position information while retaining what features are present.
+    tags: [invariance, pooling, spatial-invariance, transformation]
+    relations:
+      - target: Equivariance
+        type: contrasts_with
+        note: Invariance collapses spatial information; equivariance tracks it
+      - target: Pooling
+        type: enables
+        note: Pooling operations implement approximate translation invariance in CNNs
+
+  - name: Equivariance
+    aliases: [translation equivariance, covariance]
+    definition: >-
+      A property of a function f where, when the input undergoes a transformation T,
+      the output transforms in a corresponding way: f(T(x)) = T(f(x)). For image
+      representations, translation equivariance means that if the input image is
+      shifted, the output feature map shifts by the same amount. Convolution is
+      translation-equivariant by construction due to weight sharing — the same
+      filter is applied at every spatial location. Equivariance preserves spatial
+      structure and is essential for tasks like object detection and grasp detection
+      where location matters.
+    tags: [equivariance, convolution, spatial-structure, weight-sharing]
+    relations:
+      - target: Invariance
+        type: contrasts_with
+        note: Equivariance preserves transformation information; invariance discards it
+      - target: Convolution
+        type: enables
+        note: The weight-sharing in convolution is what makes it translation-equivariant
+
+  - name: Convolution
+    aliases: [discrete convolution, 2D convolution, convolutional filter, kernel]
+    definition: >-
+      A mathematical operation that slides a small learnable filter (kernel) over an
+      input, computing a weighted sum of local values at each position. The 1D
+      definition is (f * g)[n] = sum_{m=-inf}^{inf} f[m] g[n-m]. In 2D image
+      convolution: output[i,j] = sum_{u,v} K[u,v] * I[i+u, j+v]. Key properties:
+      (1) weight sharing — the same kernel is applied everywhere, giving translation
+      equivariance; (2) locality — only nearby pixels contribute to each output;
+      (3) pattern detection — high response where the kernel matches the local image
+      structure. Hyperparameters include kernel size K, stride s (step size,
+      larger s yields smaller output), and padding p (zeros added at borders).
+      Output size: W_out = floor((W - K + 2p) / s) + 1.
+    tags: [convolution, kernel, weight-sharing, stride, padding, feature-extraction]
+    relations:
+      - target: Equivariance
+        type: enables
+        note: Weight sharing in convolution is the mechanism behind translation equivariance
+      - target: Convolutional Neural Networks
+        type: part_of
+        note: Convolutional layers are the core building block of CNNs
+      - target: Receptive Field
+        type: related_to
+        note: Each conv layer expands the receptive field of subsequent neurons
+
+  - name: Receptive Field
+    aliases: [effective receptive field]
+    definition: >-
+      The region of the original input image that influences the activation of a
+      single neuron in a given layer. For a single conv layer with kernel size K,
+      the receptive field is K x K. When conv layers are stacked, the receptive
+      field grows with depth: after L layers each with kernel size K, the receptive
+      field is approximately 1 + L(K-1). This is a crucial property of deep CNNs —
+      neurons in later layers integrate information from large image regions while
+      each layer only performs local computation. Growing the receptive field is
+      what enables CNNs to detect large-scale patterns and objects.
+    tags: [receptive-field, depth, locality, spatial-context]
+    relations:
+      - target: Convolution
+        type: part_of
+        note: Receptive field grows by stacking conv layers
+      - target: Convolutional Neural Networks
+        type: related_to
+        note: Deeper CNNs have larger receptive fields, enabling detection of larger patterns
+
+  - name: Pooling
+    aliases: [max pooling, average pooling, global average pooling, global max pooling, spatial pooling]
+    definition: >-
+      An operation that downsamples feature maps by aggregating values over local
+      spatial regions. Max pooling takes the maximum value in each window:
+      out[i,j] = max_{u,v in window} feat[i*s+u, j*s+v]. Average pooling takes the
+      mean. Both have parameters: window size and stride. Effects: (1) reduces
+      spatial resolution, (2) increases robustness to small input shifts (spatial
+      invariance). Global pooling collapses the entire spatial dimension to a single
+      value per channel, removing all spatial information and keeping only "what is
+      present" — this enables fixed-size feature vectors regardless of input
+      resolution and provides full spatial invariance, useful before fully connected
+      layers.
+    tags: [pooling, max-pooling, downsampling, spatial-invariance, global-pooling]
+    relations:
+      - target: Invariance
+        type: enables
+        note: Pooling discards precise spatial position, implementing spatial invariance
+      - target: Convolutional Neural Networks
+        type: part_of
+        note: Pooling layers are a standard CNN building block between conv layers
+
+  - name: Convolutional Neural Networks
+    aliases: [CNN, ConvNet, AlexNet, VGG, ResNet]
+    definition: >-
+      A class of deep neural networks designed for processing grid-structured data
+      such as images, built from three types of layers: (1) Convolutional layers —
+      detect local spatial patterns using learnable filters (parameters: output
+      channels, kernel size, stride, padding, activation); (2) Pooling layers —
+      reduce spatial dimensionality; (3) Fully Connected layers — integrate features
+      into global representations. Classic architectures include AlexNet (5 conv
+      layers with an 11x11 first filter, then 3 FC layers), VGG16 (13 conv layers
+      all 3x3, very deep and uniform), and ResNet (introduces residual/skip
+      connections: out = F(x) + x, solving vanishing gradients in 50-152 layer
+      networks). Deeper models have more representation power but are harder to
+      optimize, motivating residual connections.
+    tags: [cnn, deep-learning, alexnet, vgg, resnet, residual-connection, image-classification]
+    relations:
+      - target: Convolution
+        type: part_of
+        note: Convolutional layers are the defining building block of CNNs
+      - target: Pooling
+        type: part_of
+        note: Pooling layers are standard CNN components for spatial downsampling
+      - target: Object Detection
+        type: enables
+        note: CNNs serve as the backbone feature extractor for object detection systems
+      - target: Hand-Designed Visual Features
+        type: contrasts_with
+        note: CNNs learn features end-to-end rather than relying on manually engineered ones
+
+  - name: Object Detection
+    aliases: [detection, classification + localization, region proposal network]
+    definition: >-
+      The task of simultaneously classifying and localizing one or more objects in
+      an image. It combines image classification (what is present: class scores via
+      softmax + classification loss) and object localization (where it is: bounding
+      box coordinates [x, y, h, w] via regression loss). A common approach uses
+      region proposals: (1) generate many candidate crops of the image, (2) run a
+      CNN on each crop to predict class scores and refined box coordinates, (3) apply
+      non-maximum suppression to remove duplicates. This is the basis of R-CNN,
+      Fast R-CNN, and Faster R-CNN. The combined training loss is:
+      L = L_classification + lambda * L_regression.
+    tags: [object-detection, bounding-box, region-proposal, localization, classification]
+    relations:
+      - target: Convolutional Neural Networks
+        type: prerequisite_for
+        note: CNNs are used as backbone feature extractors in all modern object detectors
+      - target: Grasp Detection
+        type: related_to
+        note: 4-DoF grasp detection is formulated as an object detection problem
+
+  - name: Grasp Detection
+    aliases: [robotic grasping, 4-DoF grasp, grasp prediction, parallel-jaw grasping]
+    definition: >-
+      The problem of predicting valid end-effector poses for a robot to robustly pick
+      up an object. For a parallel-jaw gripper, a grasp is parameterized as the pose
+      of the end effector: 6-DoF grasp = [x, y, z, alpha, beta, gamma] or the
+      simplified 4-DoF grasp = [x, y, z, gamma] (yaw only), valid when the gripper
+      approaches along the camera z-axis and orientation is constrained to the image
+      plane. 4-DoF grasp detection is formulated as object detection: region proposal
+      → grasp proposal, class score → success probability, bounding box → grasp
+      orientation. A CNN takes a 227x227 image patch aligned with the candidate grasp
+      and predicts success probability for each discretized yaw bin. 2D detections
+      [x', y', gamma] are lifted to 3D using camera intrinsics and table height:
+      x_c = (x'-c_x)/alpha, y_c = (y'-c_y)/beta, X_camera = z_table * [x_c, y_c, 1]^T,
+      X_robot = R * X_camera + T.
+    tags: [grasping, robotics, 4-dof, end-effector, grasp-detection, manipulation]
+    relations:
+      - target: Object Detection
+        type: related_to
+        note: Grasp detection is directly reducible to an object detection formulation
+      - target: Convolutional Neural Networks
+        type: prerequisite_for
+        note: A CNN backbone predicts grasp success probabilities from image patches
+      - target: RGB Image Representation
+        type: prerequisite_for
+        note: Grasp detection operates on 2D image patches extracted from RGB or RGB-D images
+
+  - name: Residual Connection
+    aliases: [skip connection, residual block, ResNet block, shortcut connection]
+    definition: >-
+      A network design pattern that directly adds the input of a block to its output:
+      out = F(x) + x, where F(x) represents the learned residual function (typically
+      a sequence of conv-BN-ReLU layers) and x is the identity shortcut. Introduced
+      in ResNet to address the optimization challenge of very deep networks: while
+      deeper models theoretically have more representation power, they are harder to
+      optimize due to vanishing gradients during backpropagation. The skip connection
+      provides a gradient highway so the identity mapping is easily learnable, enabling
+      networks of 50–152 layers. A bottleneck residual block example:
+      1x1 conv (64) → 3x3 conv (64) → 1x1 conv (256), all with BN+ReLU, plus a
+      direct skip from 256-channel input to 256-channel output.
+    tags: [residual-connection, resnet, skip-connection, deep-learning, optimization]
+    relations:
+      - target: Convolutional Neural Networks
+        type: part_of
+        note: Residual connections are the defining feature of ResNet-style CNN architectures
+      - target: Convolution
+        type: related_to
+        note: Residual blocks are composed of conv-BN-ReLU sequences with skip connections

@@ -1,0 +1,358 @@
+concepts:
+
+  - name: hierarchical_decision_making
+    aliases:
+      - hierarchical policy
+      - hierarchical control
+      - multi-level policy
+    definition: >
+      A framework that decomposes robot behavior across levels of abstraction.
+      A high-level policy selects *what* to do next (a subgoal, skill, symbol,
+      or latent code), while a low-level policy decides *how* to execute it.
+      The two levels operate at different timescales: the high level switches
+      every K steps or when a termination condition fires; the low level acts
+      at every primitive timestep.
+    tags:
+      - hierarchical-rl
+      - task-decomposition
+      - temporal-abstraction
+    relations:
+      - temporal_abstraction
+      - options_framework
+      - hierarchical_reinforcement_learning
+      - skill_modularity
+
+  - name: temporal_abstraction
+    aliases:
+      - temporally extended action
+      - macro-action
+    definition: >
+      The idea that a robot can commit to a higher-level decision (e.g., "pick
+      up the cup") that spans multiple primitive timesteps, rather than
+      selecting every primitive action independently. Temporal abstraction
+      reduces the effective planning horizon and alleviates the sparse-reward
+      problem by giving the high-level planner a coarser action space.
+    tags:
+      - hierarchical-rl
+      - temporal-abstraction
+    relations:
+      - options_framework
+      - hierarchical_decision_making
+
+  - name: options_framework
+    aliases:
+      - option
+      - semi-MDP
+      - options
+    definition: >
+      A formal framework (Sutton et al. 1999) that represents a temporally
+      extended action as a triple o = (I_o, π_o, β_o):
+        - I_o: initiation set — states in which option o may be selected
+        - π_o(a|s): intra-option policy — primitive actions taken while o is active
+        - β_o(s) ∈ [0,1]: termination condition — probability of ending o at state s
+      The high-level policy π_Ω selects among available options; each option
+      then runs its intra-option policy until termination fires.
+    tags:
+      - options-framework
+      - hierarchical-rl
+      - temporal-abstraction
+    relations:
+      - temporal_abstraction
+      - hierarchical_decision_making
+      - termination_condition
+
+  - name: termination_condition
+    aliases:
+      - beta function
+      - option termination
+    definition: >
+      A function β_z(s) ∈ [0,1] that determines when a currently active skill
+      or option should terminate. Can be:
+        - Fixed horizon: t_{k+1} = t_k + K (constant subgoal duration)
+        - Hand-designed: domain-specific rule (e.g., object grasped)
+        - Learned: a neural network trained end-to-end with the hierarchy
+    tags:
+      - options-framework
+      - hierarchical-rl
+    relations:
+      - options_framework
+      - hierarchical_decision_making
+
+  - name: skill_modularity
+    aliases:
+      - reusable skills
+      - modular policy
+      - skill reuse
+    definition: >
+      The property of a policy π(a|s,z) in which a discrete or continuous skill
+      index z selects a reusable behavioral primitive (e.g., pick, pour, place).
+      Skills can be recombined across tasks, improving transfer and
+      interpretability. For example: "serve drink" = pick + pour + place;
+      "clean table" = pick + place.
+    tags:
+      - hierarchical-rl
+      - task-decomposition
+      - transfer-learning
+    relations:
+      - hierarchical_decision_making
+      - temporal_abstraction
+      - unsupervised_skill_discovery
+
+  - name: goal_conditioned_planning
+    aliases:
+      - subgoal planning
+      - goal-space planning
+      - subgoal generation
+    definition: >
+      Given a learned goal-conditioned low-level policy π_L(a|s,g), the
+      high-level planner finds a sequence of intermediate subgoals
+      g_0, g_1, ..., g_{K-1} bridging s_0 to the final goal g. Each
+      adjacent transition g_k → g_{k+1} must be feasible (executable by
+      the low-level policy). A learned generative feasibility model
+      p(g_{k+1}|g_k, g) can propose reachable subgoals directed toward g.
+    tags:
+      - subgoals
+      - hierarchical-rl
+      - goal-conditioned
+    relations:
+      - hierarchical_decision_making
+      - goal_conditioned_policy
+      - feasibility_model
+
+  - name: goal_conditioned_policy
+    aliases:
+      - goal-conditioned RL
+      - goal-reaching policy
+    definition: >
+      A low-level policy π_L(a|s,g) that takes both the current state s and a
+      goal g as input and outputs actions that attempt to reach g. Serves as
+      the primitive skill in goal-conditioned hierarchical planning.
+    tags:
+      - goal-conditioned
+      - hierarchical-rl
+    relations:
+      - goal_conditioned_planning
+      - hierarchical_decision_making
+
+  - name: feasibility_model
+    aliases:
+      - reachability model
+      - subgoal feasibility
+    definition: >
+      A generative model that scores or samples the next subgoal given the
+      current subgoal (and optionally the final goal). Three variants:
+        1. p(g_{k+1}) = p(s_t): unconditional — no generalization issue but
+           large search space
+        2. p(g_{k+1}|g_k): reachability — reduces search but g_k must be in
+           distribution
+        3. p(g_{k+1}|g_k, g): goal-directed — most focused but requires
+           (g_k, g) to be in distribution
+    tags:
+      - subgoals
+      - hierarchical-rl
+    relations:
+      - goal_conditioned_planning
+      - hierarchical_decision_making
+
+  - name: saycan
+    aliases:
+      - SayCan
+      - do as i can not as i say
+    definition: >
+      Ahn et al., CoRL 2022. A framework for language-conditioned robot planning
+      that selects skills based on two scores:
+        - "Say" (useful): LLM score p(skill | instruction) — relevance to the task
+        - "Can" (feasible): value function score V(skill, s) — physical executability
+      The combined score argmax p_LLM(skill|instr) · V(skill, s) selects the
+      next skill greedily, then the process repeats after execution.
+    tags:
+      - language-grounding
+      - hierarchical-rl
+      - LLM-planning
+    relations:
+      - task_planning_language_space
+      - hierarchical_decision_making
+
+  - name: task_planning_language_space
+    aliases:
+      - language-space planning
+      - LLM task planning
+      - language decomposition
+    definition: >
+      An approach in which natural-language subtask instructions serve as the
+      high-level action space. An LLM (or VLM) proposes a sequence of language
+      instructions; each instruction is mapped to an executable low-level skill.
+      Examples: SayCan (grounded via value functions), PALO (grounded via
+      behavior-cloning loss over few-shot demonstrations).
+    tags:
+      - language-grounding
+      - hierarchical-rl
+      - LLM-planning
+    relations:
+      - saycan
+      - palo
+      - hierarchical_decision_making
+
+  - name: palo
+    aliases:
+      - PALO
+      - temporal representation alignment
+    definition: >
+      Myers & Zheng et al., ICRA 2025. Adapts a pretrained policy to new
+      long-horizon tasks using few demonstrations. A VLM generates candidate
+      language decompositions z_{1:K}; the best decomposition is selected by
+      minimizing behavior-cloning loss:
+        z*_{1:K} = argmin_{z_{1:K}} Σ_t ||â_t - a_t||²
+      where â_t is the policy's predicted action under instruction z and a_t
+      is the demonstration action.
+    tags:
+      - language-grounding
+      - few-shot
+      - hierarchical-rl
+    relations:
+      - task_planning_language_space
+      - hierarchical_decision_making
+
+  - name: symbolic_planning
+    aliases:
+      - task planning
+      - PDDL planning
+      - classical planning
+    definition: >
+      Planning over discrete symbolic states and actions. The world is
+      represented as objects and Boolean predicates; each action schema
+      a = (Pre(a), Eff+(a), Eff-(a)) specifies preconditions, add effects,
+      and delete effects. A symbolic plan is a sequence of grounded actions
+      that transforms the initial symbolic state into the goal state.
+    tags:
+      - symbolic-AI
+      - task-decomposition
+      - TAMP
+    relations:
+      - tamp
+      - grounding_symbolic_actions
+      - hierarchical_decision_making
+
+  - name: tamp
+    aliases:
+      - Task and Motion Planning
+      - TAMP
+    definition: >
+      Task and Motion Planning connects discrete symbolic task choices with
+      continuous motion feasibility. The task planner selects a symbolic action
+      sequence a_1, ..., a_T; the motion planner instantiates continuous
+      parameters θ_1, ..., θ_T (poses, grasps, configurations, trajectories).
+      If a motion plan fails, the task planner backtracks and tries a different
+      symbolic sequence. VLMs can guide TAMP by proposing plan skeletons
+      (Yang et al., ICRA 2025).
+    tags:
+      - TAMP
+      - symbolic-AI
+      - motion-planning
+    relations:
+      - symbolic_planning
+      - grounding_symbolic_actions
+      - hierarchical_decision_making
+
+  - name: grounding_symbolic_actions
+    aliases:
+      - skill grounding
+      - symbolic grounding
+      - perception-action grounding
+    definition: >
+      The process of connecting an abstract symbolic action (e.g., Pick(cup))
+      to a concrete perception-and-control pipeline. For Pick(cup) this
+      involves: detecting the cup, estimating its pose, sampling a grasp,
+      planning a collision-free motion, closing the gripper, and verifying
+      grasp success.
+    tags:
+      - TAMP
+      - symbolic-AI
+      - perception
+    relations:
+      - symbolic_planning
+      - tamp
+
+  - name: hierarchical_reinforcement_learning
+    aliases:
+      - HRL
+      - hierarchical RL
+    definition: >
+      A class of RL algorithms that jointly learn both a high-level policy
+      π_H(z_k|s_{t_k}) and a low-level policy π_L(a_t|s,z_k) from environment
+      reward. The joint objective is J(π_H,π_L) = E[Σ_t γ^t r(s_t,a_t)].
+      The main challenge is credit assignment: as π_L changes, old high-level
+      transitions become off-policy.
+    tags:
+      - hierarchical-rl
+      - reinforcement-learning
+    relations:
+      - hierarchical_decision_making
+      - options_framework
+      - hiro
+
+  - name: hiro
+    aliases:
+      - HIRO
+      - Hindsight Experience Replay for Hierarchical RL
+      - off-policy HRL
+    definition: >
+      Nachum et al. Hierarchical RL with off-policy correction. Addresses the
+      non-stationarity problem: as the low-level policy π_L changes, old
+      (s_t, g, s_{t+1}) transitions stored in the replay buffer become
+      invalid for π_H. HIRO relabels the stored high-level goal g with g̃ —
+      the goal that maximizes the likelihood of the observed low-level
+      trajectory under the *current* π_L — enabling stable off-policy
+      training of π_H.
+    tags:
+      - hierarchical-rl
+      - off-policy
+      - goal-relabeling
+    relations:
+      - hierarchical_reinforcement_learning
+      - hierarchical_decision_making
+
+  - name: unsupervised_skill_discovery
+    aliases:
+      - skill discovery
+      - DIAYN
+      - diversity is all you need
+    definition: >
+      Learning a library of diverse, controllable skills without any task
+      reward, before the downstream task is known. Skills are indexed by a
+      latent variable z ~ p(z); the skill-conditioned policy π(a|s,z) is
+      trained to maximize mutual information I(S;Z) between visited states and
+      skill codes. DIAYN (Eysenbach et al.) implements this via a discriminator
+      q_φ(z|s) with intrinsic reward r_z(s) = log q_φ(z|s) - log p(z).
+      Desired properties: diverse, controllable, persistent, reusable.
+    tags:
+      - skill-discovery
+      - unsupervised-learning
+      - intrinsic-motivation
+      - hierarchical-rl
+    relations:
+      - skill_modularity
+      - hierarchical_decision_making
+      - diayn_objective
+
+  - name: diayn_objective
+    aliases:
+      - DIAYN objective
+      - diversity objective
+      - skill MI objective
+    definition: >
+      The training objective for DIAYN:
+        max I(S; Z) + H(A | S, Z)
+      where:
+        - I(S; Z): mutual information between visited states S and skill code Z
+          — different skills should visit different states
+        - H(A|S,Z): entropy of actions given state and skill — skills should
+          remain diverse in action space
+      Implemented by training a discriminator q_φ(z|s) and using intrinsic
+      reward r_z(s) = log q_φ(z|s) - log p(z).
+    tags:
+      - skill-discovery
+      - mutual-information
+      - intrinsic-motivation
+    relations:
+      - unsupervised_skill_discovery

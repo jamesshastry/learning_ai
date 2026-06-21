@@ -1,0 +1,235 @@
+concepts:
+  - name: Sparse Reward
+    aliases: [binary reward, goal-conditioned reward]
+    definition: >-
+      A reward function that returns a nonzero signal only when the goal is
+      reached: R(s,a,s') = 1[s' = g] or 1[d(s',g) < epsilon] or
+      1[s' in S_success]. Provides no intermediate feedback; all pre-goal
+      trajectories look equally bad. Can add -1 offset to penalize each
+      non-goal step, making V(s) approximate negative discounted distance.
+    tags: [reward, sparse, rl]
+    relations:
+      - target: Dense Reward
+        type: contrasts_with
+        note: Dense reward provides per-step feedback; sparse does not
+      - target: Reward Shaping
+        type: prerequisite_for
+        note: Sparse rewards motivate reward shaping to provide intermediate guidance
+      - target: Potential-Based Reward Shaping
+        type: related_to
+        note: Potential-based shaping can densify a sparse reward safely
+
+  - name: Dense Reward
+    aliases: [shaped reward, distance reward]
+    definition: >-
+      A reward function that provides feedback at every step, typically via a
+      distance function: R(s,a,s') = -d(s',g) or d(s,g)-d(s',g). Example:
+      d(s',g) = ||g-s'||^2. Gives fine-grained learning signal but must be
+      designed carefully to avoid misalignment with the true objective.
+    tags: [reward, dense, rl]
+    relations:
+      - target: Sparse Reward
+        type: contrasts_with
+        note: Dense rewards are informative every step; sparse only at goal
+      - target: Potential-Based Reward Shaping
+        type: related_to
+        note: Distance improvement d(s,g)-d(s',g) is a potential-based shaping function
+
+  - name: Reward Shaping
+    aliases: [auxiliary reward, shaped reward function]
+    definition: >-
+      Augmenting the original reward R with an auxiliary shaping function F
+      to guide learning: R'(s,a,s') = R(s,a,s') + F(s,a,s'). Good shaping
+      makes learning faster without changing the optimal policy. Poor shaping
+      can introduce spurious optima. Practical shaping combines distance
+      rewards, energy penalties, safety penalties, and sub-task bonuses.
+    tags: [reward, shaping, rl, reward-design]
+    relations:
+      - target: Potential-Based Reward Shaping
+        type: related_to
+        note: Potential-based form guarantees optimal policy is preserved
+      - target: Sparse Reward
+        type: related_to
+        note: Shaping is often used to densify sparse rewards
+      - target: Multi-Stage Reward
+        type: related_to
+        note: Multi-stage rewards are a form of reward shaping for sequential tasks
+
+  - name: Potential-Based Reward Shaping
+    aliases: [PBRS, potential function shaping]
+    definition: >-
+      A reward shaping function of the form F(s,a,s') = gamma*Phi(s') - Phi(s),
+      where Phi: S -> R is a potential function. Proven by Ng, Harada, Russell
+      (1999) to be the only form of shaping that does not change the optimal
+      policy pi*. The value function shifts by Phi(s), but arg max_a Q(s,a)
+      is unchanged since Phi(s) is constant w.r.t. action.
+    tags: [reward, shaping, theory, potential-function]
+    relations:
+      - target: Reward Shaping
+        type: part_of
+        note: PBRS is the theoretically safe subclass of reward shaping
+      - target: Sparse Reward
+        type: related_to
+        note: Can be used to densify sparse rewards without changing optimal policy
+      - target: Dense Reward
+        type: related_to
+        note: Distance improvement d(s,g)-d(s',g) = gamma*(-d(s',g)) - (-d(s,g)) is PBRS
+
+  - name: Multi-Stage Reward
+    aliases: [decomposed reward, sequential sub-rewards]
+    definition: >-
+      A reward function for complex tasks decomposed into sequential stages,
+      each with its own sub-reward. Example from Meta-World: total_reward =
+      reachRew + pickRew + placeRew, where each stage activates only after
+      the previous is satisfied. Enables credit assignment in long-horizon tasks.
+    tags: [reward, multi-stage, manipulation, robotics]
+    relations:
+      - target: Reward Shaping
+        type: part_of
+        note: Multi-stage reward is a structured form of reward shaping
+      - target: Sparse Reward
+        type: contrasts_with
+        note: Multi-stage provides intermediate signals unlike purely sparse rewards
+
+  - name: Supervised Reward Learning
+    aliases: [reward model, regression reward]
+    definition: >-
+      Learning a parameterized reward model R_theta(s,a,s') from a labeled
+      dataset D = {(s_i, a_i, s_i', r_i)} using regression loss:
+      theta* = argmin sum||R_theta(s_i, a_i, s_i') - r_i||^2. The model is
+      typically a neural network (CNN for image inputs). Useful when scalar
+      reward labels are available from human annotators or simulators.
+    tags: [reward-learning, supervised-learning, neural-network]
+    relations:
+      - target: Success Classifier Reward
+        type: related_to
+        note: Success classifier is the binary-label variant of supervised reward learning
+      - target: Inverse Reinforcement Learning
+        type: contrasts_with
+        note: IRL infers reward from demonstrations without explicit reward labels
+
+  - name: Success Classifier Reward
+    aliases: [goal classifier, binary reward model]
+    definition: >-
+      Training a classifier R_theta(s,a,s') to predict binary success labels
+      y_i in {0,1}: theta* = argmax sum log R_theta(y_i | s_i'). The learned
+      P(success|s') serves as a dense reward signal during RL training.
+      Useful when labeling success/failure is easier than assigning scalar rewards.
+    tags: [reward-learning, classification, rl]
+    relations:
+      - target: Supervised Reward Learning
+        type: related_to
+        note: Binary-label variant of supervised reward learning
+
+  - name: Inverse Reinforcement Learning
+    aliases: [IRL, reward inference]
+    definition: >-
+      Given expert trajectories {tau_i} sampled from pi*, infer a reward
+      function r_psi(s,a) such that pi* is optimal under that reward. In
+      contrast to forward RL (given reward, find policy), IRL recovers the
+      reward from behavior. Challenges include the trivial R=0 solution,
+      needing pi* to be truly optimal, and computational intractability of
+      enumerating all policies.
+    tags: [irl, reward-learning, imitation-learning]
+    relations:
+      - target: Max Margin IRL
+        type: related_to
+        note: Max margin IRL is one algorithmic approach to IRL
+      - target: Feature Expectation Matching
+        type: prerequisite_for
+        note: Linear IRL reduces to matching feature expectations
+      - target: Supervised Reward Learning
+        type: contrasts_with
+        note: Supervised learning needs explicit reward labels; IRL only needs demonstrations
+      - target: Linear Reward Function IRL
+        type: part_of
+        note: Linear parameterization makes IRL tractable
+
+  - name: Linear Reward Function IRL
+    aliases: [linear IRL, apprenticeship learning reward]
+    definition: >-
+      Parameterizing the reward as R_w(s) = w^T phi(s), where phi: S -> R^d
+      is a fixed feature extractor and w is learned. Expected cumulative reward
+      becomes w^T mu(pi), where mu(pi) is the feature expectation under pi.
+      IRL reduces to finding w such that w^T mu(pi*) >= w^T mu(pi) for all pi.
+    tags: [irl, linear-model, feature-expectation]
+    relations:
+      - target: Inverse Reinforcement Learning
+        type: part_of
+        note: Linear parameterization is the standard starting point for IRL
+      - target: Feature Expectation Matching
+        type: enables
+        note: Linear reward reduces IRL to matching feature expectations
+      - target: Max Margin IRL
+        type: prerequisite_for
+        note: Max margin IRL is formulated in terms of linear reward and feature expectations
+
+  - name: Feature Expectation Matching
+    aliases: [feature matching, mu(pi)]
+    definition: >-
+      The expected cumulative sum of features under a policy: mu(pi) =
+      E_{tau~p_pi}[sum_t phi(s_t)]. Under linear reward R_w(s) = w^T phi(s),
+      the expected return equals w^T mu(pi). IRL with linear reward reduces to
+      finding w such that mu(pi*) has higher dot product with w than mu(pi) for all pi.
+    tags: [irl, linear-model, feature-expectation]
+    relations:
+      - target: Linear Reward Function IRL
+        type: part_of
+        note: Feature expectations are the sufficient statistics for linear IRL
+      - target: Max Margin IRL
+        type: prerequisite_for
+        note: Max margin IRL maximizes margin between w^T mu(pi*) and w^T mu(pi)
+
+  - name: Max Margin IRL
+    aliases: [structured max margin IRL, SVM IRL]
+    definition: >-
+      An IRL formulation that finds w with minimum norm satisfying
+      w^T mu(pi*) > w^T mu(pi) + m(pi*, pi) for all pi, where m(pi*, pi)
+      is a policy-specific margin. Standard form uses margin=1; structured
+      prediction form uses m(pi*,pi) = number of states where pi* and pi
+      disagree. Analogous to SVM in classification.
+    tags: [irl, max-margin, optimization]
+    relations:
+      - target: Inverse Reinforcement Learning
+        type: part_of
+        note: Max margin is one principled IRL algorithm
+      - target: Feature Expectation Matching
+        type: prerequisite_for
+        note: Formulated in terms of feature expectations mu(pi)
+
+  - name: Keypoint-Based Reward
+    aliases: [keypoint reward, geometric reward]
+    definition: >-
+      A reward function defined as distances or relations between semantic
+      keypoints on objects and the robot. KETO (Qin et al., ICRA 2018) uses
+      environment, effect, function, and grasp points; reward = distance
+      between keypoints in desired configuration. ReKep (Huang et al. 2024)
+      uses spatio-temporal relational keypoint constraints for manipulation.
+    tags: [reward-learning, keypoints, manipulation, robotics]
+    relations:
+      - target: Supervised Reward Learning
+        type: related_to
+        note: Keypoint generator trained via self-supervised learning from interactions
+      - target: Language-Conditioned Reward
+        type: related_to
+        note: Both are learned reward representations replacing hand-coded functions
+
+  - name: Language-Conditioned Reward
+    aliases: [CLIP reward, VLM reward, MineCLIP]
+    definition: >-
+      A reward function defined as the dot product between visual and text
+      feature embeddings: R = phi_V(image)^T phi_G(text). Used in MINEDOJO/
+      MineCLIP (Fan et al., NeurIPS 2022): a CLIP-style model fine-tuned on
+      Minecraft gameplay with subtitles achieves 0.95 correlation with human
+      reward judgments. Enables open-vocabulary reward specification.
+    tags: [reward-learning, language, clip, vlm, multimodal]
+    relations:
+      - target: Supervised Reward Learning
+        type: related_to
+        note: VLM reward is a form of learned reward using multimodal pretraining
+      - target: Keypoint-Based Reward
+        type: related_to
+        note: Both replace manually designed rewards with learned representations
+      - target: Inverse Reinforcement Learning
+        type: contrasts_with
+        note: Language reward uses pretrained VLM rather than expert demonstrations

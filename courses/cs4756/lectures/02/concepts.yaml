@@ -1,0 +1,520 @@
+concepts:
+  - name: Rigid Body
+    aliases: ["rigid-body motion"]
+    definition: >-
+      A physical body that does not deform during motion. Robot links and most
+      robot structures are modeled as rigid bodies. The motion of a rigid body
+      in 2D is described by the Special Euclidean group SE(2) (position x, y
+      and angle θ); in 3D by SE(3) (position x, y, z and orientation described
+      by roll, pitch, yaw).
+    tags: [mechanics, kinematics, SE2, SE3]
+    relations:
+      - target: Articulated Rigid Body
+        type: part_of
+        note: Multiple rigid bodies connected by joints form an articulated rigid body
+      - target: Special Euclidean Group
+        type: related_to
+        note: SE(2) and SE(3) are the mathematical groups describing rigid-body motion
+
+  - name: Special Euclidean Group
+    aliases: ["SE(2)", "SE(3)", "special Euclidean group"]
+    definition: >-
+      The mathematical group describing rigid-body motion. SE(2) covers 2D
+      motion (x, y, θ) and SE(3) covers 3D motion (x, y, z plus roll, pitch,
+      yaw). Each element of SE(n) is a combination of a rotation (from SO(n))
+      and a translation (from R^n). A wheeled robot on a plane lives in SE(2);
+      a UAV in free space lives in SE(3).
+    tags: [mathematics, group-theory, kinematics]
+    relations:
+      - target: Rigid Body
+        type: related_to
+        note: SE groups are the natural state spaces for rigid-body motion
+      - target: Degrees of Freedom
+        type: related_to
+        note: SE(2) imposes 3 DoF; SE(3) imposes 6 DoF
+
+  - name: Actuator
+    aliases: ["motor", "actuators"]
+    definition: >-
+      A device that supplies motive power to a robot, providing force and
+      torque to drive motion. Common types: stepper motors (discrete steps,
+      open-loop), servomotors (continuous, closed-loop feedback), and hydraulic
+      motors (high force via pressurized fluid). Stepper and servomotors are
+      electromagnetic actuators.
+    tags: [hardware, motors, control]
+    relations:
+      - target: Articulated Rigid Body
+        type: enables
+        note: Actuators drive relative motion at the joints between links
+      - target: Control
+        type: related_to
+        note: The control module outputs commands that drive the actuators
+
+  - name: Articulated Rigid Body
+    aliases: ["articulated body", "kinematic chain"]
+    definition: >-
+      A mechanical structure consisting of multiple rigid body links connected
+      by joints, actuated by motors. Defined by three components: Links
+      (individual rigid segments), Joints (connections between links that allow
+      relative motion), and End Effectors (devices attached to the terminal
+      link to interact with the environment).
+    tags: [mechanics, robot-structure, kinematics]
+    relations:
+      - target: Link
+        type: part_of
+        note: An articulated rigid body is composed of links
+      - target: Joint
+        type: part_of
+        note: Joints connect links and define allowed relative motion
+      - target: End Effector
+        type: part_of
+        note: The end effector is attached to the last link and acts on the environment
+      - target: Degrees of Freedom
+        type: related_to
+        note: Total robot DoF is computed from the link/joint structure via Grübler's formula
+
+  - name: Link
+    aliases: []
+    definition: >-
+      A single rigid body segment in an articulated robot. Links are the
+      structural members; joints connect them. In a robot arm, link 0 is
+      typically the base and the last link carries the end effector.
+    tags: [robot-structure, mechanics]
+    relations:
+      - target: Articulated Rigid Body
+        type: part_of
+        note: Links are the basic building blocks of an articulated robot
+      - target: Joint
+        type: related_to
+        note: Each joint connects two adjacent links
+
+  - name: Joint
+    aliases: ["robot joint"]
+    definition: >-
+      The connection between two links in a robot. A joint simultaneously
+      provides freedoms (the motions it allows) and constraints (the motions
+      it forbids). Common joint types: Revolute (R, 1 DoF, pure rotation),
+      Prismatic (P, 1 DoF, linear sliding), Helical (H, 1 DoF, screw),
+      Cylindrical (C, 2 DoF), Universal (U, 2 DoF), Spherical (S, 3 DoF).
+    tags: [robot-structure, mechanics, degrees-of-freedom]
+    relations:
+      - target: Degrees of Freedom
+        type: enables
+        note: Each joint type contributes a specific number of DoFs and constraints
+      - target: Grübler's Formula
+        type: related_to
+        note: Joint constraints c_i appear directly in Grübler's formula
+      - target: Link
+        type: related_to
+        note: Joints connect adjacent links
+
+  - name: End Effector
+    aliases: ["end-effector", "gripper", "tool"]
+    definition: >-
+      A device attached to a specific link of a robot (typically the last
+      link/tip of an arm) that interacts with the environment to perform the
+      task. Common types: parallel jaw gripper (binary open/close), suction
+      cup (vacuum-based pick-and-place), and dexterous hand (multi-finger
+      for complex grasps and in-hand manipulation).
+    tags: [robot-structure, manipulation]
+    relations:
+      - target: Articulated Rigid Body
+        type: part_of
+        note: The end effector is attached to the terminal link of the arm
+      - target: Workspace
+        type: related_to
+        note: The workspace is defined as the set of poses the end effector can reach
+      - target: Task Space
+        type: related_to
+        note: Task space is often expressed in terms of end-effector pose
+
+  - name: Degrees of Freedom
+    aliases: ["DoF", "DOF", "degrees of freedom"]
+    definition: >-
+      The number of independent parameters required to fully specify the
+      configuration of a mechanical system. A 2D point has 2 DoF (x, y);
+      a 2D line segment has 3 DoF (x, y, θ); a 3D rigid body has 6 DoF
+      (3 translational + 3 rotational). For a robot, total DoF equals the
+      sum of all joint DoFs (accounting for Grübler's constraints).
+    tags: [mechanics, kinematics, configuration-space]
+    relations:
+      - target: Grübler's Formula
+        type: related_to
+        note: Grübler's formula computes total system DoF from rigid body count and joint constraints
+      - target: Configuration Space
+        type: enables
+        note: The dimension of C-Space equals the system's DoF
+      - target: Joint
+        type: related_to
+        note: Each joint type contributes a fixed number of DoFs
+
+  - name: Grübler's Formula
+    aliases: ["Grubler's formula", "mobility formula"]
+    definition: >-
+      A formula for computing the total degrees of freedom of a mechanism:
+      dof = m(N-1) - sum_{i=1}^{J} c_i, where m is the dimension of the
+      ambient space (3 for planar, 6 for spatial), N is the total number
+      of rigid bodies (including the ground/base), J is the number of joints,
+      and c_i is the number of constraints imposed by joint i. The formula
+      counts rigid-body freedoms then subtracts joint constraints.
+    tags: [mechanics, kinematics, degrees-of-freedom]
+    relations:
+      - target: Degrees of Freedom
+        type: enables
+        note: Grübler's formula is the standard method to compute system DoF
+      - target: Joint
+        type: prerequisite_for
+        note: Joint constraint values c_i are inputs to the formula
+
+  - name: Configuration Space
+    aliases: ["C-Space", "configuration space", "joint space"]
+    definition: >-
+      The space of all possible configurations of a robot or mechanical system.
+      Each point in C-Space represents one complete configuration. Its
+      dimensionality equals the system's DoF and its topology depends on the
+      joint types (e.g., a revolute joint contributes S^1; a prismatic joint
+      contributes R^1). A 2R planar arm has C-Space T^2 = S^1 x S^1.
+    tags: [kinematics, planning, topology]
+    relations:
+      - target: Degrees of Freedom
+        type: related_to
+        note: The dimension of C-Space equals the number of DoF
+      - target: Workspace
+        type: contrasts_with
+        note: C-Space is defined over joint parameters; workspace is defined over end-effector Cartesian positions
+      - target: Task Space
+        type: contrasts_with
+        note: C-Space is robot-centric; task space is task-centric
+      - target: Forward Kinematics
+        type: related_to
+        note: FK maps a point in C-Space to a point in task/Cartesian space
+
+  - name: Workspace
+    aliases: ["reachable workspace", "dexterous workspace"]
+    definition: >-
+      The set of all end-effector poses (positions and orientations) that a
+      robot can physically reach, determined entirely by the robot's mechanical
+      structure (link lengths, joint types, joint limits). It is independent
+      of the task. Often visualized as a volume in 3D space.
+    tags: [kinematics, robot-structure]
+    relations:
+      - target: Configuration Space
+        type: contrasts_with
+        note: Workspace is in Cartesian/task space; C-Space is in joint parameter space
+      - target: Task Space
+        type: contrasts_with
+        note: Workspace is robot-determined; task space is task-determined
+      - target: End Effector
+        type: related_to
+        note: The workspace is defined as the reachable set of end-effector poses
+
+  - name: Task Space
+    aliases: ["operational space", "Cartesian space"]
+    definition: >-
+      The space in which the robot's task is most naturally expressed. Defined
+      by the task requirements, independent of the robot structure. For
+      whiteboard writing, task space is the 2D whiteboard surface (R^2).
+      For floor cleaning, task space is the (x, y) position of the robot base.
+    tags: [kinematics, planning, task-description]
+    relations:
+      - target: Workspace
+        type: contrasts_with
+        note: Task space is task-determined; workspace is robot-determined
+      - target: Inverse Kinematics
+        type: related_to
+        note: IK converts a desired task-space pose into joint-space configuration
+      - target: Configuration Space
+        type: contrasts_with
+        note: Task space is expressed in Cartesian terms; C-Space is in joint parameters
+
+  - name: Forward Kinematics
+    aliases: ["FK", "forward kinematics"]
+    definition: >-
+      The mapping from joint-space configuration to end-effector pose in
+      Cartesian/task space. Given link lengths and joint angles, compute the
+      resulting end-effector position and orientation. For a 2-link planar arm:
+      x = l1*cos(t1) + l2*cos(t1+t2), y = l1*sin(t1) + l2*sin(t1+t2),
+      t_f = t1 + t2. FK always has a unique solution.
+    tags: [kinematics, computation]
+    relations:
+      - target: Inverse Kinematics
+        type: contrasts_with
+        note: FK goes joint→task (unique); IK goes task→joint (possibly non-unique or unsolvable)
+      - target: Configuration Space
+        type: related_to
+        note: FK maps from C-Space (joint angles) to task space
+      - target: Task Space
+        type: enables
+        note: FK produces the end-effector pose in task/Cartesian space
+
+  - name: Inverse Kinematics
+    aliases: ["IK", "inverse kinematics"]
+    definition: >-
+      The mapping from a desired end-effector pose in task/Cartesian space
+      back to joint-space configurations. Given desired (x, y, t_f) and link
+      lengths, find joint angles (t1, t2). IK may have zero, one, or multiple
+      solutions (e.g., elbow-up vs. elbow-down). For high-DoF robots, closed-
+      form solutions may not exist and numerical/optimization methods are used.
+    tags: [kinematics, computation, optimization]
+    relations:
+      - target: Forward Kinematics
+        type: contrasts_with
+        note: IK is the inverse of FK; it is generally harder and may be non-unique
+      - target: Task Space
+        type: related_to
+        note: IK takes desired task-space pose as input
+      - target: Configuration Space
+        type: enables
+        note: IK outputs a joint-space configuration that achieves the desired task pose
+
+  - name: Perception-Action Loop
+    aliases: ["sense-act loop", "perception-action cycle"]
+    definition: >-
+      The fundamental closed loop in autonomous robotics: the robot continuously
+      perceives its environment through sensors, processes that information,
+      and acts through actuators, whose actions change the environment, which
+      is then re-perceived. Closing this loop robustly is the central challenge
+      of autonomous robotics.
+    tags: [autonomy, control, sensing]
+    relations:
+      - target: State Estimation
+        type: related_to
+        note: State estimation is the perception component of the loop
+      - target: Control
+        type: related_to
+        note: Control is the action component of the loop
+      - target: Staged Robotic Pipeline
+        type: related_to
+        note: The staged pipeline implements the perception-action loop in four modules
+
+  - name: Staged Robotic Pipeline
+    aliases: ["classical robotic pipeline", "modular robotic system"]
+    definition: >-
+      The classical decomposition of an autonomous robotic system into four
+      sequential modules: (1) State Estimation — extract robot/environment
+      state from noisy sensor readings; (2) Modeling & Prediction — build
+      models and forecast future states; (3) Planning — determine action
+      sequences to achieve the goal; (4) Control — compute motor commands
+      to execute the plan. Each module has well-defined interfaces.
+    tags: [architecture, autonomy, pipeline]
+    relations:
+      - target: State Estimation
+        type: part_of
+        note: First stage of the pipeline; bridges sensors to downstream modules
+      - target: Modeling and Prediction
+        type: part_of
+        note: Second stage; models robot and environment properties
+      - target: Planning
+        type: part_of
+        note: Third stage; determines goal-achieving behavior sequences
+      - target: Control
+        type: part_of
+        note: Fourth stage; translates planned behaviors into motor commands
+      - target: End-to-End Robot Learning
+        type: contrasts_with
+        note: Robot learning progressively replaces staged modules with learned components
+
+  - name: State Estimation
+    aliases: ["perception", "state estimation module"]
+    definition: >-
+      The first module in the staged robotic pipeline. Extracts the robot's
+      and environment's state (position, orientation, velocity, object poses,
+      etc.) from raw, noisy sensor inputs. Techniques include object detection,
+      segmentation, pose estimation, and 3D reconstruction. Key challenges:
+      high dimensionality, high diversity of scenes, sensor noise, and
+      multi-modal sensor fusion.
+    tags: [perception, sensing, pipeline]
+    relations:
+      - target: Staged Robotic Pipeline
+        type: part_of
+        note: State estimation is the first stage of the classical pipeline
+      - target: Modeling and Prediction
+        type: enables
+        note: State estimates are passed to modeling and prediction
+      - target: Perception-Action Loop
+        type: related_to
+        note: State estimation is the perception half of the loop
+
+  - name: Modeling and Prediction
+    aliases: ["model-based prediction", "world modeling"]
+    definition: >-
+      The second module in the staged robotic pipeline. Builds models of the
+      robot's dynamics and the environment, and forecasts future states. Must
+      handle high DoFs (e.g., dexterous hands), complex environments, and
+      human behavior prediction. Examples: predicting vehicle trajectories
+      at intersections, modeling object contact physics.
+    tags: [modeling, prediction, pipeline]
+    relations:
+      - target: Staged Robotic Pipeline
+        type: part_of
+        note: Second stage of the classical pipeline
+      - target: State Estimation
+        type: related_to
+        note: Receives state estimates as input
+      - target: Planning
+        type: enables
+        note: Models and predictions feed the planning stage
+
+  - name: Planning
+    aliases: ["motion planning", "task planning", "robot planning"]
+    definition: >-
+      The third module in the staged robotic pipeline. Determines the sequence
+      of behaviors or actions that achieve the goal while satisfying all
+      constraints (joint limits, collision avoidance, task objectives).
+      Approaches include sampling-based planners (RRT, PRM) and
+      optimization-based methods. Output is a trajectory or action sequence.
+    tags: [planning, motion-planning, pipeline]
+    relations:
+      - target: Staged Robotic Pipeline
+        type: part_of
+        note: Third stage; outputs action sequences for the control module
+      - target: Modeling and Prediction
+        type: related_to
+        note: Uses models of robot and environment to plan feasible paths
+      - target: Control
+        type: enables
+        note: The plan is executed by the control module
+
+  - name: Control
+    aliases: ["robot control", "motor control", "feedback control"]
+    definition: >-
+      The fourth module in the staged robotic pipeline. Computes motor commands
+      (forces and torques) to execute the desired behaviors output by the
+      planner. Operates in a closed loop with feedback. Control objectives
+      include: motion control (trajectory tracking), force control, hybrid
+      motion-force control, and impedance control (regulating the
+      force-displacement relationship).
+    tags: [control, feedback, pipeline]
+    relations:
+      - target: Staged Robotic Pipeline
+        type: part_of
+        note: Last stage; directly drives the actuators
+      - target: Planning
+        type: related_to
+        note: Executes the plan produced by the planning stage
+      - target: Actuator
+        type: enables
+        note: Control outputs commands that drive the actuators
+      - target: Perception-Action Loop
+        type: related_to
+        note: Control is the action half of the perception-action loop
+
+  - name: End-to-End Robot Learning
+    aliases: ["end-to-end learning", "learned policy", "sensorimotor policy"]
+    definition: >-
+      An approach that replaces some or all of the staged robotic pipeline
+      modules with a single neural network trained directly from sensor inputs
+      to motor commands (actuator outputs). Motivated by the success of
+      end-to-end deep learning in computer vision and NLP. Current robot
+      learning has progressed progressively: first replacing state estimation,
+      then planning/control, with the long-term goal of fully end-to-end systems.
+    tags: [robot-learning, deep-learning, policy]
+    relations:
+      - target: Staged Robotic Pipeline
+        type: contrasts_with
+        note: End-to-end learning replaces the hand-engineered staged pipeline
+      - target: Diffusion Policy
+        type: related_to
+        note: Diffusion Policy is a recent end-to-end learned control architecture
+      - target: Transformer Policy
+        type: related_to
+        note: Transformer-based policies are a recent large-capacity end-to-end approach
+
+  - name: Diffusion Policy
+    aliases: ["diffusion-based policy"]
+    definition: >-
+      A robot learning approach (Chi et al. 2023) that uses diffusion models —
+      originally developed for image generation — to represent robot action
+      distributions. Diffusion models can capture multimodal action
+      distributions (multiple valid actions for a given state), making them
+      well-suited for complex manipulation tasks.
+    tags: [robot-learning, deep-learning, generative-models, policy]
+    relations:
+      - target: End-to-End Robot Learning
+        type: related_to
+        note: Diffusion Policy is a specific end-to-end policy architecture
+      - target: Transformer Policy
+        type: related_to
+        note: Both are large-capacity neural policy architectures for manipulation
+
+  - name: Transformer Policy
+    aliases: ["transformer-based policy"]
+    definition: >-
+      A robot control policy that uses a transformer neural network architecture
+      (originally from NLP) to model long-range dependencies in observation
+      sequences and produce robot actions. PI's 2024 system demonstrated
+      generalist manipulation capabilities using transformer-based policies.
+    tags: [robot-learning, deep-learning, transformers, policy]
+    relations:
+      - target: End-to-End Robot Learning
+        type: related_to
+        note: Transformer policies are a class of end-to-end learned controllers
+      - target: Diffusion Policy
+        type: related_to
+        note: Both are high-capacity neural policy architectures for robot learning
+
+  - name: Simulation for Robot Learning
+    aliases: ["sim-to-real", "physics simulation", "robot simulation"]
+    definition: >-
+      The use of physics simulators (e.g., Nvidia Isaac Sim, Meta Habitat) as
+      data sources for training robot learning systems. Benefits: fast
+      prototyping, easy to scale up data collection, access to privileged
+      information (perfect state), and reproducibility. The key challenge is
+      the sim-to-real gap — trained policies may fail when transferred to
+      real hardware due to simulation inaccuracies.
+    tags: [robot-learning, simulation, data-collection]
+    relations:
+      - target: End-to-End Robot Learning
+        type: enables
+        note: Simulation provides scalable training data for learned policies
+      - target: Domain Randomization
+        type: related_to
+        note: Domain randomization is a technique to bridge the sim-to-real gap
+
+  - name: Domain Randomization
+    aliases: ["randomization", "parameter randomization"]
+    definition: >-
+      A training technique that randomly varies simulation parameters
+      (appearance, lighting, physics properties, object shapes) during
+      training so that the real world appears as just another variation.
+      Used by OpenAI's Rubik's Cube project (2018) to train a vision-based
+      state estimator and control policy that transferred to a real Shadow Hand.
+    tags: [robot-learning, simulation, generalization]
+    relations:
+      - target: Simulation for Robot Learning
+        type: related_to
+        note: Domain randomization is applied within simulation to improve sim-to-real transfer
+
+  - name: Teleoperation
+    aliases: ["teleop", "human demonstration", "kinesthetic teaching"]
+    definition: >-
+      Remote human control of a robot to collect expert demonstration data.
+      Convenient teleoperation interfaces (e.g., Mobile ALOHA, Shadow Hand +
+      Glove) boost the quantity and quality of training data for robot learning.
+      This data is used for imitation learning and behavior cloning.
+    tags: [robot-learning, data-collection, demonstrations]
+    relations:
+      - target: End-to-End Robot Learning
+        type: enables
+        note: Teleoperated demonstrations provide training data for learned policies
+      - target: Simulation for Robot Learning
+        type: contrasts_with
+        note: Teleoperation provides real-world data; simulation provides synthetic data
+
+  - name: Foundation Models for Robotics
+    aliases: ["LLM for robotics", "VLM for robotics", "Code-as-Policies"]
+    definition: >-
+      The use of large pretrained language models (LLMs) and vision-language
+      models (VLMs) to inject broad world knowledge into robot systems.
+      Approaches include: Code-as-Policies (Huang et al. 2022), where an LLM
+      generates robot policy code using perception and control APIs; and MOKA
+      (Fang & Liu et al. 2024), where VLMs plan multi-step manipulation from
+      language instructions.
+    tags: [robot-learning, foundation-models, LLM, VLM]
+    relations:
+      - target: End-to-End Robot Learning
+        type: related_to
+        note: Foundation models provide a complementary source of knowledge beyond sensor data
+      - target: Planning
+        type: enables
+        note: LLMs/VLMs can serve as high-level planners that interface with classical control

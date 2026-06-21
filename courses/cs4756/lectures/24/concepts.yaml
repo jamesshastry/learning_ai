@@ -1,0 +1,288 @@
+concepts:
+
+  - name: generative_model
+    aliases:
+      - deep generative model
+      - latent variable model
+    definition: >
+      A model that learns a probability distribution p(x) over high-dimensional data
+      and can draw novel samples from it. Operates by introducing a latent variable z
+      sampled from a simple prior, then decoding z into data x via a learned neural
+      network x = g_theta(z). Contrasts with discriminative models that learn p(y|x).
+    tags: [generative-models, unsupervised-learning, latent-variable]
+    relations:
+      - type: subtypes
+        targets: [VAE, GAN, diffusion_model, normalizing_flow]
+      - type: used_as
+        targets: [stochastic_policy, dynamics_model]
+
+  - name: latent_variable
+    aliases:
+      - latent code
+      - latent z
+    definition: >
+      A compact hidden variable z in a generative model that captures the salient
+      factors of variation in the data. Sampled from a simple prior p(z) (typically
+      N(0,I)), then decoded to produce a data sample x. Acts as an index into the
+      learned data manifold.
+    tags: [generative-models, representation-learning]
+    relations:
+      - type: used_in
+        targets: [VAE, GAN, autoencoder]
+
+  - name: autoencoder
+    aliases:
+      - AE
+    definition: >
+      A neural network that compresses input x to a latent code z = f_phi(x) via an
+      encoder, then reconstructs it as x_hat = g_theta(z). Trained with reconstruction
+      loss L = ||x - x_hat||^2. Does not impose structure on the latent space, making
+      sampling from arbitrary z unreliable.
+    tags: [generative-models, representation-learning, reconstruction]
+    relations:
+      - type: precursor_to
+        targets: [denoising_autoencoder, VAE]
+
+  - name: denoising_autoencoder
+    aliases:
+      - DAE
+    definition: >
+      An autoencoder trained to reconstruct a clean sample x from a corrupted input
+      x_tilde ~ q(x_tilde | x). Forces the model to learn the structure of the data
+      manifold, producing more robust representations. Conceptually motivates the
+      diffusion model's forward/reverse process.
+    tags: [generative-models, representation-learning, denoising]
+    relations:
+      - type: inspires
+        targets: [diffusion_model]
+      - type: variant_of
+        targets: [autoencoder]
+
+  - name: VAE
+    aliases:
+      - Variational Autoencoder
+      - variational autoencoder
+    definition: >
+      A generative model that learns an approximate posterior q_phi(z|x) (encoder)
+      alongside a decoder p_theta(x|z). Trained by maximizing the ELBO:
+        log p_theta(x) >= E_{q_phi(z|x)}[log p_theta(x|z)] - D_KL(q_phi(z|x) || p(z))
+      The KL term regularizes the posterior toward the prior N(0,I), ensuring that
+      sampling z ~ p(z) at test time produces realistic x. Uses the reparameterization
+      trick z = mu_theta(x) + sigma_theta(x) * epsilon, epsilon ~ N(0,I) for gradients.
+      Strengths: principled, diverse. Weaknesses: blurry samples due to MSE reconstruction.
+    tags: [generative-models, VAE, ELBO, KL-divergence]
+    relations:
+      - type: variant_of
+        targets: [autoencoder]
+      - type: compared_to
+        targets: [GAN, diffusion_model]
+
+  - name: ELBO
+    aliases:
+      - Evidence Lower Bound
+      - evidence lower bound
+      - variational lower bound
+    definition: >
+      A tractable lower bound on the log-likelihood log p_theta(x) used to train VAEs:
+        ELBO = E_{q_phi(z|x)}[log p_theta(x|z)] - D_KL(q_phi(z|x) || p(z))
+      Consists of a reconstruction term (can decode x well from z) and a KL
+      regularization term (posterior stays close to the prior). Maximizing the ELBO
+      is equivalent to minimizing an upper bound on the true negative log-likelihood.
+    tags: [VAE, variational-inference, ELBO]
+    relations:
+      - type: used_in
+        targets: [VAE]
+
+  - name: reparameterization_trick
+    aliases:
+      - reparameterization
+      - path-wise gradient estimator
+    definition: >
+      A technique that makes sampling differentiable in VAEs by writing z as a
+      deterministic function of the parameters and an independent noise variable:
+        z = mu_theta(x) + sigma_theta(x) * epsilon,  epsilon ~ N(0,I)
+      Gradients flow through mu and sigma; randomness is isolated in epsilon which
+      has no parameters. Enables backpropagation through the stochastic sampling step.
+    tags: [VAE, gradient-estimation, differentiable-sampling]
+    relations:
+      - type: used_in
+        targets: [VAE]
+
+  - name: GAN
+    aliases:
+      - Generative Adversarial Network
+      - generative adversarial network
+    definition: >
+      A generative model with two competing networks: a generator G_theta(z) that maps
+      noise z ~ N(0,I) to fake samples, and a discriminator D_phi(x) that predicts real
+      vs. fake. Trained via minimax:
+        min_theta max_phi E_{x~p(x)}[log D_phi(x)] + E_{z~p(z)}[log(1 - D_phi(G_theta(z)))]
+      Strengths: sharp, high-quality samples. Weaknesses: training instability, mode collapse.
+    tags: [generative-models, GAN, adversarial-training]
+    relations:
+      - type: compared_to
+        targets: [VAE, diffusion_model]
+
+  - name: diffusion_model
+    aliases:
+      - DDPM
+      - denoising diffusion probabilistic model
+      - score-based generative model
+    definition: >
+      A generative model that learns to reverse a gradual noising process. The forward
+      process adds Gaussian noise over K steps: q(x_k|x_{k-1}) = N(sqrt(1-beta_k)*x_{k-1}, beta_k*I).
+      A closed-form marginal allows direct sampling at any noise level:
+        x_k = sqrt(alpha_bar_k)*x_0 + sqrt(1 - alpha_bar_k)*epsilon, epsilon ~ N(0,I)
+      where alpha_k = 1 - beta_k, alpha_bar_k = prod_{s=1}^k alpha_s.
+      The reverse process p_theta(x_{k-1}|x_k) is learned by training a noise predictor
+      epsilon_theta(x_k, k) with MSE loss: L = E[||epsilon - epsilon_theta(x_k, k)||^2].
+      Strengths: stable training, diverse high-quality samples. Weakness: slow sampling.
+    tags: [generative-models, diffusion, denoising, DDPM]
+    relations:
+      - type: compared_to
+        targets: [VAE, GAN]
+      - type: applied_as
+        targets: [diffusion_policy]
+
+  - name: forward_process
+    aliases:
+      - noising process
+      - diffusion forward process
+    definition: >
+      In a diffusion model, the fixed (non-learned) Markov chain that progressively
+      adds Gaussian noise to data over K steps: q(x_k|x_{k-1}) = N(sqrt(1-beta_k)*x_{k-1}, beta_k*I).
+      Starts at clean data x_0 ~ p(x_0) and ends at approximately isotropic Gaussian
+      noise x_K ~ N(0,I). Has a closed-form marginal for any intermediate step.
+    tags: [diffusion, forward-process]
+    relations:
+      - type: part_of
+        targets: [diffusion_model]
+      - type: reversed_by
+        targets: [reverse_process]
+
+  - name: reverse_process
+    aliases:
+      - denoising process
+      - diffusion reverse process
+    definition: >
+      In a diffusion model, the learned Markov chain p_theta(x_{k-1}|x_k) that
+      iteratively removes noise starting from x_K ~ N(0,I) to recover x_0 ~ p(x_0).
+      Implemented by a neural network that predicts the noise epsilon_theta(x_k, k);
+      the reverse mean is mu_theta(x_k, k) = (1/sqrt(alpha_t)) * (x_k - (1-alpha_k)/sqrt(1-alpha_bar_k) * epsilon_theta(x_k, k)).
+    tags: [diffusion, reverse-process, denoising]
+    relations:
+      - type: part_of
+        targets: [diffusion_model]
+      - type: reverses
+        targets: [forward_process]
+
+  - name: conditional_generation
+    aliases:
+      - conditional generative model
+      - class-conditional generation
+    definition: >
+      Extending any generative model to sample data conditioned on a context signal c:
+        x ~ p_theta(x | c)
+      The context c can be a text prompt, image, pose, segmentation map, depth map, etc.
+      In robotics, conditioning on observations o yields a policy; conditioning on
+      (s_t, a_t) yields a dynamics model.
+    tags: [generative-models, conditional-generation, context-conditioning]
+    relations:
+      - type: enables
+        targets: [stochastic_policy, dynamics_model, diffusion_policy]
+
+  - name: stochastic_policy
+    aliases:
+      - generative policy
+      - distributional policy
+    definition: >
+      A policy modeled as a conditional generative model over actions:
+        a ~ pi_theta(a | o)
+      Input is an observation o (plus optional task specification c); output is a
+      sampled action a. Captures multimodal action distributions and supports stochastic
+      exploration. Contrasts with deterministic policies that output a single mean action.
+    tags: [robot-learning, policy, generative-models, multimodal]
+    relations:
+      - type: instantiated_by
+        targets: [diffusion_policy, VAE, GAN]
+      - type: solves
+        targets: [multimodal_action_distribution]
+
+  - name: multimodal_action_distribution
+    aliases:
+      - multimodal actions
+      - action multimodality
+    definition: >
+      The phenomenon where a single robot observation corresponds to multiple valid
+      expert actions (e.g., go left or right around an obstacle). MSE behavior cloning
+      (min_theta E[||a - pi_theta(o)||^2]) averages across modes, producing physically
+      invalid mean actions. Generative policies model the full distribution and avoid
+      this mode-averaging problem.
+    tags: [robot-learning, behavior-cloning, multimodal, imitation-learning]
+    relations:
+      - type: motivates
+        targets: [stochastic_policy, diffusion_policy]
+
+  - name: diffusion_policy
+    aliases:
+      - Diffusion Policy
+    definition: >
+      A visuomotor robot policy (Chi et al. 2023) that applies diffusion model
+      denoising to generate action sequences conditioned on observation history.
+      At inference, iteratively denoises a random action sequence:
+        a_H^(K) -> a_H^(K-1) -> ... -> a_H^(0)
+      Key design choices: (1) observation history o_{t-H_o+1:t} for partial observability
+      and implicit velocity; (2) action chunking a_{t:t+H_a-1} for temporal correlation.
+      Training loss: L = E_{a,epsilon,k,o}[||epsilon - epsilon_theta(o, a^(k), k)||^2].
+    tags: [robot-learning, diffusion, imitation-learning, behavior-cloning, action-generation]
+    relations:
+      - type: applies
+        targets: [diffusion_model]
+      - type: uses
+        targets: [action_chunking, observation_history]
+      - type: solves
+        targets: [multimodal_action_distribution]
+
+  - name: action_chunking
+    aliases:
+      - temporal action abstraction
+      - action sequence prediction
+    definition: >
+      Predicting a sequence (chunk) of future actions at once rather than one action
+      at a time: a_{t:t+H_a-1} = (a_t, ..., a_{t+H_a-1}). Used in Diffusion Policy.
+      Benefits: (1) robot motion is temporally correlated, so chunks are more coherent;
+      (2) reduces myopic and noisy single-step predictions; (3) enables smooth
+      multi-step coordination required by many tasks.
+    tags: [robot-learning, action-generation, temporal-abstraction]
+    relations:
+      - type: used_in
+        targets: [diffusion_policy]
+
+  - name: observation_history
+    aliases:
+      - observation window
+      - history conditioning
+    definition: >
+      Conditioning a policy on a window of past observations o_{t-H_o+1:t} =
+      (o_{t-H_o+1}, ..., o_t) rather than only the current observation. Used in
+      Diffusion Policy. Addresses partial observability, occlusion, and the absence
+      of explicit velocity information in image-based observations (velocity can be
+      inferred from consecutive frames).
+    tags: [robot-learning, partial-observability, policy]
+    relations:
+      - type: used_in
+        targets: [diffusion_policy]
+
+  - name: noise_schedule
+    aliases:
+      - beta schedule
+      - variance schedule
+    definition: >
+      The sequence beta_1, ..., beta_K that controls how much Gaussian noise is added
+      at each forward diffusion step. Typically monotonically increasing so that
+      x_K ~ N(0,I). Defines alpha_k = 1 - beta_k and alpha_bar_k = prod_{s=1}^k alpha_s,
+      which appear in the closed-form marginal and reverse-process mean.
+    tags: [diffusion, forward-process, hyperparameter]
+    relations:
+      - type: parameter_of
+        targets: [diffusion_model, forward_process]

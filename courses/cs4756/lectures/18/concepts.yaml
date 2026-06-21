@@ -1,0 +1,240 @@
+concepts:
+  - name: State Estimation
+    aliases: [perception, state inference]
+    definition: >-
+      The process of computing a compact, structured, Markovian representation of
+      the world (the "state") from raw, noisy, high-dimensional sensor observations.
+      It is the first stage of the robotic pipeline (Sensors → State Estimation →
+      Modeling & Prediction → Planning → Control) and bridges the gap between
+      perception and action. Formally it involves computing either the single-frame
+      posterior p(s_t | o_t) or the temporal posterior p(s_t | o_{0:t}).
+    tags: [state-estimation, robot-learning, perception, probabilistic-inference]
+    relations:
+      - target: Probabilistic State Estimation
+        type: part_of
+        note: State estimation is framed as Bayesian inference over a hidden Markov model.
+      - target: Markov Property
+        type: enables
+        note: A good state estimate restores the Markov property so downstream modules need not retain full observation history.
+      - target: Filtering
+        type: related_to
+        note: Filtering is the temporal variant of state estimation, combining predict and update steps.
+
+  - name: Probabilistic State Estimation
+    aliases: [Bayesian state estimation, hidden state inference]
+    definition: >-
+      The formulation of state estimation as inference in a Hidden Markov Model
+      (HMM) where states s_t are latent and observations o_t are measured.
+      The graphical model has the chain s_{t-1} → s_t → s_{t+1} with each s_t
+      emitting an observation o_t. Two inference modes exist:
+      (1) single-step inference p(s_t | o_t), and
+      (2) temporal inference p(s_t | o_{0:t}), which conditions on all observations
+      from time 0 through t.
+    tags: [probabilistic-inference, hidden-markov-model, bayes, state-estimation]
+    relations:
+      - target: Filtering
+        type: enables
+        note: Temporal inference p(s_t | o_{0:t}) is computed recursively via the predict-update filtering equations.
+      - target: State Estimation
+        type: part_of
+        note: Probabilistic framing is the mathematical backbone of state estimation.
+      - target: Markov Property
+        type: prerequisite_for
+        note: The HMM structure assumes the Markov property — s_t is conditionally independent of o_{0:t-1} given s_{t-1}.
+
+  - name: Markov Property
+    aliases: [Markovian state, sufficient statistic]
+    definition: >-
+      A state s_t satisfies the Markov property if it is a sufficient statistic of
+      the history: the future is conditionally independent of the past given s_t.
+      Formally, p(s_{t+1} | s_t, o_{0:t}) = p(s_{t+1} | s_t). Ideal robot states
+      should be Markovian, structured, and low-dimensional. Raw sensor observations
+      are typically not Markovian because partial observability means the history
+      carries additional information.
+    tags: [markov, state-estimation, sequential-decision-making]
+    relations:
+      - target: Probabilistic State Estimation
+        type: prerequisite_for
+        note: The HMM factorization requires the Markov assumption on the state.
+      - target: Filtering
+        type: enables
+        note: The Markov property makes the recursive predict-update filter exact rather than approximate.
+
+  - name: Object Detection
+    aliases: [2D detection, bounding box detection]
+    definition: >-
+      A single-frame state estimation task that identifies and localizes objects in
+      an image. Inputs are RGB (or depth) images; outputs are class labels and
+      axis-aligned bounding boxes parameterized as [x, y, w, h] (top-left corner,
+      width, height). Challenges include occlusion, scale variation, and clutter.
+      Single-object detection outputs one box; multi-object detection outputs a
+      variable-length list of boxes. Applications in robotics include grasping
+      pipelines (object localization before pose estimation) and autonomous navigation
+      (pedestrian and vehicle detection).
+    tags: [detection, computer-vision, single-frame, bounding-box]
+    relations:
+      - target: Pose Estimation
+        type: prerequisite_for
+        note: Detection identifies which objects are present and roughly where; pose estimation then computes their precise 6-DoF transform.
+      - target: State Estimation
+        type: part_of
+        note: Object detection is a single-frame state estimation task computing p(s_t | o_t).
+      - target: Object Tracking
+        type: enables
+        note: Detection per frame is the first stage of many tracking-by-detection pipelines.
+
+  - name: Pose Estimation
+    aliases: [6-DoF pose estimation, object pose estimation]
+    definition: >-
+      A single-frame estimation task that recovers the full rigid-body pose of an
+      object or robot in SE(3) — the Special Euclidean group of 3D rigid motions.
+      The pose is parameterized as [x, y, z, α, β, γ]: three translational and
+      three rotational degrees of freedom. Two regimes: (1) instance-level pose
+      estimation, which requires knowing the exact 3D CAD model; and (2)
+      category-level pose estimation, which assumes only the object category is
+      known and defines a canonical pose per category, jointly estimating class c
+      and pose [x, y, z, α, β, γ]. Applications include robotic grasping (where
+      estimated pose is used to transform grasps from simulation) and manipulation.
+      Challenges: shape variation, partial occlusion, and rotational ambiguity for
+      symmetric objects.
+    tags: [pose-estimation, SE3, rigid-body, single-frame, grasping]
+    relations:
+      - target: Object Detection
+        type: related_to
+        note: Detection is often a prerequisite step that identifies the region of interest for pose estimation.
+      - target: 3D Reconstruction
+        type: related_to
+        note: Both recover 3D geometric information from 2D images; pose estimation focuses on the transform, reconstruction on the shape.
+      - target: SLAM
+        type: related_to
+        note: Robot pose estimation (localization) is a component of SLAM.
+
+  - name: Object Tracking
+    aliases: [visual tracking, multi-object tracking, single-object tracking]
+    definition: >-
+      A temporal state estimation task that maintains consistent state estimates
+      across video frames. Single-object tracking: given video {o_t}_{t=0}^{T-1}
+      and initial bounding box b_0, output trajectory {b_t}_{t=0}^{T-1}. Multi-object
+      tracking: given N initial bounding boxes {b_0^i}, output N trajectories
+      {b_t^i} for t=0,...,T. Point tracking: track individual keypoints or pixels
+      by estimating spatio-temporal correspondence — given initial points {x_0^i},
+      output trajectories {x_t^i}. Challenges specific to tracking: appearance
+      changes, occlusion and missed detections, temporal drift and error accumulation,
+      and data association (matching detections to identities across frames).
+    tags: [tracking, temporal-estimation, multi-object, data-association]
+    relations:
+      - target: Filtering
+        type: related_to
+        note: Kalman filtering is a classical backbone of object trackers, providing the predict-update cycle for bounding box dynamics.
+      - target: Object Detection
+        type: related_to
+        note: Tracking-by-detection pipelines run a detector per frame and solve data association to link detections.
+      - target: State Estimation
+        type: part_of
+        note: Tracking is the temporal form of state estimation computing p(s_t | o_{0:t}).
+
+  - name: 3D Reconstruction
+    aliases: [shape reconstruction, multi-view reconstruction, single-view reconstruction]
+    definition: >-
+      A state estimation task that recovers the 3D geometric structure of objects
+      or environments from 2D images. Multi-view reconstruction takes N images
+      {o_i} and camera matrices {M_i} as input and outputs a 3D structure (voxels,
+      mesh, point cloud). Single-view reconstruction takes a single image o and
+      infers 3D shape using learned category-level priors. Key challenge is the
+      fundamental ill-posedness of the 2D→3D mapping — infinitely many 3D shapes
+      project to the same 2D image. Additional challenges: occlusion, viewpoint and
+      scale ambiguity, noise and calibration errors. Output representations include
+      voxel grids, triangle meshes, and implicit functions (e.g., NeRF, signed
+      distance functions).
+    tags: [3d-reconstruction, multi-view, computer-vision, geometry]
+    relations:
+      - target: SLAM
+        type: related_to
+        note: Mapping in SLAM produces a 3D reconstruction of the environment as the robot moves.
+      - target: Pose Estimation
+        type: related_to
+        note: Both tasks recover 3D geometric information; reconstruction focuses on shape, pose estimation on rigid-body transform.
+      - target: State Estimation
+        type: part_of
+        note: 3D reconstruction estimates the geometric state of the environment from sensor observations.
+
+  - name: Human Pose Estimation
+    aliases: [skeleton estimation, keypoint detection, body pose estimation]
+    definition: >-
+      A structured state estimation task that recovers the configuration of a human
+      body from visual observations. The human pose is represented as a set of N
+      keypoints (joints: shoulders, elbows, wrists, hips, knees, ankles, head) and
+      a skeleton encoding connectivity between joints. Single-frame estimation:
+      X_t = f(I_t). Temporal tracking: X_t = f(I_{0:t}). The skeleton imposes
+      physical constraints (bone lengths, joint angle limits) that can be used to
+      regularize predictions. Robotics applications: motion retargeting (mapping
+      human states/actions to robot states/actions) and human-robot interaction
+      (understanding human intent for collaborative tasks).
+    tags: [human-pose, keypoints, skeleton, motion-retargeting, structured-state]
+    relations:
+      - target: Pose Estimation
+        type: related_to
+        note: Human pose estimation is a structured variant where the object is a human body with a known kinematic skeleton.
+      - target: Object Tracking
+        type: related_to
+        note: Human pose tracking extends single-frame estimation across video, analogous to object tracking.
+      - target: State Estimation
+        type: part_of
+        note: Human pose is a structured low-dimensional state extracted from high-dimensional visual observations.
+
+  - name: SLAM
+    aliases: [Simultaneous Localization and Mapping, SLAM problem]
+    definition: >-
+      The problem of jointly estimating the robot's trajectory (poses) and a map of
+      the environment, given only sensor observations and robot actions — neither
+      poses nor map is known a priori. Inputs: observations {o_t}_{t=0}^{T-1} and
+      robot actions {a_t}_{t=0}^{T-1}. Outputs: robot poses {x_t}_{t=0}^{T-1} and
+      environment map m. Localization assumes the map is known; mapping assumes
+      poses are known; SLAM solves both simultaneously. Classical approaches use
+      Extended Kalman Filters (EKF-SLAM), Rao-Blackwellized particle filters, or
+      graph-based pose-graph optimization. Semantic SLAM extends the map with object
+      categories and affordances, enabling language-grounded navigation (e.g., "Find
+      a microwave").
+    tags: [slam, localization, mapping, autonomous-navigation, robot-state]
+    relations:
+      - target: Filtering
+        type: related_to
+        note: EKF-SLAM applies the Kalman filter to the joint state (pose + map landmarks).
+      - target: 3D Reconstruction
+        type: related_to
+        note: The mapping component of SLAM produces a 3D reconstruction of the environment.
+      - target: State Estimation
+        type: part_of
+        note: SLAM is the most general temporal state estimation problem for mobile robots.
+      - target: Probabilistic State Estimation
+        type: part_of
+        note: SLAM is framed as Bayesian inference over the joint distribution of poses and map.
+
+  - name: Filtering
+    aliases: [Bayesian filtering, recursive Bayesian estimation, temporal filtering]
+    definition: >-
+      A recursive algorithm for estimating the state distribution p(s_t | o_{0:t})
+      over time using a two-step structure. (1) Predict step: compute the prior over
+      the current state by marginalizing over the previous state:
+        p(s_t | o_{0:t-1}) = ∫ p(s_t | s_{t-1}) p(s_{t-1} | o_{0:t-1}) ds_{t-1}.
+      (2) Update step: incorporate the new observation via Bayes' rule:
+        p(s_t | o_{0:t}) ∝ p(o_t | s_t) p(s_t | o_{0:t-1}).
+      Three canonical implementations: Bayesian filter (general, nonparametric),
+      Kalman filter (linear dynamics + Gaussian noise → closed-form Gaussian updates),
+      and Particle filter (nonlinear/non-Gaussian → weighted sample approximation).
+      Temporal filtering outperforms naive averaging because it propagates uncertainty
+      through a motion model rather than treating all observations uniformly.
+    tags: [kalman-filter, particle-filter, bayes-filter, temporal-estimation, recursive]
+    relations:
+      - target: Probabilistic State Estimation
+        type: part_of
+        note: Filtering is the recursive algorithm that solves temporal Bayesian state estimation.
+      - target: Object Tracking
+        type: enables
+        note: The Kalman filter predict-update cycle is the classical engine for object trackers.
+      - target: SLAM
+        type: enables
+        note: EKF-SLAM applies the Kalman filter to the high-dimensional joint pose-map state.
+      - target: Markov Property
+        type: prerequisite_for
+        note: The recursive predict step is valid only when the state satisfies the Markov property.

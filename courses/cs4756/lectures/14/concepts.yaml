@@ -1,0 +1,324 @@
+concepts:
+  - name: Physics Engine
+    aliases: [physics simulator, rigid body simulator]
+    definition: >-
+      Software that computes forces, torques, contacts, and state transitions
+      under physical laws. At its core, a contact collision solver. Runs faster
+      with fewer contacts and simpler collision geometries. Examples: MuJoCo,
+      Bullet, PhysX (Isaac Gym), Warp (ManiSkill).
+    tags: [simulation, physics, robotics]
+    relations:
+      - target: Contact and Collision
+        type: part_of
+        note: Contact/collision solving is the central computation in physics engines
+      - target: Rigid Body
+        type: prerequisite_for
+        note: Most physics engines assume rigid body dynamics
+      - target: Reality Gap
+        type: related_to
+        note: Imperfect physics modeling causes the sim-to-real reality gap
+
+  - name: Rigid Body
+    aliases: [rigid body dynamics]
+    definition: >-
+      An idealized solid object that does not deform under forces. Most
+      physics engines assume rigid bodies. Characterized by mass, inertia
+      tensor, pose (position + orientation), and velocity. Simplification
+      breaks down for soft objects, cloth, liquids, and granular materials.
+    tags: [simulation, physics, mechanics]
+    relations:
+      - target: Physics Engine
+        type: part_of
+        note: Physics engines primarily simulate rigid body dynamics
+      - target: Deformable Object Simulation
+        type: contrasts_with
+        note: Rigid body assumption fails for soft/deformable objects
+
+  - name: Contact and Collision
+    aliases: [contact detection, collision detection, contact forces]
+    definition: >-
+      The detection and resolution of physical contact between objects in
+      simulation. Physics engines detect contact points (where surfaces
+      intersect) and compute contact forces: normal force (perpendicular
+      to surface) and friction force (tangential, opposing velocity).
+      Fewer contacts and simpler shapes make simulation faster.
+    tags: [simulation, physics, contact]
+    relations:
+      - target: Physics Engine
+        type: part_of
+        note: Contact/collision resolution is the core computation in physics engines
+      - target: Convex Decomposition
+        type: related_to
+        note: Convex shapes enable fast exact collision detection algorithms
+
+  - name: Deformable Object Simulation
+    aliases: [soft body simulation, FEM simulation]
+    definition: >-
+      Simulation of objects that deform under forces — soft bodies, cloth,
+      liquids, granular materials. Requires finite element methods (FEM) or
+      particle-based approaches rather than rigid body dynamics. An active
+      research area; most standard simulators (MuJoCo, PyBullet) have limited
+      support.
+    tags: [simulation, soft-body, deformable]
+    relations:
+      - target: Rigid Body
+        type: contrasts_with
+        note: Deformable simulation extends beyond rigid body assumptions
+
+  - name: Mesh
+    aliases: [3D mesh, polygon mesh, .obj file]
+    definition: >-
+      A 3D surface representation as a collection of vertices (x,y,z
+      coordinates), edges, and faces (triangular or quad polygons). Standard
+      format: .obj file. Serves two roles in simulation: visual mesh (detailed,
+      for rendering) and collision mesh (simplified, for physics).
+    tags: [simulation, 3d-representation, geometry]
+    relations:
+      - target: Visual Mesh
+        type: part_of
+        note: Visual mesh is the detailed version used for rendering
+      - target: Collision Mesh
+        type: part_of
+        note: Collision mesh is the simplified version used for physics
+      - target: Convex Decomposition
+        type: related_to
+        note: Convex decomposition converts a mesh into collision-friendly convex hulls
+
+  - name: Visual Mesh
+    aliases: [render mesh, high-poly mesh]
+    definition: >-
+      The detailed, high-polygon mesh used for rendering visual observations.
+      Contains fine geometric detail and texture information. Not used for
+      physics computation. Paired with a separate collision mesh for physics.
+    tags: [simulation, rendering, mesh]
+    relations:
+      - target: Collision Mesh
+        type: contrasts_with
+        note: Visual mesh is detailed for rendering; collision mesh is simplified for physics
+      - target: Texture
+        type: related_to
+        note: Textures are applied to visual meshes via UV mapping
+
+  - name: Collision Mesh
+    aliases: [physics mesh, simplified mesh]
+    definition: >-
+      A simplified geometric representation used for physics/contact
+      computation. Often consists of primitive shapes (spheres, cylinders,
+      boxes) or a low-polygon convex approximation. Fewer polygons and simpler
+      shapes enable faster collision detection. Generated via convex decomposition
+      for complex objects.
+    tags: [simulation, physics, mesh, collision]
+    relations:
+      - target: Visual Mesh
+        type: contrasts_with
+        note: Collision mesh is simplified; visual mesh is detailed
+      - target: Convex Decomposition
+        type: related_to
+        note: Convex decomposition produces the convex hulls used as collision meshes
+
+  - name: Convex Decomposition
+    aliases: [V-HACD, approximate convex decomposition, convex hull decomposition]
+    definition: >-
+      The process of decomposing a single concave mesh into multiple convex
+      hulls to enable fast collision detection. Exact decomposition may require
+      thousands of parts; approximate decomposition (e.g., V-HACD algorithm)
+      uses ~20 parts. Convex shapes enable exact collision detection via GJK/EPA
+      algorithms in O(log n) time.
+    tags: [simulation, collision, geometry, algorithm]
+    relations:
+      - target: Collision Mesh
+        type: enables
+        note: Convex decomposition produces the collision geometry used in simulation
+      - target: Contact and Collision
+        type: related_to
+        note: Convex shapes enable fast exact contact detection
+
+  - name: Texture
+    aliases: [texture map, surface texture]
+    definition: >-
+      A 2D image applied to a 3D mesh surface to achieve visual realism.
+      Applied via UV mapping (projecting 3D surface coordinates to 2D image
+      coordinates). Material files (.mtl) specify ambient (Ka), diffuse (Kd),
+      specular (Ks) maps, bump maps, and specular maps.
+    tags: [simulation, rendering, visual-realism]
+    relations:
+      - target: UV Mapping
+        type: related_to
+        note: UV mapping is the process of projecting 3D surface to 2D for texture application
+      - target: Visual Mesh
+        type: related_to
+        note: Textures are applied to visual meshes
+
+  - name: UV Mapping
+    aliases: [UV unwrapping, texture coordinates]
+    definition: >-
+      The 3D modeling process of projecting a 3D model's surface onto a 2D
+      image for texture mapping. Each 3D point p=(x,y,z) maps to UV coordinates
+      p=(u,v). The texture image is sampled at (u,v) to determine surface color.
+      Stored in .mtl files alongside the .obj mesh file.
+    tags: [simulation, rendering, texture, 3d-modeling]
+    relations:
+      - target: Texture
+        type: part_of
+        note: UV mapping is the mechanism by which textures are applied to meshes
+
+  - name: URDF
+    aliases: [Unified Robot Description Format, robot description]
+    definition: >-
+      An XML format widely used for specifying robot models for control and
+      simulation. Defines links (rigid bodies with visual, collision, and
+      inertial properties), joints (connections between links with type and
+      axis), and parent-child kinematic tree structure. Standard in ROS.
+      Available from manufacturer websites for most robots.
+    tags: [simulation, robotics, robot-model, urdf]
+    relations:
+      - target: Articulated Rigid Body
+        type: related_to
+        note: URDF specifies the articulated rigid body structure of a robot
+      - target: Visual Mesh
+        type: part_of
+        note: URDF links include visual geometry/mesh for rendering
+      - target: Collision Mesh
+        type: part_of
+        note: URDF links include collision geometry for physics
+
+  - name: Articulated Rigid Body
+    aliases: [kinematic chain, articulated body]
+    definition: >-
+      A robot model consisting of rigid body links connected by joints,
+      forming a kinematic tree. Components: Link (single rigid body segment),
+      Joint (connection between links defining allowed motion), End Effector
+      (device at end of arm, e.g., gripper). Standard model for motor-actuated
+      robots.
+    tags: [robotics, simulation, kinematics]
+    relations:
+      - target: URDF
+        type: related_to
+        note: URDF is the standard format for specifying articulated rigid bodies
+      - target: Physics Engine
+        type: related_to
+        note: Physics engines simulate the dynamics of articulated rigid bodies
+
+  - name: OpenAI Gym Interface
+    aliases: [Gym API, gymnasium, env.step, env.reset]
+    definition: >-
+      The standard Python API for RL environments. Key methods: reset(seed)
+      returns (observation, info); step(action) returns (observation, reward,
+      terminated, truncated, info); close(). Widely adopted across simulators
+      (MuJoCo, PyBullet, ManiSkill). Each env.step() can internally take
+      multiple physics simulation steps.
+    tags: [simulation, rl, api, interface]
+    relations:
+      - target: Physics Engine
+        type: related_to
+        note: Gym wraps physics engines in a standard RL interface
+      - target: MuJoCo
+        type: related_to
+        note: MuJoCo environments implement the Gym interface
+
+  - name: MuJoCo
+    aliases: [MuJoCo simulator]
+    definition: >-
+      Multi-Joint dynamics with Contact — a physics engine widely used for
+      robot learning research. Fast CPU simulation, good physics accuracy,
+      mediocre rendering, easy configuration. Standard choice for locomotion
+      (HalfCheetah, Ant, Humanoid) and manipulation benchmarks.
+    tags: [simulation, physics, robotics, mujoco]
+    relations:
+      - target: Physics Engine
+        type: part_of
+        note: MuJoCo is one of the primary physics engines for robot learning
+      - target: PyBullet
+        type: contrasts_with
+        note: Both are popular; MuJoCo faster; PyBullet open-source and older
+      - target: Reality Gap
+        type: related_to
+        note: MuJoCo physics is an approximation; sim-to-real gap remains
+
+  - name: PyBullet
+    aliases: [Bullet physics, pybullet]
+    definition: >-
+      Python bindings for the Bullet physics engine. Normal speed, good
+      physics, basic rendering, easy Python API. Good for prototyping.
+      Load robots via loadURDF(); control via joint motors; step with
+      stepSimulation(); query state with getBasePositionAndOrientation().
+    tags: [simulation, physics, robotics, pybullet]
+    relations:
+      - target: MuJoCo
+        type: contrasts_with
+        note: PyBullet normal speed; MuJoCo faster; both have good physics
+      - target: URDF
+        type: related_to
+        note: PyBullet loads robots via URDF files with loadURDF()
+
+  - name: Reality Gap
+    aliases: [sim-to-real gap, reality gap for dynamics, reality gap for perception]
+    definition: >-
+      The distribution shift between simulated and real environments along
+      two axes: (1) dynamics gap — simulated physics differs from real
+      physics due to unknown object properties, unknown physics parameters,
+      inaccurate modeling, and limited computation; (2) perception gap —
+      simulated images differ from real camera images (lighting, textures,
+      lens effects). "All models are wrong, but some are useful." (Box, 1976)
+    tags: [simulation, sim-to-real, reality-gap, domain-adaptation]
+    relations:
+      - target: Physics Engine
+        type: related_to
+        note: Imperfect physics engines are the primary cause of the dynamics gap
+      - target: Digital Twin
+        type: related_to
+        note: Digital twins aim to reduce the reality gap by matching real environments
+      - target: Domain Randomization
+        type: related_to
+        note: Domain randomization is a common strategy for bridging the reality gap
+
+  - name: Digital Twin
+    aliases: [digital cousin, virtual twin]
+    definition: >-
+      A simulation environment created to match a specific real-world
+      environment, typically via 3D reconstruction from video scans or
+      depth sensors. Enables training policies in a virtual copy of the
+      actual deployment scene. "Digital cousin" (ACDC) refers to a
+      similar but not identical virtual environment created from real-world priors.
+    tags: [simulation, sim-to-real, 3d-reconstruction]
+    relations:
+      - target: Reality Gap
+        type: related_to
+        note: Digital twins aim to minimize the reality gap
+      - target: Automatic Environment Generation
+        type: part_of
+        note: Digital twin creation is one form of automatic environment generation
+
+  - name: Automatic Environment Generation
+    aliases: [procedural environment, generative simulation, Meta-Sim]
+    definition: >-
+      Automatically creating diverse simulated environments using generative
+      AI or procedural methods. Approaches: (1) Digital twins from 3D
+      reconstruction; (2) Procedural generation (ACDC) using scene grammars
+      and object databases; (3) Meta-Sim using probabilistic scene grammar +
+      distribution transformer to match real dataset statistics.
+    tags: [simulation, generative-ai, domain-randomization, environment-design]
+    relations:
+      - target: Digital Twin
+        type: part_of
+        note: Digital twin creation is one automated environment generation approach
+      - target: Reality Gap
+        type: related_to
+        note: Diverse generated environments help bridge the reality gap via domain randomization
+
+  - name: Domain Randomization
+    aliases: [sim randomization, physics randomization]
+    definition: >-
+      A sim-to-real transfer technique that randomizes simulation parameters
+      (object masses, friction coefficients, visual textures, lighting,
+      camera poses) during training to make policies robust to distribution
+      shift. Forces the policy to learn behaviors that work across a range
+      of simulated environments, improving generalization to the real world.
+    tags: [sim-to-real, reality-gap, robustness, transfer]
+    relations:
+      - target: Reality Gap
+        type: related_to
+        note: Domain randomization addresses the reality gap by training on diverse simulations
+      - target: Automatic Environment Generation
+        type: related_to
+        note: Automatic generation of diverse environments supports domain randomization

@@ -1,0 +1,399 @@
+concepts:
+  - name: Markov Decision Process
+    aliases: [MDP]
+    definition: >-
+      A mathematical framework for sequential decision making defined by the
+      tuple M = <S, A, P, R>: a state space S, action space A, transition
+      probability P(s' | s, a), and reward function R(s, a, s'). At each
+      time step the agent observes state s_t, takes action a_t, receives
+      reward r_t, and transitions to s_{t+1} ~ P(· | s_t, a_t).
+    tags: [mdp, sequential-decision-making, reinforcement-learning, robot-learning]
+    relations:
+      - target: Markov Assumption
+        type: part_of
+        note: The Markov assumption is the foundational property that makes an MDP well-defined.
+      - target: Policy
+        type: enables
+        note: An MDP defines the environment; a policy defines the agent's behavior within it.
+      - target: Trajectory
+        type: enables
+        note: Executing a policy in an MDP produces trajectories.
+      - target: Return
+        type: enables
+        note: The return is computed over rewards collected along a trajectory in an MDP.
+      - target: Partially Observable Markov Decision Process
+        type: contrasts_with
+        note: POMDPs extend MDPs to settings where the full state is not directly observable.
+      - target: Contextual Markov Decision Process
+        type: related_to
+        note: Contextual MDPs add a context variable that modulates the reward function.
+
+  - name: Markov Assumption
+    aliases: [Markov Property, Markov Condition]
+    definition: >-
+      Conditioned on the current state s_t and action a_t, the reward r_t
+      and next state s_{t+1} are independent of all prior states and actions.
+      Formally: p(s_{t+1}, r_t | s_t, a_t, s_{t-1}, ...) = p(s_{t+1}, r_t | s_t, a_t).
+      The state is a sufficient statistic of the history for predicting the future.
+    tags: [mdp, probability, sufficient-statistic]
+    relations:
+      - target: Markov Decision Process
+        type: part_of
+        note: The Markov assumption is what defines an MDP; without it the process is non-Markovian.
+      - target: State Space
+        type: prerequisite_for
+        note: The state must be designed to satisfy the Markov assumption (sufficient statistic).
+      - target: Partially Observable Markov Decision Process
+        type: related_to
+        note: In a POMDP the observation does not satisfy the Markov assumption; only the hidden state does.
+
+  - name: State Space
+    aliases: [S, state]
+    definition: >-
+      The set S of all possible states s_t of the environment. A state is a
+      sufficient statistic of the system to predict the future, disregarding
+      the past. States can be discrete (e.g., board positions, slot machine
+      faces) or continuous (e.g., robot joint angles, GPS coordinates).
+    tags: [mdp, state, sufficient-statistic]
+    relations:
+      - target: Markov Decision Process
+        type: part_of
+        note: S is one of the four components of an MDP tuple.
+      - target: Markov Assumption
+        type: related_to
+        note: The state must satisfy the Markov assumption to be a valid MDP state.
+      - target: Action Space
+        type: related_to
+        note: Together S and A define the space over which policies and value functions are defined.
+
+  - name: Action Space
+    aliases: [A, action]
+    definition: >-
+      The set A of all possible actions a_t available to the agent. Actions
+      represent control decisions — motor commands or abstract choices.
+      Actions can be discrete (e.g., keyboard keys, card selections) or
+      continuous (e.g., joystick deflection, steering angle, gripper torque).
+    tags: [mdp, action, control]
+    relations:
+      - target: Markov Decision Process
+        type: part_of
+        note: A is one of the four components of an MDP tuple.
+      - target: Policy
+        type: related_to
+        note: A policy maps states to actions (or distributions over actions).
+
+  - name: Transition Model
+    aliases: [transition probability, transition function, dynamics model, P]
+    definition: >-
+      A conditional probability distribution P(s' | s, a) specifying the
+      probability of transitioning to state s' given current state s and
+      action a. Can be deterministic (s' = P(s, a), one outcome) or
+      stochastic (s' ~ P(s, a), distribution over outcomes). Sources of
+      stochasticity include motor undershoot/overshoot, sensor noise, and
+      physical uncertainty. The initial state distribution rho(s_0) = P(s_0)
+      specifies how episodes begin.
+    tags: [mdp, dynamics, stochastic, deterministic]
+    relations:
+      - target: Markov Decision Process
+        type: part_of
+        note: P is one of the four components of an MDP tuple.
+      - target: Trajectory
+        type: enables
+        note: The transition model governs how states evolve along a trajectory.
+      - target: Markov Assumption
+        type: related_to
+        note: The transition model is Markovian — it only conditions on the current (s, a) pair.
+
+  - name: Reward Function
+    aliases: [R, reward, reward signal]
+    definition: >-
+      A function R(s_t, a_t, s_{t+1}) that returns the scalar reward r_t
+      received at time t. Often simplified to R(s_t, a_t), R(s_t, s_{t+1}),
+      or R(s_{t+1}). Can be sparse (nonzero only at goal/failure states) or
+      dense (nonzero at every step). For real robot tasks the reward is
+      typically hand-designed via reward shaping.
+    tags: [mdp, reward, reward-shaping, sparse-reward, dense-reward]
+    relations:
+      - target: Markov Decision Process
+        type: part_of
+        note: R is one of the four components of an MDP tuple.
+      - target: Return
+        type: enables
+        note: The return is the cumulative (possibly discounted) sum of rewards.
+      - target: Reward Shaping
+        type: related_to
+        note: Reward shaping is the practice of manually designing dense reward functions for robot tasks.
+
+  - name: Reward Shaping
+    aliases: [shaped reward, potential-based shaping]
+    definition: >-
+      The practice of hand-designing a reward function to guide the agent
+      toward a desired behavior, especially when the natural reward is sparse.
+      In robotics, shaped rewards typically combine distance terms, binary
+      completion flags, and weighted constants. Example: Meta-World Benchmark
+      uses exponential distance-based shaping for pick-and-place tasks.
+    tags: [reward, reward-design, robot-learning]
+    relations:
+      - target: Reward Function
+        type: related_to
+        note: Reward shaping produces the R component of an MDP.
+      - target: Sparse Reward
+        type: contrasts_with
+        note: Shaping is used to create dense rewards that supplement or replace sparse rewards.
+
+  - name: Sparse Reward
+    aliases: [sparse reward signal]
+    definition: >-
+      A reward function that is zero (or a constant) almost everywhere and
+      provides a nonzero signal only upon reaching a goal or terminal state.
+      Example: +1 at goal, -1 at cliff, 0 everywhere else. Simple to specify
+      but hard to learn from because the signal is rare.
+    tags: [reward, sparse, reinforcement-learning]
+    relations:
+      - target: Reward Function
+        type: part_of
+        note: Sparse reward is a special form of the reward function R.
+      - target: Reward Shaping
+        type: contrasts_with
+        note: Dense/shaped rewards provide signal at every step to alleviate sparsity.
+
+  - name: Policy
+    aliases: [pi, decision rule, behavior policy]
+    definition: >-
+      A mapping from states to actions (or distributions over actions) that
+      specifies the agent's behavior. Formally pi: S -> A for deterministic
+      policies, or pi(a | s) for stochastic policies. Deterministic:
+      a_t = pi(s_t). Stochastic: a_t ~ pi(· | s_t). A goal-conditioned
+      policy takes the form pi(a_t | s_t, g_t).
+    tags: [policy, mdp, reinforcement-learning]
+    relations:
+      - target: Markov Decision Process
+        type: related_to
+        note: A policy is the agent's response to the MDP; it is not part of the MDP tuple itself.
+      - target: Optimal Policy
+        type: related_to
+        note: The optimal policy pi* maximizes expected return J(pi).
+      - target: Trajectory
+        type: enables
+        note: A policy together with an MDP generates a distribution over trajectories.
+
+  - name: Trajectory
+    aliases: [episode, rollout, tau]
+    definition: >-
+      The sequence of states and actions produced when a policy interacts
+      with an MDP: tau = (s_0, a_0, s_1, a_1, s_2, a_2, ..., s_T).
+      The probability of a trajectory under policy pi is:
+      p_pi(tau) = rho(s_0) * prod_{t=0}^{T-1} pi(a_t | s_t) * P(s_{t+1} | s_t, a_t).
+    tags: [trajectory, episode, rollout, mdp]
+    relations:
+      - target: Policy
+        type: related_to
+        note: A trajectory is generated by executing a policy in an MDP.
+      - target: Return
+        type: enables
+        note: The return is computed by summing rewards along a trajectory.
+      - target: Transition Model
+        type: related_to
+        note: The transition model P governs the state evolution within a trajectory.
+      - target: Markov Assumption
+        type: related_to
+        note: The factored form of the trajectory probability follows from the Markov assumption.
+
+  - name: Return
+    aliases: [cumulative reward, G, discounted return]
+    definition: >-
+      The total cumulative reward collected along a trajectory. Two forms:
+      (1) Finite-horizon undiscounted: G = sum_{t=0}^{T-1} r_t.
+      (2) Infinite-horizon discounted: G = sum_{t>=0} gamma^t * r_t.
+      The expected return under policy pi is J(pi) = E_{tau ~ p_pi}[G].
+      This is the quantity optimized in reinforcement learning.
+    tags: [return, reward, discounting, objective]
+    relations:
+      - target: Reward Function
+        type: part_of
+        note: The return accumulates per-step rewards from the reward function.
+      - target: Discount Factor
+        type: related_to
+        note: The discount factor gamma weights future rewards in the infinite-horizon return.
+      - target: Optimal Policy
+        type: prerequisite_for
+        note: The optimal policy is defined as argmax over policies of expected return J(pi).
+
+  - name: Discount Factor
+    aliases: [gamma, discounting]
+    definition: >-
+      A scalar gamma in [0, 1] that controls the relative weight of future
+      rewards in an infinite-horizon MDP. Rewards t steps in the future are
+      weighted by gamma^t. gamma=0 is fully myopic (only immediate reward);
+      gamma=1 weights all future rewards equally (may not converge). Infinite-
+      horizon MDPs require a discount factor for the return to be bounded.
+      Finite-horizon MDPs do not require discounting (but can use it).
+    tags: [discount, infinite-horizon, return]
+    relations:
+      - target: Return
+        type: part_of
+        note: The discount factor appears in the discounted return formula.
+      - target: Infinite-Horizon MDP
+        type: prerequisite_for
+        note: Infinite-horizon MDPs require gamma < 1 for the return sum to converge.
+
+  - name: Finite-Horizon MDP
+    aliases: [episodic MDP, fixed-horizon MDP]
+    definition: >-
+      An MDP with a fixed time horizon T: t = 0, 1, 2, ..., T. The episode
+      terminates after exactly T steps. The return is the undiscounted sum of
+      T rewards. Does not require a discount factor (though one may be used).
+    tags: [mdp, finite-horizon, episodic]
+    relations:
+      - target: Markov Decision Process
+        type: part_of
+        note: Finite-horizon is one of the two main MDP variants.
+      - target: Infinite-Horizon MDP
+        type: contrasts_with
+        note: Finite-horizon MDPs terminate; infinite-horizon MDPs run forever.
+      - target: Discount Factor
+        type: related_to
+        note: Finite-horizon MDPs do not require a discount factor for bounded returns.
+
+  - name: Infinite-Horizon MDP
+    aliases: [continuing MDP, discounted MDP]
+    definition: >-
+      An MDP with no terminal state that runs forever: t = 0, 1, 2, ...
+      To ensure the return is bounded, a discount factor gamma in [0, 1) is
+      applied. Rewards closer in time receive higher weight (gamma^t).
+    tags: [mdp, infinite-horizon, discounting]
+    relations:
+      - target: Markov Decision Process
+        type: part_of
+        note: Infinite-horizon is one of the two main MDP variants.
+      - target: Finite-Horizon MDP
+        type: contrasts_with
+        note: Infinite-horizon MDPs never terminate; finite-horizon MDPs have a fixed endpoint.
+      - target: Discount Factor
+        type: prerequisite_for
+        note: A discount factor is needed to keep the return bounded in an infinite-horizon MDP.
+
+  - name: Optimal Policy
+    aliases: [pi*, optimal behavior]
+    definition: >-
+      The policy that maximizes expected return: pi* = argmax_pi J(pi).
+      Finding the optimal policy is the central problem of reinforcement
+      learning and much of robot learning.
+    tags: [optimal-policy, reinforcement-learning, optimization]
+    relations:
+      - target: Policy
+        type: related_to
+        note: The optimal policy is the best element of the policy space.
+      - target: Return
+        type: prerequisite_for
+        note: The optimal policy is defined with respect to maximizing expected return J(pi).
+
+  - name: Sequential Decision Making
+    aliases: [decision making over time]
+    definition: >-
+      The process of making a series of decisions over time to achieve a
+      goal, where each decision affects future states and opportunities.
+      Formalized by the MDP framework in the context of robot learning.
+    tags: [sequential-decision-making, planning, robot-learning]
+    relations:
+      - target: Markov Decision Process
+        type: related_to
+        note: MDPs are the standard mathematical formalization of sequential decision making.
+      - target: Trajectory
+        type: enables
+        note: Sequential decisions produce trajectories of states, actions, and rewards.
+
+  - name: Partially Observable Markov Decision Process
+    aliases: [POMDP, partial observability]
+    definition: >-
+      An extension of the MDP where the agent cannot directly observe the
+      full state s_t. Instead it receives an observation o_t ~ O(· | s_t)
+      from an observation model O. Defined by the tuple M = <S, Omega, A, P, O, R>
+      where Omega is the observation space and O is the observation probability.
+      The agent must infer the hidden state from the history of observations
+      and actions (belief state).
+    tags: [pomdp, partial-observability, robot-learning]
+    relations:
+      - target: Markov Decision Process
+        type: related_to
+        note: A POMDP is a generalization of an MDP where the state is not fully observable.
+      - target: Markov Assumption
+        type: related_to
+        note: The POMDP state satisfies the Markov assumption; the observation does not.
+      - target: Contextual Markov Decision Process
+        type: contrasts_with
+        note: In a Contextual MDP the context c_t is observed; in a POMDP the full state is hidden.
+
+  - name: Contextual Markov Decision Process
+    aliases: [Contextual MDP, CMDP]
+    definition: >-
+      An MDP augmented with an observable context variable c_t in C that
+      modulates the reward function. Defined by M = <S, C, A, P, R> where
+      r_t ~ R(s_t, a_t, s_{t+1}, c_t). The dynamics P are context-independent;
+      only the reward depends on context. Enables multi-task learning where
+      different contexts specify different objectives.
+    tags: [contextual-mdp, multi-task, context]
+    relations:
+      - target: Markov Decision Process
+        type: related_to
+        note: A Contextual MDP extends the standard MDP with an observable context.
+      - target: Goal-Conditioned MDP
+        type: enables
+        note: Goal-conditioned MDPs are a special case where the context is a goal g_t in C subset S.
+      - target: Partially Observable Markov Decision Process
+        type: contrasts_with
+        note: The context in a Contextual MDP is observed by the agent, unlike the hidden state in a POMDP.
+
+  - name: Goal-Conditioned MDP
+    aliases: [goal-conditioned MDP, GCMDP, goal-conditioned RL]
+    definition: >-
+      A special case of the Contextual MDP where the context is a goal g_t
+      drawn from a goal space C that is a subset of the state space S
+      (g_t in C subset S). The reward is conditioned on both the current
+      state and the goal, e.g., r_t = R(s_t, g_t) = -1[s_t != g_t].
+      The policy takes the form pi(a_t | s_t, g_t) and must generalize
+      across different goals.
+    tags: [goal-conditioned, multi-task, robot-learning]
+    relations:
+      - target: Contextual Markov Decision Process
+        type: part_of
+        note: Goal-conditioned MDPs are a special case of Contextual MDPs where context is a goal.
+      - target: Reward Function
+        type: related_to
+        note: The reward function is conditioned on the goal, e.g., sparse binary reward for reaching g_t.
+      - target: Policy
+        type: related_to
+        note: Goal-conditioned policies pi(a | s, g) must generalize across the goal space C.
+
+  - name: Perception-Action Loop
+    aliases: [sense-act loop, control loop]
+    definition: >-
+      The closed-loop interaction between a robot and its environment:
+      the robot perceives the environment (obtains state/observation),
+      decides on an action (via a policy), executes the action, which
+      changes the environment, producing new percepts. Closing this loop
+      is a key challenge in robotics.
+    tags: [robotics, perception, control, robot-learning]
+    relations:
+      - target: Markov Decision Process
+        type: related_to
+        note: The MDP formalism abstracts the perception-action loop as a state-action-reward cycle.
+      - target: Policy
+        type: related_to
+        note: The policy implements the action-selection component of the perception-action loop.
+
+  - name: Initial State Distribution
+    aliases: [rho, reset distribution]
+    definition: >-
+      A probability distribution rho over states from which the initial
+      state s_0 is sampled at the start of each episode: s_0 ~ rho(s_0) = P(s_0).
+      In practice this may be a fixed state (degenerate distribution) or a
+      broad distribution over plausible starting configurations.
+    tags: [mdp, initialization, distribution]
+    relations:
+      - target: Trajectory
+        type: part_of
+        note: The initial state distribution determines how each trajectory begins.
+      - target: Transition Model
+        type: related_to
+        note: The initial state distribution rho is sometimes considered part of the transition model.

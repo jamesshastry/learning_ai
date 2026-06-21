@@ -1,0 +1,239 @@
+concepts:
+  - name: Policy Gradient Theorem
+    aliases: [policy gradient, direct policy differentiation]
+    definition: >-
+      States that the gradient of expected return with respect to policy parameters
+      equals an expectation over trajectories sampled from the current policy:
+      ∇_θ J(θ) = E_{τ ~ p_θ(τ)}[∇_θ log p_θ(τ) · R(τ)].
+      The key insight is that differentiating through the trajectory distribution
+      p_θ(τ) becomes tractable via the log-derivative trick, converting an
+      intractable integral into a Monte Carlo estimable expectation. Crucially,
+      the gradient of log p_θ(τ) depends only on ∇_θ log π_θ(a_t|s_t) —
+      the unknown dynamics P(s_{t+1}|s_t, a_t) cancel out.
+    tags: [policy-gradients, rl-theory, gradient-estimation]
+    slide: "10-13"
+    relations:
+      - target: Log-Derivative Trick
+        type: uses
+        note: The log-derivative trick is the mathematical step that makes the theorem tractable
+      - target: REINFORCE
+        type: instantiated_by
+        note: REINFORCE is the Monte Carlo algorithm that implements this theorem
+
+  - name: Log-Derivative Trick
+    aliases: [likelihood ratio trick, score function estimator]
+    definition: >-
+      A mathematical identity used to differentiate expectations with respect to
+      distribution parameters. The identity is:
+      ∇_θ log p_θ(τ) = ∇_θ p_θ(τ) / p_θ(τ),
+      which rearranges to p_θ(τ) ∇_θ log p_θ(τ) = ∇_θ p_θ(τ).
+      Substituting this into ∫ ∇_θ p_θ(τ) R(τ) dτ yields
+      ∫ p_θ(τ) ∇_θ log p_θ(τ) R(τ) dτ = E_{τ~p_θ}[∇_θ log p_θ(τ) R(τ)],
+      which can be approximated by sampling trajectories. The gradient of
+      log p_θ(τ) reduces to Σ_t ∇_θ log π_θ(a_t|s_t) because log P(s_0) and
+      log P(s_{t+1}|s_t,a_t) have no dependence on θ.
+    tags: [policy-gradients, math, gradient-estimation]
+    slide: "11-14"
+    relations:
+      - target: Policy Gradient Theorem
+        type: enables
+        note: The trick is the key mathematical step in deriving the theorem
+
+  - name: REINFORCE
+    aliases: [Williams 1992, vanilla policy gradient]
+    definition: >-
+      The foundational policy gradient algorithm (Williams, 1992). Iterates:
+      (1) Collect N rollout trajectories {(s_i, a_i, s_i', r_i)} under the
+      current policy π_θ; (2) compute the gradient estimate
+      ∇̂_θ J(θ) = (1/N) Σ_i [(Σ_t ∇_θ log π_θ(a_{i,t}|s_{i,t}))(Σ_t R(s_{i,t}, a_{i,t}))];
+      (3) update θ ← θ + α ∇̂_θ J(θ). Compared to behavior cloning, the only
+      difference is the trajectory return multiplier — REINFORCE formalizes
+      "trial and error" by making high-return trajectories more likely and
+      low-return trajectories less likely. REINFORCE is on-policy: trajectories
+      must be collected fresh for each update.
+    tags: [policy-gradients, algorithm, on-policy]
+    slide: "16"
+    relations:
+      - target: Policy Gradient Theorem
+        type: implements
+        note: REINFORCE is the Monte Carlo implementation of the policy gradient theorem
+      - target: Reward-to-Go
+        type: improved_by
+        note: Reward-to-go replaces full trajectory return to reduce variance
+      - target: Baseline Subtraction
+        type: improved_by
+        note: Subtracting a baseline further reduces variance without bias
+
+  - name: Reward-to-Go
+    aliases: [causality trick, future return]
+    definition: >-
+      A variance-reduction technique for policy gradients based on the causality
+      principle: the policy at time t' cannot causally affect rewards at time t
+      when t < t'. This holds regardless of the Markov assumption. Applying
+      causality replaces the full trajectory return with the future return
+      (reward-to-go): Q̂_t = Σ_{t'=t}^{T-1} R(s_{t'}, a_{t'}).
+      The gradient becomes:
+      ∇_θ J(θ) = E_{τ~p_θ}[Σ_t ∇_θ log π_θ(a_t|s_t) · (Σ_{t'≥t} R(s_{t'}, a_{t'}))].
+      This estimator is unbiased (the dropped terms have zero expectation) and
+      has strictly lower variance than the full-return estimator.
+    tags: [policy-gradients, variance-reduction, causality]
+    slide: "19-20"
+    relations:
+      - target: REINFORCE
+        type: improves
+        note: Reward-to-go is a drop-in replacement for the full-return term in REINFORCE
+      - target: Baseline Subtraction
+        type: complementary_to
+        note: Both are orthogonal variance reduction techniques that can be combined
+
+  - name: Baseline Subtraction
+    aliases: [control variate, baseline]
+    definition: >-
+      Subtracting any scalar constant b (with respect to action a) from the
+      reward in the policy gradient estimator reduces variance without introducing
+      bias. The key fact is E_{τ~p_θ}[∇_θ log p_θ(τ) · b] = 0 for any constant
+      b, which follows because ∫ ∇_θ p_θ(τ) dτ = ∇_θ ∫ p_θ(τ) dτ = ∇_θ 1 = 0.
+      A simple choice is the average reward b = (1/N) Σ_i R(τ_i). The optimal
+      baseline minimizes variance per gradient element h:
+      b^h = <(Σ_k ∇_{θ_h} log π_θ)^2 Σ_l a_l r_l> / <(Σ_k ∇_{θ_h} log π_θ)^2>.
+      Without a baseline, all-positive rewards make even bad actions more likely
+      (just less so than good actions), which produces high-variance gradients.
+    tags: [policy-gradients, variance-reduction]
+    slide: "23"
+    relations:
+      - target: Reward-to-Go
+        type: complementary_to
+        note: Both reduce variance and can be combined
+      - target: REINFORCE
+        type: improves
+        note: Baseline is typically added to REINFORCE as a standard variance reduction
+
+  - name: On-Policy Learning
+    aliases: [on-policy, on-policy requirement]
+    definition: >-
+      A property of algorithms that require data to be collected under the same
+      policy that is being optimized. Policy gradient methods are on-policy
+      because the expectation E_{τ~p_θ(τ)}[...] is taken under the current
+      policy distribution; after a gradient update θ → θ', old trajectories
+      sampled under p_θ are no longer valid samples from p_{θ'}. This forces
+      fresh rollout collection after every update, making on-policy methods
+      sample-inefficient. Contrast with off-policy methods (e.g., Q-learning)
+      that can reuse data from replay buffers regardless of which policy collected it.
+    tags: [policy-gradients, rl-concepts, sample-efficiency]
+    slide: "24-25"
+    relations:
+      - target: TRPO
+        type: addressed_by
+        note: TRPO limits how much the policy changes per step, reducing the severity of the on-policy requirement
+      - target: PPO
+        type: addressed_by
+        note: PPO uses clipping to achieve similar effect to TRPO more efficiently
+
+  - name: TRPO
+    aliases: [Trust Region Policy Optimization]
+    definition: >-
+      Trust Region Policy Optimization (Schulman et al., 2015). Addresses
+      distribution shift by constraining each policy update to keep the new
+      policy close to the old one in KL-divergence:
+        max_{Δθ} J(θ + Δθ)  s.t.  D_KL(π_{θ+} ‖ π_θ) ≤ ε.
+      TRPO enforces this constraint exactly using conjugate gradient methods
+      and a line search. It has theoretical monotonic improvement guarantees
+      but is complex to implement due to the second-order optimization.
+      KL-divergence: D_KL(P‖Q) = ∫ p(x) log(p(x)/q(x)) dx.
+    tags: [policy-gradients, algorithm, distribution-shift]
+    slide: "26"
+    relations:
+      - target: PPO
+        type: simplified_by
+        note: PPO approximates TRPO's constraint with a simpler clipping objective
+      - target: On-Policy Learning
+        type: mitigates
+        note: The KL constraint prevents excessive distribution shift between updates
+
+  - name: PPO
+    aliases: [Proximal Policy Optimization]
+    definition: >-
+      Proximal Policy Optimization (Schulman et al., 2017). A practical
+      alternative to TRPO that approximates the KL trust-region constraint
+      via a clipped surrogate objective. Instead of solving a constrained
+      optimization problem, PPO clips the probability ratio
+      r_t(θ) = π_{θ+}(a_t|s_t) / π_θ(a_t|s_t) to stay within [1-ε, 1+ε].
+      This prevents the policy from moving too far from the data-collecting
+      policy without requiring second-order optimization. PPO is more widely
+      used in practice than TRPO (including in RLHF for LLMs) due to its
+      simplicity and stability.
+    tags: [policy-gradients, algorithm, distribution-shift]
+    slide: "26"
+    relations:
+      - target: TRPO
+        type: approximates
+        note: PPO approximates TRPO's exact KL constraint with a clipping objective
+      - target: On-Policy Learning
+        type: mitigates
+        note: Clipping bounds distribution shift between consecutive updates
+
+  - name: Local Optima in Policy Gradients
+    aliases: [local optima, suboptimal convergence]
+    definition: >-
+      Policy gradient ascent optimizes a non-convex objective and can converge
+      to local optima. The Ring of Fire example illustrates this: an agent
+      near a small consistent reward (value +1) will quickly reinforce that
+      behavior; a large but risky reward (+100 inside a dangerous region with
+      -10 entry cost) may never be discovered if exploration does not expose it
+      early. Once the policy concentrates probability on the safe small reward,
+      the gradient signal from the risky region becomes negligible.
+      Mitigation: randomize the reset distribution (start states) to expose
+      the agent to different regions of the state space, including near
+      high-value but hard-to-reach goals.
+    tags: [policy-gradients, challenges, exploration]
+    slide: "27-35"
+    relations:
+      - target: Reset Distribution
+        type: mitigated_by
+        note: Randomizing start states exposes the agent to diverse gradient signals
+      - target: REINFORCE
+        type: affects
+        note: REINFORCE is a local method and inherits this limitation
+
+  - name: Reset Distribution
+    aliases: [start state distribution, curriculum start states]
+    definition: >-
+      The distribution over initial states from which the agent begins each
+      episode. By default, all episodes start from the same or similar initial
+      state, which can cause the policy to get stuck in a local optimum if
+      that starting point leads to a misleading reward gradient. Using a
+      diverse or strategically chosen reset distribution — such as initializing
+      near the goal state or sampling broadly across the state space — exposes
+      the agent to different gradient signals and helps escape local optima.
+      Running REINFORCE from different start states is a practical heuristic
+      for mitigating the local optima problem in robotics (e.g., placing the
+      robot near the Ring of Fire delivers direct +100 reward signal).
+    tags: [policy-gradients, exploration, robotics]
+    slide: "31-35"
+    relations:
+      - target: Local Optima in Policy Gradients
+        type: mitigates
+        note: Diverse start states prevent gradient from concentrating on suboptimal behavior
+      - target: REINFORCE
+        type: improves
+        note: A good reset distribution improves REINFORCE exploration without algorithm change
+
+  - name: Trajectory Distribution
+    aliases: [p_θ(τ), rollout distribution]
+    definition: >-
+      The probability distribution over full trajectories τ = (s_0, a_0, s_1, a_1, ..., s_{T-1}, a_{T-1})
+      induced by policy π_θ and environment dynamics P. Factored as:
+      p_θ(τ) = P(s_0) Π_{t=0}^{T-1} π_θ(a_t|s_t) P(s_{t+1}|s_t, a_t).
+      The log of p_θ(τ) decomposes into terms from the initial state distribution,
+      the policy, and the dynamics. When taking ∇_θ, only the policy terms
+      ∇_θ log π_θ(a_t|s_t) survive; the dynamics and initial state terms
+      are independent of θ and vanish.
+    tags: [policy-gradients, mdp, math]
+    slide: "8"
+    relations:
+      - target: Policy Gradient Theorem
+        type: central_to
+        note: The trajectory distribution is the distribution over which the policy gradient expectation is taken
+      - target: Log-Derivative Trick
+        type: applied_to
+        note: The log-derivative trick is applied to p_θ(τ) to derive the gradient estimator

@@ -1,0 +1,270 @@
+concepts:
+  - name: Pinhole Camera Model
+    aliases: ["pinhole camera", "camera obscura model"]
+    definition: >-
+      A simplified camera model in which a single pinhole restricts light from
+      each scene point to exactly one ray, ensuring that each film (sensor)
+      position receives light from exactly one scene direction. This produces a
+      sharp image at the cost of low light throughput. The model introduces the
+      focal length f as the distance from the pinhole to the film. For an ideal
+      pinhole, a 3D point P = [x, y, z]^T in the camera frame projects to image
+      coordinates x' = f*x/z, y' = f*y/z. Modern cameras use lenses to gather
+      more light while preserving the sharp-projection property of the pinhole
+      model.
+    tags: [camera-models, optics, computer-vision]
+    relations:
+      - target: Perspective Projection
+        type: enables
+        note: The pinhole geometry directly produces perspective (divide-by-depth) projection.
+      - target: Focal Length
+        type: part_of
+        note: The focal length f is the defining geometric parameter of the pinhole model.
+      - target: Lens Model
+        type: contrasts_with
+        note: Lenses gather more light than pinholes while approximating the same projection geometry for distant objects.
+
+  - name: Perspective Projection
+    aliases: ["projective projection", "central projection"]
+    definition: >-
+      The mathematical mapping from 3D camera-frame coordinates (x, y, z) to 2D
+      image-plane coordinates, governed by the equations x' = alpha*x/z + c_x
+      and y' = beta*y/z + c_y. The defining characteristic is division by the
+      depth coordinate z, which makes objects appear smaller as they recede and
+      causes parallel lines to converge at vanishing points. This division by z
+      makes perspective projection nonlinear and prevents it from being written
+      as a plain matrix-vector product in Euclidean coordinates; homogeneous
+      coordinates resolve this by deferring the division to a normalization step.
+    tags: [camera-models, projective-geometry, computer-vision]
+    relations:
+      - target: Pinhole Camera Model
+        type: part_of
+        note: Perspective projection is the geometric consequence of the pinhole model.
+      - target: Homogeneous Coordinate System
+        type: prerequisite_for
+        note: Homogeneous coordinates are needed to express perspective projection as a linear matrix operation.
+      - target: Camera Intrinsic Matrix
+        type: related_to
+        note: The intrinsic matrix K encodes the full affine-plus-perspective projection in matrix form.
+
+  - name: Focal Length
+    aliases: ["f", "effective focal length"]
+    definition: >-
+      The distance f (in meters) from the lens (or pinhole) to the image plane
+      where parallel rays along the optical axis converge to the focal point. In
+      the thin lens equation 1/f = 1/z + 1/z0, it determines the relationship
+      between object distance z and image distance z0. In the pixel-coordinate
+      projection, focal length is absorbed into the effective focal length
+      parameters alpha = f*k and beta = f*l (in pixels), where k and l are the
+      horizontal and vertical pixel densities in pixels/meter. A larger focal
+      length produces greater image magnification.
+    tags: [camera-models, optics, intrinsic-parameters]
+    relations:
+      - target: Camera Intrinsic Matrix
+        type: part_of
+        note: Alpha and beta (focal length times pixel density) appear on the diagonal of K.
+      - target: Pinhole Camera Model
+        type: part_of
+        note: Focal length is the key geometric parameter of the pinhole/lens camera.
+      - target: Camera Calibration
+        type: prerequisite_for
+        note: Focal length must be estimated during camera calibration.
+
+  - name: Homogeneous Coordinate System
+    aliases: ["projective coordinates", "homogeneous coordinates"]
+    definition: >-
+      A mathematical representation that adds one extra dimension to standard
+      Euclidean coordinates so that perspective projection can be expressed as a
+      matrix multiplication. A 3D point [x, y, z]^T becomes [x, y, z, 1]^T (or
+      any scalar multiple [lambda*x, lambda*y, lambda*z, lambda]^T). A 2D point
+      [x, y]^T becomes [x, y, 1]^T. Recovering Euclidean coordinates requires
+      dividing all components by the last: [x, y, z, w]^T -> [x/w, y/w, z/w]^T.
+      The power of this system is that the nonlinear division by depth in
+      perspective projection is captured by the matrix multiplication itself,
+      with the normalization step performing the actual division. This allows the
+      entire camera pipeline to be written as P' = M*P.
+    tags: [projective-geometry, linear-algebra, camera-models]
+    relations:
+      - target: Perspective Projection
+        type: enables
+        note: Homogeneous coordinates linearize perspective projection into a matrix multiply.
+      - target: Camera Intrinsic Matrix
+        type: prerequisite_for
+        note: The intrinsic matrix K operates on homogeneous coordinates.
+      - target: SE(3) Transform
+        type: related_to
+        note: SE(3) rigid-body transforms are also conveniently expressed as 4x4 matrix multiplications in homogeneous form.
+
+  - name: Camera Intrinsic Matrix
+    aliases: ["K matrix", "intrinsic matrix", "calibration matrix"]
+    definition: >-
+      A 3x3 upper-triangular matrix K that encodes all internal camera
+      parameters, mapping camera-frame 3D coordinates (in homogeneous form) to
+      homogeneous image pixel coordinates. Its general form is:
+        K = [[alpha, -alpha*cot(theta), c_x],
+             [0,     beta/sin(theta),   c_y],
+             [0,     0,                 1  ]]
+      The five parameters (5 degrees of freedom) are: alpha (horizontal effective
+      focal length in pixels = f*k), beta (vertical effective focal length in
+      pixels = f*l), c_x and c_y (principal point coordinates), and theta (the
+      angle between pixel axes, capturing skewness). For most modern cameras
+      theta ≈ 90° so the off-diagonal skew term vanishes. The projection with
+      only intrinsics (assuming the point is already in camera frame) is
+      P' = [K | 0] * P.
+    tags: [camera-models, intrinsic-parameters, projective-geometry]
+    relations:
+      - target: Perspective Projection
+        type: enables
+        note: K encodes the full perspective projection plus pixel scaling and offset.
+      - target: Camera Skewness
+        type: part_of
+        note: The skew parameter theta appears as the off-diagonal entry -alpha*cot(theta) in K.
+      - target: Principal Point
+        type: part_of
+        note: The principal point (c_x, c_y) offsets the optical axis to pixel coordinates.
+      - target: Camera Matrix
+        type: part_of
+        note: K is the intrinsic factor in the full camera matrix M = K[R T].
+      - target: Camera Calibration
+        type: prerequisite_for
+        note: K must be estimated during camera calibration.
+
+  - name: Camera Skewness
+    aliases: ["pixel skew", "skew parameter", "axis non-orthogonality"]
+    definition: >-
+      A camera artifact in which the horizontal and vertical pixel axes are not
+      perfectly orthogonal. When the angle theta between the axes deviates from
+      90°, the skewness introduces a coupling between the x and y pixel
+      coordinates, represented by the off-diagonal term -alpha*cot(theta) in the
+      intrinsic matrix K. For theta = 90° (ideal orthogonal axes), cot(90°) = 0
+      and the skew term vanishes, leaving the simpler diagonal form of K. In
+      practice, most modern cameras have negligible skewness (theta very close to
+      90°), so skew is often set to zero, reducing the intrinsic DoF from 5 to 4.
+    tags: [camera-models, intrinsic-parameters]
+    relations:
+      - target: Camera Intrinsic Matrix
+        type: part_of
+        note: Skewness enters K as the off-diagonal element -alpha*cot(theta).
+
+  - name: Principal Point
+    aliases: ["image center", "optical center in image", "c_x c_y"]
+    definition: >-
+      The 2D pixel coordinate C' = [c_x, c_y] where the optical axis of the
+      lens pierces the image plane. In an ideal camera mounted perfectly, the
+      principal point would coincide with the geometric center of the sensor.
+      In practice it deviates due to manufacturing tolerances. Adding the
+      principal point offset converts from metric image-plane coordinates
+      (centered at the optical axis) to the pixel coordinate system
+      (origin at the image corner): x' = alpha*x/z + c_x, y' = beta*y/z + c_y.
+      It accounts for 2 of the 5 intrinsic degrees of freedom.
+    tags: [camera-models, intrinsic-parameters]
+    relations:
+      - target: Camera Intrinsic Matrix
+        type: part_of
+        note: c_x and c_y occupy the third column of K.
+      - target: Perspective Projection
+        type: part_of
+        note: The principal point offset is added after the basic f/z projection.
+
+  - name: SE(3) Transform
+    aliases: ["rigid-body transform", "extrinsic transform", "Euclidean group SE(3)"]
+    definition: >-
+      The Special Euclidean group SE(3) describes rigid-body motions in 3D
+      space, combining a rotation R in SO(3) (3 degrees of freedom) and a
+      translation T in R^3 (3 degrees of freedom) for a total of 6 DoF. In
+      homogeneous matrix form:
+        [R  T]   (4x4)
+        [0  1]
+      A point P_w in world coordinates is mapped to camera coordinates by
+      P_c = [R T; 0 1] * P_w. The rotation R can be parameterized as a product
+      of elementary rotations: R = R_x(alpha)*R_y(beta)*R_z(gamma). SE(3)
+      transforms are the extrinsic parameters in the full camera model, encoding
+      the camera's pose (position and orientation) relative to the world frame.
+    tags: [rigid-body-transforms, lie-groups, extrinsic-parameters, robotics]
+    relations:
+      - target: Camera Matrix
+        type: part_of
+        note: The extrinsic matrix [R T] is the SE(3) component of the full camera matrix M = K[R T].
+      - target: Camera Calibration
+        type: prerequisite_for
+        note: R and T must be estimated (or known from kinematics) during calibration.
+      - target: Homogeneous Coordinate System
+        type: related_to
+        note: SE(3) transforms are most cleanly expressed as 4x4 matrix multiplications in homogeneous coordinates.
+
+  - name: Camera Matrix
+    aliases: ["projection matrix", "M matrix", "camera projection matrix"]
+    definition: >-
+      The full 3x4 matrix M = K[R T] that maps a homogeneous 3D world-frame
+      point to a homogeneous 2D image pixel coordinate: P' = M*P_w, where
+      P_w = [x, y, z, 1]^T. It combines the 3x3 intrinsic matrix K (5 DoF)
+      with the 3x4 extrinsic matrix [R T] (rotation R: 3 DoF, translation T:
+      3 DoF), for a total of 11 degrees of freedom. Each row m_i of M is a
+      4-vector, and the pixel coordinates are recovered by u = (m_1 * P) /
+      (m_3 * P), v = (m_2 * P) / (m_3 * P). The camera matrix encodes both the
+      internal optics/sensor characteristics and the camera's pose in the world.
+    tags: [camera-models, projective-geometry, computer-vision]
+    relations:
+      - target: Camera Intrinsic Matrix
+        type: part_of
+        note: K is the intrinsic factor of M.
+      - target: SE(3) Transform
+        type: part_of
+        note: "[R T] is the extrinsic factor of M, encoding the camera-to-world pose."
+      - target: Camera Calibration
+        type: prerequisite_for
+        note: Camera calibration estimates M (or equivalently K, R, T) from data.
+      - target: Perspective Projection
+        type: enables
+        note: M encodes perspective projection as a single matrix multiplication in homogeneous coordinates.
+
+  - name: Camera Calibration
+    aliases: ["calibration", "camera parameter estimation"]
+    definition: >-
+      The process of estimating the intrinsic parameters K and extrinsic
+      parameters R, T of a camera from observed 3D-to-2D point correspondences.
+      A calibration target (typically a checkerboard with precisely known corner
+      positions) provides n 3D points P_i with known world coordinates and their
+      corresponding detected 2D pixel positions p_i = [u_i, v_i]^T. Each
+      correspondence imposes 2 linear constraints on the 11 entries of the camera
+      matrix M, so at least 6 correspondences (giving 12 constraints > 11
+      unknowns) are needed. In practice, many more points are used to reduce the
+      effect of corner detection noise. For robot systems, calibration can be done
+      with a static camera observing an onboard checkerboard (pose known via
+      kinematics), or an onboard wrist camera observing a static checkerboard.
+    tags: [camera-calibration, computer-vision, robotics]
+    relations:
+      - target: Camera Matrix
+        type: enables
+        note: Calibration produces the camera matrix M = K[R T].
+      - target: Camera Intrinsic Matrix
+        type: enables
+        note: Calibration recovers the 5 intrinsic parameters in K.
+      - target: SE(3) Transform
+        type: enables
+        note: Calibration recovers the 6 extrinsic parameters (R and T).
+      - target: Homogeneous Coordinate System
+        type: related_to
+        note: The calibration linear system is derived using the homogeneous form of the projection equation.
+
+  - name: Image
+    aliases: ["digital image", "RGB image", "pixel array"]
+    definition: >-
+      A 2D array representation of a scene captured by a camera sensor. An RGB
+      image of width W and height H is represented as a [W, H, 3] array where
+      each entry is an integer in [0, 255] encoding the red, green, or blue
+      channel intensity at that pixel. The pixel is the smallest addressable
+      element; its value is determined by the light intensity received at the
+      corresponding photodetector on the CMOS sensor. In the camera model, the
+      output of projection is a 2D pixel coordinate P' = [x', y']^T pointing
+      to a specific location in this array.
+    tags: [computer-vision, digital-imaging, representation]
+    relations:
+      - target: Perspective Projection
+        type: part_of
+        note: The image is the target of the perspective projection mapping.
+      - target: Principal Point
+        type: related_to
+        note: The principal point locates the optical axis within the image coordinate system.
+      - target: Camera Calibration
+        type: related_to
+        note: Calibration uses detected image coordinates of checkerboard corners as 2D observations.

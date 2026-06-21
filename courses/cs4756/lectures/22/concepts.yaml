@@ -1,0 +1,271 @@
+concepts:
+  - name: Transfer Learning
+    aliases: [knowledge transfer]
+    definition: >-
+      Learning a target task T_b by leveraging knowledge from a previously learned
+      source task T_a. The common assumption is that source data D_a is not accessible
+      during transfer. The simplest mechanism is fine-tuning: initialize target training
+      from source weights θ_a and update with target data D_b. Transfer learning is
+      a valid solution to multi-task learning, but not vice versa.
+    tags: [transfer-learning, supervised-learning, robotics]
+    relations:
+      - target: Fine-Tuning
+        type: enables
+        note: Fine-tuning is the most common mechanism for transfer learning.
+      - target: Domain Adaptation
+        type: related_to
+        note: Domain adaptation is transfer learning with access to unlabeled target domain data during training.
+      - target: Meta-Learning
+        type: related_to
+        note: Meta-learning explicitly optimizes for transferability, whereas transfer learning hopes pre-trained weights generalize.
+      - target: Continual Learning
+        type: related_to
+        note: Continual learning extends the transfer setting to sequential multi-task scenarios.
+      - target: Multi-Task Learning
+        type: contrasts_with
+        note: Multi-task learning optimizes all tasks simultaneously; transfer learning is sequential with no source data at transfer time.
+
+  - name: Multi-Task Learning
+    aliases: [MTL]
+    definition: >-
+      A learning paradigm that jointly optimizes over N tasks simultaneously:
+      min_θ Σ_{i=1}^{N} L_i(θ, D_i). All task data is available at once.
+      Differs from transfer learning in that tasks are not learned sequentially
+      and source data remains accessible.
+    tags: [multi-task-learning, supervised-learning]
+    relations:
+      - target: Transfer Learning
+        type: contrasts_with
+        note: Transfer learning is sequential; multi-task learning is simultaneous. Transfer learning can solve multi-task learning but not vice versa.
+      - target: Continual Learning
+        type: contrasts_with
+        note: Continual learning arrives at data incrementally; multi-task learning processes all data at once.
+
+  - name: Fine-Tuning
+    aliases: []
+    definition: >-
+      A transfer learning approach that initializes a model with pre-trained source
+      weights θ_a and continues gradient updates using target task data D_b:
+      θ_b ← θ_a - α∇_θ L(θ, D_b)|_{θ=θ_a}.
+      Design choices: use a smaller learning rate (1/10 of original), freeze early
+      layers (generic low-level features), reinitialize the final task-specific head,
+      and gradually unfreeze more layers as target dataset size grows.
+    tags: [fine-tuning, transfer-learning, deep-learning]
+    relations:
+      - target: Transfer Learning
+        type: part_of
+        note: Fine-tuning is the core mechanism of transfer learning.
+      - target: Catastrophic Forgetting
+        type: related_to
+        note: Unconstrained fine-tuning on a new task may overwrite representations from the source task.
+      - target: MAML
+        type: contrasts_with
+        note: MAML explicitly optimizes the initialization for fast fine-tuning, rather than assuming generic pre-training transfers.
+
+  - name: Modular Networks
+    aliases: [modular policy networks]
+    definition: >-
+      Network architectures decomposed into task-specific and robot-specific modules.
+      The task module g(·) encodes behavior for a particular manipulation task; the
+      robot module f(·) encodes embodiment properties (kinematics, morphology). At
+      inference, modules for unseen (robot, task) combinations are composed from
+      trained components, enabling O(R×T) combinations from O(R+T) modules.
+    tags: [modular-networks, transfer-learning, robotics, architecture]
+    relations:
+      - target: Transfer Learning
+        type: part_of
+        note: Modularity enables selective reuse across tasks and robot embodiments.
+      - target: Catastrophic Forgetting
+        type: related_to
+        note: Modular designs protect earlier modules from being overwritten by new task updates.
+
+  - name: Continual Learning
+    aliases: [lifelong learning, sequential task learning]
+    definition: >-
+      A learning paradigm where tasks T_1, T_2, ... arrive incrementally and the
+      goal is to learn all tasks without forgetting earlier ones. Differs from
+      transfer learning (goal is only the last task) and multi-task learning (data
+      arrives simultaneously). The primary challenge is catastrophic forgetting.
+      Also called Lifelong Learning when emphasizing the lifetime timescale.
+    tags: [continual-learning, catastrophic-forgetting, transfer-learning]
+    relations:
+      - target: Catastrophic Forgetting
+        type: part_of
+        note: Catastrophic forgetting is the primary failure mode that continual learning methods address.
+      - target: Transfer Learning
+        type: related_to
+        note: Continual learning is the sequential multi-task variant of transfer learning.
+      - target: Multi-Task Learning
+        type: contrasts_with
+        note: Multi-task learning sees all data simultaneously; continual learning sees it incrementally.
+
+  - name: Catastrophic Forgetting
+    aliases: [catastrophic interference]
+    definition: >-
+      The phenomenon where training a neural network on a new task causes it to
+      lose performance on previously learned tasks. Gradient updates for the new
+      task overwrite shared weights encoding earlier knowledge. A central challenge
+      in continual and lifelong learning.
+    tags: [continual-learning, catastrophic-forgetting, neural-networks]
+    relations:
+      - target: Continual Learning
+        type: related_to
+        note: Catastrophic forgetting is the core problem that continual learning methods address.
+      - target: Fine-Tuning
+        type: related_to
+        note: Unconstrained fine-tuning on a new task can erase representations from the source task.
+      - target: Modular Networks
+        type: related_to
+        note: Modular architectures mitigate forgetting by protecting earlier modules from new task gradients.
+
+  - name: Domain Adaptation
+    aliases: [sim-to-real transfer, distribution shift adaptation, transductive transfer learning]
+    definition: >-
+      A form of transfer learning where source domain D_S (e.g., simulation) has
+      labeled data but target domain D_T (e.g., real world) does not, and the
+      marginal distributions differ: p_S(x) ≠ p_T(x). The goal is to learn a model
+      that performs well on p_T(x, y). Having access to unlabeled target data during
+      training (transductive learning) distinguishes domain adaptation from standard
+      transfer learning. Three variants: unsupervised (no target labels), semi-supervised
+      (some target labels), and supervised (full target labels).
+    tags: [domain-adaptation, sim-to-real, distribution-shift, robotics]
+    relations:
+      - target: Transfer Learning
+        type: part_of
+        note: Domain adaptation is transfer learning with target domain data available at train time.
+      - target: Adversarial Domain Classifier (DANN)
+        type: enables
+        note: DANN is the canonical feature-alignment algorithm for unsupervised domain adaptation.
+      - target: Sim-to-Real Transfer
+        type: related_to
+        note: Sim-to-real is the dominant domain adaptation application in robotics (simulation as source, real world as target).
+
+  - name: Sim-to-Real Transfer
+    aliases: [simulation to reality, sim2real]
+    definition: >-
+      The problem of deploying a robot policy trained in simulation to the real world.
+      The domain shift between simulated and real sensor observations (lighting, textures,
+      physics) causes performance degradation. Addressed through domain adaptation
+      (feature alignment) or domain randomization (training across varied simulation
+      parameters to cover real-world variation).
+    tags: [sim-to-real, domain-adaptation, robotics, transfer-learning]
+    relations:
+      - target: Domain Adaptation
+        type: part_of
+        note: Sim-to-real is the principal application of domain adaptation in robot learning.
+      - target: Adversarial Domain Classifier (DANN)
+        type: enables
+        note: DANN aligns sim and real feature spaces without real-world labels.
+
+  - name: Adversarial Domain Classifier (DANN)
+    aliases: [domain adversarial neural network, DANN, gradient reversal, feature alignment]
+    definition: >-
+      A domain adaptation algorithm (Ganin et al., JMLR 2015) that trains a shared
+      feature encoder f_θ(x), a label classifier g_{θ_g}(y|f(x)), and a domain
+      classifier c_φ(d=source|f(x)). The encoder minimizes label prediction error
+      while maximizing domain confusion via gradient reversal.
+      Algorithm:
+        (1) Update domain classifier: min_φ L_c = -E_{x~D_S}[log c_φ(f(x))] - E_{x~D_T}[1 - log c_φ(f(x))]
+        (2) Update encoder + label classifier: min_{θ,θ_g} E_{(x,y)~D_S}[L(g_{θ_g}(f_θ(x)),y)] - λL_c
+      The -λ(dL_c/dθ) term reverses the domain classifier gradient, implementing
+      the adversarial game in a single backward pass.
+    tags: [domain-adaptation, adversarial-training, sim-to-real, feature-alignment, robotics]
+    relations:
+      - target: Domain Adaptation
+        type: part_of
+        note: DANN is the canonical approach to feature-alignment-based unsupervised domain adaptation.
+      - target: Sim-to-Real Transfer
+        type: enables
+        note: DANN has been applied to sim-to-real robotic grasping (Bousmalis et al., ICRA 2018).
+
+  - name: Meta-Learning
+    aliases: [learning to learn, few-shot learning]
+    definition: >-
+      A learning paradigm that explicitly optimizes for transferability across many
+      training tasks. Given training tasks T_1,...,T_N, meta-learning finds an
+      inductive bias (shared initialization, context encoder, etc.) that enables fast
+      adaptation to new tasks from small D_i^tr. Two main paradigms:
+      optimization-based (MAML) and context-based (one-shot imitation, PEARL).
+      Contrasts with standard transfer learning, which hopes pre-trained weights
+      generalize without explicitly training for transferability.
+    tags: [meta-learning, few-shot, transfer-learning, robotics]
+    relations:
+      - target: Transfer Learning
+        type: related_to
+        note: Meta-learning is a principled extension of transfer learning that explicitly optimizes for fast adaptation.
+      - target: MAML
+        type: enables
+        note: MAML is the canonical optimization-based meta-learning algorithm.
+      - target: PEARL
+        type: enables
+        note: PEARL is a context-based probabilistic meta-RL algorithm.
+      - target: One-Shot Imitation Learning
+        type: enables
+        note: One-shot imitation is a context-based nonparametric meta-learning approach.
+
+  - name: MAML
+    aliases: [Model-Agnostic Meta-Learning]
+    definition: >-
+      An optimization-based meta-learning algorithm (Finn et al., ICML 2017) that
+      learns a shared initialization θ such that one gradient step on D_i^tr yields
+      good performance on D_i^ts for any task i in the training distribution.
+      Meta-objective: min_θ Σ_i L(θ - α∇_θL(θ,D_i^tr), D_i^ts).
+      Meta-training loop: (1) sample task T_i=(D_i^tr,D_i^ts);
+      (2) compute φ_i ← θ - α∇_θL(θ,D_i^tr) [inner loop, function of θ];
+      (3) update θ ← θ - β∇_θL(φ_i,D_i^ts) [outer loop, requires second-order gradients].
+      Meta-testing: given new task, adapt φ ← θ - α∇_θL(θ,D^tr), predict on D^ts.
+    tags: [meta-learning, maml, optimization, few-shot, second-order]
+    relations:
+      - target: Meta-Learning
+        type: part_of
+        note: MAML is the seminal optimization-based meta-learning method.
+      - target: Fine-Tuning
+        type: related_to
+        note: MAML optimizes the initialization so that fine-tuning from θ reaches good performance in one step.
+      - target: PEARL
+        type: contrasts_with
+        note: PEARL adapts via context inference (forward pass); MAML adapts via gradient steps.
+
+  - name: PEARL
+    aliases: [Probabilistic Embeddings for Actor-critic RL, probabilistic meta-RL]
+    definition: >-
+      A context-based meta-RL algorithm (Rakelly and Zhou et al., ICML 2019) that
+      infers a latent task variable z from context c (past transitions) via an inference
+      network q_φ(z|c). Policy π_θ(a|s,z) and Q-function Q_θ(s,a,z) are conditioned
+      on z. z is regularized toward N(0,I) via KL divergence. At meta-test time, z is
+      iteratively refined by collecting rollouts and accumulating context:
+        for k=1..K: sample z~q_φ(z|c^T), roll out π_θ(a|s,z), accumulate c^T.
+      This online inference loop improves z estimates as more experience is gathered.
+    tags: [meta-learning, meta-rl, context-based, probabilistic, off-policy]
+    relations:
+      - target: Meta-Learning
+        type: part_of
+        note: PEARL is the canonical context-based probabilistic approach to meta-RL.
+      - target: MAML
+        type: contrasts_with
+        note: MAML adapts via gradient steps; PEARL adapts via latent context inference (no gradient needed at test time).
+      - target: One-Shot Imitation Learning
+        type: related_to
+        note: Both are context-based; one-shot imitation uses demonstration trajectories as context, PEARL uses reward transitions.
+
+  - name: One-Shot Imitation Learning
+    aliases: [one-shot IL, nonparametric meta-imitation]
+    definition: >-
+      A context-based meta-learning approach (Duan et al., NeurIPS 2017) that learns
+      to imitate a task from a single demonstration at test time. Trained with many
+      demonstrations across many training tasks. Architecture: Demonstration Network
+      (temporal convolution + neighborhood attention + temporal dropout) encodes the
+      demo; Context Network (attention over demo) produces a context embedding;
+      Manipulation Network (attention over current state + context) outputs actions.
+      At test time no gradient update is required — the demonstration is the context.
+    tags: [meta-learning, imitation-learning, one-shot, robotics, attention]
+    relations:
+      - target: Meta-Learning
+        type: part_of
+        note: One-shot imitation learning is a context-based, nonparametric meta-learning method for robot manipulation.
+      - target: PEARL
+        type: related_to
+        note: Both are context-based meta-learning; one-shot imitation uses demonstrations as context, PEARL uses RL transitions.
+      - target: MAML
+        type: contrasts_with
+        note: MAML adapts via gradient steps; one-shot imitation adapts via a forward pass conditioned on a demonstration.

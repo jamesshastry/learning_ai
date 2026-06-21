@@ -1,0 +1,453 @@
+concepts:
+  - name: Robot Learning
+    aliases: [robot learning, ML for robotics, learning-based robotics]
+    definition: >-
+      The application of machine learning techniques to solve robotics problems.
+      Specifically, using methods such as representation learning, imitation learning,
+      reinforcement learning, and dynamics learning to address robotics challenges in
+      perception and control. Distinct from classical robotics in that behaviors are
+      learned from data rather than hand-engineered. Defined formally as:
+      Robot Learning = using Machine Learning to solve Robotics.
+    tags: [definition, core-concept, ml, robotics]
+    relations:
+      - target: Imitation Learning
+        type: part_of
+        note: Imitation learning is one of the primary ML techniques used in robot learning
+      - target: Reinforcement Learning
+        type: part_of
+        note: RL is another primary ML technique in the robot learning toolkit
+      - target: Representation Learning
+        type: part_of
+        note: Representation learning provides the feature extraction underpinning perception
+      - target: Dynamics Learning
+        type: part_of
+        note: Dynamics learning enables model-based planning and control
+      - target: Robot Perception
+        type: enables
+        note: Robot learning provides the learned models that interpret sensor data
+      - target: Robot Control
+        type: enables
+        note: Robot learning produces policies that generate motor commands
+      - target: Data Flywheel
+        type: related_to
+        note: Robotics lacks the data flywheel that powers internet-scale ML — a key bottleneck
+
+  - name: Robot
+    aliases: [robotic system, autonomous machine]
+    definition: >-
+      A machine — especially one programmable by a computer — capable of carrying out
+      a complex series of actions automatically (Wikipedia definition). Characterized
+      by two key properties: physical instantiation as a machine, and the capacity for
+      autonomous (automatic) execution. Encompasses a wide range of morphologies
+      including robotic arms, legged robots, humanoids, wheeled robots, UAVs, and
+      soft robots. Distinguished from a washing machine (not general-purpose/programmable),
+      exoskeleton (human-directed), and chatbot (no physical embodiment).
+    tags: [definition, hardware, morphology]
+    relations:
+      - target: Robot Morphology
+        type: related_to
+        note: The physical form factor (arms, legs, wheels, etc.) is one dimension of robot classification
+      - target: Robot Autonomy
+        type: related_to
+        note: Degree of autonomy is the second classification axis
+
+  - name: Robot Morphology
+    aliases: [robot form factor, robot body type, embodiment]
+    definition: >-
+      The physical structure and body plan of a robot. Key morphology classes: robotic
+      arms (industrial manipulators), legged robots (quadrupeds, bipeds), humanoids
+      (human-like embodiment), wheeled robots (ground mobile platforms), unmanned aerial
+      vehicles (drones), and soft robots (compliant, deformable bodies). Classified on a
+      spectrum from morphology purist (must be humanoid) to morphology neutral (must be
+      able to manipulate) to morphology rebel (any degrees of freedom acceptable).
+    tags: [hardware, taxonomy, embodiment]
+    relations:
+      - target: Robot
+        type: part_of
+        note: Morphology is a defining characteristic of any robot
+      - target: Dexterity
+        type: related_to
+        note: Morphology directly constrains what dexterous tasks are achievable
+      - target: High-Dimensional Control
+        type: related_to
+        note: Humanoid and dexterous-hand morphologies create high-dimensional control problems
+
+  - name: Robot Autonomy
+    aliases: [autonomy level, degree of autonomy]
+    definition: >-
+      The degree to which a robot can act without human intervention. Classified on a
+      spectrum from autonomy purist (must be general-purpose and fully autonomous) to
+      autonomy neutral (at least somewhat intelligent) to autonomy rebel (manual control
+      is acceptable). Combined with morphology, forms a 3x3 taxonomy: e.g., Terminator
+      (humanoid + fully autonomous), Atlas (humanoid + autonomy neutral), Gundam
+      (humanoid + manual control), Wall-E (manipulator + fully autonomous), L5 Vehicle
+      (any DoFs + fully autonomous), Chopsticks (any DoFs + manual).
+    tags: [taxonomy, autonomy, control]
+    relations:
+      - target: Robot
+        type: part_of
+        note: Autonomy level is the second axis in robot classification alongside morphology
+      - target: Generalizability
+        type: related_to
+        note: Higher generalizability enables greater autonomy across varied situations
+
+  - name: Dexterity
+    aliases: [robot dexterity, manipulation dexterity, physical dexterity]
+    definition: >-
+      The capability of a robot to perform complex, precise physical interactions —
+      particularly fine manipulation tasks such as solving a Rubik's cube with a
+      multi-fingered hand. Building dexterous robots requires overcoming three key
+      challenges: (1) high-dimensional control spaces (many degrees of freedom in hands
+      and arms), (2) complex dynamics (contact, friction, deformable objects), and
+      (3) perception-action uncertainty (noisy sensors, partial observability). One of
+      the two primary axes of the robot learning North Star goal.
+    tags: [core-challenge, manipulation, control]
+    relations:
+      - target: Generalizability
+        type: contrasts_with
+        note: The dexterity-generalizability trade-off is the central tension; specialized systems maximize dexterity at the cost of generality
+      - target: High-Dimensional Control
+        type: part_of
+        note: Managing many actuator DoFs is a sub-challenge of dexterity
+      - target: Complex Dynamics
+        type: part_of
+        note: Handling contact and friction is a sub-challenge of dexterity
+      - target: Perception-Action Uncertainty
+        type: part_of
+        note: Closing the sensor-actuator loop under uncertainty is a sub-challenge of dexterity
+
+  - name: Generalizability
+    aliases: [open-world generalization, robot generalization, generalization]
+    definition: >-
+      The capability of a robot to operate effectively across diverse environments,
+      tasks, and instruction modalities not seen during training. Structured along three
+      levels of open-world generalization: environment-level (new objects, scenes,
+      layouts), behavior-level (new tasks or skill compositions), and instruction-level
+      (new modalities: language, gamepad, gesture, demonstration video). Analogous to how
+      large language models generalize across text domains. The second primary axis of the
+      robot learning North Star goal.
+    tags: [core-challenge, generalization, open-world]
+    relations:
+      - target: Dexterity
+        type: contrasts_with
+        note: Generalizable systems often sacrifice task-specific precision; central design tension
+      - target: Open-World Generalization Levels
+        type: part_of
+        note: Environment-, behavior-, and instruction-level generalization are the three structured sub-problems
+      - target: Data Flywheel
+        type: prerequisite_for
+        note: Scaling generalization requires data at a scale that current robotics data collection cannot easily provide
+
+  - name: Open-World Generalization Levels
+    aliases: [generalization levels, open-world levels, three levels of generalization]
+    definition: >-
+      A three-level taxonomy of what a generalizable robot must handle:
+      (1) Environment-Level — new objects, textures, scene layouts (e.g., unseen
+      cleaning tools, new snack packaging seen in a cluttered room environment);
+      (2) Behavior-Level — new tasks or skill compositions (e.g., hammering vs. screwing
+      a nail into a plank); (3) Instruction-Level — new instruction modalities including
+      natural language commands, gamepad input, hand gestures, and demonstration videos.
+      Each level demands different generalization capabilities from the learned model.
+    tags: [generalization, taxonomy, open-world]
+    relations:
+      - target: Generalizability
+        type: part_of
+        note: This taxonomy decomposes the generalizability challenge into tractable sub-problems
+      - target: Multi-Task Learning
+        type: related_to
+        note: Behavior-level generalization is closely tied to multi-task and goal-conditioned learning
+      - target: Goal-Conditioned Learning
+        type: related_to
+        note: Instruction-level generalization is the goal-conditioning problem — conditioning policies on language, video, or gesture
+
+  - name: Data Flywheel
+    aliases: [data flywheel effect, virtuous data cycle, data network effect]
+    definition: >-
+      A self-reinforcing feedback loop in ML systems: more users generate more training
+      data, which improves model performance, which attracts more users, which generates
+      more data. The engine behind internet-scale ML successes (search, recommendation,
+      LLMs). Robot learning critically lacks this flywheel because collecting robot
+      experience requires costly physical hardware, real time, and human supervision —
+      making data collection slow and expensive compared to digital ML domains where data
+      is a free byproduct of product use.
+    tags: [data, scaling, ml-vs-robot-learning]
+    relations:
+      - target: Robot Learning
+        type: related_to
+        note: The absence of a natural data flywheel is a defining bottleneck distinguishing robot learning from standard ML
+      - target: Generalizability
+        type: prerequisite_for
+        note: Achieving broad generalization requires the data scale that a flywheel would provide
+
+  - name: High-Dimensional Control
+    aliases: [high-DoF control, dexterous manipulation control]
+    definition: >-
+      The control challenge arising from robots with many actuated degrees of freedom,
+      such as multi-fingered dexterous hands (illustrated with a 5-fingered robotic hand).
+      The action space grows combinatorially, making hand-engineered policies intractable.
+      Learning-based approaches (imitation learning, RL) are particularly relevant here
+      because they can discover effective control strategies in high-dimensional spaces
+      from data without requiring explicit specification of all behaviors.
+    tags: [control, dexterity, challenge]
+    relations:
+      - target: Dexterity
+        type: part_of
+        note: One of three sub-challenges within dexterity
+      - target: Reinforcement Learning
+        type: related_to
+        note: RL is well-suited to discovering policies in high-dimensional action spaces
+
+  - name: Complex Dynamics
+    aliases: [contact dynamics, manipulation dynamics, physical dynamics]
+    definition: >-
+      The challenge of modeling and controlling physical interactions that involve contact
+      forces, friction, impact, and deformable objects. Classical physics-based models
+      are often inaccurate or computationally intractable for contact-rich manipulation.
+      Illustrated by the challenge of controlling a quadruped walking on varied terrain
+      (complex ground contact dynamics). Learned dynamics models and sim-to-real transfer
+      are key approaches.
+    tags: [dynamics, dexterity, challenge, physics]
+    relations:
+      - target: Dexterity
+        type: part_of
+        note: One of three sub-challenges within dexterity
+      - target: Dynamics Learning
+        type: related_to
+        note: Dynamics learning directly addresses modeling complex physical interactions
+
+  - name: Perception-Action Uncertainty
+    aliases: [sensorimotor uncertainty, perceptual uncertainty, sensor-action loop]
+    definition: >-
+      The challenge of acting under uncertainty arising from noisy and partial sensor
+      observations combined with the need to close the loop between perception and action
+      in real time. Illustrated by point cloud reconstructions of objects that contain
+      significant noise and missing data — making precise grasp planning difficult.
+      Requires uncertainty-aware perception models and robust control policies that can
+      act despite incomplete information.
+    tags: [perception, uncertainty, dexterity, challenge]
+    relations:
+      - target: Dexterity
+        type: part_of
+        note: One of three sub-challenges within dexterity
+      - target: Robot Perception
+        type: related_to
+        note: Perception quality directly determines the quality of information available for action
+
+  - name: Robot Perception
+    aliases: [robot sensing, robotic perception, visual perception]
+    definition: >-
+      The problem of interpreting raw sensor data (cameras, lidar, tactile sensors) into
+      structured representations useful for decision making. Core perception sub-problems
+      in this course include: camera models and image formation, 2D visual representations,
+      3D visual representations (depth, voxels, point clouds, meshes), and detection and
+      pose estimation. Perception is one half of the robotics problem that ML is applied
+      to in robot learning; the other half is control.
+    tags: [perception, vision, sensing]
+    relations:
+      - target: Robot Learning
+        type: part_of
+        note: Perception is one of the two robotics sub-problems that robot learning addresses
+      - target: Robot Control
+        type: enables
+        note: Perception outputs feed directly into control policies
+      - target: Representation Learning
+        type: related_to
+        note: Representation learning produces the features that perception modules output
+
+  - name: Robot Control
+    aliases: [robotic control, motion control, policy]
+    definition: >-
+      The problem of generating appropriate motor commands or actions given the robot's
+      current state and perception of the environment. In the robot learning framing,
+      control is formalized as a policy: a mapping from states (or observations) to
+      actions. Approaches include model-free methods (imitation learning, RL with policy
+      gradients, actor-critic, Q-functions) and model-based methods (model predictive
+      control, dynamics learning). Robotic control as a Markov Decision Process is a key
+      formalization covered in the fundamentals module.
+    tags: [control, policy, decision-making]
+    relations:
+      - target: Robot Learning
+        type: part_of
+        note: Control is one of the two robotics sub-problems that robot learning addresses
+      - target: Markov Decision Process
+        type: related_to
+        note: MDP is the mathematical framework used to formalize robotic control problems
+      - target: Imitation Learning
+        type: related_to
+        note: Imitation learning learns control policies from expert demonstrations
+      - target: Reinforcement Learning
+        type: related_to
+        note: RL learns control policies by optimizing reward signals through environment interaction
+
+  - name: Imitation Learning
+    aliases: [learning from demonstration, LfD, behavioral cloning, IL]
+    definition: >-
+      A family of ML approaches that learn robot policies by imitating expert
+      demonstrations rather than through trial-and-error reward optimization. Includes
+      behavioral cloning (supervised regression from observation to action) and more
+      advanced methods that address distribution shift (DAgger and variants). Particularly
+      relevant for robot learning because it avoids the need to specify reward functions
+      and can leverage human demonstrations collected via teleoperation. Covered in two
+      lectures in the Model-Free Decision Making module.
+    tags: [algorithm, model-free, decision-making]
+    relations:
+      - target: Robot Learning
+        type: part_of
+        note: Imitation learning is a primary ML technique in robot learning
+      - target: Reinforcement Learning
+        type: contrasts_with
+        note: IL learns from demonstrations rather than reward signals; avoids exploration but inherits expert behavior distribution and suffers from distribution shift
+      - target: Robot Control
+        type: enables
+        note: IL produces control policies directly from demonstrations
+
+  - name: Reinforcement Learning
+    aliases: [RL, policy optimization, reward-based learning]
+    definition: >-
+      A family of ML approaches where an agent learns a policy by interacting with an
+      environment, receiving reward signals, and optimizing cumulative return. In robot
+      learning, RL spans model-free methods (policy gradients, actor-critic, Q-functions)
+      and model-based methods (model predictive control, dynamics learning). The standard
+      RL loop: environment provides state s_t and reward r_t; robot outputs action a_t.
+      Powerful for discovering non-obvious solutions but requires many interactions and
+      reward specification — both expensive in physical robotics.
+    tags: [algorithm, decision-making, model-free, model-based]
+    relations:
+      - target: Robot Learning
+        type: part_of
+        note: RL is one of the primary ML technique families in robot learning
+      - target: Imitation Learning
+        type: contrasts_with
+        note: RL uses reward signals and exploration; IL uses demonstrations
+      - target: Markov Decision Process
+        type: prerequisite_for
+        note: MDP is the mathematical framework that formalizes RL problems
+      - target: Model Predictive Control
+        type: related_to
+        note: MPC is a model-based approach to the same sequential decision making problem RL addresses
+
+  - name: Markov Decision Process
+    aliases: [MDP, sequential decision making formalism]
+    definition: >-
+      The standard mathematical framework for formalizing sequential decision making
+      under uncertainty. Defined by a tuple (S, A, T, R, gamma): state space S, action
+      space A, transition dynamics T(s'|s,a), reward function R(s,a), and discount
+      factor gamma. In robot learning, states correspond to robot and environment
+      configurations, actions to motor commands, and transitions to physical dynamics.
+      The MDP formalism is the bridge between robotics problems and RL algorithms.
+      Covered in the Fundamentals module as "Robotic Control as Markov Decision Processes."
+    tags: [formalism, theory, decision-making]
+    relations:
+      - target: Reinforcement Learning
+        type: enables
+        note: MDP provides the formal framework that RL algorithms optimize within
+      - target: Robot Control
+        type: related_to
+        note: Robotic control as an MDP is a key fundamentals lecture topic
+
+  - name: Model Predictive Control
+    aliases: [MPC, receding horizon control]
+    definition: >-
+      A model-based control strategy that repeatedly solves a finite-horizon optimization
+      problem using a learned or known dynamics model, executes the first action, then
+      re-plans at the next timestep (receding horizon). Allows explicit incorporation of
+      constraints and multi-step lookahead. Requires a dynamics model of the environment,
+      which can be learned from data (dynamics learning). Example application: planning
+      for self-driving vehicles at intersections with uncertain other-vehicle behavior.
+      Covered in two lectures in the Model-Based Decision Making module.
+    tags: [algorithm, model-based, control]
+    relations:
+      - target: Reinforcement Learning
+        type: related_to
+        note: MPC is a model-based approach to the same sequential decision making problem as RL
+      - target: Dynamics Learning
+        type: prerequisite_for
+        note: MPC requires a dynamics model, which dynamics learning provides
+
+  - name: Dynamics Learning
+    aliases: [learned dynamics model, world model, dynamics model]
+    definition: >-
+      Learning a predictive model of how the environment transitions in response to
+      robot actions: T_theta(s'|s,a). The learned dynamics model can then be used for
+      planning (e.g., MPC), data augmentation, or policy optimization. Particularly
+      valuable in robotics where physical dynamics are complex and hard to model
+      analytically (contact, friction, deformable materials). Also called a "world model"
+      in the model-based RL literature (e.g., Ha & Schmidhuber's World Models: VAE + MDN-RNN).
+    tags: [algorithm, model-based, dynamics]
+    relations:
+      - target: Model Predictive Control
+        type: enables
+        note: A learned dynamics model is the core component that MPC plans over
+      - target: Complex Dynamics
+        type: related_to
+        note: Dynamics learning is a key approach to the complex dynamics challenge in dexterity
+      - target: Reinforcement Learning
+        type: related_to
+        note: Model-based RL uses learned dynamics models to reduce sample complexity
+
+  - name: Representation Learning
+    aliases: [feature learning, learned representations, embedding learning]
+    definition: >-
+      Learning compact, structured representations of states, observations, or actions
+      from raw sensor data. In robot learning, representation learning enables perception
+      modules to extract task-relevant features from images, point clouds, or other
+      modalities, which are then used by downstream control policies. Foundational to
+      connecting the perception and control sub-problems. Can be unsupervised (autoencoders,
+      VAEs), self-supervised, or supervised.
+    tags: [algorithm, perception, ml]
+    relations:
+      - target: Robot Perception
+        type: enables
+        note: Representation learning produces the features that perception modules output
+      - target: Robot Learning
+        type: part_of
+        note: Representation learning is one of the ML technique families within robot learning
+
+  - name: Goal-Conditioned Learning
+    aliases: [goal-conditioned RL, goal-conditioned policy, GCRL]
+    definition: >-
+      A learning paradigm where policies are conditioned on a goal specification, enabling
+      a single policy to pursue different goals at test time. Goals can be specified as
+      desired states, images, or natural language descriptions. Directly addresses
+      instruction-level generalization (one of the three open-world generalization levels)
+      and is a key frontier topic in the course.
+    tags: [algorithm, frontiers, generalization]
+    relations:
+      - target: Open-World Generalization Levels
+        type: related_to
+        note: Goal conditioning is the primary technique for achieving instruction-level generalization
+      - target: Multi-Task Learning
+        type: related_to
+        note: Goal-conditioned learning and multi-task learning are closely related paradigms for task-level generalization
+
+  - name: Multi-Task Learning
+    aliases: [MTL, multi-task robot learning]
+    definition: >-
+      Training a single model to perform multiple tasks simultaneously, enabling positive
+      transfer between tasks and producing a more general policy. In robotics, tasks may
+      share perception features or low-level motor primitives. Directly addresses
+      behavior-level generalization. A frontier topic in the course, closely related to
+      goal-conditioned learning.
+    tags: [algorithm, frontiers, generalization]
+    relations:
+      - target: Goal-Conditioned Learning
+        type: related_to
+        note: Goal conditioning is a common implementation strategy for multi-task policies
+      - target: Open-World Generalization Levels
+        type: related_to
+        note: Multi-task learning targets behavior-level generalization
+
+  - name: Engineering Approach to Robotics
+    aliases: [classical robotics, hand-engineered robotics, robot programming]
+    definition: >-
+      The traditional approach to developing robot software through explicit hand-coding
+      of behaviors, control rules, and state machines — without learning from data.
+      Works well in structured, constrained environments (factory assembly lines, circuit
+      board assembly) where conditions are predictable. Fails to scale to the diversity
+      and unpredictability of open-world environments. Robot learning adds a learning
+      component on top of engineering, rather than replacing engineering entirely.
+    tags: [approach, classical, control]
+    relations:
+      - target: Robot Learning
+        type: contrasts_with
+        note: Robot learning augments engineering with data-driven approaches to handle complexity and variability that hand-coding cannot

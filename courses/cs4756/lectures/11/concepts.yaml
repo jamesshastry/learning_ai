@@ -1,0 +1,266 @@
+concepts:
+  - name: Model-Based Reinforcement Learning
+    aliases:
+      - MBRL
+      - Model-Based RL
+    definition: >-
+      A class of RL methods that leverage an explicit dynamics model P_theta(s_{t+1} | s_t, a_t)
+      — either known (from simulation) or learned from interaction data — to plan action sequences
+      without requiring a parameterized policy. Contrasts with model-free RL, which treats the
+      transition model as unknown and learns purely from reward signals.
+    tags:
+      - planning
+      - model-based-rl
+      - dynamics
+    relations:
+      - target: Trajectory Optimization
+        type: enables
+        note: The dynamics model is the engine that makes trajectory optimization possible — it allows simulating the future without real interaction.
+      - target: Model Predictive Control
+        type: enables
+        note: MPC is the dominant algorithmic framework for applying MBRL at each time step online.
+
+  - name: Trajectory Optimization
+    aliases:
+      - Trajectory Planning
+      - Open-Loop Planning
+    definition: >-
+      The problem of finding an action sequence a_{0:T-1} that maximizes the expected cumulative
+      reward subject to dynamics constraints. Formulated as:
+        max_{a_{0:T-1}} E_{s_{1:T}}[ sum_t R(s_t, a_t) | s_0, a_{0:T-1} ]
+      subject to s_{t+1} ~ P(s_{t+1} | s_t, a_t).
+      In the deterministic case, sampling-based planning rolls out N candidate action sequences
+      through the dynamics model, scores each by total reward, and selects the best. In the
+      stochastic case, states are also sampled from the transition distribution.
+    tags:
+      - planning
+      - trajectory-optimization
+      - model-based-rl
+    relations:
+      - target: Model-Based Reinforcement Learning
+        type: part_of
+        note: Trajectory optimization is the core planning primitive in MBRL — it is how the dynamics model is used to select actions.
+      - target: Model Predictive Control
+        type: enables
+        note: MPC applies trajectory optimization repeatedly in a receding-horizon closed-loop fashion.
+      - target: Cross-Entropy Method
+        type: enables
+        note: CEM is an efficient algorithm for solving the trajectory optimization problem when the search space is large.
+
+  - name: Deterministic Dynamics Model
+    aliases:
+      - Deterministic Transition Model
+    definition: >-
+      A dynamics model of the form s_{t+1} = f(s_t, a_t) that maps a state-action pair to a
+      unique next state. This is a special (degenerate) case of the stochastic model where
+      P_theta(s_{t+1} | s_t, a_t) = delta(s_{t+1} - f(s_t, a_t)). Simplifies trajectory
+      optimization to a deterministic tree search over sampled action sequences.
+    tags:
+      - dynamics
+      - planning
+    relations:
+      - target: Trajectory Optimization
+        type: part_of
+        note: Deterministic dynamics eliminates the need to sample states; trajectory optimization reduces to rolling out f(s,a) for each candidate action sequence.
+      - target: Stochastic Dynamics Model
+        type: contrasts_with
+        note: Deterministic models are simpler but fail to capture environment stochasticity; stochastic models require sampling states at each step.
+
+  - name: Stochastic Dynamics Model
+    aliases:
+      - Probabilistic Dynamics Model
+      - Stochastic Transition Model
+    definition: >-
+      A dynamics model P_theta(s_{t+1} | s_t, a_t) that outputs a distribution over next states.
+      The state trajectory distribution under a fixed action sequence is the product of per-step
+      transitions: p(s_{1:T} | s_0, a_{0:T-1}) = prod_t P(s_{t+1} | s_t, a_t).
+      Planning maximizes the expected return over this distribution. In practice, states are sampled
+      and returns can be averaged across multiple rollouts per action sequence to reduce variance.
+    tags:
+      - dynamics
+      - planning
+      - stochastic
+    relations:
+      - target: Deterministic Dynamics Model
+        type: contrasts_with
+        note: Stochastic models require sampling both actions and states; they better capture real-world uncertainty but are more expensive to plan with.
+      - target: Trajectory Optimization
+        type: part_of
+        note: The stochastic trajectory optimization objective maximizes expected reward, estimated by Monte Carlo rollouts.
+
+  - name: Open-Loop Control
+    aliases:
+      - Feed-Forward Control
+    definition: >-
+      A control strategy that plans the entire action sequence a_{0:T-1} at time t=0 using only
+      the initial state s_0, then executes all actions without any further environment feedback.
+      Simple and computationally cheap (plan once), but brittle: any model error or external
+      disturbance breaks the plan since there is no correction mechanism.
+    tags:
+      - planning
+      - control
+    relations:
+      - target: Closed-Loop Control
+        type: contrasts_with
+        note: Open-loop control never re-observes the state after t=0; closed-loop control re-plans using current state feedback at each step.
+      - target: Model Predictive Control
+        type: contrasts_with
+        note: MPC is the closed-loop alternative to open-loop planning; MPC re-plans at every control cycle.
+
+  - name: Closed-Loop Control
+    aliases:
+      - Feedback Control
+    definition: >-
+      A control strategy that re-plans at each time step using the current observed state s_t
+      rather than relying solely on the initial plan. Robustly handles model errors and external
+      disturbances since deviations from the predicted trajectory are corrected at each cycle.
+      Computationally more demanding than open-loop control.
+    tags:
+      - planning
+      - control
+    relations:
+      - target: Open-Loop Control
+        type: contrasts_with
+        note: Open-loop plans once and executes blindly; closed-loop incorporates state feedback continuously.
+      - target: Model Predictive Control
+        type: enables
+        note: MPC is the standard realization of closed-loop control in the model-based RL setting.
+
+  - name: Model Predictive Control
+    aliases:
+      - MPC
+      - Receding Horizon Control
+    definition: >-
+      A closed-loop planning algorithm that at each time step t: (1) observes s_t, (2) plans an
+      action sequence over a short planning horizon H_p <= T by solving a trajectory optimization
+      problem, (3) executes only the first H_c <= H_p actions, then (4) re-observes the state and
+      repeats. The planning horizon H_p controls the tradeoff between greediness (short H_p, less
+      uncertain) and farsightedness (long H_p, more uncertain). The control horizon H_c determines
+      how many actions are committed before re-planning (H_c = 1 replans every step).
+    tags:
+      - model-predictive-control
+      - planning
+      - model-based-rl
+    relations:
+      - target: Trajectory Optimization
+        type: part_of
+        note: MPC applies trajectory optimization repeatedly in a receding-horizon loop, solving a new optimization at each step.
+      - target: Planning Horizon
+        type: has_component
+        note: H_p is the key design parameter of MPC — it governs the lookahead window and the greediness-uncertainty tradeoff.
+      - target: Control Horizon
+        type: has_component
+        note: H_c determines how many planned actions are executed before the next re-planning cycle.
+      - target: Cross-Entropy Method
+        type: enables
+        note: CEM is the standard efficient optimizer used inside MPC's planning step to search the action space.
+
+  - name: Planning Horizon
+    aliases:
+      - Prediction Horizon
+      - H_p
+    definition: >-
+      The number of future steps H_p over which MPC plans at each replanning cycle, where H_p <= T
+      (total episode length). A shorter H_p reduces uncertainty (model errors do not compound as
+      much) but makes the controller more greedy (myopic). A longer H_p is more farsighted but
+      harder to optimize and more susceptible to compounding model errors. In continuous action
+      spaces, the planning search space is |A|^{H_p}.
+    tags:
+      - model-predictive-control
+      - planning
+    relations:
+      - target: Model Predictive Control
+        type: part_of
+        note: H_p is the primary design knob of MPC — it defines how far into the future each planning cycle looks.
+      - target: Control Horizon
+        type: related_to
+        note: H_c <= H_p; H_c determines how many of the H_p planned steps are actually executed.
+
+  - name: Control Horizon
+    aliases:
+      - H_c
+      - Execution Horizon
+    definition: >-
+      The number of planned actions H_c <= H_p that MPC executes before re-observing the state and
+      replanning. When H_c = 1, the controller replans at every single step (maximum feedback, maximum
+      computation). When H_c = H_p, the full planned sequence is executed before replanning (less
+      feedback, less computation per unit time). Satisfies H_c <= H_p <= T.
+    tags:
+      - model-predictive-control
+      - planning
+    relations:
+      - target: Planning Horizon
+        type: related_to
+        note: Control horizon H_c <= planning horizon H_p; together they define the MPC replanning frequency.
+      - target: Model Predictive Control
+        type: part_of
+        note: H_c is the execution commitment parameter of MPC — it trades responsiveness against computational overhead.
+
+  - name: Cross-Entropy Method
+    aliases:
+      - CEM
+      - Cross-Entropy Optimization
+    definition: >-
+      An iterative stochastic optimization algorithm that concentrates sampling in promising
+      ("elite") regions of the search space. Each iteration: (1) sample N candidates from a
+      distribution p_k (initially uniform/Gaussian), (2) evaluate the objective for each,
+      (3) select the top-M elite candidates, (4) refit p_{k+1} to the elites. The distribution
+      narrows around the optimum across iterations. In practice K <= 3 iterations suffice.
+      Applied to MPC, CEM searches over action sequences rather than raw actions uniformly,
+      making search tractable even when |A|^{H_p} is large.
+    tags:
+      - cross-entropy-method
+      - planning
+      - optimization
+    relations:
+      - target: Trajectory Optimization
+        type: enables
+        note: CEM provides an efficient sampling strategy for trajectory optimization, replacing uniform random search.
+      - target: Model Predictive Control
+        type: part_of
+        note: CEM is the standard inner-loop optimizer used within MPC's planning step.
+      - target: Elite Samples
+        type: has_component
+        note: The elite selection step is what drives CEM's progressive concentration of the sampling distribution.
+      - target: Latent-Space CEM
+        type: related_to
+        note: Latent-space CEM extends standard CEM by sampling in a learned compact latent space rather than the raw action space.
+
+  - name: Elite Samples
+    aliases:
+      - Elites
+      - Top-M Samples
+    definition: >-
+      In the Cross-Entropy Method, the M < N samples (action sequences) with the highest return
+      values, selected after evaluating all N samples in each iteration. The next sampling
+      distribution p_{k+1} is fit to these elites, progressively shifting the search toward
+      high-return regions. The elite fraction M/N is a hyperparameter (typically 10–20%).
+    tags:
+      - cross-entropy-method
+      - optimization
+    relations:
+      - target: Cross-Entropy Method
+        type: part_of
+        note: Elite selection is the core mechanism of CEM — it defines which region of the search space receives more sampling mass in the next iteration.
+
+  - name: Latent-Space CEM
+    aliases:
+      - CEM in Latent Space
+      - Structured Action Sampling
+    definition: >-
+      An extension of the Cross-Entropy Method (Fang et al., CoRL 2019) that performs CEM in a
+      learned compact latent space z rather than the raw action space a. A learned action generator
+      g(·|s, z) decodes latent codes into structured, feasible actions conditioned on the current
+      state. CEM then optimizes over z ~ p(z), exploiting the structure of the latent space to
+      improve search efficiency for complex tasks such as multi-step robot manipulation.
+    tags:
+      - cross-entropy-method
+      - planning
+      - manipulation
+    relations:
+      - target: Cross-Entropy Method
+        type: extends
+        note: Latent-space CEM is CEM applied in a learned compact space rather than raw action space, improving efficiency for high-dimensional structured action problems.
+      - target: Model Predictive Control
+        type: enables
+        note: Latent-space CEM is used as the inner-loop optimizer in MPC for complex manipulation tasks.

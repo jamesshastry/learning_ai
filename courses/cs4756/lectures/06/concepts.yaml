@@ -1,0 +1,265 @@
+concepts:
+  - name: Value Function
+    aliases:
+      - State-Value Function
+      - V-function
+      - V^pi
+    definition: >-
+      The expected discounted cumulative reward starting from state s and following
+      policy pi thereafter. Formally, V^pi(s) = E_pi[sum_{t>=i} gamma^{t-i} R(s_t,a_t) | s_i = s].
+      It compresses the entire future trajectory under pi into a single scalar per state,
+      enabling recursive reasoning about long-horizon problems without unrolling full episodes.
+    tags:
+      - theory
+      - reinforcement-learning
+    relations:
+      - target: Bellman Equation
+        type: enables
+        note: The value function satisfies the Bellman self-consistency recursion by definition
+      - target: Q-Value Function
+        type: related_to
+        note: V^pi(s) = E_{a~pi}[Q^pi(s,a)]; V and Q are two complementary views of the same quantity
+      - target: Policy Evaluation
+        type: related_to
+        note: Policy evaluation is the algorithm for computing V^pi iteratively
+
+  - name: Bellman Equation
+    aliases:
+      - Bellman Consistency Equation
+      - Bellman Backup
+    definition: >-
+      A self-consistency recursion for the value function: V^pi(s_t) = E_{a~pi}[R(s_t,a_t)
+      + gamma * E_{s'~P(·|s_t,a_t)}[V^pi(s_{t+1})]]. It decomposes expected cumulative return
+      into immediate reward plus discounted expected value of the next state, enabling iterative
+      computation of V^pi without full trajectory rollouts.
+    tags:
+      - theory
+      - reinforcement-learning
+    relations:
+      - target: Value Function
+        type: related_to
+        note: The Bellman equation is the defining self-consistency property of the value function
+      - target: Bellman Optimality Equation
+        type: prerequisite_for
+        note: The Bellman optimality equation replaces the expectation over pi with a max over actions
+      - target: Value Iteration
+        type: enables
+        note: Value iteration repeatedly applies the Bellman optimality operator to converge to V*
+      - target: Policy Evaluation
+        type: enables
+        note: Policy evaluation repeatedly applies the Bellman consistency operator to compute V^pi
+
+  - name: Bellman Optimality Equation
+    aliases:
+      - Bellman Optimality
+      - Optimal Bellman Equation
+    definition: >-
+      The Bellman equation for the optimal value function V*: V*(s) = max_a[R(s,a) +
+      gamma * E_{s'~P(·|s,a)}[V*(s')]]. Unlike the standard Bellman equation which averages
+      over actions under a fixed policy, this takes the maximum over actions, yielding the
+      best achievable value from each state.
+    tags:
+      - theory
+      - reinforcement-learning
+    relations:
+      - target: Bellman Equation
+        type: related_to
+        note: Replaces expectation over pi with max over a; reduces to Bellman equation when pi is fixed
+      - target: Value Iteration
+        type: enables
+        note: Value iteration iteratively applies the Bellman optimality operator
+      - target: Q-Value Function
+        type: related_to
+        note: V*(s) = max_a Q*(s,a) connects optimal V and Q via Bellman optimality
+
+  - name: Value Iteration
+    aliases:
+      - VI
+    definition: >-
+      A dynamic programming algorithm that converges to the optimal value function V* by
+      repeatedly applying the Bellman optimality operator across all states: V_{i+1}(s) =
+      max_a[R(s,a) + gamma * E_{s'~P(·|s,a)}[V_i(s')]]. After N iterations the policy is
+      extracted by acting greedily with respect to V_N. Requires a known transition model
+      and tabular state/action spaces.
+    tags:
+      - algorithm
+      - dynamic-programming
+      - reinforcement-learning
+    relations:
+      - target: Bellman Optimality Equation
+        type: related_to
+        note: Each VI update is one application of the Bellman optimality operator
+      - target: Policy Iteration
+        type: related_to
+        note: VI tracks only the value function; PI tracks both policy and value function
+      - target: Q-Value Function
+        type: related_to
+        note: The Q_i(s,a) intermediate quantity in VI is the Q-value at iteration i
+      - target: Policy Evaluation
+        type: related_to
+        note: VI replaces the expectation over pi in policy evaluation with a max over actions
+
+  - name: Policy Evaluation
+    aliases:
+      - Iterative Policy Evaluation
+    definition: >-
+      A dynamic programming subroutine that computes V^pi for a fixed policy pi by iterating
+      the Bellman consistency operator: V_{i+1}(s) = E_{a~pi}[R(s,a) + gamma *
+      E_{s'~P(·|s,a)}[V_i(s')]]. It is the inner loop of Policy Iteration and the key
+      contrast with Value Iteration, which uses max instead of expectation.
+    tags:
+      - algorithm
+      - dynamic-programming
+      - reinforcement-learning
+    relations:
+      - target: Bellman Equation
+        type: related_to
+        note: Policy evaluation iterates the Bellman consistency equation to fixed point
+      - target: Policy Iteration
+        type: part_of
+        note: Policy evaluation is the first phase of each Policy Iteration outer loop
+      - target: Value Iteration
+        type: related_to
+        note: Policy evaluation uses E_{a~pi} where value iteration uses max_a
+
+  - name: Policy Improvement
+    aliases:
+      - Policy Greedy Improvement
+    definition: >-
+      The second phase of Policy Iteration: given the current value function V^pi, update
+      the policy greedily by pi(s) = argmax_a[R(s,a) + gamma * E_{s'~P(·|s,a)}[V^pi(s')]].
+      This monotonically improves (or maintains) the policy at every state, and the process
+      converges when no state can be improved.
+    tags:
+      - algorithm
+      - dynamic-programming
+      - reinforcement-learning
+    relations:
+      - target: Policy Iteration
+        type: part_of
+        note: Policy improvement is the second phase of each Policy Iteration outer loop
+      - target: Policy Evaluation
+        type: related_to
+        note: Improvement requires V^pi computed by policy evaluation in the prior phase
+      - target: Value Iteration
+        type: related_to
+        note: VI implicitly performs improvement at every update via the max operator
+
+  - name: Policy Iteration
+    aliases:
+      - PI
+    definition: >-
+      A dynamic programming algorithm that alternates between Policy Evaluation (compute
+      V^pi for the current policy) and Policy Improvement (greedify the policy with respect
+      to V^pi) until the policy stabilizes. PI tracks both the policy and the value function
+      and typically converges in fewer outer iterations than Value Iteration, though each
+      outer iteration is more expensive (requires solving policy evaluation to convergence).
+    tags:
+      - algorithm
+      - dynamic-programming
+      - reinforcement-learning
+    relations:
+      - target: Policy Evaluation
+        type: related_to
+        note: Policy evaluation is the first phase of each PI iteration
+      - target: Policy Improvement
+        type: related_to
+        note: Policy improvement is the second phase of each PI iteration
+      - target: Value Iteration
+        type: related_to
+        note: VI tracks only values; PI tracks both; PI often needs fewer outer iterations
+
+  - name: Q-Value Function
+    aliases:
+      - Action-Value Function
+      - Q-function
+      - Q^pi
+    definition: >-
+      The expected discounted cumulative reward starting from state s, taking action a, and
+      following policy pi thereafter: Q^pi(s,a) = E[sum_{t>=0} gamma^t R(s_t,a_t) | s_0=s,
+      a_0=a, P, pi]. Q conditions on both the state and the initial action, enabling action
+      selection without needing to know the transition model explicitly. The optimal Q* satisfies
+      V*(s) = max_a Q*(s,a) and Q*(s,a) = R(s,a) + gamma * E_{s'}[V*(s')].
+    tags:
+      - theory
+      - reinforcement-learning
+    relations:
+      - target: Value Function
+        type: related_to
+        note: V^pi(s) = E_{a~pi}[Q^pi(s,a)]; Q adds the action dimension to V
+      - target: Bellman Optimality Equation
+        type: related_to
+        note: V*(s) = max_a Q*(s,a) and Q*(s,a) = R(s,a) + gamma*E[V*(s')] are the optimal Bellman relations
+      - target: Value Iteration
+        type: related_to
+        note: Q_i(s,a) = R(s,a) + gamma*E[V_i(s')] is the Q-value intermediary computed during VI
+      - target: RL Algorithm Anatomy
+        type: related_to
+        note: Value-based RL methods fit Q* directly; actor-critic methods fit Q^pi for the current policy
+
+  - name: RL Algorithm Anatomy
+    aliases:
+      - Three-Phase RL Loop
+      - Generate-Estimate-Improve
+    definition: >-
+      The universal structure of reinforcement learning algorithms: (1) generate samples by
+      running the current policy in the environment, (2) estimate the return using those samples
+      (via Monte Carlo rollouts, value functions, or a model), (3) improve the policy (via
+      gradient ascent, greedy argmax, or planning). All RL algorithm families — policy gradients,
+      value-based, actor-critic, model-based — implement these three phases differently.
+    tags:
+      - theory
+      - reinforcement-learning
+    relations:
+      - target: Policy Gradients
+        type: related_to
+        note: Policy gradients estimate return as Monte Carlo sum and improve via gradient ascent on J(pi)
+      - target: Value Function
+        type: related_to
+        note: Value-based and actor-critic methods use V or Q to estimate the return phase
+      - target: Policy Iteration
+        type: related_to
+        note: Policy iteration is a special case of the anatomy when the model is known
+
+  - name: Policy Gradients
+    aliases:
+      - Direct Policy Gradients
+      - REINFORCE
+    definition: >-
+      A class of RL algorithms that directly differentiate the expected return objective
+      J(pi) = E_{tau~p_pi}[sum_t gamma^t r_t] with respect to policy parameters. The return
+      is estimated via Monte Carlo rollouts (R_tau = sum_t gamma^t r_t), and the policy is
+      improved by gradient ascent: pi* = argmax_pi J(pi). No explicit value function is fitted.
+    tags:
+      - algorithm
+      - reinforcement-learning
+    relations:
+      - target: RL Algorithm Anatomy
+        type: part_of
+        note: Policy gradients estimate return via MC rollout and improve policy via gradient ascent
+      - target: Q-Value Function
+        type: related_to
+        note: Actor-critic methods augment policy gradients with a fitted Q or V as a baseline
+
+  - name: Actor-Critic Methods
+    aliases:
+      - Actor-Critic
+    definition: >-
+      A class of RL algorithms that combine value function estimation with policy gradient
+      improvement. The critic fits V(s) or Q(s,a) for the current policy (policy evaluation),
+      and the actor updates its parameters via theta <- theta + alpha * nabla_theta E[Q(s_t,a_t)].
+      This hybrid reduces the variance of pure policy gradients while retaining gradient-based
+      policy optimization.
+    tags:
+      - algorithm
+      - reinforcement-learning
+    relations:
+      - target: RL Algorithm Anatomy
+        type: part_of
+        note: Actor-critic fits V or Q (estimate return) and uses it for gradient-based improvement
+      - target: Policy Gradients
+        type: related_to
+        note: Actor-critic augments policy gradients with a learned value function as the critic
+      - target: Q-Value Function
+        type: related_to
+        note: The critic fits Q^pi for the current policy, which the actor uses to improve

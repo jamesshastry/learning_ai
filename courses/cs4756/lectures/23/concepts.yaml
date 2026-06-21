@@ -1,0 +1,346 @@
+concepts:
+  - name: Contextual Markov Decision Process
+    aliases:
+      - Contextual MDP
+      - CMDP
+    definition: >
+      An MDP augmented with a context space C, defined by the tuple M = <S, C, A, P, R>.
+      The reward function depends on the context c_t: r_t = R(s_t, a_t, s_{t+1}, c_t).
+      Each context value encodes a different task, allowing a single model to handle multiple
+      tasks by conditioning on the context.
+    tags:
+      - multi-task-learning
+      - mdp
+      - formalism
+    relations:
+      - broader: Markov Decision Process
+      - used_by: Task-Conditioned Policy Learning
+
+  - name: Task-Conditioned Policy
+    aliases:
+      - multi-task policy
+      - context-conditioned policy
+    definition: >
+      A policy that maps state and task specification to action: a_t ~ pi(a_t | s_t, c).
+      Contrasts with a single-task policy pi(a_t | s_t). The task specification c can be
+      a task index, goal, language instruction, or latent variable.
+    tags:
+      - multi-task-learning
+      - policy
+    relations:
+      - broader: Policy
+      - instantiated_by: Task Index Conditioning
+      - instantiated_by: Goal-Conditioned Policy
+      - instantiated_by: Language-Conditioned Policy
+      - instantiated_by: Latent-Conditioned Policy
+
+  - name: Task Index
+    aliases:
+      - task ID
+      - one-hot task embedding
+    definition: >
+      The simplest task specification: a discrete integer identifier for a task, typically
+      converted to a one-hot vector. Effective when the task set is fixed and fully known.
+      Does not capture inter-task similarity, cannot represent continuous variation, and
+      generalizes poorly to unseen tasks.
+    tags:
+      - multi-task-learning
+      - task-specification
+    relations:
+      - type_of: Task Specification
+      - used_in: Task-Conditioned Policy
+
+  - name: Task Index Definition Criterion
+    aliases:
+      - when to share task index
+    definition: >
+      Principled rule for assigning task indices: share the same index if only p(o_t)
+      changes but the intended mapping o_t -> a_t is the same (same behavior, different
+      scene). Use different indices if p(o_t) is the same but o_t -> a_t changes
+      (different behavior, similar scene). If both change, the choice depends on desired
+      knowledge sharing.
+    tags:
+      - multi-task-learning
+      - task-specification
+    relations:
+      - applies_to: Task Index
+
+  - name: Task Embedding Architecture
+    aliases:
+      - shared backbone with task embedding
+    definition: >
+      Multi-task network architecture where a single shared backbone processes all states,
+      and a task embedding (from one-hot or learned lookup) is concatenated into the latent
+      representation before the action head. Scalable and enables efficient cross-task
+      sharing, but may suffer from gradient interference across tasks.
+    tags:
+      - multi-task-learning
+      - model-architecture
+    relations:
+      - type_of: Index-Conditioned Policy Architecture
+      - alternative: Multiple Networks Architecture
+      - alternative: Multiple Prediction Heads Architecture
+
+  - name: Multiple Networks Architecture
+    aliases:
+      - per-task networks
+    definition: >
+      Multi-task architecture with one independent neural network per task.
+      Provides full per-task specialization but enables no knowledge transfer,
+      scales linearly with number of tasks, and is limited to fixed discrete task sets.
+    tags:
+      - multi-task-learning
+      - model-architecture
+    relations:
+      - type_of: Index-Conditioned Policy Architecture
+
+  - name: Multiple Prediction Heads Architecture
+    aliases:
+      - multi-head architecture
+      - shared trunk with per-task heads
+    definition: >
+      Multi-task architecture with a shared feature extractor backbone and separate
+      output heads per task. Combines shared representation learning with per-task
+      output specialization. Still limited to fixed discrete task sets.
+    tags:
+      - multi-task-learning
+      - model-architecture
+    relations:
+      - type_of: Index-Conditioned Policy Architecture
+
+  - name: Goal-Conditioned Policy
+    aliases:
+      - goal-reaching policy
+    definition: >
+      A policy conditioned on a desired goal state or goal observation: pi(a | s, g).
+      Supports continuous task variation. Can be trained with behavior cloning (GCBC)
+      or reinforcement learning (GCRL). Enables easy data relabeling via HER.
+    tags:
+      - goal-conditioned
+      - multi-task-learning
+      - policy
+    relations:
+      - type_of: Task-Conditioned Policy
+      - trained_by: Goal-Conditioned Behavior Cloning
+      - trained_by: Goal-Conditioned Reinforcement Learning
+      - augmented_by: Hindsight Experience Replay
+
+  - name: Goal-Conditioned Behavior Cloning
+    aliases:
+      - GCBC
+    definition: >
+      Trains a goal-conditioned policy pi_theta(a_t | s_t, g) by maximizing log-likelihood:
+      theta* = argmax_theta E_{(g,s,a)}[log pi_theta(a | s, g)].
+      Training data consists of M trajectories each labeled with a goal.
+      Benefits greatly from HER relabeling which turns any trajectory into a success.
+    tags:
+      - goal-conditioned
+      - behavior-cloning
+      - imitation-learning
+    relations:
+      - type_of: Behavior Cloning
+      - trains: Goal-Conditioned Policy
+      - augmented_by: Hindsight Experience Replay
+
+  - name: Goal-Conditioned Reinforcement Learning
+    aliases:
+      - GCRL
+    definition: >
+      Trains a goal-conditioned policy to maximize cumulative goal-reaching reward:
+      theta* = argmax_theta E[sum_t gamma^t R(s_t, a_t, s_{t+1}, g)].
+      Requires defining a goal-conditioned reward (e.g., sparse binary success).
+      UVFA extends Q-functions to Q(s, a, g) and V(s, g).
+    tags:
+      - goal-conditioned
+      - reinforcement-learning
+    relations:
+      - type_of: Reinforcement Learning
+      - trains: Goal-Conditioned Policy
+      - augmented_by: Hindsight Experience Replay
+      - uses: Universal Value Function Approximators
+
+  - name: Universal Value Function Approximators
+    aliases:
+      - UVFA
+    definition: >
+      Extension of value functions to be goal-conditioned: V(s, g) and Q(s, a, g).
+      Parameterizes the value function over both state and goal, enabling a single
+      critic network to evaluate any (state, goal) pair.
+    tags:
+      - goal-conditioned
+      - reinforcement-learning
+      - value-function
+    relations:
+      - used_in: Goal-Conditioned Reinforcement Learning
+
+  - name: Goal-Reaching Reward
+    aliases:
+      - sparse goal reward
+      - binary success reward
+    definition: >
+      Reward function for goal-conditioned RL. Sparse form: R(s,a,s',g) = 1[s'=g].
+      Offset form: R = 1[s' in S_success] - 1 = -1[s' not in S_success], which
+      encourages faster goal-reaching and makes V(s) approximate the negative
+      discounted distance to goal.
+    tags:
+      - goal-conditioned
+      - reward-design
+      - reinforcement-learning
+    relations:
+      - used_in: Goal-Conditioned Reinforcement Learning
+
+  - name: Hindsight Experience Replay
+    aliases:
+      - HER
+    definition: >
+      Data augmentation for goal-conditioned learning. Key idea: a failed episode for goal g
+      is a successful episode for an achieved goal g_tilde. Given transition (s_t, a_t, s_{t+1}, g),
+      HER creates relabeled transition (s_t, a_t, s_{t+1}, g_tilde) where g_tilde = s_{t'} for
+      some t' > t in the same episode. For GCBC: turns any trajectory into a success.
+      For GCRL: mitigates sparse reward by guaranteeing goal achievement when g_tilde = s_{t+1}.
+    tags:
+      - goal-conditioned
+      - data-augmentation
+      - hindsight
+      - reinforcement-learning
+    relations:
+      - augments: Goal-Conditioned Behavior Cloning
+      - augments: Goal-Conditioned Reinforcement Learning
+      - related: Goal-Conditioned Exploration
+
+  - name: Goal-Conditioned Exploration
+    aliases:
+      - curriculum learning for GCRL
+      - goal curriculum
+    definition: >
+      Exploration strategy for GCRL where a learned goal proposal module q_phi(g) proposes
+      goals at the epistemic boundary between solvable and unsolvable — feasible yet
+      challenging. Procedure: (1) sample g ~ q_phi(g), (2) roll out policy for episode tau,
+      (3) extract achieved goal g_tilde, (4) relabel transitions with g_tilde.
+      The epistemic boundary shifts outward as the policy improves. (Zhang et al., NeurIPS 2020)
+    tags:
+      - goal-conditioned
+      - exploration
+      - curriculum-learning
+    relations:
+      - used_in: Goal-Conditioned Reinforcement Learning
+      - related: Hindsight Experience Replay
+
+  - name: Language-Conditioned Policy
+    aliases:
+      - instruction-following policy
+    definition: >
+      A policy conditioned on a natural language instruction l: pi(a | s, l).
+      Offers open-ended expressiveness. Trained with LCBC (maximize log-likelihood) or
+      LCRL (maximize cumulative reward). Relabeling is much harder than for goal-conditioned
+      policies; reward is also harder to define for RL.
+    tags:
+      - language-conditioned
+      - multi-task-learning
+      - policy
+    relations:
+      - type_of: Task-Conditioned Policy
+      - trained_by: Language-Conditioned Behavior Cloning
+      - trained_by: Language-Conditioned Reinforcement Learning
+
+  - name: Language-Conditioned Behavior Cloning
+    aliases:
+      - LCBC
+    definition: >
+      Trains a language-conditioned policy pi_theta(a_t | s_t, l) by maximizing
+      log-likelihood: theta* = argmax_theta E_{(l,s,a)}[log pi_theta(a | s, l)].
+      Compared to GCBC, relabeling is much harder because generating a new language
+      description for an achieved state requires an LLM or human annotator.
+    tags:
+      - language-conditioned
+      - behavior-cloning
+    relations:
+      - type_of: Behavior Cloning
+      - trains: Language-Conditioned Policy
+      - contrast: Goal-Conditioned Behavior Cloning
+
+  - name: Language-Conditioned Reinforcement Learning
+    aliases:
+      - LCRL
+    definition: >
+      Trains a language-conditioned policy to maximize cumulative instruction-following reward:
+      theta* = argmax_theta E[sum_t gamma^t R(s_t, a_t, s_{t+1}, l)].
+      Compared to GCRL, reward is much harder to define — requires perceptual understanding
+      of whether a state satisfies the language instruction, typically via a learned reward model.
+    tags:
+      - language-conditioned
+      - reinforcement-learning
+    relations:
+      - type_of: Reinforcement Learning
+      - trains: Language-Conditioned Policy
+
+  - name: Latent Task Representation
+    aliases:
+      - task latent
+      - latent task variable
+      - latent context
+    definition: >
+      A continuous latent vector z used as the task specification: pi(a | s, z).
+      Provides a compact continuous representation where similar tasks map to nearby embeddings,
+      capturing inter-task geometry that discrete indices cannot. Can be jointly learned or
+      pre-trained. Has low interpretability; expressiveness and grounding depend on data.
+    tags:
+      - latent-representation
+      - multi-task-learning
+      - task-specification
+    relations:
+      - type_of: Task Specification
+      - related: Task Index
+
+  - name: Grounding Problem
+    aliases:
+      - symbol grounding
+      - instruction grounding
+      - language grounding in robotics
+    definition: >
+      The challenge of mapping a task specification (especially language) to the relevant
+      objects, relations, and actions in the current scene. Requires answering: what are
+      the target objects, the success condition, and the constraints? Particularly hard for
+      language specifications that reference object parts, functional affordances, or abstract
+      goals. A major open problem in language-conditioned robot learning.
+    tags:
+      - language-conditioned
+      - grounding
+      - open-problems
+    relations:
+      - challenges: Language-Conditioned Policy
+
+  - name: Long-Tail Task Distribution
+    aliases:
+      - imbalanced task distribution
+    definition: >
+      The phenomenon in real-world multi-task datasets where a few common tasks and objects
+      dominate the data (head) while many rare tasks have limited supervision (tail).
+      Multi-task learning must balance positive transfer from head tasks with robustness
+      on tail tasks. Observed empirically in large datasets like Open X-Embodiment (ICRA 2025).
+    tags:
+      - multi-task-learning
+      - data-distribution
+      - generalization
+    relations:
+      - affects: Task-Conditioned Policy
+
+  - name: Task Specification Tradeoff
+    aliases:
+      - task representation comparison
+    definition: >
+      Summary of tradeoffs among the four task specification types across expressiveness,
+      interpretability, grounding, and relabeling.
+      Task Index: Limited / High / No / Hard.
+      Goal: Goal-reaching / High / Medium / Easy.
+      Language: Open-ended / High / Hard / Hard.
+      Latent: Depends on data / Low / Depends on data / Hard.
+    tags:
+      - multi-task-learning
+      - task-specification
+      - summary
+    relations:
+      - summarizes: Task Index
+      - summarizes: Goal-Conditioned Policy
+      - summarizes: Language-Conditioned Policy
+      - summarizes: Latent Task Representation

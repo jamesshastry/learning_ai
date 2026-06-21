@@ -1,0 +1,218 @@
+concepts:
+  - name: Double Q-Learning
+    aliases: [double DQN, double Q-network]
+    definition: >-
+      A technique to reduce overestimation bias in Q-learning by maintaining two separate
+      Q-networks and decoupling action selection from action evaluation. One network selects
+      the greedy action (argmax) and the other evaluates its value. This prevents the same
+      network's noise from being amplified by the max operator. In the deep version
+      (Hasselt et al., 2015), a primary network selects the action and a target network
+      evaluates it: Q*(s,a) ≈ r + γ Q_θ'(s', argmax_a' Q_θ(s',a')).
+    tags: [q-learning, off-policy, stability]
+    relations:
+      - target: Target Network
+        type: used_with
+        note: Double Q-learning is typically combined with a target network for stability
+      - target: Overestimation Bias
+        type: addresses
+        note: Decoupling selection and evaluation reduces positive bias from the max operator
+
+  - name: Overestimation Bias
+    aliases: [Q-value overestimation, extrapolation error]
+    definition: >-
+      A systematic upward bias in Q-function approximation caused by applying the max
+      operator to a noisy function estimator. The neural network extrapolates arbitrarily
+      high values in unvisited state-action regions; taking the maximum actively selects
+      these overestimated regions. The resulting overestimated targets then corrupt future
+      training, creating a compounding feedback loop. Addressed by Double Q-learning and
+      the clipped double-Q trick in SAC/TD3.
+    tags: [q-learning, failure-mode]
+    relations:
+      - target: Double Q-Learning
+        type: addressed_by
+        note: Double Q-learning decouples selection and evaluation to break the feedback loop
+      - target: Soft Actor-Critic
+        type: addressed_by
+        note: SAC uses two critics and takes the minimum to mitigate overestimation
+
+  - name: Target Network
+    aliases: [target value network, target Q-network, polyak averaging]
+    definition: >-
+      A slowly-updated copy of the main Q-network (or policy network) used to generate
+      stable Bellman regression targets. Updated via polyak (exponential moving) averaging:
+      φ_targ ← ρ φ_targ + (1−ρ) φ, where ρ is close to 1 (e.g., 0.995). Without a target
+      network, the regression target and the network being trained are the same, causing
+      the loss surface to chase a moving target, leading to instability or divergence.
+    tags: [q-learning, stability, off-policy]
+    relations:
+      - target: Double Q-Learning
+        type: used_with
+        note: Target network provides the evaluation network in modern Double Q-learning
+      - target: DDPG
+        type: used_in
+        note: DDPG maintains target actor and target critic, both updated by polyak averaging
+      - target: Soft Actor-Critic
+        type: used_in
+        note: SAC maintains a target critic (two in the multi-critic version) for stable targets
+
+  - name: DDPG
+    aliases: [Deep Deterministic Policy Gradient]
+    definition: >-
+      An off-policy actor-critic algorithm for continuous action spaces. Maintains a
+      deterministic actor π_θ(s) and a critic Q_φ(s,a). The actor is trained to maximize
+      the critic via backpropagation through the differentiable Q-function: the policy
+      gradient is ∇_θ Q_φ(s, π_θ(s)). The critic is trained with double Q-learning style
+      targets using target actor and target critic networks. Conceptually, DDPG approximates
+      Q-learning's argmax with a learned deterministic policy. Requires explicit exploration
+      noise (e.g., Gaussian or Ornstein-Uhlenbeck noise) during data collection.
+    tags: [off-policy, actor-critic, continuous-actions, deterministic-policy]
+    relations:
+      - target: Target Network
+        type: uses
+        note: Maintains target actor and target critic updated by polyak averaging
+      - target: Soft Actor-Critic
+        type: predecessor_of
+        note: SAC replaces DDPG's deterministic policy with a stochastic entropy-regularized one
+      - target: Double Q-Learning
+        type: builds_on
+        note: DDPG uses target networks in the same spirit as Double Q-learning
+
+  - name: Entropy-Regularized RL
+    aliases: [maximum entropy RL, MaxEnt RL, entropy bonus]
+    definition: >-
+      A framework that augments the standard RL objective with an entropy bonus at each
+      time step: π*(s) = argmax_π E[Σ_t γ^t (R(s_t,a_t) + α H(π(·|s_t)))], where α > 0
+      is the temperature coefficient. The entropy term H(π(·|s)) = E[-log π(a|s)] encourages
+      the policy to remain stochastic and explore broadly. The modified value functions
+      satisfy: V^π(s) = E_π[Q^π(s,a)] + α H(π(·|s)), and the Bellman equation becomes
+      Q^π(s,a) = E_π[R(s,a) + γ V^π(s')], where V^π already encodes the entropy.
+    tags: [exploration, soft-rl, entropy]
+    relations:
+      - target: Entropy
+        type: uses
+        note: Policy entropy H(π(·|s)) is the exploration measure added as bonus reward
+      - target: Soft Actor-Critic
+        type: implemented_by
+        note: SAC is the canonical deep RL algorithm implementing entropy-regularized RL
+
+  - name: Entropy
+    aliases: [Shannon entropy, policy entropy, differential entropy]
+    definition: >-
+      The average amount of information (uncertainty) conveyed by a random variable:
+      H(x) = E_{x~p}[-log p(x)]. Measures "how random" a distribution is. For a Bernoulli
+      distribution, entropy is maximized at p=0.5 (maximum uncertainty). For a Gaussian
+      N(μ, σ²), entropy is H(x) = ½ log(2πeσ²) — monotonically increasing in σ. In RL,
+      policy entropy H(π(·|s)) is used as a proxy for exploration: high entropy means the
+      policy spreads probability mass across many actions rather than collapsing to a single mode.
+    tags: [exploration, information-theory]
+    relations:
+      - target: Entropy-Regularized RL
+        type: used_in
+        note: Policy entropy is added as a bonus reward in the entropy-regularized objective
+      - target: Soft Actor-Critic
+        type: used_in
+        note: SAC maximizes a weighted combination of reward and policy entropy
+
+  - name: Soft Actor-Critic
+    aliases: [SAC]
+    definition: >-
+      An off-policy actor-critic algorithm that combines entropy-regularized RL with
+      the reparameterization trick for stable, sample-efficient continuous control. Key
+      components: (1) stochastic actor using tanh-squashed Gaussian with state-dependent
+      std: ã(s,ξ) = tanh(μ_θ(s) + σ_θ(s) ⊙ ξ), ξ~N(0,I); (2) critic targets that
+      include the entropy penalty: y_i = R + γ(min_j Q_φ_targ,j(s',ã') − α log π(ã'|s'));
+      (3) actor updated by reparameterized gradient through the critic; (4) two critic
+      networks with polyak-averaged targets to mitigate overestimation. Consistently
+      outperforms DDPG, TD3, and PPO on MuJoCo continuous control benchmarks. Widely
+      used in robot learning due to sample efficiency and generalization.
+    tags: [off-policy, actor-critic, entropy, stochastic-policy, continuous-actions]
+    relations:
+      - target: DDPG
+        type: improves_on
+        note: SAC replaces deterministic policy and noise exploration with entropy maximization
+      - target: Entropy-Regularized RL
+        type: implements
+        note: SAC is the practical deep RL implementation of the MaxEnt RL framework
+      - target: Reparameterization Trick
+        type: uses
+        note: SAC uses reparameterization to get low-variance policy gradients through the critic
+      - target: Target Network
+        type: uses
+        note: SAC maintains two polyak-averaged target critics to stabilize training
+      - target: Double Q-Learning
+        type: uses
+        note: SAC uses two critics and takes the minimum (clipped double-Q) to reduce overestimation
+
+  - name: Reparameterization Trick
+    aliases: [reparameterization gradient, pathwise gradient estimator]
+    definition: >-
+      A technique to compute low-variance gradients through stochastic sampling by expressing
+      a sample from a parameterized distribution as a deterministic function of the parameters
+      and external noise: a = μ_θ(s) + σ_θ(s) ⊙ ξ, ξ ~ N(0,I). The sampling operation
+      is moved outside the gradient path, so ∇_θ a is well-defined. This converts an
+      expectation over actions into an expectation over noise, enabling backpropagation
+      through the sampled action into the policy parameters. Contrast with the REINFORCE
+      (log-derivative) estimator, which treats the sample as a fixed constant and weights
+      gradients by rewards — higher variance.
+    tags: [gradient-estimation, stochastic-policy, variational]
+    relations:
+      - target: Soft Actor-Critic
+        type: used_in
+        note: SAC uses reparameterization to train the stochastic actor via critic gradients
+      - target: DDPG
+        type: related_to
+        note: DDPG uses a deterministic policy to sidestep this problem entirely; SAC uses reparam instead
+
+  - name: Polyak Averaging
+    aliases: [exponential moving average, EMA update, soft target update]
+    definition: >-
+      A parameter update rule that maintains a running weighted average of network parameters:
+      φ_targ ← ρ φ_targ + (1−ρ) φ, with ρ ∈ (0,1) close to 1. Used to update target
+      networks in deep RL (DQN, DDPG, SAC). The resulting target network parameters change
+      slowly and smoothly, providing stable regression targets. Contrast with hard updates
+      (copying weights periodically) which can cause abrupt target shifts. ρ is a
+      hyperparameter; typical values are 0.995–0.999.
+    tags: [stability, target-network, optimization]
+    relations:
+      - target: Target Network
+        type: implements
+        note: Polyak averaging is the standard update rule for target networks in deep RL
+
+  - name: Off-Policy vs On-Policy RL
+    aliases: [on-policy, off-policy, replay buffer, data reuse]
+    definition: >-
+      On-policy algorithms (e.g., PPO, REINFORCE) must collect new data under the current
+      policy after each update — data from old policies is discarded. Off-policy algorithms
+      (e.g., Q-Learning, DDPG, SAC) store transitions in a replay buffer and can reuse
+      data from arbitrary past policies, making them more sample-efficient. The trade-off:
+      off-policy methods can suffer from distribution shift between the data-collecting
+      policy and the current policy, requiring importance weighting or careful design.
+      DDPG and SAC sidestep this by learning Q-functions that don't require on-policy data.
+    tags: [fundamentals, sample-efficiency]
+    relations:
+      - target: DDPG
+        type: example_of
+        note: DDPG is off-policy; exploration policy π_e collects data stored in replay buffer
+      - target: Soft Actor-Critic
+        type: example_of
+        note: SAC is off-policy with a replay buffer; actor samples fresh actions for targets
+
+  - name: Exploration in Deep RL
+    aliases: [exploration strategy, epsilon-greedy, noise-based exploration, entropy exploration]
+    definition: >-
+      Strategies for ensuring an RL agent tries sufficiently diverse actions to discover
+      good policies. Key approaches covered in lecture: (1) Epsilon-greedy / Softmax — for
+      discrete Q-learning, randomly select non-greedy actions with probability ε; (2)
+      Noise-based — for DDPG, add Gaussian or Ornstein-Uhlenbeck noise to deterministic
+      actions during collection; (3) Implicit — stochastic policies (Actor-Critic, PPO)
+      explore via their action distribution variance; (4) Entropy Maximization — SAC
+      explicitly rewards the policy for maintaining high entropy, making exploration a
+      first-class objective rather than an add-on.
+    tags: [exploration, fundamentals]
+    relations:
+      - target: Entropy-Regularized RL
+        type: related_to
+        note: Entropy maximization is the principled exploration mechanism in SAC
+      - target: DDPG
+        type: related_to
+        note: DDPG requires external noise injection because its policy is deterministic
