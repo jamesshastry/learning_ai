@@ -2,6 +2,8 @@
 
 Personal learning acceleration system for AI courses. Transcribe YouTube lectures, generate structured notes, extract concepts, build a knowledge graph, and track your learning progress — all from the command line.
 
+**🌐 [Browse the live site →](https://jamesshastry.github.io/learning_ai/)** — search notes, take quizzes, and explore the knowledge graph right in your browser. Auto-deployed from `main` via GitHub Pages.
+
 **35 commands** covering the full learning lifecycle: ingest → study → review → synthesize → export.
 
 ## Features
@@ -206,6 +208,22 @@ learn schedule <course> --day Tuesday --time "12:00 PM"
 learn due                                           # Check for new lectures today
 ```
 
+### Web Interface
+
+The full knowledge base is available as a static site with search, quizzes, and an interactive knowledge graph.
+
+**Live on GitHub Pages:** [jamesshastry.github.io/learning_ai](https://jamesshastry.github.io/learning_ai/)
+Auto-deployed on every push to `main` via GitHub Actions.
+
+**Run locally** (for AI-powered Q&A via `/api/ask`):
+
+```bash
+learn site                                          # Generate the static site
+learn serve                                         # Start local server at http://localhost:3000
+```
+
+The floating ⚡ toolbar (bottom-right) has three tabs: **Search**, **Quiz**, and **Ask**. Search and Quiz work on the hosted site; Ask requires the local server with an API key configured.
+
 ### Export & Active Recall
 
 ```bash
@@ -219,12 +237,6 @@ learn export <course> <id> --format md              # Single lecture export
 learn quiz <course> <id>                            # Quiz from one lecture
 learn quiz <course>                                 # Quiz across entire course
 learn quiz --topic "attention"                      # Topic-scoped quiz
-
-# Static site (full-featured knowledge base)
-learn site                                          # Generate multi-page site with sidebar nav
-learn site --output ./public                        # Custom output directory
-# Generates: home, course pages, lecture pages with Q&A,
-#   papers library, resource library, knowledge graph, progress dashboard
 
 # Obsidian integration
 learn obsidian                                      # Configure as Obsidian vault
