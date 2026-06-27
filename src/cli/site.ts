@@ -167,6 +167,20 @@ body {
 .breadcrumb { font-size: 13px; color: var(--muted); }
 .breadcrumb a { color: var(--accent); text-decoration: none; }
 .breadcrumb a:hover { text-decoration: underline; }
+#refresh-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .2s;
+}
+#refresh-btn:hover { border-color: var(--accent); color: var(--text); }
+#refresh-btn.refreshing { opacity: .6; pointer-events: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#refresh-btn.refreshing::before { content: ''; display: inline-block; animation: spin .8s linear infinite; }
 
 #content {
   max-width: var(--content-max);
@@ -521,10 +535,41 @@ const TOOLBAR_JS = `
   async function checkServer() {
     try {
       const r = await fetch('/api/courses', { signal: AbortSignal.timeout(1000) });
-      if (r.ok) { serverOnline = true; updateServerBadge(); }
-    } catch { serverOnline = false; updateServerBadge(); }
+      if (r.ok) { serverOnline = true; updateServerBadge(); updateRefreshBtn(); }
+    } catch { serverOnline = false; updateServerBadge(); updateRefreshBtn(); }
   }
   checkServer();
+
+  // Show/hide refresh button based on server status
+  function updateRefreshBtn() {
+    const btn = document.getElementById('refresh-btn');
+    if (btn) btn.style.display = serverOnline ? '' : 'none';
+  }
+
+  // Handle refresh click
+  const refreshBtn = document.getElementById('refresh-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', async () => {
+      refreshBtn.classList.add('refreshing');
+      refreshBtn.textContent = '🔄 Refreshing…';
+      try {
+        const r = await fetch('/api/refresh', { method: 'POST' });
+        const data = await r.json();
+        if (data.ok) {
+          refreshBtn.textContent = '✓ Done';
+          setTimeout(() => location.reload(), 600);
+        } else {
+          refreshBtn.textContent = '✗ ' + (data.error || 'Failed');
+          refreshBtn.classList.remove('refreshing');
+          setTimeout(() => { refreshBtn.textContent = '🔄 Refresh'; }, 3000);
+        }
+      } catch (e) {
+        refreshBtn.textContent = '✗ Server error';
+        refreshBtn.classList.remove('refreshing');
+        setTimeout(() => { refreshBtn.textContent = '🔄 Refresh'; }, 3000);
+      }
+    });
+  }
 
   function updateServerBadge() {
     const el = document.getElementById('tb-server');
@@ -770,6 +815,7 @@ function page(title: string, content: string, nav: string, breadcrumb: string, a
 <div id="main">
   <div id="topbar">
     <div class="breadcrumb">${breadcrumb}</div>
+    <button id="refresh-btn" style="display:none" title="Regenerate site with latest content">🔄 Refresh</button>
   </div>
   <div id="content">
     ${content}
@@ -1965,6 +2011,242 @@ function generateGraphPage(graphJson: string, nav: string): string {
 
 // ─── Main command ────────────────────────────────────────────────
 
+export interface SiteResult {
+  pages: number;
+  courses: number;
+  papers: number;
+  searchEntries: number;
+  quizConcepts: number;
+  ankiCards: number;
+  graphEmbedded: boolean;
+}
+
+/**
+ * Generate the static site. Callable from both the CLI command and the server refresh endpoint.
+ */
+export async function generateSite(projectRoot: string, outputDir: string): Promise<SiteResult> {
+  ensureDir(outputDir);
+
+  const coursesDir = resolve(projectRoot, 'courses');
+  const pages: Array<{ path: string; content: string }> = [];
+
+  // ── Load courses ──
+  const courses: CourseWithReadings[] = [];
+  if (existsSync(coursesDir)) {
+    const courseDirs = readdirSync(coursesDir)
+      .filter(d => d !== 'synthesis' && !d.startsWith('.'));
+
+    for (const courseDir of courseDirs) {
+      const courseConfig = readYaml<CourseWithReadings>(
+        resolve(coursesDir, courseDir, 'course.yaml')
+      );
+      if (courseConfig) courses.push(courseConfig);
+    }
+  }
+
+  // ── Load papers ──
+  const papers = loadPapers(projectRoot);
+
+  // ── Load knowledge graph ──
+  const graphPath = resolve(projectRoot, 'knowledge-graph', 'graph.json');
+  const graphExists = existsSync(graphPath);
+  const graphJson = graphExists
+    ? readFileSync(graphPath, 'utf-8')
+    : '{"nodes":[],"edges":[]}';
+
+  // Count concepts and edges
+  let totalConcepts = 0;
+  let totalEdges = 0;
+  try {
+    const graph = JSON.parse(graphJson) as GraphData;
+    totalConcepts = graph.nodes?.length ?? 0;
+    totalEdges = graph.edges?.length ?? 0;
+  } catch { /* ignore */ }
+
+  // ── Build navigation ──
+  const nav = buildNav(courses, papers, graphExists, '');
+
+  // ── Generate home page ──
+  pages.push({
+    path: resolve(outputDir, 'index.html'),
+    content: generateHomePage(courses, papers, totalConcepts, totalEdges, graphExists,
+      buildNav(courses, papers, graphExists, 'home')),
+  });
+
+  // ── Generate course pages + lecture pages ──
+  for (const courseConfig of courses) {
+    const courseOutputDir = resolve(outputDir, courseConfig.name);
+    ensureDir(courseOutputDir);
+
+    pages.push({
+      path: resolve(courseOutputDir, 'index.html'),
+      content: generateCoursePage(courseConfig, projectRoot,
+        buildNav(courses, papers, graphExists, `course-${courseConfig.name}`)),
+    });
+
+    // Lecture pages
+    const lecturesDir = resolve(coursesDir, courseConfig.name, 'lectures');
+    if (!existsSync(lecturesDir)) continue;
+
+    for (const lectureDir of readdirSync(lecturesDir).filter(d => !d.startsWith('.')).sort()) {
+      const notes = readText(resolve(lecturesDir, lectureDir, 'notes.md'));
+      if (!notes) continue;
+
+      const annotations = readText(resolve(lecturesDir, lectureDir, 'annotations.md'));
+      const lectureId = lectureDir.split('-')[0];
+      const lecture = courseConfig.lectures.find(l => l.id === lectureId);
+
+      // Load concepts for Q&A
+      const conceptsYaml = readYaml<ConceptsYaml>(
+        resolve(lecturesDir, lectureDir, 'concepts.yaml')
+      );
+      const concepts = conceptsYaml?.concepts ?? [];
+
+      pages.push({
+        path: resolve(courseOutputDir, `${lectureDir}.html`),
+        content: generateLecturePage(notes, annotations, courseConfig, lectureDir,
+          lecture, concepts,
+          buildNav(courses, papers, graphExists, `course-${courseConfig.name}`)),
+      });
+    }
+  }
+
+  // ── Generate papers pages ──
+  if (papers.length > 0) {
+    const papersOutputDir = resolve(outputDir, 'papers');
+    ensureDir(papersOutputDir);
+
+    // Papers index
+    pages.push({
+      path: resolve(papersOutputDir, 'index.html'),
+      content: generatePapersIndexPage(papers, courses,
+        buildNav(courses, papers, graphExists, 'papers')),
+    });
+
+    // Category pages
+    const categories = [...new Set(papers.map(p => p.category))];
+    for (const cat of categories) {
+      pages.push({
+        path: resolve(papersOutputDir, `${cat}.html`),
+        content: generatePaperCategoryPage(cat, papers,
+          buildNav(courses, papers, graphExists, `papers-${cat}`)),
+      });
+    }
+
+    // Individual paper pages
+    for (const paper of papers) {
+      const paperDir = resolve(papersOutputDir, paper.category);
+      ensureDir(paperDir);
+      pages.push({
+        path: resolve(papersOutputDir, paper.relativePath.replace('.md', '.html')),
+        content: generatePaperPage(paper,
+          buildNav(courses, papers, graphExists, `papers-${paper.category}`)),
+      });
+    }
+  }
+
+  // ── Generate resource library ──
+  pages.push({
+    path: resolve(outputDir, 'resources.html'),
+    content: generateResourceLibraryPage(courses, papers,
+      buildNav(courses, papers, graphExists, 'resources')),
+  });
+
+  // ── Generate progress page ──
+  pages.push({
+    path: resolve(outputDir, 'progress.html'),
+    content: generateProgressPage(courses,
+      buildNav(courses, papers, graphExists, 'progress')),
+  });
+
+  // ── Generate visualizations page ──
+  pages.push({
+    path: resolve(outputDir, 'visualizations.html'),
+    content: generateVisualizationsPage(
+      buildNav(courses, papers, graphExists, 'visualizations')),
+  });
+
+  // ── Generate knowledge graph page ──
+  if (graphExists) {
+    pages.push({
+      path: resolve(outputDir, 'graph.html'),
+      content: generateGraphPage(graphJson,
+        buildNav(courses, papers, graphExists, 'graph')),
+    });
+  }
+
+  // ── Write all pages ──
+  for (const p of pages) {
+    ensureDir(resolve(p.path, '..'));
+    writeText(p.path, p.content);
+  }
+
+  // ── Generate static data files for client-side features ──
+
+  // Search index: key snippets from all notes
+  const searchIndex: Array<{ course: string; lecture: string; text: string }> = [];
+  for (const courseConfig of courses) {
+    const lectDir = resolve(coursesDir, courseConfig.name, 'lectures');
+    if (!existsSync(lectDir)) continue;
+    for (const ld of readdirSync(lectDir).filter(d => !d.startsWith('.')).sort()) {
+      const notes = readText(resolve(lectDir, ld, 'notes.md'));
+      if (!notes) continue;
+      const lecId = ld.split('-')[0];
+      // Extract key lines (headings, takeaways, quotes, concept mentions)
+      const lines = notes.split('\n').filter(l =>
+        l.startsWith('#') || l.startsWith('- ') || l.startsWith('> ') ||
+        l.includes('**') || l.includes('[[') || l.length > 40
+      );
+      for (const line of lines.slice(0, 30)) {
+        const clean = line.replace(/^[#*>\-\s]+/, '').replace(/\[\[|\]\]/g, '').trim();
+        if (clean.length > 15) {
+          searchIndex.push({ course: courseConfig.name, lecture: lecId, text: clean });
+        }
+      }
+    }
+  }
+  writeText(resolve(outputDir, 'search-index.json'), JSON.stringify(searchIndex));
+
+  // Quiz data: all concepts as flashcard-style questions
+  const quizData: Array<{ name: string; definition: string; course: string; lecture: string }> = [];
+  for (const courseConfig of courses) {
+    const lectDir = resolve(coursesDir, courseConfig.name, 'lectures');
+    if (!existsSync(lectDir)) continue;
+    for (const ld of readdirSync(lectDir).filter(d => !d.startsWith('.')).sort()) {
+      const conceptsData = readYaml<ConceptsYaml>(resolve(lectDir, ld, 'concepts.yaml'));
+      if (!conceptsData?.concepts) continue;
+      for (const c of conceptsData.concepts) {
+        if (c.name && c.definition) {
+          quizData.push({
+            name: c.name,
+            definition: c.definition,
+            course: courseConfig.name,
+            lecture: ld.split('-')[0],
+          });
+        }
+      }
+    }
+  }
+  writeText(resolve(outputDir, 'quiz-data.json'), JSON.stringify(quizData));
+
+  // Anki export: TSV of all concepts
+  const ankiLines = quizData.map(q =>
+    `${q.name}\t${q.definition} (Source: ${q.course} L${q.lecture})`
+  );
+  ensureDir(resolve(outputDir, 'exports'));
+  writeText(resolve(outputDir, 'exports', 'anki.txt'), ankiLines.join('\n'));
+
+  return {
+    pages: pages.length,
+    courses: courses.length,
+    papers: papers.length,
+    searchEntries: searchIndex.length,
+    quizConcepts: quizData.length,
+    ankiCards: ankiLines.length,
+    graphEmbedded: graphExists,
+  };
+}
+
 export function siteCommand(program: Command): void {
   program
     .command('site')
@@ -1974,228 +2256,20 @@ export function siteCommand(program: Command): void {
       try {
         const config = loadConfig();
         const outputDir = resolve(config.projectRoot, opts.output);
-        ensureDir(outputDir);
 
         progress('Generating static site...');
 
-        const coursesDir = resolve(config.projectRoot, 'courses');
-        const pages: Array<{ path: string; content: string }> = [];
+        const result = await generateSite(config.projectRoot, outputDir);
 
-        // ── Load courses ──
-        const courses: CourseWithReadings[] = [];
-        if (existsSync(coursesDir)) {
-          const courseDirs = readdirSync(coursesDir)
-            .filter(d => d !== 'synthesis' && !d.startsWith('.'));
-
-          for (const courseDir of courseDirs) {
-            const courseConfig = readYaml<CourseWithReadings>(
-              resolve(coursesDir, courseDir, 'course.yaml')
-            );
-            if (courseConfig) courses.push(courseConfig);
-          }
-        }
-
-        // ── Load papers ──
-        const papers = loadPapers(config.projectRoot);
-
-        // ── Load knowledge graph ──
-        const graphPath = resolve(config.projectRoot, 'knowledge-graph', 'graph.json');
-        const graphExists = existsSync(graphPath);
-        const graphJson = graphExists
-          ? readFileSync(graphPath, 'utf-8')
-          : '{"nodes":[],"edges":[]}';
-
-        // Count concepts and edges
-        let totalConcepts = 0;
-        let totalEdges = 0;
-        try {
-          const graph = JSON.parse(graphJson) as GraphData;
-          totalConcepts = graph.nodes?.length ?? 0;
-          totalEdges = graph.edges?.length ?? 0;
-        } catch { /* ignore */ }
-
-        // ── Build navigation ──
-        const nav = buildNav(courses, papers, graphExists, '');
-
-        // ── Generate home page ──
-        pages.push({
-          path: resolve(outputDir, 'index.html'),
-          content: generateHomePage(courses, papers, totalConcepts, totalEdges, graphExists,
-            buildNav(courses, papers, graphExists, 'home')),
-        });
-
-        // ── Generate course pages + lecture pages ──
-        for (const courseConfig of courses) {
-          const courseOutputDir = resolve(outputDir, courseConfig.name);
-          ensureDir(courseOutputDir);
-
-          pages.push({
-            path: resolve(courseOutputDir, 'index.html'),
-            content: generateCoursePage(courseConfig, config.projectRoot,
-              buildNav(courses, papers, graphExists, `course-${courseConfig.name}`)),
-          });
-
-          // Lecture pages
-          const lecturesDir = resolve(coursesDir, courseConfig.name, 'lectures');
-          if (!existsSync(lecturesDir)) continue;
-
-          for (const lectureDir of readdirSync(lecturesDir).filter(d => !d.startsWith('.')).sort()) {
-            const notes = readText(resolve(lecturesDir, lectureDir, 'notes.md'));
-            if (!notes) continue;
-
-            const annotations = readText(resolve(lecturesDir, lectureDir, 'annotations.md'));
-            const lectureId = lectureDir.split('-')[0];
-            const lecture = courseConfig.lectures.find(l => l.id === lectureId);
-
-            // Load concepts for Q&A
-            const conceptsYaml = readYaml<ConceptsYaml>(
-              resolve(lecturesDir, lectureDir, 'concepts.yaml')
-            );
-            const concepts = conceptsYaml?.concepts ?? [];
-
-            pages.push({
-              path: resolve(courseOutputDir, `${lectureDir}.html`),
-              content: generateLecturePage(notes, annotations, courseConfig, lectureDir,
-                lecture, concepts,
-                buildNav(courses, papers, graphExists, `course-${courseConfig.name}`)),
-            });
-          }
-        }
-
-        // ── Generate papers pages ──
-        if (papers.length > 0) {
-          const papersOutputDir = resolve(outputDir, 'papers');
-          ensureDir(papersOutputDir);
-
-          // Papers index
-          pages.push({
-            path: resolve(papersOutputDir, 'index.html'),
-            content: generatePapersIndexPage(papers, courses,
-              buildNav(courses, papers, graphExists, 'papers')),
-          });
-
-          // Category pages
-          const categories = [...new Set(papers.map(p => p.category))];
-          for (const cat of categories) {
-            pages.push({
-              path: resolve(papersOutputDir, `${cat}.html`),
-              content: generatePaperCategoryPage(cat, papers,
-                buildNav(courses, papers, graphExists, `papers-${cat}`)),
-            });
-          }
-
-          // Individual paper pages
-          for (const paper of papers) {
-            const paperDir = resolve(papersOutputDir, paper.category);
-            ensureDir(paperDir);
-            pages.push({
-              path: resolve(papersOutputDir, paper.relativePath.replace('.md', '.html')),
-              content: generatePaperPage(paper,
-                buildNav(courses, papers, graphExists, `papers-${paper.category}`)),
-            });
-          }
-        }
-
-        // ── Generate resource library ──
-        pages.push({
-          path: resolve(outputDir, 'resources.html'),
-          content: generateResourceLibraryPage(courses, papers,
-            buildNav(courses, papers, graphExists, 'resources')),
-        });
-
-        // ── Generate progress page ──
-        pages.push({
-          path: resolve(outputDir, 'progress.html'),
-          content: generateProgressPage(courses,
-            buildNav(courses, papers, graphExists, 'progress')),
-        });
-
-        // ── Generate visualizations page ──
-        pages.push({
-          path: resolve(outputDir, 'visualizations.html'),
-          content: generateVisualizationsPage(
-            buildNav(courses, papers, graphExists, 'visualizations')),
-        });
-
-        // ── Generate knowledge graph page ──
-        if (graphExists) {
-          pages.push({
-            path: resolve(outputDir, 'graph.html'),
-            content: generateGraphPage(graphJson,
-              buildNav(courses, papers, graphExists, 'graph')),
-          });
-        }
-
-        // ── Write all pages ──
-        for (const p of pages) {
-          ensureDir(resolve(p.path, '..'));
-          writeText(p.path, p.content);
-        }
-
-        // ── Generate static data files for client-side features ──
-
-        // Search index: key snippets from all notes
-        const searchIndex: Array<{ course: string; lecture: string; text: string }> = [];
-        for (const courseConfig of courses) {
-          const lectDir = resolve(coursesDir, courseConfig.name, 'lectures');
-          if (!existsSync(lectDir)) continue;
-          for (const ld of readdirSync(lectDir).filter(d => !d.startsWith('.')).sort()) {
-            const notes = readText(resolve(lectDir, ld, 'notes.md'));
-            if (!notes) continue;
-            const lecId = ld.split('-')[0];
-            // Extract key lines (headings, takeaways, quotes, concept mentions)
-            const lines = notes.split('\n').filter(l =>
-              l.startsWith('#') || l.startsWith('- ') || l.startsWith('> ') ||
-              l.includes('**') || l.includes('[[') || l.length > 40
-            );
-            for (const line of lines.slice(0, 30)) {
-              const clean = line.replace(/^[#*>\-\s]+/, '').replace(/\[\[|\]\]/g, '').trim();
-              if (clean.length > 15) {
-                searchIndex.push({ course: courseConfig.name, lecture: lecId, text: clean });
-              }
-            }
-          }
-        }
-        writeText(resolve(outputDir, 'search-index.json'), JSON.stringify(searchIndex));
-
-        // Quiz data: all concepts as flashcard-style questions
-        const quizData: Array<{ name: string; definition: string; course: string; lecture: string }> = [];
-        for (const courseConfig of courses) {
-          const lectDir = resolve(coursesDir, courseConfig.name, 'lectures');
-          if (!existsSync(lectDir)) continue;
-          for (const ld of readdirSync(lectDir).filter(d => !d.startsWith('.')).sort()) {
-            const conceptsData = readYaml<ConceptsYaml>(resolve(lectDir, ld, 'concepts.yaml'));
-            if (!conceptsData?.concepts) continue;
-            for (const c of conceptsData.concepts) {
-              if (c.name && c.definition) {
-                quizData.push({
-                  name: c.name,
-                  definition: c.definition,
-                  course: courseConfig.name,
-                  lecture: ld.split('-')[0],
-                });
-              }
-            }
-          }
-        }
-        writeText(resolve(outputDir, 'quiz-data.json'), JSON.stringify(quizData));
-
-        // Anki export: TSV of all concepts
-        const ankiLines = quizData.map(q =>
-          `${q.name}\t${q.definition} (Source: ${q.course} L${q.lecture})`
-        );
-        ensureDir(resolve(outputDir, 'exports'));
-        writeText(resolve(outputDir, 'exports', 'anki.txt'), ankiLines.join('\n'));
-
-        success(`Static site generated: ${pages.length} pages`);
-        info(`  📚 ${courses.length} courses`);
-        info(`  📄 ${papers.length} papers`);
-        if (graphExists) info(`  🔗 Knowledge graph embedded`);
+        success(`Static site generated: ${result.pages} pages`);
+        info(`  📚 ${result.courses} courses`);
+        info(`  📄 ${result.papers} papers`);
+        if (result.graphEmbedded) info(`  🔗 Knowledge graph embedded`);
         info(`  📋 Resource library`);
         info(`  📊 Progress dashboard`);
-        info(`  🔍 Search index: ${searchIndex.length} entries`);
-        info(`  📝 Quiz data: ${quizData.length} concepts`);
-        info(`  📇 Anki export: ${ankiLines.length} cards`);
+        info(`  🔍 Search index: ${result.searchEntries} entries`);
+        info(`  📝 Quiz data: ${result.quizConcepts} concepts`);
+        info(`  📇 Anki export: ${result.ankiCards} cards`);
         info(`Open: ${resolve(outputDir, 'index.html')}`);
         info('Interactive: `learn serve` for full experience');
       } catch (e) {

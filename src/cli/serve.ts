@@ -5,6 +5,7 @@ import express from 'express';
 import { loadConfig } from '../utils/config.js';
 import { readYaml, readText } from '../utils/files.js';
 import { success, error, info, progress } from '../utils/logger.js';
+import { generateSite } from './site.js';
 import type { CourseConfig, ConceptsYaml } from '../types.js';
 
 /**
@@ -273,6 +274,19 @@ export function serveCommand(program: Command): void {
           res.json({ courses });
         });
 
+        // ── API: Refresh (regenerate site) ──
+        app.post('/api/refresh', async (_req, res) => {
+          try {
+            info('🔄 Regenerating site...');
+            const result = await generateSite(config.projectRoot, siteDir);
+            info(`✓ Refreshed: ${result.pages} pages, ${result.courses} courses`);
+            res.json({ ok: true, ...result });
+          } catch (e) {
+            error(`Refresh failed: ${(e as Error).message}`);
+            res.json({ ok: false, error: (e as Error).message });
+          }
+        });
+
         // Start server
         app.listen(port, () => {
           success(`Server running at http://localhost:${port}`);
@@ -282,6 +296,7 @@ export function serveCommand(program: Command): void {
           info('  ❓ Ask:        POST /api/ask');
           info('  📝 Quiz:       POST /api/quiz');
           info('  📇 Anki:       POST /api/export-anki');
+          info('  🔄 Refresh:    POST /api/refresh');
           info('  📚 Courses:    GET  /api/courses');
           info('');
           info('  Press Ctrl+C to stop');
