@@ -1105,11 +1105,11 @@ function generateLecturePage(
             <div class="qa-item">
               <button class="qa-question">What is ${escapeHtml(c.name)}?</button>
               <div class="qa-answer">
-                <p><strong>${escapeHtml(c.name)}</strong>: ${escapeHtml(c.definition)}</p>
-                ${c.relations && c.relations.length > 0 ? `<p><strong>Related:</strong> ${c.relations.map(r =>
-                  `${escapeHtml(r.target)} (${r.type.replace(/_/g, ' ')})`
+                <p><strong>${escapeHtml(c.name)}</strong>: ${escapeHtml(c.definition ?? '')}</p>
+                ${(c.relations ?? []).filter(r => r.target).length > 0 ? `<p><strong>Related:</strong> ${(c.relations ?? []).filter(r => r.target).map(r =>
+                  `${escapeHtml(r.target)} (${(r.type ?? '').replace(/_/g, ' ')})`
                 ).join(', ')}</p>` : ''}
-                ${c.timestamps.length > 0 ? `<p style="color:var(--faint);font-size:12px">Timestamps: ${c.timestamps.join(', ')}</p>` : ''}
+                ${(c.timestamps ?? []).length > 0 ? `<p style="color:var(--faint);font-size:12px">Timestamps: ${c.timestamps.join(', ')}</p>` : ''}
               </div>
             </div>
           `).join('\n')}
