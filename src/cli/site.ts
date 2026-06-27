@@ -908,51 +908,55 @@ function buildNav(
   courses: CourseWithReadings[],
   papers: PaperFile[],
   graphExists: boolean,
-  activeId: string
+  activeId: string,
+  basePath = ''
 ): string {
+  // basePath is a relative prefix to reach the site root from the current page.
+  // Root pages: ''  |  Course/lecture pages: '../'  |  Paper detail pages: '../../'
+  const b = basePath;
   let html = '';
 
   // Home
-  html += `<a class="nav-item ${activeId === 'home' ? 'active' : ''}" href="index.html">
+  html += `<a class="nav-item ${activeId === 'home' ? 'active' : ''}" href="${b}index.html">
     <span class="nav-icon">🏠</span> Home</a>`;
 
   // Courses
   html += '<div class="nav-section">Courses</div>';
   for (const c of courses) {
     const id = `course-${c.name}`;
-    html += `<a class="nav-item ${activeId === id ? 'active' : ''}" href="${c.name}/index.html">
+    html += `<a class="nav-item ${activeId === id ? 'active' : ''}" href="${b}${c.name}/index.html">
       <span class="nav-icon">📚</span> ${escapeHtml(c.title)}</a>`;
   }
 
   // Papers
   if (papers.length > 0) {
     html += '<div class="nav-section">Papers</div>';
-    html += `<a class="nav-item ${activeId === 'papers' ? 'active' : ''}" href="papers/index.html">
+    html += `<a class="nav-item ${activeId === 'papers' ? 'active' : ''}" href="${b}papers/index.html">
       <span class="nav-icon">📄</span> All Papers</a>`;
 
     const categories = [...new Set(papers.map(p => p.category))];
     for (const cat of categories) {
       const label = cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, ' ');
       const id = `papers-${cat}`;
-      html += `<a class="nav-item ${activeId === id ? 'active' : ''}" href="papers/${cat}.html">
+      html += `<a class="nav-item ${activeId === id ? 'active' : ''}" href="${b}papers/${cat}.html">
         <span class="nav-icon">›</span> ${escapeHtml(label)}</a>`;
     }
   }
 
   // Resources
   html += '<div class="nav-section">Resources</div>';
-  html += `<a class="nav-item ${activeId === 'resources' ? 'active' : ''}" href="resources.html">
+  html += `<a class="nav-item ${activeId === 'resources' ? 'active' : ''}" href="${b}resources.html">
     <span class="nav-icon">📋</span> Resource Library</a>`;
 
-  html += `<a class="nav-item ${activeId === 'visualizations' ? 'active' : ''}" href="visualizations.html">
+  html += `<a class="nav-item ${activeId === 'visualizations' ? 'active' : ''}" href="${b}visualizations.html">
     <span class="nav-icon">🎛️</span> Visualizations</a>`;
 
   if (graphExists) {
-    html += `<a class="nav-item ${activeId === 'graph' ? 'active' : ''}" href="graph.html">
+    html += `<a class="nav-item ${activeId === 'graph' ? 'active' : ''}" href="${b}graph.html">
       <span class="nav-icon">🔗</span> Knowledge Graph</a>`;
   }
 
-  html += `<a class="nav-item ${activeId === 'progress' ? 'active' : ''}" href="progress.html">
+  html += `<a class="nav-item ${activeId === 'progress' ? 'active' : ''}" href="${b}progress.html">
     <span class="nav-icon">📊</span> Progress</a>`;
 
   return html;
@@ -2081,7 +2085,7 @@ export async function generateSite(projectRoot: string, outputDir: string): Prom
     pages.push({
       path: resolve(courseOutputDir, 'index.html'),
       content: generateCoursePage(courseConfig, projectRoot,
-        buildNav(courses, papers, graphExists, `course-${courseConfig.name}`)),
+        buildNav(courses, papers, graphExists, `course-${courseConfig.name}`, '../')),
     });
 
     // Lecture pages
@@ -2106,7 +2110,7 @@ export async function generateSite(projectRoot: string, outputDir: string): Prom
         path: resolve(courseOutputDir, `${lectureDir}.html`),
         content: generateLecturePage(notes, annotations, courseConfig, lectureDir,
           lecture, concepts,
-          buildNav(courses, papers, graphExists, `course-${courseConfig.name}`)),
+          buildNav(courses, papers, graphExists, `course-${courseConfig.name}`, '../')),
       });
     }
   }
@@ -2120,7 +2124,7 @@ export async function generateSite(projectRoot: string, outputDir: string): Prom
     pages.push({
       path: resolve(papersOutputDir, 'index.html'),
       content: generatePapersIndexPage(papers, courses,
-        buildNav(courses, papers, graphExists, 'papers')),
+        buildNav(courses, papers, graphExists, 'papers', '../')),
     });
 
     // Category pages
@@ -2129,7 +2133,7 @@ export async function generateSite(projectRoot: string, outputDir: string): Prom
       pages.push({
         path: resolve(papersOutputDir, `${cat}.html`),
         content: generatePaperCategoryPage(cat, papers,
-          buildNav(courses, papers, graphExists, `papers-${cat}`)),
+          buildNav(courses, papers, graphExists, `papers-${cat}`, '../')),
       });
     }
 
@@ -2140,7 +2144,7 @@ export async function generateSite(projectRoot: string, outputDir: string): Prom
       pages.push({
         path: resolve(papersOutputDir, paper.relativePath.replace('.md', '.html')),
         content: generatePaperPage(paper,
-          buildNav(courses, papers, graphExists, `papers-${paper.category}`)),
+          buildNav(courses, papers, graphExists, `papers-${paper.category}`, '../../')),
       });
     }
   }
