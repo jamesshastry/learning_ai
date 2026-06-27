@@ -163,7 +163,7 @@ Generate a synthesis document in markdown with these sections:
 /**
  * Source material found for a topic.
  */
-interface SourceExcerpt {
+export interface SourceExcerpt {
   course: string;
   lectureId: string;
   lectureTitle: string;
@@ -174,7 +174,7 @@ interface SourceExcerpt {
 /**
  * Collect relevant excerpts from all courses matching a topic.
  */
-function collectSources(projectRoot: string, topic: string): SourceExcerpt[] {
+export function collectSources(projectRoot: string, topic: string): SourceExcerpt[] {
   const sources: SourceExcerpt[] = [];
   const coursesDir = resolve(projectRoot, 'courses');
   const topicLower = topic.toLowerCase();
@@ -217,7 +217,7 @@ function collectSources(projectRoot: string, topic: string): SourceExcerpt[] {
  * Extract sections from markdown that mention the topic.
  * Returns the relevant sections (not the whole document).
  */
-function extractRelevantSections(content: string, topicLower: string): string {
+export function extractRelevantSections(content: string, topicLower: string): string {
   const lines = content.split('\n');
   const relevantLines: string[] = [];
   let inRelevantSection = false;
@@ -262,7 +262,7 @@ function collectConcepts(projectRoot: string, topic: string): string[] {
 /**
  * Build the synthesis context from sources and concepts.
  */
-function buildSynthesisContext(sources: SourceExcerpt[], concepts: string[]): string {
+export function buildSynthesisContext(sources: SourceExcerpt[], concepts: string[]): string {
   const parts: string[] = [];
 
   // Group sources by course

@@ -174,7 +174,7 @@ export function importCommand(program: Command): void {
 /**
  * Parse an SRT subtitle file into transcript segments.
  */
-function parseSRT(content: string): TranscriptSegment[] {
+export function parseSRT(content: string): TranscriptSegment[] {
   const segments: TranscriptSegment[] = [];
   const blocks = content.trim().split(/\n\s*\n/);
 
@@ -205,7 +205,7 @@ function parseSRT(content: string): TranscriptSegment[] {
 /**
  * Parse plain text, detecting optional timestamps.
  */
-function parsePlainText(content: string): TranscriptSegment[] {
+export function parsePlainText(content: string): TranscriptSegment[] {
   const lines = content.split('\n').filter(l => l.trim());
   const segments: TranscriptSegment[] = [];
 
@@ -226,7 +226,7 @@ function parsePlainText(content: string): TranscriptSegment[] {
 /**
  * Format a timestamp, stripping leading 00: hours.
  */
-function formatTimestamp(ts: string): string {
+export function formatTimestamp(ts: string): string {
   if (ts.startsWith('00:')) return ts.slice(3);
   return ts;
 }

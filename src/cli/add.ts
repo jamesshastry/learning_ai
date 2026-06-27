@@ -238,7 +238,7 @@ async function fetchVideoTitle(videoId: string): Promise<string> {
 /**
  * Extract a YouTube video ID from various URL formats.
  */
-function extractVideoId(url: string): string | null {
+export function extractVideoId(url: string): string | null {
   try {
     const parsed = new URL(url);
     if (parsed.hostname.includes('youtube.com') && parsed.searchParams.has('v')) {

@@ -324,7 +324,7 @@ function collectConcepts(
 /**
  * Escape text for Anki TSV format.
  */
-function escapeAnki(text: string): string {
+export function escapeAnki(text: string): string {
   return text
     .replace(/\t/g, ' ')
     .replace(/\n/g, '<br>')

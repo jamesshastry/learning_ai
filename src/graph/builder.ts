@@ -79,7 +79,7 @@ export function buildGraph(projectRoot: string): MergeResult {
 /**
  * Generate Obsidian-compatible markdown for a concept.
  */
-function generateConceptMarkdown(concept: MergedConcept): string {
+export function generateConceptMarkdown(concept: MergedConcept): string {
   const frontmatter = [
     '---',
     `aliases: [${concept.aliases.map(a => `"${a}"`).join(', ')}]`,
@@ -127,7 +127,7 @@ function generateConceptMarkdown(concept: MergedConcept): string {
 /**
  * Build the graph data structure for D3.js.
  */
-function buildGraphData(concepts: MergedConcept[]): GraphData {
+export function buildGraphData(concepts: MergedConcept[]): GraphData {
   const conceptNames = new Set(concepts.map(c => c.name));
 
   const nodes: GraphNode[] = concepts.map(c => ({
@@ -341,7 +341,7 @@ function generateVisualizationHTML(graphData: GraphData): string {
 /**
  * Convert a concept name to a URL-safe slug for file names.
  */
-function slugifyConcept(name: string): string {
+export function slugifyConcept(name: string): string {
   return name
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
